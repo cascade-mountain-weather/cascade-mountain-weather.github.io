@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast Verification | Dawg Winter Weather Blog</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .verification-intro {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .verification-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        
+        .verification-table th,
+        .verification-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .verification-table th {
+            background-color: #2a5298;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .verification-table tr:hover {
+            background-color: #f5f7fa;
+        }
+        
+        .accuracy-good {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .accuracy-fair {
+            color: #f57f17;
+            font-weight: 600;
+        }
+        
+        .accuracy-poor {
+            color: #c62828;
+            font-weight: 600;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #2a5298;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎿 Dawg Winter Weather Blog</h1>
+        <p class="tagline">Washington Ski Area Weather & Snow Forecasts</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#latest-post">Latest Forecast</a></li>
+            <li><a href="index.html#ski-areas">Ski Areas</a></li>
+            <li><a href="posts/archive.html">Archive</a></li>
+            <li><a href="verification.html" class="active">Verification</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="verification-intro">
+            <h2>📊 Forecast Verification</h2>
+            <p><strong>Transparency and accountability matter!</strong> This page tracks the accuracy of our weekend ski forecasts by comparing predictions against actual observed conditions.</p>
+            <p>Data is collected from SNOTEL stations, NWS observations, and resort reports. Verification helps improve future forecasts and builds trust with readers.</p>
+        </section>
+
+        <section>
+            <h2>Season Statistics (2024-2025)</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Forecasts</div>
+                    <div class="stat-number">--</div>
+                    <p>Weekly forecasts issued</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Within Range</div>
+                    <div class="stat-number">--%</div>
+                    <p>Forecasts within predicted range</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mean Error</div>
+                    <div class="stat-number">-- in</div>
+                    <p>Average snowfall error</p>
+                </div>
+            </div>
+
+            <p><em>Statistics will be updated as we collect more forecast verification data throughout the season.</em></p>
+        </section>
+
+        <section>
+            <h2>Recent Forecast Verification</h2>
+            
+            <table class="verification-table">
+                <thead>
+                    <tr>
+                        <th>Forecast Date</th>
+                        <th>Ski Area</th>
+                        <th>Forecast</th>
+                        <th>Actual</th>
+                        <th>Error</th>
+                        <th>Accuracy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                            <em>Verification data will appear here after the first forecast weekend.<br>
+                            Run the verification scripts after collecting observation data.</em>
+                        </td>
+                    </tr>
+                    <!-- Example row (uncomment when you have data):
+                    <tr>
+                        <td>Jan 15, 2025</td>
+                        <td>Mt. Baker</td>
+                        <td>20" (14-24")</td>
+                        <td>18"</td>
+                        <td>-2" (-10%)</td>
+                        <td><span class="accuracy-good">✓ Within Range</span></td>
+                    </tr>
+                    -->
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>By Ski Area Performance</h2>
+            
+            <h3>Mt. Baker</h3>
+            <p><strong>Forecasts Verified:</strong> --</p>
+            <p><strong>Mean Absolute Error:</strong> -- inches</p>
+            <p><strong>Within Range:</strong> --/-- (--%)</p>
+            
+            <h3>Stevens Pass</h3>
+            <p><strong>Forecasts Verified:</strong> --</p>
+            <p><strong>Mean Absolute Error:</strong> -- inches</p>
+            <p><strong>Within Range:</strong> --/-- (--%)</p>
+            
+            <h3>Crystal Mountain</h3>
+            <p><strong>Forecasts Verified:</strong> --</p>
+            <p><strong>Mean Absolute Error:</strong> -- inches</p>
+            <p><strong>Within Range:</strong> --/-- (--%)</p>
+            
+            <h3>Other Areas</h3>
+            <p>Verification data for Snoqualmie, White Pass, and Blewett Pass will be added as we collect observations.</p>
+        </section>
+
+        <section>
+            <h2>Methodology</h2>
+            <h3>Data Sources</h3>
+            <ul>
+                <li><strong>SNOTEL Stations:</strong> Automated snow and weather stations from NRCS</li>
+                <li><strong>NWS Observations:</strong> National Weather Service station data</li>
+                <li><strong>Resort Reports:</strong> Official snow reports from ski areas</li>
+            </ul>
+            
+            <h3>Verification Process</h3>
+            <ol>
+                <li>Forecast data is saved at time of posting (stored in data/forecasts/)</li>
+                <li>After the forecast period, actual observations are collected</li>
+                <li>Automated scripts compare forecast vs. actual values</li>
+                <li>Verification reports are generated and posted here</li>
+            </ol>
+            
+            <h3>Accuracy Metrics</h3>
+            <ul>
+                <li><strong>Within Range:</strong> Did actual fall within the forecast range?</li>
+                <li><strong>Absolute Error:</strong> |Forecast - Actual|</li>
+                <li><strong>Percentage Error:</strong> (|Forecast - Actual| / Actual) × 100</li>
+                <li><strong>Mean Absolute Error (MAE):</strong> Average error across all forecasts</li>
+            </ul>
+        </section>
+
+        <section class="about">
+            <h2>Why Verification Matters</h2>
+            <p>Forecast verification serves multiple purposes:</p>
+            <ul>
+                <li><strong>Accountability:</strong> Being transparent about forecast accuracy builds trust</li>
+                <li><strong>Improvement:</strong> Identifying patterns in errors helps refine future forecasts</li>
+                <li><strong>Learning:</strong> Understanding which weather patterns are harder to forecast</li>
+                <li><strong>Comparison:</strong> See how different ski areas verify relative to each other</li>
+            </ul>
+            <p>No forecast is perfect, but consistent verification helps us get better over time!</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Dawg Winter Weather Blog | Washington Ski Area Forecasts</p>
+        <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
+    </footer>
+</body>
+</html>
