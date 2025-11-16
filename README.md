@@ -1,4 +1,4 @@
-# Dawg Winter Weather Blog
+# Cascski Alpine Insights
 
 A simple, easy-to-maintain weather blog focused on Washington state ski area forecasts. Provides weekly weekend forecasts for Mt. Baker, Stevens Pass, Snoqualmie Pass, Blewett Pass, Crystal Mountain, and White Pass.
 
