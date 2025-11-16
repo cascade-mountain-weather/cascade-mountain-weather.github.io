@@ -6,7 +6,9 @@ This directory stores weather figures and images used in blog posts.
 
 ```
 assets/
+├── image_scraper.py     # Automated image download script
 └── images/              # Current forecast figures
+    ├── cw3e/            # CW3E West-WRF model images
     └── archive/         # Dated copies (optional)
 ```
 
@@ -58,3 +60,41 @@ Note: Archive images are excluded from git tracking by default (see `.gitignore`
 - JPEG works for photos/satellite imagery
 
 See `scripts/manage_figures.py` for helper functions to organize figures.
+
+## Automated Image Scraping
+
+The `image_scraper.py` script automates downloading forecast images from various sources.
+
+### CW3E West-WRF Snow Meteogram
+
+Source: **Center for Western Weather and Water Extremes (CW3E)**
+
+Downloads the Paradis West-WRF 3hr snow ensemble meteogram panel for Mount Rainier National Park (MRNP).
+
+**Usage:**
+```bash
+python assets/image_scraper.py --cw3e-westwrf-snow
+```
+
+**Saved files:**
+- `images/cw3e/West-WRF_3hrSnow_Meteogram_Panel_MRNP.png` - Current version (overwritten on each run)
+- `images/cw3e/West-WRF_3hrSnow_Meteogram_Panel_MRNP_YYYYmmdd_HHMMSS.png` - Timestamped archive
+
+**Features:**
+- Automatic retry on transient failures (3 attempts)
+- Response validation (HTTP 200, image content type)
+- Timestamped archival copies for historical tracking
+- Detailed logging of download progress
+
+**Other options:**
+- `--all` - Download all available images
+- `--verbose` or `-v` - Enable detailed logging
+
+**Example:**
+```bash
+# Download only CW3E snow meteogram
+python assets/image_scraper.py --cw3e-westwrf-snow
+
+# Download all images with verbose output
+python assets/image_scraper.py --all --verbose
+```
