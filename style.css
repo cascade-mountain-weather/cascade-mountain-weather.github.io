@@ -230,7 +230,7 @@ footer p {
 }
 
 .UtahSnowEnsemble {
-    max-width: 100%;
+    max-width: 80%;
 }
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -255,3 +255,109 @@ footer p {
         align-items: flex-start;
     }
 }
+
+.PlotTitle {
+    font-size: 2em;
+    font-weight: bold;
+    margin-top: 0.5em;
+}
+
+/* Hover-only dropdown for "Model tools" */
+
+/* Align dropdown label and caret with other nav items */
+.main-nav a,
+.main-nav .dropdown-toggle {
+  display: inline-flex;        /* allows vertical centering of text + caret */
+  align-items: center;         /* center vertically */
+  gap: 0.35rem;                /* small space between text and caret if present */
+  line-height: 1;              /* avoid extra internal leading */
+  vertical-align: middle;      /* helps when inline with other elements */
+  padding-top: 0.25rem;        /* match existing nav padding (tweak if needed) */
+  padding-bottom: 0.25rem;
+}
+
+/* If you previously set larger padding or a different font-size for .dropdown-toggle, override here */
+.dropdown-toggle {
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  margin: 0;                   /* ensure no top/bottom offsets */
+}
+
+/* Optional: if the caret glyph still looks slightly off, reduce its size or nudge it */
+.dropdown-toggle .nav-caret,
+.dropdown-toggle::after {
+  display: inline-block;
+  transform: translateY(0);    /* tweak to e.g. -1px or 0.05em if needed to nudge */
+  font-size: 0.9em;            /* slightly smaller caret helps visual alignment */
+  line-height: 1;
+}
+
+/* Dropdown menu: hidden by default */
+.dropdown-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid rgba(15,23,42,0.06);
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+  padding: 0.35rem 0;
+  display: none;
+  z-index: 40;
+}
+
+/* Menu items */
+.dropdown-menu li { list-style: none; }
+.dropdown-menu a {
+  display: block;
+  padding: 0.5rem 0.9rem;
+  color: #0f172a;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.dropdown-menu a:hover,
+.dropdown-menu a:focus {
+  background: rgba(37,99,235,0.06);
+  outline: none;
+}
+
+.nav-item.dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .nav-item.dropdown > .dropdown-menu {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    top: calc(100% + 6px);
+  }
+
+/* SHOW MENU on hover for pointer devices (desktop/laptops) */
+/* Using both :hover and :focus-within keeps it accessible for keyboard users */
+@media (hover: hover) and (pointer: fine) {
+  .nav-item.dropdown:hover > .dropdown-menu,
+  .nav-item.dropdown:focus-within > .dropdown-menu {
+    display: block;
+  }
+}
+
+/* On small / touch screens: keep menu hidden (no hover available) */
+/* This prevents the dropdown from opening on taps — users should navigate to model-tools.html */
+@media (max-width: 800px) {
+  .dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin-top: 0.25rem;
+    min-width: auto;
+    display: none !important;
+  }
+  .dropdown-menu a {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  /* If your mobile nav is vertical, ensure overall nav layout adapts, but submenu will remain hidden */
+  .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
