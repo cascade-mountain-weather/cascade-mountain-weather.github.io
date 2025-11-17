@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Precipitation Models</title>
+        <link rel="stylesheet" href="../style.css">
+    </head>
+
+<!-- This script will dynamically pull the png -->
+<body>
+    <header>
+        <h1>🎿 Cascski Alpine Insights</h1>
+        <p class="tagline">Washington Ski Area Weather & Snow Forecasts</p>
+    </header>
+  
+    <nav>
+        <ul>
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="#latest-post">Latest Forecast</a></li>
+            <li><a href="#ski-areas">Ski Areas</a></li>
+            <li><a href="posts/archive.html">Archive</a></li>
+            <li><a href="verification.html">Verification</a></li>
+            <li class="nav-item dropdown">
+                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+                <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
+                  <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
+                  <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
+                  <li role="none"><a role="menuitem" href="model-tools-precipitation.html">Precipitation</a></li>
+                </ul>
+              </li>
+        </ul>
+    </nav>
+
+    <section id="latest-post" class="hero">
+        <figure>
+            <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram - Paradise Ranger Station (Mt. Ranier NP)</figcaption>
+            <img class="UtahSnowEnsemble" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_3hrSnow_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise RS" />
+        </figure>
+        <figure>
+            <figcaption class="PlotTitle">Utah Snow Ensemble - Paradise Ranger Station (Mt. Ranier NP)</figcaption>
+            <img id="utah-weather-url" class="UtahSnowEnsemble" alt="Utah Snow Ensemble - Paradise RS"/>
+        </figure>
+    </section>
+    <script>
+        function makeUtahWeatherUrl() {
+            const date = new Date();
+            const dayOfMonth = date.getUTCDate() - 1;
+            const month = date.getUTCMonth() + 1;
+            const year = date.getFullYear();
+            const dmyString = `${year}${month}${dayOfMonth}`;
+            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_PVC54${dmyString}00F240.png`;
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            const url = makeUtahWeatherUrl();
+            console.log("Generated URL:", url);
+            document.getElementById("utah-weather-url").src = url;
+        });
+    </script>
+</body>
+</html>
