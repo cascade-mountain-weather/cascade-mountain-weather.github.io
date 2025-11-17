@@ -6,6 +6,16 @@
     <title>Cascski Alpine Insights - WA Skiing Forecasts</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<script>
+    function makeUtahWeatherUrl() {
+        const date = new Date();
+        const dayOfMonth = date.getUTCDate() - 1;
+        const month = date.getUTCMonth() + 1;
+        const year = date.getFullYear();
+        const dmyString = `${year}${month}${dayOfMonth}`;
+        return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_PVC54${dmyString}00F240.png`;
+    }
+</script>
 <body>
     <header>
         <h1>🎿 Cascski Alpine Insights</h1>
@@ -24,6 +34,10 @@
 
     <main>
         <section id="latest-post" class="hero">
+            <img id="utah-weather-url" />
+            <script>
+                document.getElementById("utah-weather-url").src = makeUtahWeatherUrl();
+            </script>
             <h2>Latest Weekend Forecast</h2>
             <div class="post-preview">
                 <h3><a href="posts/2025-01-15-weekend-forecast.html">Weekend of January 15-17, 2025: Prime Snow at Baker & Stevens</a></h3>
