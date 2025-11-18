@@ -229,7 +229,7 @@ footer p {
     opacity: 0.9;
 }
 
-.UtahSnowEnsemble {
+.PlotFormat {
     max-width: 80%;
 }
 /* Responsive Design */
@@ -262,7 +262,7 @@ footer p {
     margin-top: 0.5em;
 }
 
-/* Hover-only dropdown for "Model tools" */
+
 
 /* Align dropdown label and caret with other nav items */
 .main-nav a,
@@ -333,6 +333,15 @@ footer p {
     right: auto;
     top: calc(100% + 6px);
   }
+
+/* Show dropdown on hover or when .open is present */
+.nav-item.dropdown:hover .dropdown-menu,
+.nav-item.dropdown.open .dropdown-menu {
+    display: block;
+}
+.dropdown-menu {
+    display: none;
+}
 
 /* SHOW MENU on hover for pointer devices (desktop/laptops) */
 /* Using both :hover and :focus-within keeps it accessible for keyboard users */
