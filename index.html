@@ -34,11 +34,11 @@
     <main>
         <section id="latest-post" class="hero">
             <h2>Latest Weekend Forecast</h2>
-            <div class="post-preview">
-                <h3><a href="posts/2025-01-15-weekend-forecast.html">Weekend of January 15-17, 2025: Prime Snow at Baker & Stevens</a></h3>
-                <p class="post-date">Posted: January 15, 2025</p>
-                <p class="post-summary">Strong cold front moving through with heavy snowfall expected at Mt. Baker and Stevens Pass. Crystal Mountain also looking good for powder skiing this weekend.</p>
-                <a href="posts/2025-01-15-weekend-forecast.html" class="read-more">Read Full Forecast →</a>
+            <div class="post-preview" id="latest-post-preview">
+                <h3><a id="post-link" href="#">Loading latest forecast…</a></h3>
+                <p class="post-date" id="post-date">&nbsp;</p>
+                <p class="post-summary" id="post-summary">If you see this, the site is looking for the most recent forecast.</p>
+                <a id="read-more" href="#" class="read-more">Read Full Forecast →</a>
             </div>
         </section>
 
@@ -78,28 +78,145 @@
             </div>
         </section>
 
-        <section id="about" class="about">
-            <h2>About This Blog</h2>
-            <p>Weekly weather forecasts focused on helping skiers find the best snow conditions across Washington's premier ski areas. Each forecast includes detailed analysis of temperatures, precipitation, freezing levels, wind conditions, and longer-range outlooks.</p>
-            <p><strong>Updated:</strong> Weekly, typically Thursday or Friday for the upcoming weekend.</p>
-        </section>
-
         <section id="recent-posts" class="recent-posts">
             <h2>Recent Forecasts</h2>
-            <ul class="post-list">
-                <li>
-                    <a href="posts/2025-01-15-weekend-forecast.html">
-                        <span class="post-date">Jan 15, 2025</span>
-                        <span class="post-title">Weekend of January 15-17: Prime Snow at Baker & Stevens</span>
-                    </a>
-                </li>
+            <ul class="post-list" id="recent-posts-list">
+                <li class="placeholder">Loading recent posts…</li>
             </ul>
         </section>
     </main>
 
     <footer>
         <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
-        <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
+        <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
     </footer>
+        <!-- Load latest post summary and populate recent posts -->
+        <script>
+        (async function(){
+            const setText = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
+            const setHref = (id, href) => { const el = document.getElementById(id); if(el) el.href = href; };
+
+            async function fetchLatestSummary(){
+                try{
+                    const res = await fetch('posts/latest-post-summary.html');
+                    if(!res.ok) throw new Error('no summary');
+                    const text = await res.text();
+                    const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
+                    if(scriptMatch){
+                        try{ (new Function(scriptMatch[1]))(); }catch(e){}
+                    }
+                    const temp = document.createElement('div');
+                    temp.innerHTML = text;
+                    const tagline = (typeof post_tagline !== 'undefined' && post_tagline) ? post_tagline : (temp.querySelector('#post-tagline')?.textContent || '');
+                    const date = (typeof post_date !== 'undefined' && post_date) ? post_date : (temp.querySelector('#post-date')?.textContent || '');
+                    const summary = (typeof post_summary !== 'undefined' && post_summary) ? post_summary : (temp.querySelector('#post-summary')?.textContent || '');
+                    const href = (typeof post_href !== 'undefined' && post_href) ? post_href : (temp.querySelector('#post-href')?.getAttribute('href') || '');
+                    return {tagline,date,summary,href};
+                }catch(e){
+                    return null;
+                }
+            }
+
+            async function exists(path){
+                try{
+                    const res = await fetch(path, {method:'HEAD'});
+                    if(res && res.ok) return true;
+                    const res2 = await fetch(path);
+                    return res2 && res2.ok;
+                }catch(e){ return false; }
+            }
+
+            async function fetchPostTitle(path){
+                try{
+                    const res = await fetch(path);
+                    if(!res.ok) return null;
+                    const text = await res.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const postHeader = doc.querySelector('.post-header');
+                    if(postHeader){
+                        const h = postHeader.querySelector('h1, h2');
+                        if(h && h.textContent.trim()) return h.textContent.replace(/\s+/g,' ').trim();
+                    }
+                    const hAnywhere = doc.querySelector('h1, h2');
+                    if(hAnywhere) return hAnywhere.textContent.replace(/\s+/g,' ').trim();
+                    const t = doc.querySelector('title');
+                    if(t) return t.textContent.replace(/\s+/g,' ').trim();
+                }catch(e){}
+                return null;
+            }
+
+            function dateToPath(d){
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth()+1).padStart(2,'0');
+                const dd = String(d.getDate()).padStart(2,'0');
+                return `posts/${yyyy}-${mm}-${dd}-weekend-forecast.html`;
+            }
+
+            async function findRecentWeekends(maxDays=365, maxResults=3){
+                const results = [];
+                const today = new Date();
+                for(let i=0;i<maxDays && results.length<maxResults;i++){
+                    const d = new Date();
+                    d.setDate(today.getDate()-i);
+                    const path = dateToPath(d);
+                    if(await exists(path)){
+                        const title = await fetchPostTitle(path);
+                        results.push({href:path, date:d, title});
+                    }
+                }
+                return results;
+            }
+
+            async function findLatestWeekend(maxDays=90){
+                const r = await findRecentWeekends(maxDays,1);
+                return r.length? r[0] : null;
+            }
+
+            // populate latest post area (existing behavior)
+            const summary = await fetchLatestSummary();
+            let href = summary && summary.href ? summary.href : '';
+            if(!href){
+                const found = await findLatestWeekend(90);
+                if(found) href = found.href;
+            }
+            if(summary){
+                if(summary.tagline) setText('post-link', summary.tagline);
+                if(summary.date) setText('post-date', 'Posted: ' + summary.date);
+                if(summary.summary) setText('post-summary', summary.summary);
+            }
+            if(href){
+                setHref('post-link', href);
+                setHref('read-more', href);
+            } else {
+                setText('post-link', 'No recent forecast found');
+                setText('read-more', '');
+            }
+
+            // populate up to 3 recent posts
+            const recentContainer = document.getElementById('recent-posts-list');
+            if(recentContainer){
+                recentContainer.innerHTML = '<li class="placeholder">Searching for recent posts…</li>';
+                const recent = await findRecentWeekends(365, 3);
+                recentContainer.innerHTML = '';
+                if(recent.length===0){
+                    recentContainer.innerHTML = '<li>No recent posts found.</li>';
+                } else {
+                    for(const p of recent){
+                        const li = document.createElement('li');
+                        const a = document.createElement('a'); a.href = p.href;
+                        const spanDate = document.createElement('span'); spanDate.className='post-date';
+                        spanDate.textContent = p.date.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+                        const spanTitle = document.createElement('span'); spanTitle.className='post-title';
+                        spanTitle.textContent = p.title ? p.title : p.href.split('/').pop().replace(/-/g,' ').replace('.html','');
+                        a.appendChild(spanDate); a.appendChild(document.createTextNode(' ')); a.appendChild(spanTitle);
+                        li.appendChild(a);
+                        recentContainer.appendChild(li);
+                    }
+                }
+            }
+
+        })();
+        </script>
 </body>
 </html>

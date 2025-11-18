@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forecast Archive | Dawg Winter Weather Blog</title>
+    <title>Forecast Archive | Cascski Alpine Insights </title>
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -25,33 +25,11 @@
     <main>
         <section class="archive">
             <h2>📚 Forecast Archive</h2>
-            
-            <div class="archive-section">
-                <h3>January 2025</h3>
-                <ul class="post-list">
-                    <li>
-                        <a href="2025-01-15-weekend-forecast.html">
-                            <span class="post-date">Jan 15, 2025</span>
-                            <span class="post-title">Weekend of January 15-17: Prime Snow at Baker & Stevens</span>
-                        </a>
-                    </li>
-                </ul>
+
+            <div id="archive-list">
+                <p>Loading archive…</p>
             </div>
-            
-            <!-- Add more months as you create posts -->
-            <!--
-            <div class="archive-section">
-                <h3>December 2024</h3>
-                <ul class="post-list">
-                    <li>
-                        <a href="2024-12-XX-weekend-forecast.html">
-                            <span class="post-date">Dec XX, 2024</span>
-                            <span class="post-title">Your Post Title</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            -->
+
         </section>
         
         <section class="about">
@@ -64,5 +42,126 @@
         <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
         <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
     </footer>
+        <script>
+        (function(){
+            // Config: earliest date to scan (inclusive). Edit as needed to cover all posts.
+            const START_DATE = new Date('2025-01-01');
+            const END_DATE = new Date(); // today
+            const CONCURRENCY = 12; // number of parallel probes
+
+            function formatFilename(d){
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth()+1).padStart(2,'0');
+                const dd = String(d.getDate()).padStart(2,'0');
+                return `${yyyy}-${mm}-${dd}-weekend-forecast.html`;
+            }
+
+            async function exists(href){
+                try{
+                    const head = await fetch(href, {method:'HEAD'});
+                    if(head && head.ok) return true;
+                    // Some hosts don't allow HEAD — fall back to GET but only check status
+                    const get = await fetch(href, {method:'GET'});
+                    return get && get.ok;
+                }catch(e){
+                    return false;
+                }
+            }
+
+            async function fetchTitle(href){
+                try{
+                    const res = await fetch(href);
+                    if(!res.ok) return null;
+                    const text = await res.text();
+                    // Prefer the title inside an element with class "post-header"
+                    try{
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+                        const postHeader = doc.querySelector('.post-header');
+                        if(postHeader){
+                            const h = postHeader.querySelector('h1, h2');
+                            if(h && h.textContent.trim()) return h.textContent.replace(/\s+/g,' ').trim();
+                        }
+                    }catch(e){}
+                    // Fallback: try to find an H1 or H2 anywhere
+                    const matchH = text.match(/<(h1|h2)[^>]*>([\s\S]*?)<\/(h1|h2)>/i);
+                    if(matchH) return matchH[2].replace(/\s+/g,' ').trim();
+                    // Final fallback: use the document <title>
+                    const matchT = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+                    if(matchT) return matchT[1].replace(/\s+/g,' ').trim();
+                }catch(e){}
+                return null;
+            }
+
+            function dayIterator(start, end){
+                const arr = [];
+                let d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+                const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                while(d <= last){ arr.push(new Date(d)); d.setDate(d.getDate()+1); }
+                return arr;
+            }
+
+            async function scan(){
+                const container = document.getElementById('archive-list');
+                container.innerHTML = '<p>Scanning posts — this may take a few seconds...</p>';
+                const days = dayIterator(START_DATE, END_DATE);
+                const results = [];
+
+                // probe in batches to limit concurrent requests
+                for(let i=0;i<days.length;i+=CONCURRENCY){
+                    const batch = days.slice(i, i+CONCURRENCY).map(async d => {
+                        const fname = formatFilename(d);
+                        if(await exists(fname)){
+                            const title = await fetchTitle(fname);
+                            return {date: new Date(d), href: fname, title};
+                        }
+                        return null;
+                    });
+                    const settled = await Promise.all(batch);
+                    for(const r of settled) if(r) results.push(r);
+                }
+
+                if(results.length===0){
+                    container.innerHTML = '<p>No archive posts found in the scanned date range.</p>';
+                    return;
+                }
+
+                // sort newest -> oldest
+                results.sort((a,b)=> b.date - a.date);
+
+                // group by month-year
+                const groups = {};
+                for(const p of results){
+                    const key = p.date.toLocaleString(undefined, {year:'numeric', month:'long'});
+                    if(!groups[key]) groups[key]=[];
+                    groups[key].push(p);
+                }
+
+                // render
+                container.innerHTML = '';
+                for(const key of Object.keys(groups)){
+                    const section = document.createElement('div');
+                    section.className = 'archive-section';
+                    const h3 = document.createElement('h3'); h3.textContent = key; section.appendChild(h3);
+                    const ul = document.createElement('ul'); ul.className = 'post-list';
+                    for(const p of groups[key]){
+                        const li = document.createElement('li');
+                        const a = document.createElement('a'); a.href = p.href;
+                        const spanDate = document.createElement('span'); spanDate.className='post-date';
+                        spanDate.textContent = p.date.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+                        const spanTitle = document.createElement('span'); spanTitle.className='post-title';
+                        spanTitle.textContent = p.title ? p.title : `Weekend of ${spanDate.textContent}`;
+                        a.appendChild(spanDate); a.appendChild(document.createTextNode(' ')); a.appendChild(spanTitle);
+                        li.appendChild(a); ul.appendChild(li);
+                    }
+                    section.appendChild(ul);
+                    container.appendChild(section);
+                }
+            }
+
+            // Run scan asynchronously — keep UI responsive
+            setTimeout(scan, 20);
+        })();
+        </script>
 </body>
 </html>
