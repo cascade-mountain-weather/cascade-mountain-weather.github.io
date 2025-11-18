@@ -211,6 +211,18 @@ h3 {
     color: #2a5298;
 }
 
+/* Make post dates larger and more legible; include a slightly smaller size on narrow screens */
+@media (min-width: 480px) {
+    .post-list .post-date {
+        font-size: 1.05rem;
+    }
+}
+@media (max-width: 479px) {
+    .post-list .post-date {
+        font-size: 0.98rem;
+    }
+}
+
 .post-list .post-title {
     flex-grow: 1;
 }
@@ -361,3 +373,4 @@ footer p {
   }
   /* If your mobile nav is vertical, ensure overall nav layout adapts, but submenu will remain hidden */
   .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
+}
