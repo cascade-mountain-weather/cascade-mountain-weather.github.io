@@ -14,13 +14,22 @@
 
     <nav>
         <ul>
-            <li><a href="../index.html">Home</a></li>
+            <a href="../index.html">Home</a>
             <li><a href="../index.html#latest-post">Latest Forecast</a></li>
             <li><a href="../index.html#ski-areas">Ski Areas</a></li>
-            <li><a href="archive.html" class="active">Archive</a></li>
+            <li><a href="../posts/archive.html">Archive</a></li>
             <li><a href="../verification.html">Verification</a></li>
+            <li class="nav-item dropdown">
+                <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+                <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
+                  <li role="none"><a role="menuitem" href="../tools/model-tools-current-weather.html">Current Weather</a></li>
+                  <li role="none"><a role="menuitem" href="../tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
+                  <li role="none"><a role="menuitem" href="../tools/model-tools-precipitation.html">Precipitation</a></li>
+                </ul>
+              </li>
+            <li><a href="../about.html">About</a></li>
         </ul>
-    </nav>
+      </nav>
 
     <main>
         <section class="archive">
@@ -163,5 +172,19 @@
             setTimeout(scan, 20);
         })();
         </script>
+      
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdown = document.querySelector('.nav-item.dropdown');
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      toggle.addEventListener('click', function(e) {
+        if (window.innerWidth <= 800) {
+          e.preventDefault();
+          dropdown.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+        }
+      });
+    });
+    </script>
 </body>
 </html>

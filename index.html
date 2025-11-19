@@ -219,5 +219,19 @@
 
         })();
         </script>
+      
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdown = document.querySelector('.nav-item.dropdown');
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      toggle.addEventListener('click', function(e) {
+        if (window.innerWidth <= 800) {
+          e.preventDefault();
+          dropdown.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+        }
+      });
+    });
+    </script>
 </body>
 </html>
