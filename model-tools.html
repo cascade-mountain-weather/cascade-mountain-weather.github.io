@@ -46,13 +46,26 @@
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <p>© Cascski Alpine Insights</p>
-    </div>
-  </footer>
+  <footer>
+    <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+    <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
+</footer>
 
   <script src="assets/header.js" defer></script>
   <script src="scripts/model-tools.js" defer></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdown = document.querySelector('.nav-item.dropdown');
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      toggle.addEventListener('click', function(e) {
+        if (window.innerWidth <= 800) {
+          e.preventDefault();
+          dropdown.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+        }
+      });
+    });
+    </script>
 </body>
 </html>
