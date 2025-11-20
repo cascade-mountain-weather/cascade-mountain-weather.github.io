@@ -83,8 +83,8 @@
 </head>
 <body>
     <header>
-        <h1>🎿 Cascski Alpine Insights</h1>
-        <p class="tagline">Washington Ski Area Weather & Snow Forecasts</p>
+        <h1>Cascski Alpine Insights</h1>
+        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
 
     <nav>
@@ -93,7 +93,7 @@
             <li><a href="index.html#latest-post">Latest Forecast</a></li>
             <li><a href="index.html#ski-areas">Ski Areas</a></li>
             <li><a href="posts/archive.html">Archive</a></li>
-            <li><a href="verification.html">Verification</a></li>
+            <li><a href="verification.html" class="active">Verification</a></li>
             <li class="nav-item dropdown">
                 <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
                 <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
@@ -237,18 +237,6 @@
         <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
         <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
     </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const dropdown = document.querySelector('.nav-item.dropdown');
-          const toggle = dropdown.querySelector('.dropdown-toggle');
-          toggle.addEventListener('click', function(e) {
-            if (window.innerWidth <= 800) {
-              e.preventDefault();
-              dropdown.classList.toggle('open');
-              toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
-            }
-          });
-        });
-        </script>
+    <script src="assets/header.js" defer></script>
 </body>
 </html>
