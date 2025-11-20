@@ -10,8 +10,8 @@
 
 <body>
     <header>
-        <h1>Cascski Alpine Insights</h1>
-        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
+        <h1>🎿 Cascski Alpine Insights</h1>
+        <p class="tagline">Washington Ski Area Weather & Snow Forecasts</p>
     </header>
 
     <nav>
@@ -34,30 +34,26 @@
     </nav>
     <section id="latest-post" class="hero">
         <header>
-          <p class="PlotTitle"> Mt. Baker Ski Area - Heather Meadows (~4700')</p>
+          <p class="PlotTitle"> Blewett Pass (~4200')</p>
         </header>
       </section>
 
     <section id="latest-post" class="hero">
         <figure>
             <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_WA543.png" alt="West WRF Meteogram Heather Meadows" />
+            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
         </figure>
         <figure>
-            <figcaption class="PlotTitle">CW3E West-WRF Ensemble QPF</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_WA543.png" alt="West WRF Meteogram Heather Meadows" />
-          </figure>
+          <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
+          <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
+        </figure>
         <figure>
             <figcaption class="PlotTitle">Utah Snow Ensemble</figcaption>
-            <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Heather Meadows"/>
+            <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Blewett Pass"/>
         </figure>
         <figure>
             <figcaption class="PlotTitle">Utah RRFS QSF</figcaption>
-            <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Heather Meadows"/>
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">Upper Skagit Freezing Level Forecast</figcaption>
-            <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17110005_current.png"alt="UpperSkagitFrzLvl"/>
+            <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Blewett Pass"/>
         </figure>
     </section>
     <script>
@@ -86,5 +82,18 @@
             document.getElementById("utah-rrfsqsf-url").src = url2;
         });
     </script>
-    <script src="../assets/header.js" defer></script>
+      
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdown = document.querySelector('.nav-item.dropdown');
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      toggle.addEventListener('click', function(e) {
+        if (window.innerWidth <= 800) {
+          e.preventDefault();
+          dropdown.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+        }
+      });
+    });
+    </script>
 </body>

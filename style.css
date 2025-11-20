@@ -101,8 +101,21 @@ h3 {
 }
 
 /* Hero Section */
-.hero {
+/* .hero {
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+} */
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem; /* space between figures */
+}
+
+.hero figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .post-preview h3 a {
@@ -323,7 +336,7 @@ figure .SynopticPlot img {
 }
 
 .PlotTitle {
-    font-size: 2em;
+    font-size: 3em;
     font-weight: bold;
     margin-top: 0.5em;
 }
@@ -405,9 +418,6 @@ nav a,
 .nav-item.dropdown:hover .dropdown-menu,
 .nav-item.dropdown.open .dropdown-menu {
     display: block;
-}
-.dropdown-menu {
-    display: none;
 }
 
 /* SHOW MENU on hover for pointer devices (desktop/laptops) */

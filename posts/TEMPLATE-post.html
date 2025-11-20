@@ -15,10 +15,10 @@
 
     <nav>
         <ul>
-            <li><a href="../index.html">Home</a></li>
+            <a href="../index.html">Home</a>
             <li><a href="../index.html#latest-post">Latest Forecast</a></li>
             <li><a href="../index.html#ski-areas">Ski Areas</a></li>
-            <li><a href="archive.html">Archive</a></li>
+            <li><a href="../posts/archive.html">Archive</a></li>
             <li><a href="../verification.html">Verification</a></li>
             <li class="nav-item dropdown">
     <script src="../assets/header.js" defer></script>
@@ -31,7 +31,7 @@
               </li>
             <li><a href="../about.html">About</a></li>
         </ul>
-    </nav>
+      </nav>
 
     <main>
         <article class="post">
@@ -224,5 +224,19 @@
         <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
         <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
     </footer>
+      
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdown = document.querySelector('.nav-item.dropdown');
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      toggle.addEventListener('click', function(e) {
+        if (window.innerWidth <= 800) {
+          e.preventDefault();
+          dropdown.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+        }
+      });
+    });
+    </script>
 </body>
 </html>
