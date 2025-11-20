@@ -14,11 +14,16 @@ body {
 
 /* Header */
 header {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    /* Use scenic photo with a subtle dark overlay so white text remains readable */
+    background: linear-gradient(rgba(16,32,64,0.45), rgba(16,32,64,0.25)), url('assets/images/snoq_pass_view.JPG');
+    background-size: cover;
+    background-position: center center;
     color: white;
     padding: 2rem 1rem;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* ensure the header is tall enough to show the image nicely */
+    min-height: 160px;
 }
 
 header h1 {
@@ -257,6 +262,55 @@ footer p {
 .PlotFormat {
     max-width: 80%;
 }
+
+/* Responsive figure sizing: make large figures occupy ~80% of the viewport width
+     but clamp to reasonable min/max sizes so they remain legible. Images are
+     centered and keep their aspect ratio. */
+.UtahSnowEnsemble,
+.PlotFormat,
+figure img {
+    display: block;
+    width: clamp(320px, 70vw, 1200px); /* dynamic: min 320px, ideal 80% viewport, max 1200px */
+    max-width: 100%;
+    height: auto;
+    margin: 0.75rem auto;
+}
+
+/* Synoptic tools grid: two columns (GFS left, ECMWF right) with multiple rows.
+     Each .tool-card holds a product title and an image. On narrow screens the
+     layout collapses to a single column. */
+.synoptic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 2rem;
+    align-items: start;
+}
+.tool-card {
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    text-align: center;
+}
+.tool-card .tool-title {
+    font-weight: 700;
+    color: #1e3c72;
+    margin: 0.25rem 0 0.5rem 0;
+}
+
+@media (max-width: 900px) {
+    .synoptic-grid { grid-template-columns: 1fr; }
+}
+
+/* create a new figure class for synoptic plots that are slightly smaller */
+.SynopticPlot,
+figure .SynopticPlot img {
+    display: block;
+    width: clamp(280px, 50vw, 1000px); /* dynamic: min 280px, ideal 60% viewport, max 1000px */
+    max-width: 100%;
+    height: auto;
+    margin: 0.75rem auto;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
     header h1 {
@@ -290,15 +344,15 @@ footer p {
 
 
 /* Align dropdown label and caret with other nav items */
-.main-nav a,
-.main-nav .dropdown-toggle {
-  display: inline-flex;        /* allows vertical centering of text + caret */
-  align-items: center;         /* center vertically */
-  gap: 0.35rem;                /* small space between text and caret if present */
-  line-height: 1;              /* avoid extra internal leading */
-  vertical-align: middle;      /* helps when inline with other elements */
-  padding-top: 0.25rem;        /* match existing nav padding (tweak if needed) */
-  padding-bottom: 0.25rem;
+/* Ensure the dropdown toggle matches the nav link sizing so it aligns vertically */
+nav a,
+.nav-item.dropdown > .dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1;
+    vertical-align: middle;
+    padding: 1rem 1.5rem; /* match `nav a` padding for consistent height */
 }
 
 /* If you previously set larger padding or a different font-size for .dropdown-toggle, override here */
@@ -319,27 +373,28 @@ footer p {
 
 /* Dropdown menu: hidden by default */
 .dropdown-menu {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 6px);
-  min-width: 200px;
-  background: #fff;
-  border: 1px solid rgba(15,23,42,0.06);
-  border-radius: 6px;
-  box-shadow: 0 8px 20px rgba(2,6,23,0.06);
-  padding: 0.35rem 0;
-  display: none;
-  z-index: 40;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 2px); /* small gap so menu doesn't overlap the toggle */
+    min-width: 200px;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,0.06);
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+    padding: 0.25rem 0;
+    display: none;
+    z-index: 40;
+    pointer-events: auto;
 }
 
 /* Menu items */
 .dropdown-menu li { list-style: none; }
 .dropdown-menu a {
-  display: block;
-  padding: 0.5rem 0.9rem;
-  color: #0f172a;
-  text-decoration: none;
-  font-size: 0.95rem;
+    display: block;
+    padding: 0.65rem 1rem; /* larger click/tap area */
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 0.98rem;
 }
 .dropdown-menu a:hover,
 .dropdown-menu a:focus {
@@ -350,14 +405,14 @@ footer p {
 .nav-item.dropdown {
     position: relative;
     display: inline-block;
-  }
-  
-  .nav-item.dropdown > .dropdown-menu {
+}
+
+.nav-item.dropdown > .dropdown-menu {
     left: 50%;
     transform: translateX(-50%);
     right: auto;
-    top: calc(100% + 6px);
-  }
+    top: calc(100% + 2px); /* keep consistent small gap */
+}
 
 /* Show dropdown on hover or when .open is present */
 .nav-item.dropdown:hover .dropdown-menu,
@@ -378,24 +433,18 @@ footer p {
 /* This prevents the dropdown from opening on taps — users should navigate to model-tools.html */
 @media (max-width: 800px) {
     .dropdown-menu {
-      position: static;
-      box-shadow: none;
-      border: none;
-      padding: 0;
-      margin-top: 0.25rem;
-      min-width: auto;
-      display: none;
-      text-align: center;
-      margin: 0 auto;
-      width: 100%;
+        position: static;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin-top: 0.25rem;
+        min-width: auto;
+        display: none;
     }
-    .nav-item.dropdown.open > .dropdown-menu {
-      display: block;
-    }
-    .dropdown-menu a {
-        padding-left: 0;
-        padding-right: 0;
-        display: block;
-      }
-    .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
+  .dropdown-menu a {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
+  /* If your mobile nav is vertical, ensure overall nav layout adapts, but submenu will remain hidden */
+  .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
+}

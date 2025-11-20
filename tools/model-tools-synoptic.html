@@ -10,8 +10,8 @@
 <!-- This script will dynamically pull the png -->
 <body>
     <header>
-        <h1>🎿 Cascski Alpine Insights</h1>
-        <p class="tagline">Washington Ski Area Weather & Snow Forecasts</p>
+        <h1>Cascski Alpine Insights</h1>
+        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
   
     <nav>
@@ -33,15 +33,50 @@
         </ul>
     </nav>
 
-    <section id="latest-post" class="hero">
-        <figure>
-            <figcaption class="PlotTitle">GFS Integrated Vapor Transport</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F24.png" alt="GFS Integrated Vapor Transport" />
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">GFS 500mb Vorticity and Geopotential Height</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F24.png" alt="GFS 500mb Vorticity and Geopotential Height" />
-        </figure>
-    </section>
+        <section id="latest-post" class="hero">
+            <div class="synoptic-grid">
+                <!-- Row: Integrated Vapor Transport -->
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F24.png" alt="GFS Integrated Vapor Transport" />
+                    </figure>
+                </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F12.png" alt="ECMWF Integrated Vapor Transport (placeholder)" />
+                    </figure>
+                </div>
+
+                <!-- Row: 500 mb Vorticity & Geopotential Height -->
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F24.png" alt="GFS 500mb Vorticity and Geopotential Height" />
+                    </figure>
+                </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">ECMWF — 500mb Vorticity &amp; Geopotential Height </figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F36.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
+                    </figure>
+                </div>
+                <!-- Row: AR Timeseries -->
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GEFS — AR Landfall Tool</figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gefs/v12/LFT/US-west/GEFS_LandfallTool_250_coast_current.png" alt="GEFS AR Landfall Tool" />
+                    </figure>
+                </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">EPS — AR Landfall Tool</figcaption>
+                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ensemble/LandfallTool/US-west/ECMWF_LandfallTool_250_coast_current.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
+                    </figure>
+                </div>
+            </div>
+        </section>
+    <script src="../assets/header.js" defer></script>
 </body>
 </html>
