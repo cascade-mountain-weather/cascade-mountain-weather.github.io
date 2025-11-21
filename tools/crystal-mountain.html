@@ -32,30 +32,52 @@
               <li><a href="../about.html">About</a></li>
         </ul>
     </nav>
-    <section id="latest-post" class="hero">
-        <header>
-          <p class="PlotTitle"> Crystal Mountain/Paradise RS (~5000')</p>
-        </header>
-      </section>
 
-    <section id="latest-post" class="hero">
-        <figure>
-            <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise RS" />
-        </figure>
-        <figure>
-          <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
-          <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise RS" />
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">Utah Snow Ensemble</figcaption>
-            <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Paradise RS"/>
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">Utah RRFS QSF</figcaption>
-            <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Paradise RS"/>
-        </figure>
-    </section>
+      <section id="latest-post" class="hero">
+        <h1 class="PlotTitle">Crystal Mountain/Paradise RS (~4400')</h1>
+        <div class="synoptic-grid">
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">CW3E West-WRF Ensemble Snow</figcaption>
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise RS" />
+            </figure>
+          </div>
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">CW3E West-WRF Ensemble Precipitation</figcaption>
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise RS" />
+            </figure>
+          </div>
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">Utah Snow Ensemble - 10-day forecast</figcaption>
+              <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Crystal Mountain"/>
+            </figure>
+          </div>
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">RRFS Snow Ensemble - 2.5-day forecast</figcaption>
+              <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Crystal Mountain"/>
+            </figure>
+          </div>
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">Puyallup River Basin Freezing Level Forecast - ECMWF</figcaption>
+              <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17110014_current.png" alt="SkykomishFrzLvl"/>
+            </figure>
+          </div>
+          <div class="tool-card">
+            <figure>
+              <figcaption class="tool-title">Puyallup River Basin Freezing Level Forecast - GEFS</figcaption>
+              <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17110014_current.png" alt="SkykomishFrzLvl"/>
+            </figure>
+          </div>
+        </div>
+      </section>
+      <footer>
+        <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+        <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
+      </footer>
     <script>
         function makeUtahWeatherUrl() {
             const date = new Date();
@@ -63,7 +85,7 @@
             const month = date.getUTCMonth() + 1;
             const year = date.getFullYear();
             const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_PVC54${dmyString}00F240.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_CMT${dmyString}00F240.png`;
         }
 
         function makeUtahRrfsqsfUrl() {
@@ -72,7 +94,7 @@
             const month = date.getUTCMonth() + 1;
             const year = date.getFullYear();
             const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_PVC54${dmyString}00F060.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_CMT${dmyString}00F060.png`;
         }
     
         document.addEventListener("DOMContentLoaded", function() {

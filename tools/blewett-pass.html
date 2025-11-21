@@ -32,30 +32,40 @@
               <li><a href="../about.html">About</a></li>
         </ul>
     </nav>
-    <section id="latest-post" class="hero">
-        <header>
-          <p class="PlotTitle"> Blewett Pass (~4200')</p>
-        </header>
-      </section>
 
     <section id="latest-post" class="hero">
-        <figure>
-            <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
-            <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
-        </figure>
-        <figure>
-          <figcaption class="PlotTitle">CW3E West-WRF Ensemble Meteogram</figcaption>
-          <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">Utah Snow Ensemble</figcaption>
-            <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Blewett Pass"/>
-        </figure>
-        <figure>
-            <figcaption class="PlotTitle">Utah RRFS QSF</figcaption>
-            <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Blewett Pass"/>
-        </figure>
+      <h1 class="PlotTitle"> Blewett Pass (~4200')</h1>
+      <div class="synoptic-grid">
+        <div class="tool-card">
+          <figure>
+              <figcaption class="tool-title">CW3E West-WRF Ensemble Snow</figcaption>
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
+          </figure>
+      </div>
+      <div class="tool-card">
+          <figure>
+              <figcaption class="tool-title">CW3E West-WRF Ensemble Precipitation</figcaption>
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_US97.png" alt="West WRF Meteogram Blewett Pass" />
+          </figure>
+      </div>
+      <div class="tool-card">
+          <figure>
+              <figcaption class="tool-title">Wenatchee River Basin Freezing Level Forecast - ECMWF</figcaption>
+              <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17020011_current.png" alt="WenatcheeFrzLvl"/>
+          </figure>
+      </div>
+      <div class="tool-card">
+          <figure>
+              <figcaption class="tool-title">Wenatchee River Basin Freezing Level Forecast - GEFS</figcaption>
+              <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17020011_current.png" alt="WenatcheeFrzLvl"/>
+          </figure>
+      </div>
+      </div>
     </section>
+    <footer>
+      <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+      <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
+    </footer>
     <script>
         function makeUtahWeatherUrl() {
             const date = new Date();
