@@ -214,6 +214,31 @@
     background-color: #1e3c72;
 }
 
+p {
+    margin-bottom: 1em;
+  }
+  
+.figure-half {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .figure-half img {
+    width: 50%;
+    min-width: 200px;
+    max-width: 400px;
+    height: auto;
+    flex-shrink: 0;
+  }
+  
+  .figure-half p {
+    flex: 1;
+    margin: 0;
+    align-self: center;
+  }
+
 /* Responsive */
 @media (max-width: 768px) {
     .post-header {
