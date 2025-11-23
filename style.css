@@ -448,3 +448,30 @@ nav a,
   /* If your mobile nav is vertical, ensure overall nav layout adapts, but submenu will remain hidden */
   .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
 }
+
+.data-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced from 24px */
+    max-width: 400px;
+    margin: 32px auto;
+  }
+  .data-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0; /* Reduced from 18px 0 */
+    border-bottom: 1px solid #eee;
+  }
+  .value {
+    font-size: 2.2em;
+    font-weight: bold;
+    margin-bottom: 2px; /* Reduced from 6px */
+  }
+  .label {
+    font-size: 1em;
+    color: #555;
+  }
+  .data-row:last-child {
+    border-bottom: none;
+  }
