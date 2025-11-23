@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Synoptic-scale Tools</title>
+        <link rel="stylesheet" href="../style.css">
+    </head>
+  
+<body>
+    <header>
+        <h1>Cascski Alpine Insights</h1>
+        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
+    </header>
+  
+    <nav>
+      <ul>
+          <a href="../index.html">Home</a>
+          <li><a href="../index.html#latest-post">Latest Forecast</a></li>
+          <li><a href="../index.html#ski-areas">Ski Areas</a></li>
+          <li><a href="../posts/archive.html">Archive</a></li>
+          <li><a href="../verification.html">Verification</a></li>
+          <li class="nav-item dropdown">
+              <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+              <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
+                <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
+                <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
+                <li role="none"><a role="menuitem" href="model-tools-precipitation.html">Precipitation</a></li>
+              </ul>
+            </li>
+            <li><a href="../about.html">About</a></li>
+      </ul>
+  </nav>
+
+  <main>
+    <section id="ski-areas" class="ski-areas">
+        <h2>Latest Conditions</h2>
+        <div class="area-grid">
+            <a href="mt-baker.html" class="area-card">
+                <h3>Mt. Baker Backcountry Heather Meadows</h3>
+                <p class="elevation">Base: 3,500' | Summit: 5,089'</p>
+            </a>
+            <a href="stevens-pass.html" class="area-card">
+              <h3>Stevens Pass</h3>
+              <p>Central Cascades</p>
+              <p class="elevation">Base: 4,061' | Summit: 5,845'</p>
+              <ul id="stevens-snow-list">
+                <li>Mid-mountain (4800') air temp: 34.65&deg;F</li>
+                <li>Summit (5300') air temp: 34.19&deg;F</li>
+                <li>Mid-mountain (4800') snow interval: 162.69in</li>
+                <li>Mid-mountain (4800') snow depth: 7.72in</li>
+              </ul>
+          </a>
+            <a href="snoqualmie-pass.html" class="area-card">
+                <h3>Snoqualmie Pass</h3>
+                <p>Summit Central, West, East, Alpental</p>
+                <p class="elevation">Base: 3,000' | Summit: 5,420'</p>
+            </a>
+            <a href="blewett-pass.html" class="area-card">
+                <h3>Blewett Pass</h3>
+                <p>East of Cascades - Backcountry</p>
+                <p class="elevation">Elevation: ~4,100'</p>
+            </a>
+            <a href="crystal-mountain.html" class="area-card">
+                <h3>Crystal Mountain</h3>
+                <p>Mt. Rainier Area - Largest in WA</p>
+                <p class="elevation">Base: 4,400' | Summit: 7,012'</p>
+            </a>
+            <a href="white-pass.html" class="area-card">
+                <h3>White Pass</h3>
+                <p>South Cascades - US 12 Corridor</p>
+                <p class="elevation">Base: 4,500' | Summit: 6,000'</p>
+            </a>
+        </div>
+    </section>
+</main>
+    <script src="../assets/header.js" defer></script>
+    <script>
+      fetch('../data/stevens_snow.json') // or '../data/stevens_snow.json' if in a subfolder
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          const list = document.getElementById('stevens-snow-list');
+          if (list) {
+            list.innerHTML = `
+              <li>24 Hour Snowfall: ${data['24_hour_snowfall']}</li>
+              <li>48 Hour Snowfall: ${data['48_hour_snowfall']}</li>
+              <li>7 Day Snowfall: ${data['7_day_snowfall']}</li>
+              <li>Base Depth: ${data['base_depth']}</li>
+            `;
+          }
+        })
+        .catch(error => {
+          console.error('Error loading Stevens Pass snow data:', error);
+        });
+      </script>
+</body>
+<footer>
+  <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+  <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
+</footer>
+</html>
