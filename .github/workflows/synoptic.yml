@@ -1,8 +1,8 @@
-name: Fetch Synoptic Weather Data
+name: Fetch Current Weather Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 * * * *'   # Runs at minute 0 of every hour
   workflow_dispatch:
 
 jobs:
@@ -17,4 +17,4 @@ jobs:
       - name: Install requests
         run: pip install requests
       - name: Run fetch script
-        run: python fetch_synoptic.py
+        run: python collect_weather_data.py
