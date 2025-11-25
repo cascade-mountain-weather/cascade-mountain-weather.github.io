@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cascski Alpine Insights - WA Skiing Forecasts</title>
+    <title>Cascade Mountain Weather - WA Skiing Forecasts</title>
     <link rel="stylesheet" href="style.css">
     <style>
       .about-container {
@@ -70,18 +70,23 @@
 
 <body>
   <header>
-    <h1>Cascski Alpine Insights</h1>
+    <h1>Cascade Mountain Weather</h1>
     <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
   </header>
   <nav>
-    <ul>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+    <ul id="primary-nav">
         <a href="index.html">Home</a>
         <li><a href="index.html#latest-post">Latest Forecast</a></li>
         <li><a href="index.html#ski-areas">Ski Areas</a></li>
         <li><a href="posts/archive.html">Archive</a></li>
         <li><a href="verification.html">Verification</a></li>
         <li class="nav-item dropdown">
-            <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+          <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
             <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
               <li role="none"><a role="menuitem" href="tools/model-tools-current-weather.html">Current Weather</a></li>
               <li role="none"><a role="menuitem" href="tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
@@ -92,10 +97,9 @@
     </ul>
   </nav>
     <main>
-      <div class="about-container">
-          <script src="assets/header.js" defer></script>
+        <div class="about-container">
         <p>
-          Cascski Alpine Insights is dedicated to providing accurate, up-to-date weather and snow forecasts for Washington's ski areas. Our passion for skiing and meteorology drives us to help you make the most of every powder day.
+          Cascade Mountain Weather is dedicated to providing accurate, up-to-date weather and snow forecasts for Washington's ski areas. Our passion for skiing and meteorology drives us to help you make the most of every powder day.
         </p>
         <h2 style="text-align:center; margin-bottom:1.5rem;">Meet the Team</h2>
         <div class="team-section">
@@ -118,18 +122,6 @@
         </div>
       </div>
     </main>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const dropdown = document.querySelector('.nav-item.dropdown');
-        const toggle = dropdown.querySelector('.dropdown-toggle');
-        toggle.addEventListener('click', function(e) {
-          if (window.innerWidth <= 800) {
-            e.preventDefault();
-            dropdown.classList.toggle('open');
-            toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
-          }
-        });
-      });
-      </script>
+    <script src="assets/header.js" defer></script>
 </body>
 </html>

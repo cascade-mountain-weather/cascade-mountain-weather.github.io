@@ -6,30 +6,81 @@
     const dropdown = dropdownToggle.closest('.nav-item.dropdown');
     let leaveTimer = null;
 
-    // Toggle on click/tap
+    // Toggle on click/tap: one press to open, one press to close
     dropdownToggle.addEventListener('click', function(e){
       e.preventDefault();
-      dropdown.classList.toggle('open');
+      e.stopPropagation();           // ADD THIS LINE
+      const isOpen = dropdown.classList.toggle('open');
+      dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     });
 
-    // Keep open while mouse is over; delay closing so small pointer gaps don't hide the menu
-    dropdown.addEventListener('mouseenter', function(){
-      clearTimeout(leaveTimer);
-      dropdown.classList.add('open');
-    });
-    dropdown.addEventListener('mouseleave', function(){
-      clearTimeout(leaveTimer);
-      leaveTimer = setTimeout(function(){ dropdown.classList.remove('open'); }, 200);
-    });
-
-    // Close when clicking outside
+    // Close when clicking outside (ignore clicks on the toggle itself)
     document.addEventListener('click', function(e){
-      if(!dropdown.contains(e.target)) dropdown.classList.remove('open');
+      if(dropdownToggle.contains(e.target)) return;
+      if(!dropdown.contains(e.target)){
+        dropdown.classList.remove('open');
+        dropdownToggle.setAttribute('aria-expanded','false');
+      }
     });
 
     // Close on Escape
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') dropdown.classList.remove('open'); });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        dropdown.classList.remove('open');
+        dropdownToggle.setAttribute('aria-expanded','false');
+      }
+    });
   }catch(err){ console.warn('header behavior error', err); }
+
+  // Mobile nav hamburger toggle
+  try{
+    const nav = document.querySelector('nav');
+    const toggle = document.querySelector('.nav-toggle');
+    if(nav && toggle){
+      const primaryNav = document.getElementById('primary-nav');
+      toggle.addEventListener('click', function(){
+        const isOpen = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      // Close menu when clicking outside on small screens
+      document.addEventListener('click', function(e){
+        if(!nav.contains(e.target) && nav.classList.contains('open')){
+          nav.classList.remove('open');
+          toggle.setAttribute('aria-expanded','false');
+        }
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape' && nav.classList.contains('open')){
+          nav.classList.remove('open');
+          toggle.setAttribute('aria-expanded','false');
+        }
+      });
+
+      // Hide hamburger when scrolling past header
+      let lastScroll = 0;
+      window.addEventListener('scroll', function(){
+        const header = document.querySelector('header');
+        if(!header) return;
+        const headerHeight = header.offsetHeight;
+        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if(currentScroll > headerHeight) {
+          toggle.classList.add('scrolled');
+          // Close menu if it's open when hiding hamburger
+          if(nav.classList.contains('open')){
+            nav.classList.remove('open');
+            toggle.setAttribute('aria-expanded','false');
+          }
+        } else {
+          toggle.classList.remove('scrolled');
+        }
+        lastScroll = currentScroll;
+      });
+    }
+  }catch(err){ console.warn('nav toggle error', err); }
 
   // Also attempt to resolve the latest forecast link and update any nav links
   (async function updateLatestNav(){
@@ -74,7 +125,7 @@
 
     // Compute an absolute URL for the site repo so links work from any page.
     // Adjust the repository base if you host under a different path.
-    const repoBase = '/' + 'Cascski-Alpine-Insights' + '/';
+    const repoBase = '/' + 'cascade-mountain-weather.github.io' + '/';
     const absolute = window.location.origin + repoBase + latestHref.replace(/^\/+/, '');
 
     // Update nav anchors that point to the index anchor for latest-post

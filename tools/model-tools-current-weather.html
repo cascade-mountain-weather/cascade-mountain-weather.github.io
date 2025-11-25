@@ -9,19 +9,24 @@
   
 <body>
     <header>
-        <h1>Cascski Alpine Insights</h1>
+        <h1>Cascade Mountain Weather</h1>
         <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
   
     <nav>
-      <ul>
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <ul id="primary-nav">
           <a href="../index.html">Home</a>
           <li><a href="../index.html#latest-post">Latest Forecast</a></li>
           <li><a href="../index.html#ski-areas">Ski Areas</a></li>
           <li><a href="../posts/archive.html">Archive</a></li>
-          <li><a href="../verification.html">Verification</a></li>
-          <li class="nav-item dropdown">
-              <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+            <li><a href="../verification.html">Verification</a></li>
+            <li class="nav-item dropdown">
+              <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
               <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
                 <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
                 <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
@@ -209,7 +214,7 @@
       </script>
 </body>
 <footer>
-  <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+  <p>Cascade Mountain Weather | Washington Ski Area Forecasts</p>
   <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
 </footer>
 </html>

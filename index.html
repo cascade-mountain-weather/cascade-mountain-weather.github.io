@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cascski Alpine Insights - WA Skiing Forecasts</title>
+    <title>Cascade Mountain Weather - WA Skiing Forecasts</title>
     <link rel="stylesheet" href="style.css">
 
     <!-- Google Analytics -->
@@ -18,19 +18,24 @@
 
 <body>
     <header>
-        <h1>Cascski Alpine Insights</h1>
+        <h1>Cascade Mountain Weather</h1>
         <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
 
     <nav>
-        <ul>
+        <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+        </button>
+        <ul id="primary-nav">
             <a href="index.html">Home</a>
             <li><a href="index.html#latest-post">Latest Forecast</a></li>
             <li><a href="index.html#ski-areas">Ski Areas</a></li>
             <li><a href="posts/archive.html">Archive</a></li>
             <li><a href="verification.html">Verification</a></li>
             <li class="nav-item dropdown">
-                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
                 <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
                   <li role="none"><a role="menuitem" href="tools/model-tools-current-weather.html">Current Weather</a></li>
                   <li role="none"><a role="menuitem" href="tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
@@ -43,7 +48,7 @@
 
     <main>
         <section id="latest-post" class="hero">
-            <h2>Latest Weekend Forecast</h2>
+            <h2>The Dendritic Growth Zone - Latest Weekend Forecast</h2>
             <div class="post-preview" id="latest-post-preview">
                 <h3><a id="post-link" href="#">Loading latest forecast…</a></h3>
                 <p class="post-date" id="post-date">&nbsp;</p>
@@ -97,7 +102,7 @@
     </main>
 
     <footer>
-        <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+        <p>Cascade Mountain Weather | Washington Ski Area Forecasts</p>
         <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
     </footer>
         <!-- Load latest post summary and populate recent posts -->
