@@ -66,7 +66,7 @@ for resort, stations in RESORTS_TO_STATIONS.items():
         RESULTS[resort]['summit'] = synoptic_api_pull(summit)
 
 # Read the template
-with open('models-tools-current-weather.tpl.html', 'r') as f:
+with open('scripts/models-tools-current-weather.tpl.html', 'r') as f:
     html = f.read()
     # Replace variables
     for area, area_data in RESULTS.items():
@@ -84,5 +84,5 @@ with open('models-tools-current-weather.tpl.html', 'r') as f:
                 html = re.sub(re.escape(var_name), replacement, html)
 
     # Write the output
-    with open('../tools/model-tools-current-weather.html', 'w') as f:
+    with open('tools/model-tools-current-weather.html', 'w') as f:
         f.write(html)
