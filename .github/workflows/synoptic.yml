@@ -17,5 +17,11 @@ jobs:
       - name: Install requests
         run: pip install requests
       - name: Run fetch script
-        run: python scripts/collect_weather_data.py
-
+        run: python fetch_synoptic.py
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add tools/model-tools-current-weather.html
+          git commit -m "Update weather data [skip ci]" || echo "No changes to commit"
+          git push
