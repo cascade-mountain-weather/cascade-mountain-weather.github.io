@@ -17,7 +17,7 @@ jobs:
       - name: Install requests
         run: pip install requests
       - name: Run fetch script
-        run: python fetch_synoptic.py
+        run: python scripts/collect_weather_data.py
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
