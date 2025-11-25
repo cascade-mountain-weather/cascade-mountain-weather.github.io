@@ -1,4 +1,4 @@
-# Cascski Alpine Insights
+# Cascade Mountain Weather
 
 A simple, easy-to-maintain weather blog focused on Washington state area forecasts. Provides weekly weekend forecasts for Mt. Baker, Stevens Pass, Snoqualmie Pass, Blewett Pass, Crystal Mountain, and White Pass.
 
