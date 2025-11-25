@@ -2,19 +2,70 @@ name: Fetch Current Weather Data
 
 on:
   schedule:
-    - cron: '0 * * * *'   # Runs at minute 0 of every hour
+    - cron: '0 * * * *'   # Runs at minute 0 of every hour (UTC)
   workflow_dispatch:
+
+# If your script commits to the repo, the workflow needs write permission on contents.
+permissions:
+  contents: write
 
 jobs:
   fetch-weather:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Debug: show repo and python info
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "Contents of repo root:"
+          ls -la
+          if [ -d scripts ]; then
+            echo "Contents of scripts/:"
+            ls -la scripts
+            echo "Show first 200 lines of collect_weather_data.py (if present):"
+            head -n 200 scripts/collect_weather_data.py || true
+          fi
+          python --version || true
+          python -c "import sys; print('sys.executable=', sys.executable)" || true
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-      - name: Install requests
-        run: pip install requests
+
+      - name: Upgrade pip and install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          else
+            python -m pip install requests
+          fi
+
       - name: Run fetch script
-        run: python scripts/collect_weather_data.py
+        # Add any required secrets here, e.g. OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        env:
+          # OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+        run: python -u scripts/collect_weather_data.py
+
+      - name: Commit and push changes (if script writes files)
+        if: ${{ always() }}
+        run: |
+          # Only push if there are changes
+          if git status --porcelain | grep .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Update weather data (action)"
+            # Push back to the branch that triggered the workflow
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
