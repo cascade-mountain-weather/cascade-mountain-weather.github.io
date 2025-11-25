@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write    # Required if your script commits to the repo
+  contents: write
 
 jobs:
   fetch-weather:
