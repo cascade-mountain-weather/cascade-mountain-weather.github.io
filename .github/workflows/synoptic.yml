@@ -27,4 +27,4 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git add tools/model-tools-current-weather.html
           git commit -m "Update weather data [skip ci]" || echo "No changes to commit"
-          git push origin HEAD:${{ github.ref }}
+          git push origin main
