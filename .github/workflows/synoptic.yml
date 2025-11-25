@@ -17,5 +17,5 @@ jobs:
       - name: Install requests
         run: pip install requests
       - name: Run fetch script
-        run: python scripts/fetch_synoptic.py
+        run: python scripts/collect_weather_data.py
 
