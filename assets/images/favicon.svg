@@ -4,26 +4,63 @@
       .snowflake { fill: #2a5298; }
     </style>
   </defs>
-  <!-- Main vertical line -->
-  <rect class="snowflake" x="47" y="5" width="6" height="90" rx="3"/>
-  <!-- Main horizontal line -->
-  <rect class="snowflake" x="5" y="47" width="90" height="6" rx="3"/>
-  <!-- Diagonal line 1 (top-left to bottom-right) -->
-  <rect class="snowflake" x="47" y="5" width="6" height="90" rx="3" transform="rotate(45 50 50)"/>
-  <!-- Diagonal line 2 (top-right to bottom-left) -->
-  <rect class="snowflake" x="47" y="5" width="6" height="90" rx="3" transform="rotate(-45 50 50)"/>
-  <!-- Center circle -->
-  <circle class="snowflake" cx="50" cy="50" r="8"/>
-  <!-- Top branch details -->
-  <rect class="snowflake" x="47" y="15" width="6" height="15" rx="3" transform="rotate(30 50 22)"/>
-  <rect class="snowflake" x="47" y="15" width="6" height="15" rx="3" transform="rotate(-30 50 22)"/>
-  <!-- Bottom branch details -->
-  <rect class="snowflake" x="47" y="70" width="6" height="15" rx="3" transform="rotate(30 50 78)"/>
-  <rect class="snowflake" x="47" y="70" width="6" height="15" rx="3" transform="rotate(-30 50 78)"/>
-  <!-- Left branch details -->
-  <rect class="snowflake" x="15" y="47" width="15" height="6" rx="3" transform="rotate(30 22 50)"/>
-  <rect class="snowflake" x="15" y="47" width="15" height="6" rx="3" transform="rotate(-30 22 50)"/>
-  <!-- Right branch details -->
-  <rect class="snowflake" x="70" y="47" width="15" height="6" rx="3" transform="rotate(30 78 50)"/>
-  <rect class="snowflake" x="70" y="47" width="15" height="6" rx="3" transform="rotate(-30 78 50)"/>
+  <!-- 6-sided stellar dendrite snowflake -->
+  <!-- Center hexagon -->
+  <circle class="snowflake" cx="50" cy="50" r="6"/>
+  
+  <!-- 6 main branches at 60° intervals (0°, 60°, 120°, 180°, 240°, 300°) -->
+  <!-- Branch 1: 0° (pointing up) -->
+  <g class="snowflake">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <!-- Dendrite side branches -->
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
+  
+  <!-- Branch 2: 60° -->
+  <g class="snowflake" transform="rotate(60 50 50)">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
+  
+  <!-- Branch 3: 120° -->
+  <g class="snowflake" transform="rotate(120 50 50)">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
+  
+  <!-- Branch 4: 180° -->
+  <g class="snowflake" transform="rotate(180 50 50)">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
+  
+  <!-- Branch 5: 240° -->
+  <g class="snowflake" transform="rotate(240 50 50)">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
+  
+  <!-- Branch 6: 300° -->
+  <g class="snowflake" transform="rotate(300 50 50)">
+    <rect x="48" y="8" width="4" height="42" rx="2"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(45 50 24)"/>
+    <rect x="48" y="18" width="4" height="12" rx="2" transform="rotate(-45 50 24)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(45 50 33)"/>
+    <rect x="48" y="28" width="4" height="10" rx="2" transform="rotate(-45 50 33)"/>
+  </g>
 </svg>
