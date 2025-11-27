@@ -82,7 +82,7 @@ with open('scripts/models-tools-current-weather.tpl.html', 'r') as f:
                 elif metric == 'air_temp':
                     replacement = str(round(value * 9 / 5 + 32, 2))
                 elif metric in ['snow_interval', 'snow_depth']:
-                    replacement = str(round(value / 10, 2))
+                    replacement = str(round(value / 25.4, 2))
                 else:
                     replacement = str(value)
                 html = re.sub(re.escape(var_name), replacement, html)
