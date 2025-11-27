@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Forecast Verification Script
-Compares forecasts against actual observations and generates verification reports
+Forecast Evaluation Script
+Compares forecasts against actual observations and generates evaluation reports
 """
 
 import json
@@ -46,7 +46,7 @@ def verify_forecast(forecast_date):
         forecast_date: Date of forecast to verify 'YYYY-MM-DD'
     
     Returns:
-        dict: Verification results
+        dict: Evaluation results
     """
     forecast = load_forecast(forecast_date)
     if not forecast:
@@ -95,15 +95,15 @@ def verify_forecast(forecast_date):
     
     return results
 
-def generate_verification_report(forecast_date):
-    """Generate a human-readable verification report"""
+def generate_evaluation_report(forecast_date):
+    """Generate a human-readable evaluation report"""
     results = verify_forecast(forecast_date)
     
     if 'error' in results:
         return results['error']
     
     report = []
-    report.append(f"Forecast Verification Report")
+    report.append(f"Forecast Evaluation Report")
     report.append(f"=" * 60)
     report.append(f"Forecast Date: {results['forecast_date']}")
     report.append(f"Valid For: {', '.join(results['valid_dates'])}")
@@ -125,16 +125,16 @@ def generate_verification_report(forecast_date):
     
     return "\n".join(report)
 
-def save_verification_report(forecast_date, report_text):
-    """Save verification report to file"""
-    report_dir = Path('data/verification_reports')
+def save_evaluation_report(forecast_date, report_text):
+    """Save evaluation report to file"""
+    report_dir = Path('data/evaluation_reports')
     report_dir.mkdir(parents=True, exist_ok=True)
     
-    filename = report_dir / f"verification_{forecast_date}.txt"
+    filename = report_dir / f"evaluation_{forecast_date}.txt"
     with open(filename, 'w') as f:
         f.write(report_text)
     
-    print(f"Saved verification report to {filename}")
+    print(f"Saved evaluation report to {filename}")
 
 def generate_season_summary():
     """Generate summary statistics for entire season"""
@@ -163,7 +163,7 @@ def generate_season_summary():
     
     # Generate summary
     summary = []
-    summary.append("Season Forecast Verification Summary")
+    summary.append("Season Forecast Evaluation Summary")
     summary.append("=" * 60)
     
     for area, stats in area_stats.items():
@@ -178,23 +178,23 @@ def generate_season_summary():
     
     return "\n".join(summary)
 
-def example_verification():
-    """Example of running verification"""
-    print("Example Verification")
+def example_evaluation():
+    """Example of running evaluation"""
+    print("Example Evaluation")
     print("=" * 60)
     
     # This assumes you've already collected forecast and observation data
     forecast_date = '2025-01-15'
     
     # Generate report
-    report = generate_verification_report(forecast_date)
+    report = generate_evaluation_report(forecast_date)
     print(report)
     
     # Save report
-    save_verification_report(forecast_date, report)
+    save_evaluation_report(forecast_date, report)
 
 if __name__ == '__main__':
-    print("Forecast Verification Script")
+    print("Forecast Evaluation Script")
     print("=" * 60)
     print("\nThis script compares your forecasts against actual observations")
     print("to evaluate forecast accuracy.\n")
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     print("Usage:")
     print("  1. After a forecast weekend, collect observation data")
     print("  2. Run this script to verify the forecast")
-    print("  3. View verification reports in data/verification_reports/")
+    print("  3. View evaluation reports in data/evaluation_reports/")
     print("\nExample:\n")
     
-    example_verification()
+    example_evaluation()

@@ -8,19 +8,19 @@ Congratulations! Your Washington Skiing Weather Blog is ready to use. Here's eve
 - Homepage with ski area information
 - Sample weekend forecast post
 - Archive page for past forecasts
-- Verification page for tracking accuracy
+- Evaluation page for tracking accuracy
 - Responsive design (works on phones, tablets, desktops)
 
-✅ **Forecast Verification System**
+✅ **Forecast Evaluation System**
 - Python scripts for data collection
-- Automated forecast verification
+- Automated forecast evaluation
 - Figure management tools
 - Data storage structure
 
 ✅ **Comprehensive Documentation**
 - README.md - Full project guide
 - QUICK-GUIDE.md - Fast workflow reference
-- VERIFICATION-GUIDE.md - Verification details
+- EVALUATION-GUIDE.md - Evaluation details
 
 ## Next Steps
 
@@ -85,7 +85,7 @@ mkdir -p assets/images
 # <img src="../assets/images/temp_forecast.png" alt="Temperature Forecast">
 ```
 
-### 5. Use the Verification System
+### 5. Use the Evaluation System
 
 **After you post a forecast:**
 ```bash
@@ -100,10 +100,10 @@ python3 scripts/collect_weather_data.py
 # Visit: https://wcc.sc.egov.usda.gov/ for SNOTEL data
 # Save to data/observations/
 
-# Run verification
+# Run evaluation
 python3 scripts/verify_forecasts.py
 
-# Update verification.html with results
+# Update evaluation.html with results
 ```
 
 ## Useful Resources
@@ -160,7 +160,7 @@ python3 scripts/verify_forecasts.py
 4. **Reference** in posts with `<img>` tags
 5. **Overwrite** each week with new figures
 
-### Verification
+### Evaluation
 1. **Always save** forecast data at time of posting
 2. **Wait 24-48 hours** after weekend for complete observations
 3. **Cross-reference** multiple sources (SNOTEL, NWS, resorts)
@@ -172,7 +172,7 @@ python3 scripts/verify_forecasts.py
 ### Update Navigation Links
 All navigation is in each HTML file's `<nav>` section. If you add new pages, update the nav in:
 - index.html
-- verification.html
+- evaluation.html
 - posts/*.html
 
 ### Change Colors/Styling
@@ -182,7 +182,7 @@ All navigation is in each HTML file's `<nav>` section. If you add new pages, upd
 ### Add a New Ski Area
 1. Add card to homepage ski areas grid (index.html)
 2. Include in forecast posts
-3. Add SNOTEL data source to verification guide
+3. Add SNOTEL data source to evaluation guide
 
 ## Troubleshooting
 
@@ -191,7 +191,7 @@ All navigation is in each HTML file's `<nav>` section. If you add new pages, upd
 - Verify images are in assets/images/ directory
 - Check file names match HTML references
 
-**Verification scripts not working?**
+**Evaluation scripts not working?**
 - Install requirements: `pip install -r requirements.txt`
 - Check JSON formatting is valid
 - Verify file paths in scripts
@@ -205,7 +205,7 @@ All navigation is in each HTML file's `<nav>` section. If you add new pages, upd
 
 - Check README.md for detailed information
 - See QUICK-GUIDE.md for fast workflow tips
-- Read VERIFICATION-GUIDE.md for verification details
+- Read EVALUATION-GUIDE.md for evaluation details
 - Review example post: posts/2025-01-15-weekend-forecast.html
 
 ## Let's Go!

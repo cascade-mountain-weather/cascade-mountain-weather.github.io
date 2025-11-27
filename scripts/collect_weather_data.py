@@ -18,6 +18,10 @@ RESORTS_TO_STATIONS = {
         'mid': 'CCB59',
         'summit': 'CMT69'
     },
+    'paradise':{
+        'base':'PVC54',
+        'summit':'MU101'
+    },
     'snoqualmie': {
         'base': 'ALP31',
         'mid': 'ALP44',

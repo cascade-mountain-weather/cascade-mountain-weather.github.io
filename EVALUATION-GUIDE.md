@@ -1,13 +1,13 @@
-# Forecast Verification System Guide
+# Forecast Evaluation System Guide
 
-This guide explains how to use the forecast verification system to track forecast accuracy and improve your predictions over time.
+This guide explains how to use the forecast evaluation system to track forecast accuracy and improve your predictions over time.
 
 ## Overview
 
-The verification system has three main components:
+The evaluation system has three main components:
 
 1. **Data Collection** (`scripts/collect_weather_data.py`) - Save forecasts and collect observations
-2. **Verification** (`scripts/verify_forecasts.py`) - Compare forecasts to actual conditions
+2. **Evaluation** (`scripts/verify_forecasts.py`) - Compare forecasts to actual conditions
 3. **Figure Management** (`scripts/manage_figures.py`) - Organize weather images/figures
 
 ## Directory Structure
@@ -20,7 +20,7 @@ Dawg-Winter-Weather-Blog/
 ├── data/
 │   ├── forecasts/           # Your forecast predictions (JSON)
 │   ├── observations/        # Actual weather data (JSON)
-│   └── verification_reports/ # Generated verification reports
+│   └── evaluation_reports/ # Generated evaluation reports
 └── scripts/
     ├── collect_weather_data.py
     ├── verify_forecasts.py
@@ -33,7 +33,7 @@ Dawg-Winter-Weather-Blog/
 
 When you write your weekend forecast blog post:
 
-1. **Save Forecast Data** for verification:
+1. **Save Forecast Data** for evaluation:
    ```bash
    python3 scripts/collect_weather_data.py
    ```
@@ -120,11 +120,11 @@ python3 scripts/verify_forecasts.py
 This will:
 - Compare your forecasts to actual observations
 - Calculate error metrics
-- Generate verification reports in `data/verification_reports/`
+- Generate evaluation reports in `data/evaluation_reports/`
 
-### Step 4: Update Verification Page
+### Step 4: Update Evaluation Page
 
-Manually update `verification.html` with the results, or create a script to auto-generate the HTML from verification reports.
+Manually update `evaluation.html` with the results, or create a script to auto-generate the HTML from evaluation reports.
 
 Example table entry:
 ```html
@@ -160,18 +160,18 @@ Example table entry:
 ### Option 1: Manual (Simplest)
 - Copy template JSON files
 - Fill in forecast and observation data by hand
-- Run verification script weekly
+- Run evaluation script weekly
 
 ### Option 2: Semi-Automated
 - Use Python scripts to fetch SNOTEL data automatically
 - Manual entry of forecasts
-- Automated verification
+- Automated evaluation
 
 ### Option 3: Fully Automated (Advanced)
 - Web scraping or API calls for all data sources
 - Automated forecast parsing from blog posts
-- Scheduled verification runs
-- Auto-generated verification page updates
+- Scheduled evaluation runs
+- Auto-generated evaluation page updates
 
 ## Example Python Code for SNOTEL
 
@@ -216,9 +216,9 @@ def fetch_snotel_data(site_id, start_date, end_date):
 # print(json.dumps(data, indent=2))
 ```
 
-## Tips for Better Verification
+## Tips for Better Evaluation
 
-1. **Be Consistent**: Use the same data sources for all verifications
+1. **Be Consistent**: Use the same data sources for all evaluations
 2. **Document Sources**: Always note where observation data came from
 3. **Account for Timing**: SNOTEL data may not capture all snowfall if it melts quickly
 4. **Multiple Sources**: Cross-reference resort reports with SNOTEL when possible
@@ -250,7 +250,7 @@ Relative error compared to actual value:
 - Some sites have transmission issues in heavy snow
 - Use nearby sites as backup
 
-**Q: Verification script shows no matching observations**
+**Q: Evaluation script shows no matching observations**
 - Check date formats are consistent (YYYY-MM-DD)
 - Ensure observation files are in correct directory
 - Verify JSON formatting is valid
@@ -264,8 +264,8 @@ Relative error compared to actual value:
 
 1. Run your first forecast and save the data
 2. Collect observations after the weekend
-3. Run verification and review results
-4. Update verification.html with findings
+3. Run evaluation and review results
+4. Update evaluation.html with findings
 5. Use insights to improve next forecast!
 
 Remember: The goal is continuous improvement, not perfection!

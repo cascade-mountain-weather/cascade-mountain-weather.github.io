@@ -40,42 +40,42 @@
 
 
     <section id="latest-post" class="hero">
-      <h1 class="PlotTitle"> White Pass</h1>
+      <h1 class="PlotTitle"> Paradise - Mt. Rainier</h1>
       <div class="synoptic-grid">
         <div class="tool-card">
           <figure>
               <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
-              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_US12.png" alt="West WRF Meteogram White Pass" />
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise - Mt. Rainier" />
           </figure>
       </div>
       <div class="tool-card">
           <figure>
               <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
-              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_US12.png" alt="West WRF Meteogram White Pass" />
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise - Mt. Rainier" />
           </figure>
       </div>
       <div class="tool-card">
           <figure>
               <figcaption class="tool-title">Utah Snow Ensemble</figcaption>
-              <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - White Pass"/>
+              <img id="utah-weather-url" class="PlotFormat" alt="Utah Snow Ensemble - Paradise - Mt. Rainier"/>
           </figure>
       </div>
       <div class="tool-card">
           <figure>
               <figcaption class="tool-title">Utah RRFS QSF</figcaption>
-              <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - White Pass"/>
+              <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Paradise - Mt. Rainier"/>
           </figure>
       </div>
       <div class="tool-card">
           <figure>
               <figcaption class="tool-title">Upper Cowlitz Freezing Level Forecast - ECMWF</figcaption>
-              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17080004_current.png" alt="UpperCowlitzFrzLvl"/>
+              <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17110015_current.png" alt="UpperCowlitzFrzLvl"/>
           </figure>
       </div>
       <div class="tool-card">
           <figure>
               <figcaption class="tool-title">Upper Cowlitz Freezing Level Forecast - GEFS</figcaption>
-              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17080004_current.png" alt="UpperCowlitzFrzLvl"/>
+              <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17110015_current.png" alt="UpperCowlitzFrzLvl"/>
           </figure>
       </div>
       </div>
@@ -91,7 +91,7 @@
             const month = date.getUTCMonth() + 1;
             const year = date.getFullYear();
             const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_WPS45${dmyString}00F240.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_PVC54${dmyString}00F240.png`;
         }
 
         function makeUtahRrfsqsfUrl() {
@@ -100,7 +100,7 @@
             const month = date.getUTCMonth() + 1;
             const year = date.getFullYear();
             const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_WPS45${dmyString}00F060.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_PVC54${dmyString}00F060.png`;
         }
     
         document.addEventListener("DOMContentLoaded", function() {
