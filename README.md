@@ -1,4 +1,4 @@
-# Cascski Alpine Insights
+# Cascade Mountain Weather
 
 A simple, easy-to-maintain weather blog focused on Washington state area forecasts. Provides weekly weekend forecasts for Mt. Baker, Stevens Pass, Snoqualmie Pass, Blewett Pass, Crystal Mountain, and White Pass.
 
@@ -21,7 +21,7 @@ A simple, easy-to-maintain weather blog focused on Washington state area forecas
 Dawg-Winter-Weather-Blog/
 ├── index.html              # Homepage
 ├── style.css               # Main stylesheet
-├── verification.html       # Forecast verification page
+├── evaluation.html       # Forecast evaluation page
 ├── posts/                  # Blog posts directory
 │   ├── archive.html        # Archive page
 │   ├── post-style.css      # Post-specific styles
@@ -30,11 +30,11 @@ Dawg-Winter-Weather-Blog/
 ├── assets/                 # Images for blog posts
 │   └── images/             # Forecast figures (can be overwritten weekly)
 │       └── archive/        # Optional: Dated copies of figures
-├── data/                   # Verification data
+├── data/                   # Evaluation data
 │   ├── forecasts/          # Your forecast predictions (JSON)
 │   ├── observations/       # Actual weather data (JSON)
-│   └── verification_reports/ # Generated verification reports
-├── scripts/                # Python scripts for data & verification
+│   └── evaluation_reports/ # Generated evaluation reports
+├── scripts/                # Python scripts for data & evaluation
 │   ├── collect_weather_data.py
 │   ├── verify_forecasts.py
 │   └── manage_figures.py
@@ -52,16 +52,16 @@ Dawg-Winter-Weather-Blog/
    - Click Save
    - Your blog will be available at: `https://[username].github.io/Dawg-Winter-Weather-Blog/`
 
-### Using the Forecast Verification System
+### Using the Forecast Evaluation System
 
-The blog includes a built-in verification system to track forecast accuracy:
+The blog includes a built-in evaluation system to track forecast accuracy:
 
 1. **Save your forecasts** as JSON in `data/forecasts/`
 2. **Collect actual observations** from SNOTEL/NWS after the forecast period
-3. **Run verification scripts** to compare and generate accuracy reports
-4. **Update the verification page** with results
+3. **Run evaluation scripts** to compare and generate accuracy reports
+4. **Update the evaluation page** with results
 
-See [VERIFICATION-GUIDE.md](VERIFICATION-GUIDE.md) for detailed instructions.
+See [EVALUATION-GUIDE.md](EVALUATION-GUIDE.md) for detailed instructions.
 
 ### Creating a New Blog Post
 

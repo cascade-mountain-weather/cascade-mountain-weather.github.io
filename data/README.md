@@ -1,6 +1,6 @@
 # Data Directory
 
-This directory stores forecast and observation data for verification purposes.
+This directory stores forecast and observation data for evaluation purposes.
 
 ## Directory Structure
 
@@ -8,14 +8,14 @@ This directory stores forecast and observation data for verification purposes.
 data/
 ├── forecasts/              # Your forecast predictions (saved as JSON)
 ├── observations/           # Actual weather observations (saved as JSON)
-└── verification_reports/   # Generated verification reports (TXT)
+└── evaluation_reports/   # Generated evaluation reports (TXT)
 ```
 
 ## Purpose
 
 - **Track forecast accuracy** over time
 - **Store structured data** for analysis
-- **Enable automated verification** with scripts
+- **Enable automated evaluation** with scripts
 - **Build historical record** of forecasts and outcomes
 
 ## File Formats
@@ -64,12 +64,12 @@ Example: `baker_2025-01.json`
 
 ## Usage
 
-See `VERIFICATION-GUIDE.md` in the root directory for detailed instructions on:
+See `EVALUATION-GUIDE.md` in the root directory for detailed instructions on:
 - Creating forecast data files
 - Collecting observation data
-- Running verification scripts
+- Running evaluation scripts
 - Generating reports
 
 ## Git Tracking
 
-These directories and their contents are tracked in git to maintain a complete history of forecasts and verification. If you have very large datasets, consider adding specific exclusions to `.gitignore`.
+These directories and their contents are tracked in git to maintain a complete history of forecasts and evaluation. If you have very large datasets, consider adding specific exclusions to `.gitignore`.

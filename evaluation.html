@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forecast Verification | Cascski Alpine Insights</title>
+    <title>Forecast Evaluation | Cascade Mountain Weather</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .verification-intro {
+        .evaluation-intro {
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             padding: 2rem;
             border-radius: 8px;
             margin-bottom: 2rem;
         }
         
-        .verification-table {
+        .evaluation-table {
             width: 100%;
             border-collapse: collapse;
             margin: 1.5rem 0;
         }
         
-        .verification-table th,
-        .verification-table td {
+        .evaluation-table th,
+        .evaluation-table td {
             padding: 1rem;
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
         }
         
-        .verification-table th {
+        .evaluation-table th {
             background-color: #2a5298;
             color: white;
             font-weight: 600;
         }
         
-        .verification-table tr:hover {
+        .evaluation-table tr:hover {
             background-color: #f5f7fa;
         }
         
@@ -83,19 +83,24 @@
 </head>
 <body>
     <header>
-        <h1>Cascski Alpine Insights</h1>
+        <h1>Cascade Mountain Weather</h1>
         <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
 
     <nav>
-        <ul>
-            <a href="index.html">Home</a>
+        <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+        <ul id="primary-nav">
+            <li><a href="index.html">Home</a></li>
             <li><a href="index.html#latest-post">Latest Forecast</a></li>
             <li><a href="index.html#ski-areas">Ski Areas</a></li>
             <li><a href="posts/archive.html">Archive</a></li>
-            <li><a href="verification.html" class="active">Verification</a></li>
+            <li><a href="evaluation.html">Evaluation</a></li>
             <li class="nav-item dropdown">
-                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
                 <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
                   <li role="none"><a role="menuitem" href="tools/model-tools-current-weather.html">Current Weather</a></li>
                   <li role="none"><a role="menuitem" href="tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
@@ -107,10 +112,10 @@
       </nav>
 
     <main>
-        <section class="verification-intro">
-            <h2>📊 Forecast Verification</h2>
+        <section class="evaluation-intro">
+            <h2>📊 Forecast Evaluation</h2>
             <p><strong>Transparency and accountability matter!</strong> This page tracks the accuracy of our weekend ski forecasts by comparing predictions against actual observed conditions.</p>
-            <p>Data is collected from SNOTEL stations, NWS observations, and resort reports. Verification helps improve future forecasts and builds trust with readers.</p>
+            <p>Data is collected from SNOTEL stations, NWS observations, and resort reports. Evaluation helps improve future forecasts and builds trust with readers.</p>
         </section>
 
         <section>
@@ -134,13 +139,13 @@
                 </div>
             </div>
 
-            <p><em>Statistics will be updated as we collect more forecast verification data throughout the season.</em></p>
+            <p><em>Statistics will be updated as we collect more forecast evaluation data throughout the season.</em></p>
         </section>
 
         <section>
-            <h2>Recent Forecast Verification</h2>
+            <h2>Recent Forecast Evaluation</h2>
             
-            <table class="verification-table">
+            <table class="evaluation-table">
                 <thead>
                     <tr>
                         <th>Forecast Date</th>
@@ -154,8 +159,8 @@
                 <tbody>
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                            <em>Verification data will appear here after the first forecast weekend.<br>
-                            Run the verification scripts after collecting observation data.</em>
+                            <em>Evaluation data will appear here after the first forecast weekend.<br>
+                            Run the evaluation scripts after collecting observation data.</em>
                         </td>
                     </tr>
                     <!-- Example row (uncomment when you have data):
@@ -191,7 +196,7 @@
             <p><strong>Within Range:</strong> --/-- (--%)</p>
             
             <h3>Other Areas</h3>
-            <p>Verification data for Snoqualmie, White Pass, and Blewett Pass will be added as we collect observations.</p>
+            <p>Evaluation data for Snoqualmie, White Pass, and Blewett Pass will be added as we collect observations.</p>
         </section>
 
         <section>
@@ -203,12 +208,12 @@
                 <li><strong>Resort Reports:</strong> Official snow reports from ski areas</li>
             </ul>
             
-            <h3>Verification Process</h3>
+            <h3>Evaluation Process</h3>
             <ol>
                 <li>Forecast data is saved at time of posting (stored in data/forecasts/)</li>
                 <li>After the forecast period, actual observations are collected</li>
                 <li>Automated scripts compare forecast vs. actual values</li>
-                <li>Verification reports are generated and posted here</li>
+                <li>Evaluation reports are generated and posted here</li>
             </ol>
             
             <h3>Accuracy Metrics</h3>
@@ -221,22 +226,22 @@
         </section>
 
         <section class="about">
-            <h2>Why Verification Matters</h2>
-            <p>Forecast verification serves multiple purposes:</p>
+            <h2>Why Evaluation Matters</h2>
+            <p>Forecast evaluation serves multiple purposes:</p>
             <ul>
                 <li><strong>Accountability:</strong> Being transparent about forecast accuracy builds trust</li>
                 <li><strong>Improvement:</strong> Identifying patterns in errors helps refine future forecasts</li>
                 <li><strong>Learning:</strong> Understanding which weather patterns are harder to forecast</li>
                 <li><strong>Comparison:</strong> See how different ski areas verify relative to each other</li>
             </ul>
-            <p>No forecast is perfect, but consistent verification helps us get better over time!</p>
+            <p>No forecast is perfect, but consistent evaluation helps us get better over time!</p>
         </section>
     </main>
 
     <footer>
-        <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+        <p>Cascade Mountain Weather | Washington Ski Area Forecasts</p>
         <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
     </footer>
-    <script src="assets/header.js" defer></script>
+    <script src="assets/header.js?v=2" defer></script>
 </body>
 </html>

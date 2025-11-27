@@ -9,7 +9,7 @@
   
 <body>
     <header>
-        <h1>Cascski Alpine Insights</h1>
+        <h1>Cascade Mountain Weather</h1>
         <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
     </header>
   
@@ -19,7 +19,7 @@
           <li><a href="../index.html#latest-post">Latest Forecast</a></li>
           <li><a href="../index.html#ski-areas">Ski Areas</a></li>
           <li><a href="../posts/archive.html">Archive</a></li>
-          <li><a href="../verification.html">Verification</a></li>
+          <li><a href="../evaluation.html">Evaluation</a></li>
           <li class="nav-item dropdown">
               <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
               <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
@@ -127,7 +127,7 @@
                   <span class="label">Blewett Pass (4100') Current Temperature</span>
                 </div>
                 <div class="data-row">
-                  <span class="value temp">{{ blewett-base-snow_depth }}&deg;F</span>
+                  <span class="value temp">{{ blewett-base-snow_depth }} in</span>
                   <span class="label">Blewett Pass (4100') Snow interval</span>
                 </div>
                 <div class="data-row">
@@ -171,6 +171,29 @@
                 </div>
               </div>
             </a>
+            <a href="paradise.html" class="area-card">
+              <div class="card-header">
+                <h3>Paradise - Mt. Rainier</h3>
+              </div>
+              <div class="data-sources">
+                <div class="data-row">
+                  <span class="value temp">{{ paradise-base-air_temp }}&deg;F</span>
+                  <span class="label">Paradise RS (5400') Current Temperature</span>
+                </div>
+                <div class="data-row">
+                  <span class="value temp">{{ paradise-summit-air_temp }}&deg;F</span>
+                  <span class="label">Camp Muir (10000') Current Temperature</span>
+                </div>
+                <div class="data-row">
+                  <span class="value snow">{{ paradise-base-snow_interval }} in</span>
+                  <span class="label">Paradise RS (5400') snow interval</span>
+                </div>
+                <div class="data-row">
+                  <span class="value snow">{{ paradise-base-snow_depth }} in</span>
+                  <span class="label">Paradise RS (5400') Snow Depth</span>
+                </div>
+              </div>
+            </a>
             <a href="white-pass.html" class="area-card">
               <div class="card-header">
                 <h3>White Pass</h3>
@@ -209,7 +232,7 @@
       </script>
 </body>
 <footer>
-  <p>Cascski Alpine Insights | Washington Ski Area Forecasts</p>
+  <p>Cascade Mountain Weather | Washington Ski Area Forecasts</p>
   <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
 </footer>
 </html>

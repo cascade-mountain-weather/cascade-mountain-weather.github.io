@@ -55,6 +55,7 @@ nav ul {
 
 nav li {
     margin: 0;
+    position: relative;
 }
 
 nav a {
@@ -70,6 +71,111 @@ nav a:hover,
 nav a.active {
     background-color: #2a5298;
     color: white;
+}
+
+.nav-item.dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 220px;
+    background: #ffffff;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    padding: 0.25rem 0;
+    display: none;
+    z-index: 120;
+}
+
+.nav-item.dropdown.open .dropdown-menu {
+    display: block;
+}
+
+.dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.dropdown-caret {
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+
+.nav-item.dropdown.open .dropdown-caret {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu li a {
+    padding: 0.6rem 1.25rem;
+    white-space: nowrap;
+}
+
+/* Mobile nav toggle (hamburger) */
+.nav-toggle {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 13rem;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    border: none;
+    background: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    z-index: 150;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.nav-toggle.scrolled {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.nav-toggle:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.nav-toggle-bar {
+    position: absolute;
+    left: 50%;
+    width: 22px;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 1px;
+    transition: transform 0.25s ease, opacity 0.25s ease, top 0.25s ease;
+}
+
+.nav-toggle-bar:nth-child(1) {
+    top: 13px;
+    transform: translateX(-50%);
+}
+
+.nav-toggle-bar:nth-child(2) {
+    top: 19px;
+    transform: translateX(-50%);
+}
+
+.nav-toggle-bar:nth-child(3) {
+    top: 25px;
+    transform: translateX(-50%);
+}
+
+/* When nav is open, morph bars into an X */
+nav.open .nav-toggle-bar:nth-child(1) {
+    top: 19px;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+nav.open .nav-toggle-bar:nth-child(2) {
+    opacity: 0;
+}
+
+nav.open .nav-toggle-bar:nth-child(3) {
+    top: 19px;
+    transform: translateX(-50%) rotate(-45deg);
 }
 
 /* Main Content */
@@ -259,6 +365,37 @@ footer p {
     opacity: 0.9;
 }
 
+/* Responsive navigation: collapse to hamburger on smaller screens */
+@media (max-width: 768px) {
+    nav {
+        position: sticky;
+        top: 0;
+    }
+
+    nav ul {
+        flex-direction: column;
+        align-items: stretch;
+        display: none;
+        width: 100%;
+    }
+
+    nav.open ul {
+        display: flex;
+    }
+
+    nav li {
+        border-top: 1px solid #e0e0e0;
+    }
+
+    nav a {
+        padding: 0.85rem 1.25rem;
+    }
+
+    .nav-toggle {
+        display: block;
+    }
+}
+
 .PlotFormat {
     max-width: 80%;
 }
@@ -414,19 +551,9 @@ nav a,
     top: calc(100% + 2px); /* keep consistent small gap */
 }
 
-/* Show dropdown on hover or when .open is present */
-.nav-item.dropdown:hover .dropdown-menu,
+/* Show dropdown only when .open class is present (controlled by JavaScript) */
 .nav-item.dropdown.open .dropdown-menu {
     display: block;
-}
-
-/* SHOW MENU on hover for pointer devices (desktop/laptops) */
-/* Using both :hover and :focus-within keeps it accessible for keyboard users */
-@media (hover: hover) and (pointer: fine) {
-  .nav-item.dropdown:hover > .dropdown-menu,
-  .nav-item.dropdown:focus-within > .dropdown-menu {
-    display: block;
-  }
 }
 
 /* On small / touch screens: keep menu hidden (no hover available) */
