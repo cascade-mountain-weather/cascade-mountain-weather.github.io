@@ -84,17 +84,49 @@
               <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Crystal Mountain"/>
             </figure>
           </div>
-          <div class="tool-card">
+          <div class="tool-card" style="position:relative;">
             <figure>
-              <figcaption class="tool-title">Puyallup River Basin Freezing Level Forecast - ECMWF</figcaption>
+              <figcaption class="tool-title">
+                  Puyallup River Basin Freezing Level Forecast - ECMWF
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17110014_current.png" alt="SkykomishFrzLvl"/>
             </figure>
+            <div class="info-popup">
+                <h3>What is this?</h3>
+                This image shows the ECMWF (European) ensemble forecast for freezing levels at Crystal Mountain (Puyallup River Watershed). 
+                Each light gray line represents a single model within the ensemble. Tightly spaced
+                model lines imply high model agreement which can give us more confidence in the 
+                forecast while widely spaced lines mean higher uncertainty. It can be helpful to 
+                <strong> look at the ensemble mean (light green line) and the +/- 1 standard deviation
+                ensemble spread (gray shading between red and blue lines) to better understand
+                model uncertainty</strong>. The bar plot shows 6hr precipitation totals averaged across the whole
+                watershed with colors representing what percentage of the watershed will see
+                snow vs. rain during that time period.
+                <button class="close-btn" onclick="hideInfo(event)">×</button>
+            </div>
           </div>
-          <div class="tool-card">
+          <div class="tool-card" style="position:relative;">
             <figure>
-              <figcaption class="tool-title">Puyallup River Basin Freezing Level Forecast - GEFS</figcaption>
+              <figcaption class="tool-title">
+                  Puyallup River Basin Freezing Level Forecast - GEFS
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="http://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17110014_current.png" alt="SkykomishFrzLvl"/>
             </figure>
+            <div class="info-popup">
+                <h3>What is this?</h3>
+                This image shows the GEFS (American) ensemble forecast for freezing levels at Crystal Mountain (Puyallup River Watershed). 
+                Each light gray line represents a single model within the ensemble. Tightly spaced
+                model lines imply high model agreement which can give us more confidence in the 
+                forecast while widely spaced lines mean higher uncertainty. It can be helpful to 
+                <strong> look at the ensemble mean (light green line) and the +/- 1 standard deviation
+                ensemble spread (gray shading between red and blue lines) to better understand
+                model uncertainty</strong>. The bar plot shows 6hr precipitation totals averaged across the whole
+                watershed with colors representing what percentage of the watershed will see
+                snow vs. rain during that time period.
+                <button class="close-btn" onclick="hideInfo(event)">×</button>
+            </div>
           </div>
         </div>
       </section>
@@ -141,5 +173,20 @@
         }
       });
     });
+    </script>
+    <script src="../assets/header.js" defer></script>
+    <script>
+        function showInfo(event) {
+        const toolCard = event.target.closest('.tool-card');
+        const popup = toolCard.querySelector('.info-popup');
+        popup.style.display = 'block';
+        const rect = event.target.getBoundingClientRect();
+        popup.style.position = 'absolute';
+        popup.style.left = (rect.left - toolCard.getBoundingClientRect().left + 24) + 'px';
+        popup.style.top = (rect.top - toolCard.getBoundingClientRect().top - 8) + 'px';
+        }
+        function hideInfo(event) {
+        event.target.closest('.info-popup').style.display = 'none';
+        }
     </script>
 </body>
