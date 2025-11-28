@@ -116,4 +116,4 @@ cbar.ax.tick_params(labelsize=8)
 ax.set_title('Dendrite Growth (Average -ω*RH in -20°C < T < -10°C Layer)\n'+title+'GFS Initialized '+ncss.metadata.time_span['begin'][0:10]+' '+ncss.metadata.time_span['begin'][11:13]+'z, Valid '+str(valid)[0:13]+'z',fontsize=8)
 ax.text(lon[-2,-2],lat[-2,-2],'Plotting code from:\nGitHub: SamBrandtMeteo',fontsize=4,ha='right',va='bottom')
 
-plt.savefig('../assets/images/gfs_dgz_F24.png',dpi=300,bbox_inches='tight')
+plt.savefig('assets/images/gfs_dgz_F24.png',dpi=300,bbox_inches='tight')
