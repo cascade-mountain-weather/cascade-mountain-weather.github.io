@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install matplotlib cartopy siphon xarray numpy
+          pip install matplotlib cartopy siphon xarray numpy netCDF4
 
       - name: Run plot script
         run: python scripts/gfs_dgz_plot.py
