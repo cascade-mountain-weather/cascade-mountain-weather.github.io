@@ -3,7 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cascade Mountain Weather - WA Skiing Forecasts</title>
+    <title>Cascade Mountain Weather | Washington Ski & Snow Forecasts</title>
+    <meta name="description" content="Cascade Mountain Weather provides accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas including Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more.">
+    <meta name="keywords" content="Cascade Mountain Weather, Washington ski forecast, Cascade Range weather, Mt Baker snow forecast, Stevens Pass weather, Crystal Mountain forecast, Snoqualmie Pass snow, PNW ski weather, backcountry skiing Washington">
+    <meta name="author" content="Cascade Mountain Weather">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.cascademountainweather.com/">
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cascade Mountain Weather | Washington Ski & Snow Forecasts">
+    <meta property="og:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas. Your trusted source for PNW backcountry weather.">
+    <meta property="og:url" content="https://www.cascademountainweather.com/">
+    <meta property="og:site_name" content="Cascade Mountain Weather">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Cascade Mountain Weather | Washington Ski & Snow Forecasts">
+    <meta name="twitter:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas.">
+    
     <link rel="stylesheet" href="style.css">
 
     <!-- Google Analytics -->
@@ -66,22 +85,20 @@
                 </a>
                 <a href="./tools/stevens-pass.html" class="area-card">
                     <h3>Stevens Pass</h3>
-                    <p>Central Cascades - I-90 Corridor</p>
+                    <p>Central Cascades</p>
                     <p class="elevation">Base: 4,061' | Summit: 5,845'</p>
                 </a>
                 <a href="./tools/snoqualmie-pass.html" class="area-card">
-                    <h3>Snoqualmie Pass</h3>
+                    <h3>Alpental Backcountry</h3>
                     <p>Summit Central, West, East, Alpental</p>
                     <p class="elevation">Base: 3,000' | Summit: 5,420'</p>
                 </a>
                 <a href="./tools/blewett-pass.html" class="area-card">
                     <h3>Blewett Pass</h3>
-                    <p>East of Cascades - Backcountry</p>
                     <p class="elevation">Elevation: ~4,100'</p>
                 </a>
-                <a href="./tools/tools/crystal-mountain.html" class="area-card">
+                <a href="./tools/crystal-mountain.html" class="area-card">
                     <h3>Crystal Mountain</h3>
-                    <p>Mt. Rainier Area - Largest in WA</p>
                     <p class="elevation">Base: 4,400' | Summit: 7,012'</p>
                 </a>
                 <a href="./tools/paradise.html" class="area-card">
@@ -101,6 +118,61 @@
             <ul class="post-list" id="recent-posts-list">
                 <li class="placeholder">Loading recent posts…</li>
             </ul>
+        </section>
+
+
+        <section id="latest-post" class="hero">
+            <h2>Welcome to the Dendritic Growth Zone!</h2>
+            <p>
+                While also the name of our blog, the Dendritic Growth Zone (DGZ)
+                is key to understanding snow forecasting. When we ski or ride that 
+                perfect blower powder, we are enjoying the fruits of the DGZ's 
+                labor, millions of stellar dendrite snowflakes. These classic six-sided 
+                snowflakes are what dreams are made of. Their intricate arms and branches
+                leave plenty of room for air in between the snowflakes, providing low-density
+                powder we all know and love. What is the dendritic growth zone? As the name
+                suggests, this zone is where our favorite snowflakes grow in the atmosphere.
+                Specifically, the DGZ is defined as the layer of the atmosphere between 
+                -10&deg;C and -20&deg;C. When these temperatures combine with other favorable
+                conditions such as high relative humidity and upward motions, the DGZ is 
+                highly efficient at growing stellar dendrites through the Bergeron-Findeisen 
+                process. Also known as vapor diffusion, the Bergeron-Findeisen process grows
+                ice crystals and snowflakes by depositing water vapor molecules in the clouds
+                onto existing ice crystals, freezing them on contact. 
+            </p>
+            <h3>Here are two plots that can help us analyize the DGZ. </h3> 
+            <div class="synoptic-grid">
+                <!-- Row: Integrated Vapor Transport -->
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">SPC Dendritic Growth Zone Analysis</figcaption>
+                        <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="SPC Dendritic Growth Zone Analysis" />
+                    </figure>
+                    <p>
+                        This figure is incredibly messy so let's break it down. 
+                        The green contours/shading represent the relative humidity in the 
+                        DGZ layer of the atmosphere. The more moisture, the better! The 
+                        purple numbers represent vertical motions in the DGZ, otherwise
+                        refered to in meteorological plots and equations as the greek letter  
+                        <span>&omega;</span> (omega). Here, <span>&omega;</span> is in units of 
+                        pressure decrease per second, with more negative values showing stronger
+                        upward motions in the atmosphere (good for dendrite growth).
+                    </p>
+                </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GFS Dendritic Growth Zone</figcaption>
+                        <img class="SynopticPlot" src="assets/images/gfs_dgz_F24.png" alt="GFS F24 Dendritic Growth Zone" />
+                    </figure>
+                    <p>
+                        The plot on the right is a 24hr forecast for dendrite growth efficiency 
+                        (<span>&omega;</span> times relative humidity) in blue shading. The red 
+                        contours show where surface temperatures are below freezing. To find 
+                        where dendrites are growing in the atmosphere, look for dark blue to 
+                        purple shading inside the red contours.
+                    </p>
+                </div>
+            </div>
         </section>
     </main>
 
