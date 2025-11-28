@@ -602,3 +602,53 @@ nav a,
   .data-row:last-child {
     border-bottom: none;
   }
+
+  .info-icon {
+    display: inline-block;
+    cursor: pointer;
+    margin-left: 6px;
+    font-weight: bold;
+    color: #0074D9;
+    border-radius: 50%;
+    background: #eaf6ff;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    line-height: 18px;
+    font-size: 14px;
+  }
+  .info-popup {
+    display: none; /* Show with JS */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.95);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+    padding: 2rem 2rem 1rem 1rem;
+    box-sizing: border-box;
+  }
+  .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: #eee;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0074D9;
+    cursor: pointer;
+    line-height: 20px;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: background 0.2s;
+  }
+  .close-btn:hover {
+    background: #0074D9;
+    color: #fff;
+  }
