@@ -396,8 +396,13 @@ footer p {
     }
 }
 
-.PlotFormat {
-    max-width: 80%;
+.PlotFormat,
+figure img {
+    display: block;
+    width: 100%;      /* Fill parent grid cell */
+    max-width: 100%;  /* Prevent overflow */
+    height: auto;     /* Maintain aspect ratio */
+    margin: 0.75rem auto;
 }
 
 /* Responsive figure sizing: make large figures occupy ~80% of the viewport width
@@ -407,7 +412,7 @@ footer p {
 .PlotFormat,
 figure img {
     display: block;
-    width: clamp(320px, 70vw, 1200px); /* dynamic: min 320px, ideal 80% viewport, max 1200px */
+    /* width: clamp(320px, 70vw, 1200px); dynamic: min 320px, ideal 80% viewport, max 1200px */
     max-width: 100%;
     height: auto;
     margin: 0.75rem auto;
@@ -651,4 +656,42 @@ nav a,
   .close-btn:hover {
     background: #0074D9;
     color: #fff;
+  }
+
+  .contact-form {
+    max-width: 500px;
+    margin: 2rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .contact-form label {
+    font-weight: 600;
+  }
+  
+  .contact-form input,
+  .contact-form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .contact-form textarea {
+    min-height: 120px;
+  }
+  
+  .contact-form button {
+    background: #1e293b;
+    color: white;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .contact-form button:hover {
+    background: #0f172a;
   }
