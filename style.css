@@ -429,10 +429,21 @@ figure img {
 }
 .tool-card {
     background: #fff;
+    left: auto !important;
+    right: 0% !important;
+    top: 10% !important;
     padding: 0.5rem;
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     text-align: center;
+    position: relative; /* for any future absolute children */
+}
+/* Stronger selector for right column flipping */
+.tool-card.centered > .info-popup,
+.tool-card.centered .info-popup {
+  left: auto !important;
+  right: 0% !important;
+  top: 10% !important;
 }
 .tool-card .tool-title {
     font-weight: 700;
