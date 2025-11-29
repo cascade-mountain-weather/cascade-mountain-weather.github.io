@@ -61,17 +61,67 @@
     <section id="latest-post" class="hero">
       <h1 class="PlotTitle"> Paradise - Mt. Rainier</h1>
       <div class="synoptic-grid">
-        <div class="tool-card">
+        <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
+              <figcaption class="tool-title">
+                  CW3E West-WRF Ensemble Snow Meteogram
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise - Mt. Rainier" />
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>The plot on the right here shows accumulated snow for Paradise - Mt. Rainier from 
+              the West-WRF ensemble from the Center for Western Weather and Water Extremes at UC San
+              Diego. West-WRF is an ensemble of 200 member models with 9km horizontal grid resolution
+              (9km x 9km grid cells) run from October-March. It was developed primarily to forecast 
+              high-intensity winter precipitation (especially during atmospheric rivers) and recent
+              studies have shown it to perform better than the GEFS (US) and as well or better than
+              the ECMWF ensemble (<a href='https://journals.ametsoc.org/view/journals/mwre/153/8/MWR-D-24-0136.1.xml' target="_blank">
+                  Delle Monache et al. 2025
+              </a>).</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms" target="_blank">
+                  https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
+              <figcaption class="tool-title">
+                  CW3E West-WRF Ensemble Precipitation Meteogram
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_MRNP.png" alt="West WRF Meteogram Paradise - Mt. Rainier" />
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>The plot on the right here shows precipitation (rain + snow water equivalent) for Paradise - Mt. Rainier from 
+              the West-WRF ensemble from the Center for Western Weather and Water Extremes at UC San
+              Diego. West-WRF is an ensemble of 200 member models with 9km horizontal grid resolution
+              (9km x 9km grid cells) run from October-March. It was developed primarily to forecast 
+              high-intensity winter precipitation (especially during atmospheric rivers) and recent
+              studies have shown it to perform better than the GEFS (US) and as well or better than
+              the ECMWF ensemble (<a href='https://journals.ametsoc.org/view/journals/mwre/153/8/MWR-D-24-0136.1.xml' target="_blank">
+                  Delle Monache et al. 2025
+              </a>).</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms" target="_blank">
+                  https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
       <div class="tool-card">
           <figure>
@@ -85,7 +135,7 @@
               <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Utah RRFS QSF - Paradise - Mt. Rainier"/>
           </figure>
       </div>
-      <div class="tool-card" style="position:relative;">
+      <div class="tool-card centered" style="position:relative;">
           <figure>
               <figcaption class="tool-title">
                   Upper Cowlitz Freezing Level Forecast - ECMWF
@@ -104,10 +154,14 @@
               model uncertainty</strong>. The bar plot shows 6hr precipitation totals averaged across the whole
               watershed with colors representing what percentage of the watershed will see
               snow vs. rain during that time period.
+              <h4>Source:</h4>
+              <a href="https://cw3e.ucsd.edu/DSMaps/DS_freezing.html" target="_blank">
+                  https://cw3e.ucsd.edu/DSMaps/DS_freezing.html
+              </a>
               <button class="close-btn" onclick="hideInfo(event)">×</button>
           </div>
       </div>
-      <div class="tool-card" style="position:relative;">
+      <div class="tool-card centered" style="position:relative;">
           <figure>
               <figcaption class="tool-title">
                   Upper Cowlitz Freezing Level Forecast - GEFS
@@ -126,6 +180,10 @@
               model uncertainty</strong>. The bar plot shows 6hr precipitation totals averaged across the whole
               watershed with colors representing what percentage of the watershed will see
               snow vs. rain during that time period.
+              <h4>Source:</h4>
+              <a href="https://cw3e.ucsd.edu/DSMaps/DS_freezing.html" target="_blank">
+                  https://cw3e.ucsd.edu/DSMaps/DS_freezing.html
+              </a>
               <button class="close-btn" onclick="hideInfo(event)">×</button>
           </div>
       </div>
