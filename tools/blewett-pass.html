@@ -93,20 +93,21 @@
     <script>
         function makeUtahWeatherUrl() {
             const date = new Date();
-            const dayOfMonth = date.getUTCDate() - 1;
-            const month = date.getUTCMonth() + 1;
-            const year = date.getFullYear();
-            const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_MTB42${dmyString}00F240.png`;
+            const shifted = new Date(date.getTime() - 12 * 60 * 60 * 1000);
+            const day = String(shifted.getUTCDate()).padStart(2, "0");
+            const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+            const year = shifted.getUTCFullYear();
+            const dmyString = `${year}${month}${day}`;
+            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_CMT2025120300F240.png`;
         }
-
         function makeUtahRrfsqsfUrl() {
             const date = new Date();
-            const dayOfMonth = date.getUTCDate() - 1;
-            const month = date.getUTCMonth() + 1;
-            const year = date.getFullYear();
-            const dmyString = `${year}${month}${dayOfMonth}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_MTB42${dmyString}00F060.png`;
+            const shifted = new Date(date.getTime() - 12 * 60 * 60 * 1000);
+            const day = String(shifted.getUTCDate()).padStart(2, "0");
+            const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+            const year = shifted.getUTCFullYear();
+            const dmyString = `${year}${month}${day}`;
+            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_CMT${dmyString}00F060.png`;
         }
     
         document.addEventListener("DOMContentLoaded", function() {
