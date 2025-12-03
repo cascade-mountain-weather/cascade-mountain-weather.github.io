@@ -112,6 +112,7 @@
             const dmyString = `${year}${month}${day}`;
             return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_CMT2025120300F240.png`;
         }
+
         function makeUtahRrfsqsfUrl() {
             const date = new Date();
             const shifted = new Date(date.getTime() - 12 * 60 * 60 * 1000);
@@ -128,9 +129,8 @@
             document.getElementById("utah-weather-url").src = url1;
             document.getElementById("utah-rrfsqsf-url").src = url2;
         });
-        
     </script>
-  
+      
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const dropdown = document.querySelector('.nav-item.dropdown');

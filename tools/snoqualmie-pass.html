@@ -126,8 +126,9 @@
             const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
             const year = shifted.getUTCFullYear();
             const dmyString = `${year}${month}${day}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_CMT2025120300F240.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/ensgefsds/ENSGEFSDSPL_SNO30${dmyString}00F240.png`;
         }
+
         function makeUtahRrfsqsfUrl() {
             const date = new Date();
             const shifted = new Date(date.getTime() - 12 * 60 * 60 * 1000);
@@ -135,7 +136,7 @@
             const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
             const year = shifted.getUTCFullYear();
             const dmyString = `${year}${month}${day}`;
-            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_CMT${dmyString}00F060.png`;
+            return `https://weather.utah.edu/${dmyString}/images/models/rrfsqsf/RRFSPL_SNO30${dmyString}00F060.png`;
         }
     
         document.addEventListener("DOMContentLoaded", function() {
