@@ -1,0 +1,70 @@
+{
+    "post_date": "2025-11-27",
+    "valid_dates": [
+        "2025-11-27",
+        "2025-11-30"
+    ],
+    "areas": {
+        "Mt. Baker Ski Area": {
+            "nbm_forecast": {
+                "deterministic": 5,
+                "range": [
+                    2,
+                    10
+                ],
+                "units": "inches"
+            }
+        },
+        "Stevens Pass": {
+            "nbm_forecast": {
+                "deterministic": 2.7600000000000002,
+                "range": [
+                    0.92,
+                    3.04
+                ],
+                "units": "inches"
+            }
+        },
+        "Snoqualmie Pass": {
+            "nbm_forecast": {
+                "deterministic": 5,
+                "range": [
+                    2,
+                    10
+                ],
+                "units": "inches"
+            }
+        },
+        "Blewett Pass": {
+            "nbm_forecast": {
+                "deterministic": 9,
+                "range": [
+                    6,
+                    12
+                ],
+                "units": "inches"
+            }
+        },
+        "White Pass": {
+            "nbm_forecast": {
+                "deterministic": 9,
+                "range": [
+                    6,
+                    12
+                ],
+                "units": "inches"
+            }
+        },
+        "HURW1": {
+            "nbm_forecast": {
+                "deterministic": 15,
+                "range": [
+                    10,
+                    20
+                ],
+                "units": "inches"
+            }
+        }
+    },
+    "created_at": "2025-11-30"
+}
