@@ -61,41 +61,170 @@
     <section id="latest-post" class="hero">
       <h1 class="PlotTitle"> White Pass</h1>
       <div class="synoptic-grid">
-        <div class="tool-card">
+        <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
+              <figcaption class="tool-title">
+                  CW3E West-WRF Ensemble Snow Meteogram
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_US12.png" alt="West WRF Meteogram White Pass" />
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+                <p>This plot shows accumulated snow for White Pass from
+              the West-WRF ensemble from the Center for Western Weather and Water Extremes at UC San
+              Diego. West-WRF is an ensemble of 200 member models with 9km horizontal grid resolution
+              (9km x 9km grid cells) run from October-March. It was developed primarily to forecast 
+              high-intensity winter precipitation (especially during atmospheric rivers) and recent
+              studies have shown it to perform better than the GEFS (US) and as well or better than
+              the ECMWF ensemble (<a href='https://journals.ametsoc.org/view/journals/mwre/153/8/MWR-D-24-0136.1.xml' target="_blank">
+                  Delle Monache et al. 2025
+              </a>).</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms" target="_blank">
+                  https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">CW3E West-WRF Ensemble Meteogram</figcaption>
+              <figcaption class="tool-title">
+                  CW3E West-WRF Ensemble Precipitation Meteogram
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_US12.png" alt="West WRF Meteogram White Pass" />
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+                <p>This plot shows precipitation (rain + snow water equivalent) for White Pass from
+              the West-WRF ensemble from the Center for Western Weather and Water Extremes at UC San
+              Diego. West-WRF is an ensemble of 200 member models with 9km horizontal grid resolution
+              (9km x 9km grid cells) run from October-March. It was developed primarily to forecast 
+              high-intensity winter precipitation (especially during atmospheric rivers) and recent
+              studies have shown it to perform better than the GEFS (US) and as well or better than
+              the ECMWF ensemble (<a href='https://journals.ametsoc.org/view/journals/mwre/153/8/MWR-D-24-0136.1.xml' target="_blank">
+                  Delle Monache et al. 2025
+              </a>).</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms" target="_blank">
+                  https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">Utah Snow Ensemble</figcaption>
+              <figcaption class="tool-title">
+                  Utah Snow Ensemble - 10-day forecast
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img id="utah-weather-url" class="PlotFormat" alt="Not Available Right Now :( - White Pass"/>
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>This plot shows accumulated snow and precipitation for White Pass from 
+              the Utah Snow Ensemble from the University of Utah. The Utah Snow Ensemble 
+              includes the GEFS (US) and ECMWF EPS (European) ensembles and some fancy math 
+              (statistical downscaling) to produce these forecasts. 
+              </p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+                  The bottom left panel shows the wet-bulb temperature 0.5&deg;C level
+                  which generally corresponds to the rain/snow level. Where values for this 
+                  plot are near the elevation of White Pass (elevation denoted by the brown 
+                  shaded area), there is greater uncertainty in the snow totals.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://weather.utah.edu" target="_blank">
+                  https://weather.utah.edu
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered">
           <figure>
-              <figcaption class="tool-title">Utah RRFS QSF</figcaption>
+              <figcaption class="tool-title">
+                  RRFS Snow Ensemble - 2.5-day forecast
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img id="utah-rrfsqsf-url" class="PlotFormat" alt="Not Available Right Now :( - White Pass"/>
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>This plot shows accumulated snow and precipitation for White Pass from 
+              the Rapid Refresh Forecast System (RRFS) Ensemble. The RRFS Ensemble is 
+              NOAA's next generation, convection-allowing ensemble forecast system. It
+              is run out 60 hours (2.5 days) at 3km horizontal grid resolution, rerun 
+              every 6 hours. 
+              </p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p style="margin-bottom:2rem;">
+                  Look at the range of the ensemble members (also called ensemble spread) to evaluate the 
+                  uncertainty in the forecast. Larger spread implies lower confidence in the forecast.
+                  The bottom left panel shows the wet-bulb temperature 0.5&deg;C level
+                  which generally corresponds to the rain/snow level. Where values for this 
+                  plot are near the elevation of White Pass (elevation denoted by the brown 
+                  shaded area), there is greater uncertainty in the snow totals.
+              </p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://weather.utah.edu" target="_blank">
+                  https://weather.utah.edu
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered" style="position:relative;">
           <figure>
-              <figcaption class="tool-title">Upper Cowlitz Freezing Level Forecast - ECMWF</figcaption>
+              <figcaption class="tool-title">
+                  Upper Cowlitz Freezing Level Forecast - ECMWF
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/ECMWF/freezingLevelImages/17080004_current.png" alt="UpperCowlitzFrzLvl"/>
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>This image shows the ECMWF (European) ensemble forecast for freezing levels at White Pass (Upper Cowlitz Watershed). Each light gray line represents a single model within the ensemble. The bar plot shows 6hr precipitation totals averaged across the whole watershed with colors representing what percentage of the watershed will see snow vs. rain during that time period.</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p>Tightly spaced model lines imply high model agreement which can give us more confidence in the forecast while widely spaced lines mean higher uncertainty. It can be helpful to <strong>look at the ensemble mean (light green line) and the +/- 1 standard deviation ensemble spread (gray shading between red and blue lines) to better understand model uncertainty</strong>.</p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/DSMaps/DS_freezing.html" target="_blank">
+                  https://cw3e.ucsd.edu/DSMaps/DS_freezing.html
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
-      <div class="tool-card">
+      <div class="tool-card centered" style="position:relative;">
           <figure>
-              <figcaption class="tool-title">Upper Cowlitz Freezing Level Forecast - GEFS</figcaption>
+              <figcaption class="tool-title">
+                  Upper Cowlitz Freezing Level Forecast - GEFS
+                  <span class="info-icon" onclick="showInfo(event)">i</span>
+              </figcaption>
               <img class="PlotFormat" src="https://cw3e.ucsd.edu/images/gefs/freezingLevelImages/17080004_current.png" alt="UpperCowlitzFrzLvl"/>
           </figure>
+          <div class="info-popup">
+              <h3>What is this?</h3>
+              <p>This image shows the GEFS (American) ensemble forecast for freezing levels at White Pass (Upper Cowlitz Watershed). Each light gray line represents a single model within the ensemble. The bar plot shows 6hr precipitation totals averaged across the whole watershed with colors representing what percentage of the watershed will see snow vs. rain during that time period.</p>
+              <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+              <p>Tightly spaced model lines imply high model agreement which can give us more confidence in the forecast while widely spaced lines mean higher uncertainty. It can be helpful to <strong>look at the ensemble mean (light green line) and the +/- 1 standard deviation ensemble spread (gray shading between red and blue lines) to better understand model uncertainty</strong>.</p>
+              <h4 style="margin-top:2rem;">Source:</h4>
+              <a href="https://cw3e.ucsd.edu/DSMaps/DS_freezing.html" target="_blank">
+                  https://cw3e.ucsd.edu/DSMaps/DS_freezing.html
+              </a>
+              <button class="close-btn" onclick="hideInfo(event)">×</button>
+          </div>
       </div>
       </div>
     </section>
@@ -158,4 +287,18 @@
     });
     </script>
     <script src="../assets/header.js" defer></script>
+    <script>
+        function showInfo(event) {
+        const toolCard = event.target.closest('.tool-card');
+        const popup = toolCard.querySelector('.info-popup');
+        popup.style.display = 'block';
+        const rect = event.target.getBoundingClientRect();
+        popup.style.position = 'absolute';
+        popup.style.left = (rect.left - toolCard.getBoundingClientRect().left + 24) + 'px';
+        popup.style.top = (rect.top - toolCard.getBoundingClientRect().top - 8) + 'px';
+        }
+        function hideInfo(event) {
+        event.target.closest('.info-popup').style.display = 'none';
+        }
+    </script>
   </body>
