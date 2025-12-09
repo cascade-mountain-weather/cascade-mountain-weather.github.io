@@ -140,40 +140,73 @@
                 ice crystals and snowflakes by depositing water vapor molecules in the clouds
                 onto existing ice crystals, freezing them on contact. 
             </p>
-            <h3>Here are two plots that can help us analyize the DGZ. </h3> 
+            <h3 style="margin-bottom:-5rem;">Here are two plots that can help us analyize the DGZ. </h3> 
             <div class="synoptic-grid">
                 <!-- Row: Integrated Vapor Transport -->
-                <div class="tool-card">
+                <div class="tool-card centered" style="position:relative;">
                     <figure>
-                        <figcaption class="tool-title">SPC Dendritic Growth Zone Analysis</figcaption>
+                        <figcaption class="tool-title">
+                            SPC Dendritic Growth Zone Analysis
+                            <span class="info-icon" onclick="showInfo(event)">i</span>
+                        </figcaption>
                         <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="SPC Dendritic Growth Zone Analysis" />
                     </figure>
-                    <p>
-                        This figure is incredibly messy so let's break it down. 
-                        The green contours/shading represent the relative humidity in the 
-                        DGZ layer of the atmosphere. The more moisture, the better! The 
-                        purple numbers represent vertical motions in the DGZ, otherwise
-                        refered to in meteorological plots and equations as the greek letter  
-                        <span>&omega;</span> (omega). Here, <span>&omega;</span> is in units of 
-                        pressure decrease per second, with more negative values showing stronger
-                        upward motions in the atmosphere (good for dendrite growth).
-                    </p>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>This figure shows current atmospheric conditions in the Dendritic Growth Zone (DGZ) from the Storm Prediction Center. The green contours/shading represent relative humidity in the DGZ layer of the atmosphere. The purple numbers represent vertical motions in the DGZ (ω, omega), measured in units of pressure decrease per second.</p>
+                        <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+                        <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for green hatched areas inside purple contours</strong>. More negative ω values show stronger upward motions in the atmosphere (better for dendrite growth). The more moisture (darker green) combined with strong upward motions (more negative purple values), the better conditions for stellar dendrite formation.</p>
+                        <h4 style="margin-top:2rem;">Source:</h4>
+                        <a href="https://www.spc.noaa.gov/exper/mesoanalysis/" target="_blank">
+                            https://www.spc.noaa.gov/exper/mesoanalysis/
+                        </a>
+                        <button class="close-btn" onclick="hideInfo(event)">×</button>
+                    </div>
                 </div>
-                <div class="tool-card">
+                <div class="tool-card centered" style="position:relative;">
                     <figure>
-                        <figcaption class="tool-title">GFS Dendritic Growth Zone</figcaption>
+                        <figcaption class="tool-title">
+                            GFS Dendritic Growth Zone
+                            <span class="info-icon" onclick="showInfo(event)">i</span>
+                        </figcaption>
                         <img class="SynopticPlot" src="assets/images/gfs_dgz_F24.png" alt="GFS F24 Dendritic Growth Zone" />
                     </figure>
-                    <p>
-                        The plot on the right is a 24hr forecast for dendrite growth efficiency 
-                        (<span>&omega;</span> times relative humidity) in blue shading. The red 
-                        contours show where surface temperatures are below freezing. To find 
-                        where dendrites are growing in the atmosphere, look for dark blue to 
-                        purple shading inside the red contours.
-                    </p>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>This is a 24hr forecast for dendrite growth efficiency (ω times relative humidity) shown in blue shading. The red contours show where surface temperatures are below freezing. This plot updates every 6 hours via GitHub Actions at 10Z and 22Z (2am and 2pm Pacific Standard Time).</p>
+                        <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+                        <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for dark blue to purple shading inside the red contours</strong>. The plot is valid for the UTC time listed in the title. For example, in November Washington is 8 hours behind UTC, so 2025-11-29 06Z is valid at 6am UTC on November 29th / 10pm PST on November 28th.</p>
+                        <h4 style="margin-top:2rem;">Source:</h4>
+                        <a href="https://github.com/SamBrandtMeteo/DGZ_efficiency" target="_blank">
+                            Code from Sam Brandt
+                        </a>
+                        <button class="close-btn" onclick="hideInfo(event)">×</button>
+                    </div>
                 </div>
+                <div style="height: 3rem;"></div>
             </div>
         </section>
+        <center>
+            <h3>Have a comment or suggestion?</h3>
+        </center>
+        <form class="contact-form" action="https://formspree.io/f/xeobnrzz" method="POST">
+            <label>
+              Name <span style="color: red">*</span>
+              <input name="name" />
+            </label>
+          
+            <label>
+              Email <span style="color: red">*</span>
+              <input name="email" type="email" required />
+            </label>
+          
+            <label>
+              Message <span style="color: red">*</span>
+              <textarea name="message"></textarea>
+            </label>
+          
+            <button type="submit">Send</button>
+          </form>
     </main>
 
     <footer>
@@ -310,5 +343,19 @@
         </script>
         <!-- Shared header behavior loaded from assets -->
         <script src="assets/header.js" defer></script>
+        <script>
+            function showInfo(event) {
+                const toolCard = event.target.closest('.tool-card');
+                const popup = toolCard.querySelector('.info-popup');
+                popup.style.display = 'block';
+                const rect = event.target.getBoundingClientRect();
+                popup.style.position = 'absolute';
+                popup.style.left = (rect.left - toolCard.getBoundingClientRect().left + 24) + 'px';
+                popup.style.top = (rect.top - toolCard.getBoundingClientRect().top - 8) + 'px';
+            }
+            function hideInfo(event) {
+                event.target.closest('.info-popup').style.display = 'none';
+            }
+        </script>
 </body>
 </html>
