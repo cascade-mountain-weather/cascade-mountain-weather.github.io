@@ -20,6 +20,7 @@ import shutil
 import re
 from bs4 import BeautifulSoup
 import sys
+import numpy as np
 
 def load_forecast(site, output_dir):
     """Load forecast data for a specific date"""
@@ -155,7 +156,8 @@ def new_snow_estimate(swe, temp):
 
 def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     """Load observation data for an area and month"""
-    end_date = fx_date + pd.Timedelta(days=4)
+    start_date = fx_date + pd.Timedelta(days=1)
+    end_date = fx_date + pd.Timedelta(days=3)
     sites ={
     "Mt. Baker" : "909:WA:SNTL",
     "Stevens Pass" : "791:WA:SNTL",
@@ -168,32 +170,81 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     "Washington Pass" : "515:WA:SNTL"
     }
     observation_output_dict = {"areas": {}, 
-                           "start_date": str(fx_date.date()),
+                           "start_date": str(start_date.date()),
                             "end_date": str(end_date.date())}
     print(f"Getting observations for {site} from {sites[site]}")
     # get snotel data
     snotel_point = SnotelPointData(sites[site], site)
-    sntl_df = snotel_point.get_daily_data(fx_date, end_date, [snotel_point.ALLOWED_VARIABLES.SNOWDEPTH,
+    if site == 'Mt. Baker':
+        snotel_point_2 = SnotelPointData("998:WA:SNTL", "Easy Pass")
+    try:
+        sntl_df = snotel_point.get_daily_data(start_date, end_date, [snotel_point.ALLOWED_VARIABLES.SNOWDEPTH,
                                                                 snotel_point.ALLOWED_VARIABLES.SWE,
                                                                 snotel_point.ALLOWED_VARIABLES.TEMPMAX,
                                                                 snotel_point.ALLOWED_VARIABLES.TEMPMIN])
+        if site == 'Mt. Baker':
+            sntl_df_2 = snotel_point_2.get_daily_data(start_date, end_date, [snotel_point_2.ALLOWED_VARIABLES.SNOWDEPTH,
+                                                                    snotel_point_2.ALLOWED_VARIABLES.SWE,
+                                                                    snotel_point_2.ALLOWED_VARIABLES.TEMPMAX,
+                                                                    snotel_point_2.ALLOWED_VARIABLES.TEMPMIN])
+            # average the two dataframes
+            # reset_index to combine
+            reset_sntl_df = sntl_df.reset_index().set_index('datetime', drop=True)[['SNOWDEPTH','SWE',]]
+            reset_sntl_df2 = sntl_df_2.reset_index().set_index('datetime', drop=True)[['SNOWDEPTH','SWE',]]
+            sntl_df = pd.concat([reset_sntl_df, reset_sntl_df2]).groupby(level=0).mean()
+    except:
+        raise Exception(f"Could not retrieve Snotel data for {site} ({sites[site]}) between {start_date.date()} and {end_date.date()}.")
+        return None
     print("Snotel data retrieved.")
     # get the cumulative maximum of consecutive swe values
+    # drop any negative numbers
+    sntl_df = sntl_df[sntl_df['SWE'] >= 0]
+    # remove any really big numbers (> 200 inches)
+    sntl_df = sntl_df[sntl_df['SWE'] <= 200]
     swe_change = sntl_df['SWE'].diff().clip(lower=0).sum()
     # estimate new snow depth from swe and temperature
     if "TEMPMIN" and "TEMPMAX" not in sntl_df.columns:
         print("Temperature data not available for snow depth estimation.")
-        max_snow_depth_estimate = swe_change / 0.08 # assume 8% density
-        min_snow_depth_estimate = swe_change / 0.2 # assume 20% density
+        max_snow_depth_estimate_swe = swe_change / 0.08 # assume 10% density
+        min_snow_depth_estimate_swe = swe_change / 0.25 # assume 25% density
+        snowdepth_change_swe = swe_change/0.15
     else:
-        max_snow_depth_estimate = new_snow_estimate(swe_change, sntl_df['TEMPMIN'].min())
-        min_snow_depth_estimate = new_snow_estimate(swe_change, sntl_df['TEMPMAX'].max())
-    snowdepth_change = swe_change / 0.15 # assume 15% density
-    # if "SNOWDEPTH" not in sntl_df.columns or sntl_df['SNOWDEPTH'].isnull().all():
-    #     snowdepth_change = swe_change / 0.15 # assume 15% density
-    # else: # calculate snow depth change in inches
-    #     snowdepth_change = sntl_df['SNOWDEPTH'].max() - sntl_df['SNOWDEPTH'].min()
-    # round observation values to 1 decimal place
+        max_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['TEMPMIN'].min())
+        min_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['TEMPMAX'].max())
+        snowdepth_change_swe = np.mean([max_snow_depth_estimate_swe, min_snow_depth_estimate_swe])
+
+    if ("SNOWDEPTH" in sntl_df.columns) and not (sntl_df['SNOWDEPTH'].isnull().all()):
+        sntl_df = sntl_df[sntl_df['SNOWDEPTH'] >= 0]
+        sntl_df = sntl_df[sntl_df['SNOWDEPTH'] <= 1000]
+        max_snow_depth_estimate = sntl_df['SNOWDEPTH'].diff().clip(lower=0).sum()
+        # settlement rate
+        density = swe_change / max_snow_depth_estimate
+        # density change  per 
+        if density < 0.25:
+            density += 0.01 * 24 * 4 / 2.54
+            # max density is 0.25
+            if density > 0.25:
+                density = 0.25
+        min_snow_depth_estimate = swe_change / density
+        snowdepth_change = np.mean([min_snow_depth_estimate, max_snow_depth_estimate])
+
+        if snowdepth_change < snowdepth_change_swe*0.8:
+            snowdepth_change = snowdepth_change_swe
+        elif snowdepth_change > snowdepth_change_swe*2:
+            snowdepth_change = snowdepth_change_swe
+        if min_snow_depth_estimate < min_snow_depth_estimate_swe*0.8:
+            min_snow_depth_estimate = min_snow_depth_estimate_swe
+        elif min_snow_depth_estimate > min_snow_depth_estimate_swe*2:
+            min_snow_depth_estimate = min_snow_depth_estimate_swe
+        if max_snow_depth_estimate < max_snow_depth_estimate_swe*0.8:
+            max_snow_depth_estimate = max_snow_depth_estimate_swe
+        elif max_snow_depth_estimate > max_snow_depth_estimate_swe*2:
+            max_snow_depth_estimate = max_snow_depth_estimate_swe
+    # replace any nans with 0
+    snowdepth_change = 0 if pd.isna(snowdepth_change) else snowdepth_change
+    min_snow_depth_estimate = 0 if pd.isna(min_snow_depth_estimate) else min_snow_depth_estimate
+    max_snow_depth_estimate = 0 if pd.isna(max_snow_depth_estimate) else max_snow_depth_estimate
+
     snowdepth_change = round(float(snowdepth_change), 1)
     min_snow_depth_estimate = round(float(min_snow_depth_estimate), 1)
     max_snow_depth_estimate = round(float(max_snow_depth_estimate), 1)
@@ -427,11 +478,11 @@ def evaluate_forecast(sites, output_dir, min_snow_level=None, max_snow_level=Non
                 fx_snow_level_max = None
             
             try:
-                our_mean = (area_fx['accumulated_snowfall']['our_forecast']['range'][0] + area_fx['accumulated_snowfall']['our_forecast']['range'][1]) / 2
-                within_range = (our_mean >= actual_snow_min and 
-                                our_mean <= actual_snow_max)
+                
+                our_max = area_fx['accumulated_snowfall']['our_forecast']['range'][1]
+                our_min = area_fx['accumulated_snowfall']['our_forecast']['range'][0]
+                within_range = (our_min <= actual_snow <= our_max)
             except:
-                our_mean = None
                 within_range = False
             results['areas'][site] = {
                 'snowfall': {
@@ -591,7 +642,7 @@ def _build_summary_from_reports(report_dir: Path, days: int | None = None, as_of
             summary.append(f"\n{area.upper()}")
             summary.append(f"  Forecasts: {stats['total']}")
             summary.append(f"  Mean Absolute Error (NBM): {mae:.1f} inches")
-            summary.append(f"  NBM Within IQR Range: {stats['nbm_within_range_count']}/{stats['total']} ({nbm_accuracy:.1f}%)")
+            summary.append(f"  Was the NBM within range? Range: {stats['nbm_within_range_count']}/{stats['total']} ({nbm_accuracy:.1f}%)")
             summary.append(f"  Our Forecast Within Range: {stats['within_range_count']}/{stats['total']} ({our_accuracy:.1f}%)")
     
     return "\n".join(summary)

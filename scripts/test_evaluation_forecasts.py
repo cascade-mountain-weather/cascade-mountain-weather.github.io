@@ -27,7 +27,7 @@ sys.modules['metloom.variables'] = MagicMock()
 sys.modules['pandas'] = MagicMock()
 
 sys.path.insert(0, str(Path(__file__).parent))
-from verify_forecasts import (
+from build_fx_evaluation import (
     scrape_forecast_ranges,
     update_forecast_with_our_forecast,
     calculate_forecast_error,
