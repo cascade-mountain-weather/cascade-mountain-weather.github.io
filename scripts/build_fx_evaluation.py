@@ -145,19 +145,19 @@ def new_snow_estimate(swe, temp):
     # convert swe to m
     swe = swe * 25.4
     # Simple empirical formula for snow density estimation
-    if temp <= -15:
-        density = 50  # Very light, fluffy snow
-    elif temp > 0:
-        density = 250  # Wet, heavy snow
+    if temp <= 258.16:
+        density = .50  # Very light, fluffy snow
+    elif temp > 273.16:
+        density = .250  # Wet, heavy snow
     else:
-        density = 0.05 + 0.0017*((temp-258.16)**1.5)
+        density = 0.05 + 0.0017*((temp-258.16)**1.5) 
     new_snow_depth = ((swe) / density) 
-    return round(new_snow_depth, 1)
+    return round(new_snow_depth/25.4, 1)
 
 def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     """Load observation data for an area and month"""
     start_date = fx_date + pd.Timedelta(days=1)
-    end_date = fx_date + pd.Timedelta(days=3)
+    end_date = start_date + pd.Timedelta(days=4)
     sites ={
     "Mt. Baker" : "909:WA:SNTL",
     "Stevens Pass" : "791:WA:SNTL",
@@ -181,12 +181,15 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
         sntl_df = snotel_point.get_daily_data(start_date, end_date, [snotel_point.ALLOWED_VARIABLES.SNOWDEPTH,
                                                                 snotel_point.ALLOWED_VARIABLES.SWE,
                                                                 snotel_point.ALLOWED_VARIABLES.TEMPMAX,
-                                                                snotel_point.ALLOWED_VARIABLES.TEMPMIN])
+                                                                snotel_point.ALLOWED_VARIABLES.TEMPMIN,
+                                                                snotel_point.ALLOWED_VARIABLES.TEMPAVG,
+                                                                snotel_point.ALLOWED_VARIABLES.PRECIPITATION])
         if site == 'Mt. Baker':
             sntl_df_2 = snotel_point_2.get_daily_data(start_date, end_date, [snotel_point_2.ALLOWED_VARIABLES.SNOWDEPTH,
                                                                     snotel_point_2.ALLOWED_VARIABLES.SWE,
                                                                     snotel_point_2.ALLOWED_VARIABLES.TEMPMAX,
-                                                                    snotel_point_2.ALLOWED_VARIABLES.TEMPMIN])
+                                                                    snotel_point_2.ALLOWED_VARIABLES.TEMPMIN,
+                                                                    snotel_point_2.ALLOWED_VARIABLES.PRECIPITATION])
             # average the two dataframes
             # reset_index to combine
             reset_sntl_df = sntl_df.reset_index().set_index('datetime', drop=True)[['SNOWDEPTH','SWE',]]
@@ -194,7 +197,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
             sntl_df = pd.concat([reset_sntl_df, reset_sntl_df2]).groupby(level=0).mean()
     except:
         raise Exception(f"Could not retrieve Snotel data for {site} ({sites[site]}) between {start_date.date()} and {end_date.date()}.")
-        return None
+        return None 
     print("Snotel data retrieved.")
     # get the cumulative maximum of consecutive swe values
     # drop any negative numbers
@@ -203,15 +206,32 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     sntl_df = sntl_df[sntl_df['SWE'] <= 200]
     swe_change = sntl_df['SWE'].diff().clip(lower=0).sum()
     # estimate new snow depth from swe and temperature
-    if "TEMPMIN" and "TEMPMAX" not in sntl_df.columns:
+    if "MAX AIR TEMP" and "MIN AIR TEMP" not in sntl_df.columns:
         print("Temperature data not available for snow depth estimation.")
         max_snow_depth_estimate_swe = swe_change / 0.08 # assume 10% density
         min_snow_depth_estimate_swe = swe_change / 0.25 # assume 25% density
         snowdepth_change_swe = swe_change/0.15
-    else:
-        max_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['TEMPMIN'].min())
-        min_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['TEMPMAX'].max())
-        snowdepth_change_swe = np.mean([max_snow_depth_estimate_swe, min_snow_depth_estimate_swe])
+
+        print("assumed snow depth change:", snowdepth_change_swe)
+    else:        
+        if "PRECIPITATION" in sntl_df.columns:
+            # lapse assumption:
+            lapse = 1 # feet
+            feet_to_meters = 3.28084
+            lapse_rate_per_C = 6
+            precip_total = sntl_df['PRECIPITATION'].diff().clip(lower=0).sum()
+            # assume lapse rate for temperature
+            lapse_rate_F_1000ft = ((lapse_rate_per_C*9/5)) / feet_to_meters * lapse 
+            lapse_adjusted_temp = sntl_df['AVG AIR TEMP'] - lapse_rate_F_1000ft
+            if (lapse_adjusted_temp.mean() < 32) and (sntl_df['AVG AIR MIN'].mean() > 34):
+                swe_change = precip_total
+                print("using precip based swe change:", swe_change)
+            
+            max_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['MIN AIR TEMP'].min())
+            min_snow_depth_estimate_swe = new_snow_estimate(swe_change, sntl_df['MAX AIR TEMP'].max())
+            snowdepth_change_swe = np.mean([max_snow_depth_estimate_swe, min_snow_depth_estimate_swe])
+            print("snowdepth change from swe and temp:", snowdepth_change_swe)
+            
 
     if ("SNOWDEPTH" in sntl_df.columns) and not (sntl_df['SNOWDEPTH'].isnull().all()):
         sntl_df = sntl_df[sntl_df['SNOWDEPTH'] >= 0]
@@ -240,6 +260,13 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
             max_snow_depth_estimate = max_snow_depth_estimate_swe
         elif max_snow_depth_estimate > max_snow_depth_estimate_swe*2:
             max_snow_depth_estimate = max_snow_depth_estimate_swe
+        print("snowdepth change from snowdepth data:", snowdepth_change)
+    else:
+        snowdepth_change = snowdepth_change_swe
+        min_snow_depth_estimate = min_snow_depth_estimate_swe
+        max_snow_depth_estimate = max_snow_depth_estimate_swe
+        print("no snowdepth data, using swe based estimate:", snowdepth_change)
+
     # replace any nans with 0
     snowdepth_change = 0 if pd.isna(snowdepth_change) else snowdepth_change
     min_snow_depth_estimate = 0 if pd.isna(min_snow_depth_estimate) else min_snow_depth_estimate
@@ -248,6 +275,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     snowdepth_change = round(float(snowdepth_change), 1)
     min_snow_depth_estimate = round(float(min_snow_depth_estimate), 1)
     max_snow_depth_estimate = round(float(max_snow_depth_estimate), 1)
+    print("Final snow depth change estimate:", snowdepth_change)
     
     # inputs into the observation output dict
     observation_output_dict['areas'][site] = {"observed_snowfall": snowdepth_change, 
@@ -685,9 +713,9 @@ if __name__ == '__main__':
     obs_dir.mkdir(parents=True, exist_ok=True)
     
     try:
-        if len(sys.argv) > 2:
-          snow_lvl_max = sys.argv[3]
-          snow_lvl_min = sys.argv[2]
+        if len(sys.argv) > 1:
+          snow_lvl_max = sys.argv[2]
+          snow_lvl_min = sys.argv[1]
         else:
             snow_lvl_min = input("Enter minimum snow level in meters (e.g., 1439): ")
             snow_lvl_max = input("Enter maximum snow level in meters (e.g., 1646): ")
