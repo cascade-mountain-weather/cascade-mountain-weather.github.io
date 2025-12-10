@@ -144,13 +144,6 @@ def parse_recent_evaluation(filepath):
                     if match:
                         area_data['actual'] = float(match.group(1))
                 
-                # Extract Actual Snowfall Range
-                if 'Range (estimated):' in line:
-                    match = re.search(r'Range \(estimated\):\s+([\d.]+)\s*-\s*([\d.]+)\s+inches', line)
-                    if match:
-                        area_data['actual_low'] = float(match.group(1))
-                        area_data['actual_high'] = float(match.group(2))
-                
                 # Extract NBM Forecast
                 if 'NBM Forecast:' in line:
                     match = re.search(r'NBM Forecast:\s+([\d.]+|None)\s+inches', line)
@@ -185,24 +178,6 @@ def parse_recent_evaluation(filepath):
                     if match:
                         area_data['our_within_range'] = match.group(2) == 'Yes'
                 
-                # Extract Snow Level Forecast Range
-                if 'Snow Level:' in line and i + 1 < len(lines):
-                    next_line = lines[i + 1].strip()
-                    if 'Forecast Range:' in next_line:
-                        match = re.search(r'Forecast Range:\s+([\d.]+|None)\s*-\s*([\d.]+|None)\s+feet', next_line)
-                        if match:
-                            low, high = match.group(1), match.group(2)
-                            area_data['snow_level_forecast_low'] = float(low) if low != 'None' else None
-                            area_data['snow_level_forecast_high'] = float(high) if high != 'None' else None
-                    if i + 2 < len(lines):
-                        actual_line = lines[i + 2].strip()
-                        if 'Actual Range:' in actual_line:
-                            match = re.search(r'Actual Range:\s+([\d.]+|None)\s*-\s*([\d.]+|None)\s+feet', actual_line)
-                            if match:
-                                low, high = match.group(1), match.group(2)
-                                area_data['snow_level_actual_low'] = float(low) if low != 'None' else None
-                                area_data['snow_level_actual_high'] = float(high) if high != 'None' else None
-                
                 i += 1
             
             # Fill in missing values
@@ -218,18 +193,6 @@ def parse_recent_evaluation(filepath):
                 area_data['our_forecast_high'] = None
             if 'our_within_range' not in area_data:
                 area_data['our_within_range'] = False
-            if 'snow_level_forecast_low' not in area_data:
-                area_data['snow_level_forecast_low'] = None
-            if 'snow_level_forecast_high' not in area_data:
-                area_data['snow_level_forecast_high'] = None
-            if 'actual_low' not in area_data:
-                area_data['actual_low'] = None
-            if 'actual_high' not in area_data:
-                area_data['actual_high'] = None
-            if 'snow_level_actual_low' not in area_data:
-                area_data['snow_level_actual_low'] = None
-            if 'snow_level_actual_high' not in area_data:
-                area_data['snow_level_actual_high'] = None
             
             # Determine overall accuracy class
             if area_data.get('our_forecast_low') is None:
@@ -321,15 +284,9 @@ def populate_html(html_path, season_data, recent_evals):
                 accuracy_text = '✗ Outside Range'
             
             # Build metrics
-            actual_display = f"{eval_item['actual']:.1f}"
-            if eval_item['actual_low'] is not None and eval_item['actual_high'] is not None:
-                actual_display += f" ({eval_item['actual_low']:.1f}-{eval_item['actual_high']:.1f}\")" 
-            else:
-                actual_display += "\""
-            
             metrics = f"""                <div class="evaluation-metric">
                     <span class="evaluation-metric-label">Actual Snowfall:</span>
-                    <span class="evaluation-metric-value">{actual_display}</span>
+                    <span class="evaluation-metric-value">{eval_item['actual']:.1f}"</span>
                 </div>"""
             
             # NBM metrics
@@ -375,20 +332,6 @@ def populate_html(html_path, season_data, recent_evals):
                     <span class="evaluation-metric-value">Not Issued</span>
                 </div>"""
             
-            # Snow level metrics
-            if eval_item['snow_level_forecast_low'] is not None:
-                metrics += f"""
-                <div class="evaluation-metric">
-                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
-                    <span class="evaluation-metric-value">{eval_item['snow_level_forecast_low']:.0f}-{eval_item['snow_level_forecast_high']:.0f} ft</span>
-                </div>"""
-            if eval_item['snow_level_actual_low'] is not None:
-                metrics += f"""
-                <div class="evaluation-metric">
-                    <span class="evaluation-metric-label">Actual Snow Level:</span>
-                    <span class="evaluation-metric-value">{eval_item['snow_level_actual_low']:.0f}-{eval_item['snow_level_actual_high']:.0f} ft</span>
-                </div>"""
-            
             card = f"""                <div class="evaluation-card">
                     <div class="evaluation-card-header">
                         <h3 class="evaluation-card-title">{eval_item['area']}</h3>
@@ -405,8 +348,8 @@ def populate_html(html_path, season_data, recent_evals):
         
         # Replace the placeholder cards container
         html = re.sub(
-            r'<div class="evaluation-cards-grid" id="evaluation-cards-data" style="display: none;">.*?</div>\s*</section>',
-            f'<div class="evaluation-cards-grid" id="evaluation-cards-data" style="display: none;">\n                <!-- All cards stored here for reference, hidden from view -->\n{cards_grid}\n            </div>\n        </section>',
+            r'<div class="evaluation-cards-grid" id="evaluation-cards">.*?</div>',
+            f'<div class="evaluation-cards-grid" id="evaluation-cards">\n{cards_grid}\n            </div>',
             html,
             flags=re.DOTALL
         )
