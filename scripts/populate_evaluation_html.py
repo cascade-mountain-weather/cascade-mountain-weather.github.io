@@ -111,84 +111,101 @@ def parse_recent_evaluation(filepath):
     Parse the most recent evaluation_YYYY-MM-DD.txt file.
     
     Returns:
-        list of dicts: [
-            {
-                'date': 'Jan 15, 2025',
-                'area': 'Mt. Baker',
-                'forecast': '20" (14-24")',
-                'actual': '18.0"',
-                'error': '-2.0" (-10.0%)',
-                'accuracy': 'Within Range' or 'Outside Range',
-                'accuracy_class': 'good' or 'poor'
-            },
-            ...
-        ]
+        list of dicts with area evaluation data
     """
     with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
+        lines = f.readlines()
     
     results = []
+    current_area = None
+    i = 0
     
-    # Extract forecast date from header
-    date_match = re.search(r'Forecast Date:\s+(\d{4}-\d{2}-\d{2})', content)
-    if date_match:
-        date_str = date_match.group(1)
-        forecast_date = datetime.strptime(date_str, '%Y-%m-%d').strftime('%b %d, %Y')
-    else:
-        forecast_date = 'Unknown'
-    
-    # Parse each area section
-    area_pattern = r'^([A-Z][A-Z\s\.]+)\n-+\n\s+Snowfall:\n.*?Our Forecast Range:\s+([\d.]+|None)\s*-\s*([\d.]+|None)\s+inches\n\s+Actual:\s+([\d.]+)\s+\(\+/-\s+[\d.]+\)\s+inches\s+\n\s+Within forecast range:\s+([✓✗])\s+(Yes|No)'
-    
-    matches = re.finditer(area_pattern, content, re.MULTILINE | re.DOTALL)
-    
-    for match in matches:
-        area_name = match.group(1).strip()
-        forecast_low = match.group(2)
-        forecast_high = match.group(3)
-        actual = float(match.group(4))
-        within_symbol = match.group(5)
-        within_text = match.group(6)
+    while i < len(lines):
+        line = lines[i].strip()
         
-        # Format area name for display (title case, etc.)
-        display_name = format_area_name(area_name)
-        
-        # Handle areas with no forecast
-        if forecast_low == 'None' or forecast_high == 'None':
-            forecast_str = "No Forecast"
-            actual_str = f"{actual:.1f}\""
-            error_str = "N/A"
-            accuracy = 'No Forecast'
-            accuracy_class = 'neutral'
-        else:
-            forecast_low = float(forecast_low)
-            forecast_high = float(forecast_high)
+        # Check if this is an area header (e.g., "MT. BAKER")
+        if line and line.isupper() and not line.startswith('---') and i + 1 < len(lines) and lines[i + 1].strip().startswith('-'):
+            current_area = line
+            area_data = {'area': format_area_name(current_area)}
             
-            # Calculate error (use midpoint of forecast range)
-            forecast_mid = (forecast_low + forecast_high) / 2
-            error = actual - forecast_mid
-            if actual > 0:
-                error_pct = (error / actual) * 100
+            # Parse the following lines for this area
+            i += 2  # Skip the dashes line
+            
+            while i < len(lines):
+                line = lines[i].strip()
+                
+                # Stop if we hit the next area
+                if line and line.isupper() and i + 1 < len(lines) and lines[i + 1].strip().startswith('-'):
+                    break
+                
+                # Extract Actual Snowfall
+                if 'Actual Snowfall:' in line:
+                    match = re.search(r'Actual Snowfall:\s+([\d.]+)\s+inches', line)
+                    if match:
+                        area_data['actual'] = float(match.group(1))
+                
+                # Extract NBM Forecast
+                if 'NBM Forecast:' in line:
+                    match = re.search(r'NBM Forecast:\s+([\d.]+|None)\s+inches', line)
+                    if match:
+                        val = match.group(1)
+                        area_data['nbm_forecast'] = float(val) if val != 'None' else None
+                
+                # Extract NBM Error
+                if 'Error:' in line and 'NBM' in lines[i-1] if i > 0 else False:
+                    match = re.search(r'Error:\s+([\d.]+|-)\s+inches', line)
+                    if match:
+                        val = match.group(1)
+                        area_data['nbm_error'] = float(val) if val != '-' else None
+                
+                # Extract Within NBM IQR range
+                if 'Within NBM IQR range:' in line:
+                    match = re.search(r'Within NBM IQR range:\s+([✓✗])\s+(Yes|No)', line)
+                    if match:
+                        area_data['nbm_within_range'] = match.group(2) == 'Yes'
+                
+                # Extract Our Forecast Range
+                if 'Our Forecast Range:' in line:
+                    match = re.search(r'Our Forecast Range:\s+([\d.]+|None)\s*-\s*([\d.]+|None)\s+inches', line)
+                    if match:
+                        low, high = match.group(1), match.group(2)
+                        area_data['our_forecast_low'] = float(low) if low != 'None' else None
+                        area_data['our_forecast_high'] = float(high) if high != 'None' else None
+                
+                # Extract Within forecast range
+                if 'Within forecast range:' in line:
+                    match = re.search(r'Within forecast range:\s+([✓✗])\s+(Yes|No)', line)
+                    if match:
+                        area_data['our_within_range'] = match.group(2) == 'Yes'
+                
+                i += 1
+            
+            # Fill in missing values
+            if 'nbm_forecast' not in area_data:
+                area_data['nbm_forecast'] = None
+            if 'nbm_error' not in area_data:
+                area_data['nbm_error'] = None
+            if 'nbm_within_range' not in area_data:
+                area_data['nbm_within_range'] = False
+            if 'our_forecast_low' not in area_data:
+                area_data['our_forecast_low'] = None
+            if 'our_forecast_high' not in area_data:
+                area_data['our_forecast_high'] = None
+            if 'our_within_range' not in area_data:
+                area_data['our_within_range'] = False
+            
+            # Determine overall accuracy class
+            if area_data.get('our_forecast_low') is None:
+                area_data['accuracy_class'] = 'neutral'
+            elif area_data.get('our_within_range'):
+                area_data['accuracy_class'] = 'good'
             else:
-                error_pct = 0.0
+                area_data['accuracy_class'] = 'poor'
             
-            # Format strings
-            forecast_str = f"{forecast_mid:.0f}\" ({forecast_low:.0f}-{forecast_high:.0f}\")"
-            actual_str = f"{actual:.1f}\""
-            error_str = f"{error:+.1f}\" ({error_pct:+.1f}%)"
-            
-            accuracy = 'Within Range' if within_text == 'Yes' else 'Outside Range'
-            accuracy_class = 'good' if within_text == 'Yes' else 'poor'
+            results.append(area_data)
         
-        results.append({
-            'date': forecast_date,
-            'area': display_name,
-            'forecast': forecast_str,
-            'actual': actual_str,
-            'error': error_str,
-            'accuracy': accuracy,
-            'accuracy_class': accuracy_class
-        })
+        else:
+            i += 1
     
     return results
 
@@ -251,27 +268,88 @@ def populate_html(html_path, season_data, recent_evals):
         html
     )
     
-    # Build recent forecast evaluation table rows
+    # Build recent forecast evaluation cards
     if recent_evals:
-        table_rows = []
+        cards_html = []
         for eval_item in recent_evals:
-            accuracy_html = f'<span class="accuracy-{eval_item["accuracy_class"]}">{eval_item["accuracy"]}</span>'
-            row = f"""                    <tr>
-                        <td>{eval_item['date']}</td>
-                        <td>{eval_item['area']}</td>
-                        <td>{eval_item['forecast']}</td>
-                        <td>{eval_item['actual']}</td>
-                        <td>{eval_item['error']}</td>
-                        <td>{accuracy_html}</td>
-                    </tr>"""
-            table_rows.append(row)
+            # Determine accuracy display
+            if eval_item['accuracy_class'] == 'neutral':
+                accuracy_label = 'No Forecast'
+                accuracy_text = 'No Forecast'
+            elif eval_item['accuracy_class'] == 'good':
+                accuracy_label = 'Within Range'
+                accuracy_text = '✓ Our Forecast Within Range'
+            else:
+                accuracy_label = 'Outside Range'
+                accuracy_text = '✗ Outside Range'
+            
+            # Build metrics
+            metrics = f"""                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">{eval_item['actual']:.1f}"</span>
+                </div>"""
+            
+            # NBM metrics
+            if eval_item['nbm_forecast'] is not None:
+                nbm_status = '✓' if eval_item['nbm_within_range'] else '✗'
+                nbm_error_val = f"{eval_item['nbm_error']:+.1f}" if eval_item['nbm_error'] is not None else 'N/A'
+                metrics += f"""
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">{eval_item['nbm_forecast']:.1f}"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">{nbm_error_val}</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Within IQR:</span>
+                    <span class="evaluation-metric-value">{nbm_status}</span>
+                </div>"""
+            
+            # Our forecast metrics
+            if eval_item['our_forecast_low'] is not None:
+                our_mid = (eval_item['our_forecast_low'] + eval_item['our_forecast_high']) / 2
+                our_error = eval_item['actual'] - our_mid
+                our_status = '✓' if eval_item['our_within_range'] else '✗'
+                metrics += f"""
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">{our_mid:.0f}" ({eval_item['our_forecast_low']:.0f}-{eval_item['our_forecast_high']:.0f}")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">{our_error:+.1f}"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Within Range:</span>
+                    <span class="evaluation-metric-value">{our_status}</span>
+                </div>"""
+            else:
+                metrics += """
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">Not Issued</span>
+                </div>"""
+            
+            card = f"""                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">{eval_item['area']}</h3>
+                        <span class="evaluation-card-accuracy {eval_item['accuracy_class']}">{accuracy_label}</span>
+                    </div>
+                    <div class="evaluation-card-body">
+{metrics}
+                    </div>
+                </div>"""
+            
+            cards_html.append(card)
         
-        table_body = '\n'.join(table_rows)
+        cards_grid = '\n'.join(cards_html)
         
-        # Replace the placeholder tbody content
+        # Replace the placeholder cards container
         html = re.sub(
-            r'<tbody>.*?</tbody>',
-            f'<tbody>\n{table_body}\n                </tbody>',
+            r'<div class="evaluation-cards-grid" id="evaluation-cards">.*?</div>',
+            f'<div class="evaluation-cards-grid" id="evaluation-cards">\n{cards_grid}\n            </div>',
             html,
             flags=re.DOTALL
         )
