@@ -223,7 +223,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
             # assume lapse rate for temperature
             lapse_rate_F_1000ft = ((lapse_rate_per_C*9/5)) / feet_to_meters * lapse 
             lapse_adjusted_temp = sntl_df['AVG AIR TEMP'] - lapse_rate_F_1000ft
-            if (lapse_adjusted_temp.mean() < 32) and (sntl_df['AVG AIR MIN'].mean() > 34):
+            if (lapse_adjusted_temp.mean() < 32) and (sntl_df['MIN AIR TEMP'].mean() > 34):
                 swe_change = precip_total
                 print("using precip based swe change:", swe_change)
             
