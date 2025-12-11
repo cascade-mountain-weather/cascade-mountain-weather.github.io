@@ -24,12 +24,20 @@ import numpy as np
 
 def load_forecast(site, output_dir):
     """Load forecast data for a specific date"""
-    saved_path = output_dir / f"{site}.csv"
-    if site == "Crystal" or site == "Paradise":
-        return None  # No forecast available for these sites
     # check if today is a Thursday
     if datetime.today().weekday() != 3:  # 3 corresponds to Thursday
         return saved_path  # Only download on Thursdays
+    
+    saved_path = output_dir / f"{site}.csv"
+    # delete file to replace it
+    if os.path.exists(saved_path):
+        os.remove(saved_path)
+    if site == "Crystal" or site == "Paradise":
+        return None  # No forecast available for these sites
+    if site =="Blewett Pass":
+        site = "TBLEW"
+    if site == "Hurricane Ridge":
+        site = "HURW1"
     
     options = webdriver.ChromeOptions()
     options.add_experimental_option("prefs", {
@@ -60,16 +68,17 @@ def load_forecast(site, output_dir):
 
     driver.quit()
 
-    # rename the downloaded file to the desired name for TBLEW and HURW1
-    if site == "Blewett Pass":
+    # rename the downloaded file to the desired name for TBLEW and HURW1 to Blewett Pass and Hurricane Ridge
+    if site == "TBLEW":
         downloaded_file = output_dir / "TBLEW.csv"
+        new_name = output_dir / "Blewett Pass.csv"
         if downloaded_file.exists():
-            downloaded_file.rename(saved_path)
-    elif site == "Hurricane Ridge":
+            downloaded_file.rename(new_name)
+    if site == "HURW1":
         downloaded_file = output_dir / "HURW1.csv"
+        new_name = output_dir / "Hurricane Ridge.csv"
         if downloaded_file.exists():
-            downloaded_file.rename(saved_path)
-
+            downloaded_file.rename(new_name)
     return saved_path
 
 def get_forecast_file(site, output_dir):
