@@ -60,20 +60,103 @@
         <section id="latest-post" class="hero">
             <div class="synoptic-grid">
                 <!-- Row: Integrated Vapor Transport -->
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F24.png" alt="GFS Integrated Vapor Transport" />
-                    </figure>
+            <!-- Row: Integrated Vapor Transport (GFS left, ECMWF right) -->
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="ivtPrev('gfs')">◀</button>
+                <span id="gfs-ivt-hour">F00</span>
+                <button type="button" onclick="ivtNext('gfs')">▶</button>
+                <button type="button" onclick="ivtPlay('gfs')">Play</button>
+                <button type="button" onclick="ivtStop('gfs')">Stop</button>
                 </div>
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F12.png" alt="ECMWF Integrated Vapor Transport (placeholder)" />
-                    </figure>
+                <img id="gfs-ivt-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F00.png"
+                    alt="GFS Integrated Vapor Transport" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="ivtPrev('ecmwf')">◀</button>
+                <span id="ecmwf-ivt-hour">F00</span>
+                <button type="button" onclick="ivtNext('ecmwf')">▶</button>
+                <button type="button" onclick="ivtPlay('ecmwf')">Play</button>
+                <button type="button" onclick="ivtStop('ecmwf')">Stop</button>
                 </div>
+                <img id="ecmwf-ivt-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F00.png"
+                    alt="ECMWF Integrated Vapor Transport" />
+            </figure>
+            </div>
 
-                <!-- Row: 500 mb Vorticity & Geopotential Height -->
+            <!-- Row: Utah Weather Synoptic (GFS 0.25° left, HRES Extended right) -->
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS 0.25° Synoptic 4-Panel</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="utPrev('utah_gfs')">◀</button>
+                <span id="utah_gfs-hour">F000</span>
+                <button type="button" onclick="utNext('utah_gfs')">▶</button>
+                <button type="button" onclick="utPlay('utah_gfs')">Play</button>
+                <button type="button" onclick="utStop('utah_gfs')">Stop</button>
+                </div>
+                <img id="utah_gfs-img" class="SynopticPlot"
+                    src=""
+                    alt="Utah Weather GFS 0.25° Synoptic" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">HRES ECMWF Synoptic 4-Panel</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="utPrev('utah_hres')">◀</button>
+                <span id="utah_hres-hour">F000</span>
+                <button type="button" onclick="utNext('utah_hres')">▶</button>
+                <button type="button" onclick="utPlay('utah_hres')">Play</button>
+                <button type="button" onclick="utStop('utah_hres')">Stop</button>
+                </div>
+                <img id="utah_hres-img" class="SynopticPlot"
+                    src=""
+                    alt="Utah Weather HRES Extended Synoptic" />
+            </figure>
+            </div>
+
+            <!-- Row: 850 hPa Temperature (GFS left, ECMWF right) -->
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS — 850 hPa Temperature</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="tempPrev('gfs850')">◀</button>
+                <span id="gfs850-hour">F000</span>
+                <button type="button" onclick="tempNext('gfs850')">▶</button>
+                <button type="button" onclick="tempPlay('gfs850')">Play</button>
+                <button type="button" onclick="tempStop('gfs850')">Stop</button>
+                </div>
+                <img id="gfs850-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F0.png"
+                    alt="GFS 850 hPa Temperature" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">ECMWF — 850 hPa Temperature</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="tempPrev('ecmwf850')">◀</button>
+                <span id="ecmwf850-hour">F000</span>
+                <button type="button" onclick="tempNext('ecmwf850')">▶</button>
+                <button type="button" onclick="tempPlay('ecmwf850')">Play</button>
+                <button type="button" onclick="tempStop('ecmwf850')">Stop</button>
+                </div>
+                <img id="ecmwf850-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/ECMWF/850Temp/ECMWF_850Temp_USWC_latest_F0.png"
+                    alt="ECMWF 850 hPa Temperature" />
+            </figure>
+            </div>
+
+                <!-- Row: 500 mb Vorticity & Geopotential Height (GFS left, ECMWF right) -->
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
@@ -102,5 +185,215 @@
             </div>
         </section>
     <script src="../assets/header.js" defer></script>
+    <script>
+    (function(){
+    // Forecast hours 0–144 in 6-hr steps
+    // IVT products on CW3E often begin at later lead times.
+    // Use per-model hour arrays to skip unavailable F00/F06 frames.
+    const hoursGFS = Array.from({length: 23}, (_, i) => 12 + i * 6); // [12,18,...,144]
+    const hoursECMWF = Array.from({length: 23}, (_, i) => 12 + i * 6); // [12,18,...,144]
+    const hours240 = Array.from({length: 41}, (_, i) => i * 6); // [0,6,...,240]
+    const hours180 = Array.from({length: 31}, (_, i) => i * 6); // [0,6,...,180]
+
+    // Per-model state
+    const state = {
+        gfs: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F', hours: hoursGFS },
+        ecmwf: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F', hours: hoursECMWF }
+    };
+
+    // 850 hPa temperature state
+    const tempState = {
+        gfs850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F', hours: hours180 },
+        ecmwf850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/850Temp/ECMWF_850Temp_USWC_latest_F', hours: hours180 }
+    };
+
+    // Build Utah Weather base URLs using current UTC date and cycle hour (like mt-baker pages)
+    function buildUtahBase() {
+        let date = new Date();
+        // shift before 12 UTC to previous day for consistency with Utah site update cadence
+        if (date.getUTCHours() < 12) {
+            date = new Date(date.setUTCDate(date.getUTCDate() - 1));
+        }
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const year = date.getUTCFullYear();
+        const dmyString = `${year}${month}${day}`; // e.g., 20251213
+
+        // Choose cycle: use 12Z if current UTC hour >= 12, else 00Z
+        const cycle = (new Date().getUTCHours() >= 12) ? '12' : '00';
+
+        const gfsFolder = `https://weather.utah.edu/${dmyString}/images/models/gfs0p25/`;
+        const hresFolder = `https://weather.utah.edu/${dmyString}/images/models/hresext/`;
+
+        // Example full: GFSSY_WS2025121312F000.png
+        const gfsPrefix = `GFSSY_WS${dmyString}${cycle}F`;
+        const hresPrefix = `HRESSY_WS${dmyString}${cycle}F`;
+
+        return {
+            utah_gfs: { idx: 0, timer: null, folder: gfsFolder, prefix: gfsPrefix, hours: hours240 },
+            utah_hres: { idx: 0, timer: null, folder: hresFolder, prefix: hresPrefix, hours: hours240 }
+        };
+    }
+    const utahState = buildUtahBase();
+
+    function padHour(h){
+        // F0 → F00, F6 → F06, F12 → F12, etc.
+        return String(h).padStart(2, '0');
+    }
+
+    function setImage(model){
+        const s = state[model];
+        const h = s.hours[s.idx];
+        const url = s.base + padHour(h) + '.png';
+        const img = document.getElementById(model + '-ivt-img');
+        const label = document.getElementById(model + '-ivt-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + padHour(h);
+    }
+
+    function setUtahImage(model){
+        const s = utahState[model];
+        const h = s.hours[s.idx];
+        const url = s.folder + s.prefix + String(h).padStart(3, '0') + '.png'; // F000..F240
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
+    function setTempImage(model){
+        const s = tempState[model];
+        const h = s.hours[s.idx];
+        const url = s.base + h + '.png'; // uses no zero-pad in provided URLs
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
+    function step(model, dir){
+        const s = state[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setImage(model);
+    }
+
+    function utStep(model, dir){
+        const s = utahState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setUtahImage(model);
+    }
+
+    function tempStep(model, dir){
+        const s = tempState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setTempImage(model);
+    }
+
+    function play(model){
+        const s = state[model];
+        if (s.timer) return; // already playing
+        s.timer = setInterval(() => step(model, +1), 1000); // 1s per frame; adjust as needed
+    }
+
+    function utPlay(model){
+        const s = utahState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => utStep(model, +1), 1000);
+    }
+
+    function tempPlay(model){
+        const s = tempState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => tempStep(model, +1), 1000);
+    }
+
+    function stop(model){
+        const s = state[model];
+        if (s.timer){
+        clearInterval(s.timer);
+        s.timer = null;
+        }
+    }
+
+    function utStop(model){
+        const s = utahState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
+    function tempStop(model){
+        const s = tempState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
+    // Expose handlers
+    window.ivtPrev = (model) => step(model, -1);
+    window.ivtNext = (model) => step(model, +1);
+    window.ivtPlay = (model) => play(model);
+    window.ivtStop = (model) => stop(model);
+
+    // Expose Utah handlers
+    window.utPrev = (model) => utStep(model, -1);
+    window.utNext = (model) => utStep(model, +1);
+    window.utPlay = (model) => utPlay(model);
+    window.utStop = (model) => utStop(model);
+
+    // Expose 850-temp handlers
+    window.tempPrev = (model) => tempStep(model, -1);
+    window.tempNext = (model) => tempStep(model, +1);
+    window.tempPlay = (model) => tempPlay(model);
+    window.tempStop = (model) => tempStop(model);
+
+    // Keyboard controls: ArrowLeft/ArrowRight step both models; Space stops both
+    document.addEventListener('keydown', (e) => {
+        // Skip if typing in inputs or content-editable elements
+        const t = e.target;
+        const isTyping =
+            t instanceof HTMLInputElement ||
+            t instanceof HTMLTextAreaElement ||
+            t.isContentEditable;
+        if (isTyping) return;
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            step('gfs', -1);
+            step('ecmwf', -1);
+            utStep('utah_gfs', -1);
+            utStep('utah_hres', -1);
+            tempStep('gfs850', -1);
+            tempStep('ecmwf850', -1);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            step('gfs', +1);
+            step('ecmwf', +1);
+            utStep('utah_gfs', +1);
+            utStep('utah_hres', +1);
+            tempStep('gfs850', +1);
+            tempStep('ecmwf850', +1);
+        } else if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            stop('gfs');
+            stop('ecmwf');
+            utStop('utah_gfs');
+            utStop('utah_hres');
+            tempStop('gfs850');
+            tempStop('ecmwf850');
+        }
+    });
+
+    // Initialize to first available per model (GFS→F24, ECMWF→F12)
+    setImage('gfs');
+    setImage('ecmwf');
+    setUtahImage('utah_gfs');
+    setUtahImage('utah_hres');
+    setTempImage('gfs850');
+    setTempImage('ecmwf850');
+    })();
+    </script>
 </body>
 </html>
