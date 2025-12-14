@@ -24,6 +24,187 @@
     <meta name="twitter:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas.">
     
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <style>
+      #snow-map {
+        width: 100%;
+        height: 600px;
+        margin-top: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 1;
+      }
+      .east-flow-watch {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        background: #eaf6ff; /* match info-icon light blue */
+        color: #0074D9; /* match info-icon text color */
+        border: 1px solid #bfe1ff;
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        font-weight: 600;
+        display: none;
+        z-index: 1000;
+      }
+      /* inline info icon placed next to Watch label */
+      .east-flow-info-inline {
+        margin-left: 6px;
+      }
+      .east-flow-info-panel {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        min-width: 300px;
+        background: rgba(255,255,255,0.95);
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        z-index: 1000;
+        padding: 2rem 2rem 1rem 1rem;
+        box-sizing: border-box;
+      }
+      .east-flow-info-panel h3 {
+        color: #2a5298;
+        margin-bottom: 1rem;
+      }
+      .east-flow-info-panel p {
+        margin: 0.5rem 0;
+        line-height: 1.6;
+      }
+      .east-flow-close-btn {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        background: #eee;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #0074D9;
+        cursor: pointer;
+        line-height: 20px;
+        padding: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        transition: background 0.2s;
+      }
+      .east-flow-close-btn:hover {
+        background: #0074D9;
+        color: #fff;
+      }
+      .map-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      .map-section h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .leaflet-popup-content {
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+      }
+      .color-scale {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      .color-scale h3 {
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #333;
+      }
+      .scale-bar {
+        display: flex;
+        gap: 2px;
+        margin-bottom: 8px;
+      }
+      .scale-segment {
+        flex: 1;
+        height: 25px;
+        border: 1px solid #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+      }
+      .scale-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+      #ski-areas {
+        display: none;
+      }
+      .title-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #1e3c72;
+      }
+      .title-bar .bar {
+        height: 4px;
+        width: 100%;
+        background: linear-gradient(90deg, #1F7FD4, #8B2F8B, #AA0040);
+        border-radius: 999px;
+      }
+      .title-bar .title-subtext {
+        font-size: 14px;
+        color: #555;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .region-selector-dropdown {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        border: 2px solid #2a5298;
+        border-radius: 6px;
+        background-color: white;
+        color: #1e3c72;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      .region-selector-dropdown:hover {
+        background-color: #f5f7fa;
+        box-shadow: 0 2px 8px rgba(42, 82, 152, 0.15);
+      }
+      .region-selector-dropdown:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+      }
+      @media (max-width: 768px) {
+        #snow-map { height: 400px; }
+        .region-selector-dropdown {
+          padding: 0.4rem 0.5rem;
+          font-size: 0.8rem;
+          position: relative;
+        }
+        .scale-segment { height: 35px; font-size: 10px; }
+        select { -webkit-appearance: menulist; appearance: menulist; }
+      }
+    </style>
 
 </head>
   
@@ -34,16 +215,20 @@
     </header>
   
     <nav>
-      <ul>
+        <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+        </button>
+      <ul id="primary-nav">
           <a href="../index.html">Home</a>
           <li><a href="../index.html#latest-post">Latest Forecast</a></li>
-          <li><a href="../index.html#ski-areas">Ski Areas</a></li>
+          <li><a href="../tools/model-tools-current-weather.html">Current Weather</a></li>
           <li><a href="../posts/archive.html">Archive</a></li>
           <li><a href="../evaluation.html">Evaluation</a></li>
           <li class="nav-item dropdown">
-              <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools ▾</a>
+              <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
               <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
                 <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
                 <li role="none"><a role="menuitem" href="model-tools-precipitation.html">Precipitation</a></li>
               </ul>
@@ -53,6 +238,58 @@
   </nav>
 
   <main>
+    <section class="map-section">
+      <div class="title-bar">
+        <span>Current Conditions Map</span>
+        <span class="title-subtext">This product is refreshed every hour and provided as is, may be erroneous or delayed.</span>
+        <span class="bar"></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 20px;">
+        <div style="text-align: left; flex: 1;">
+          <select id="map-data-select" aria-label="Select data type" class="region-selector-dropdown">
+            <option value="snow-depth">Snow Depth</option>
+            <option value="temperature">Temperature</option>
+            <option value="snow-interval">Snow Interval (24h)</option>
+          </select>
+        </div>
+        <div style="flex: 1;"></div>
+        <div style="text-align: right; flex: 1;">
+          <select id="unit-toggle" class="region-selector-dropdown">
+            <option value="imperial">in</option>
+            <option value="metric">cm</option>
+          </select>
+        </div>
+      </div>
+      <div id="snow-map">
+        <div id="east-flow-watch" class="east-flow-watch">🚨 East Flow Watch <span id="east-flow-info-toggle" class="info-icon east-flow-info-inline">i</span>
+          <div id="east-flow-info" class="east-flow-info-panel">
+            <p>This triggers when Berne (2700') is at least 2°C colder than Stevens Pass — Brooks (4800'). This suggests an atmospheric temperature inversion with potential easterly gap flow at the pass and lower snow levels.</p>
+            <button class="east-flow-close-btn" onclick="document.getElementById('east-flow-info').style.display='none'">×</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Color Scale Legend -->
+      <div class="color-scale">
+        <h3>Color Scale Legend</h3>
+        
+        <!-- Snow Depth Scale -->
+        <div id="snow-depth-scale" class="scale-section" style="display: block;">
+          <div class="scale-bar"></div>
+        </div>
+        
+        <!-- Temperature Scale -->
+        <div id="temperature-scale" class="scale-section" style="display: none;">
+          <div class="scale-bar"></div>
+        </div>
+        
+        <!-- Snow Interval Scale -->
+        <div id="snow-interval-scale" class="scale-section" style="display: none;">
+          <div class="scale-bar"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="ski-areas" class="ski-areas">
         <h2>Latest Conditions</h2>
         <div class="area-grid">
@@ -87,6 +324,10 @@
                 <div class="data-row">
                   <span class="value temp">43.41&deg;F</span>
                   <span class="label">Brooks (4800') Current Temperature</span>
+                </div>
+                <div class="data-row">
+                  <span class="value temp">{{ stevens_pass-tye-air_temp }}&deg;F</span>
+                  <span class="label">Tye Mill (5180') Current Temperature</span>
                 </div>
                 <div class="data-row">
                   <span class="value temp">42.89&deg;F</span>
@@ -223,14 +464,496 @@
                   <span class="value temp">37.69&deg;F</span>
                   <span class="label">White Pass Base (4500') Current Temperature</span>
                 </div>
+                <div class="data-row">
+                  <span class="value temp">{{ white_pass-pigtail-air_temp }}&deg;F</span>
+                  <span class="label">Pigtail Peak (5970') Current Temperature</span>
+                </div>
+              </div>
+            </a>
+            <a href="berne.html" class="area-card">
+              <div class="card-header">
+                <h3>Berne</h3>
+              </div>
+              <div class="data-sources">
+                <div class="data-row">
+                  <span class="value temp">33.91&deg;F</span>
+                  <span class="label">Berne (2700') Current Temperature</span>
+                </div>
+                <div class="data-row">
+                  <span class="value snow">0.35 in</span>
+                  <span class="label">Berne (2700') snow interval</span>
+                </div>
+                <div class="data-row">
+                  <span class="value snow">2.16 in</span>
+                  <span class="label">Berne (2700') Snow Depth</span>
+                </div>
               </div>
             </a>
         </div>
     </section>
 </main>
     <script src="../assets/header.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-      fetch('../data/stevens_snow.json') // or '../data/stevens_snow.json' if in a subfolder
+      // Site data with coordinates and names
+      const sites = [
+        { name: 'Mt. Baker - Heather Meadows', lat: 48.86, lon: -121.68, elevation: '4210 ft', id: 'baker', elevation_key: '4200' },
+        { name: 'Mt. Baker - Pan Dome', lat: 48.85, lon: -121.68, elevation: '5020 ft', id: 'baker', elevation_key: '5000' },
+        { name: 'Stevens Pass - Brooks', lat: 47.74, lon: -121.11, elevation: '4790 ft', id: 'stevens', elevation_key: '4800' },
+        { name: 'Stevens Pass - Skyline', lat: 47.73, lon: -121.11, elevation: '5250 ft', id: 'stevens', elevation_key: '5200' },
+        { name: 'Stevens Pass - Tye Mill', lat: 47.73, lon: -121.09, elevation: '5180 ft', id: 'stevens', elevation_key: '5180' },
+        { name: 'Alpental - Base', lat: 47.44, lon: -121.42, elevation: '3100 ft', id: 'snoqualmie', elevation_key: '3100' },
+        { name: 'Alpental - Mid-mountain', lat: 47.43, lon: -121.43, elevation: '4350 ft', id: 'snoqualmie', elevation_key: '4400' },
+        { name: 'Alpental - Summit', lat: 47.44, lon: -121.44, elevation: '5470 ft', id: 'snoqualmie', elevation_key: '5500' },
+        { name: 'Blewett Pass', lat: 47.33, lon: -120.58, elevation: '4100 ft', id: 'blewett', elevation_key: '4100' },
+        { name: 'Crystal Mountain - Base', lat: 46.94, lon: -121.52, elevation: '4600 ft', id: 'crystal', elevation_key: '4600' },
+        { name: 'Crystal Mountain - Mid', lat: 46.945, lon: -121.525, elevation: '5900 ft', id: 'crystal', elevation_key: '5900' },
+        { name: 'Paradise - RS', lat: 46.79, lon: -121.74, elevation: '5400 ft', id: 'paradise', elevation_key: '5400' },
+        { name: 'Camp Muir', lat: 46.84, lon: -121.73, elevation: '10110 ft', id: 'paradise', elevation_key: '10000' },
+        { name: 'White Pass - Base', lat: 46.64, lon: -121.39, elevation: '4498 ft', id: 'white', elevation_key: '4500' },
+        { name: 'White Pass - Pigtail Peak', lat: 46.62, lon: -121.39, elevation: '5970 ft', id: 'white', elevation_key: '5970' },
+        { name: 'Berne', lat: 47.78, lon: -120.97, elevation: '2700 ft', id: 'berne', elevation_key: '2700' }
+      ];
+
+      let snowDepthMin = 0, snowDepthMax = 24;
+
+      function getSnowColor(depth) {
+        if (depth === null || depth === 0) return '#999999';
+        const range = snowDepthMax - snowDepthMin;
+        const step = range / 10;
+        const colorStops = [
+          '#E0F2F7', '#BFE5F2', '#7FD4F1', '#3FA8E8', '#1F7FD4',
+          '#1E5BA8', '#6B46A8', '#8B2F8B', '#AA0040', '#550000'
+        ];
+        for (let i = 0; i < 10; i++) {
+          const binMin = snowDepthMin + (i * step);
+          const binMax = snowDepthMin + ((i + 1) * step);
+          if (depth >= binMin && depth < binMax) {
+            return colorStops[i];
+          }
+        }
+        return colorStops[9];
+      }
+
+      function getTempColor(temp) {
+        if (temp === null) return '#999999';
+        if (temp > 50) return '#FF4500';
+        if (temp > 40) return '#FFD700';
+        if (temp > 32) return '#87CEEB';
+        if (temp > 20) return '#4169E1';
+        return '#00008B';
+      }
+
+      function getIntervalColor(interval) {
+        if (interval === null || interval === 0) return '#999999';
+        if (interval < 0.25) return '#E0F2F7';
+        if (interval < 0.5) return '#BFE5F2';
+        if (interval < 0.75) return '#7FD4F1';
+        if (interval < 1.0) return '#3FA8E8';
+        if (interval < 1.5) return '#1F7FD4';
+        if (interval < 2.0) return '#1E5BA8';
+        if (interval < 3.0) return '#6B46A8';
+        if (interval < 4.0) return '#8B2F8B';
+        if (interval < 6.0) return '#AA0040';
+        if (interval < 8.0) return '#550000';
+        if (interval < 12.0) return '#330000';
+        if (interval < 16.0) return '#1a0000';
+        if (interval < 20.0) return '#0d0000';
+        if (interval < 24.0) return '#000000';
+        return '#1a1a1a';
+      }
+
+      function getAllDataFromPage() {
+        const data = {};
+        const cards = document.querySelectorAll('.area-card');
+        cards.forEach(card => {
+          const link = card.getAttribute('href');
+          let siteId = null;
+          if (link.includes('mt-baker')) siteId = 'baker';
+          else if (link.includes('stevens')) siteId = 'stevens';
+          else if (link.includes('snoqualmie')) siteId = 'snoqualmie';
+          else if (link.includes('blewett')) siteId = 'blewett';
+          else if (link.includes('crystal')) siteId = 'crystal';
+          else if (link.includes('paradise')) siteId = 'paradise';
+          else if (link.includes('white')) siteId = 'white';
+          else if (link.includes('berne')) siteId = 'berne';
+          if (siteId) {
+            if (!data[siteId]) {
+              data[siteId] = {};
+            }
+            const rows = card.querySelectorAll('.data-row');
+            rows.forEach(row => {
+              const label = row.querySelector('.label')?.textContent || '';
+              const tempValue = row.querySelector('.value.temp')?.textContent || '';
+              const snowValue = row.querySelector('.value.snow')?.textContent || '';
+              const elevationMatch = label.match(/\((\d+)'/);
+              const elevation = elevationMatch ? elevationMatch[1] : null;
+              if (elevation) {
+                if (!data[siteId][elevation]) {
+                  data[siteId][elevation] = {
+                    temp: null,
+                    snowDepth: null,
+                    snowInterval: null
+                  };
+                }
+                if (tempValue && label.toLowerCase().includes('current temperature')) {
+                  data[siteId][elevation].temp = parseFloat(tempValue);
+                }
+                if (snowValue && label.toLowerCase().includes('snow depth') && !label.toLowerCase().includes('interval')) {
+                  data[siteId][elevation].snowDepth = parseFloat(snowValue);
+                }
+                if (snowValue && label.toLowerCase().includes('snow interval')) {
+                  data[siteId][elevation].snowInterval = parseFloat(snowValue);
+                }
+              }
+            });
+          }
+        });
+        return data;
+      }
+
+      const map = L.map('snow-map').setView([47.5, -121.5], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 13
+      }).addTo(map);
+
+      let allMapData = {};
+      let mapMarkers = {};
+      let currentDataType = 'snow-depth';
+      let currentUnits = 'imperial';
+
+      function fToC(f){ return (f - 32) * 5/9; }
+
+      function updateEastFlowWatch(){
+        try {
+          const stevens = allMapData['stevens'];
+          const berne = allMapData['berne'];
+          const brooksF = stevens && stevens['4800'] && stevens['4800'].temp != null ? stevens['4800'].temp : null; // Brooks
+          const berneF = berne && berne['2700'] && berne['2700'].temp != null ? berne['2700'].temp : null; // Berne base
+          const box = document.getElementById('east-flow-watch');
+          if (!box) return;
+          if (brooksF == null || berneF == null){ box.style.display = 'none'; return; }
+          const brooksC = fToC(brooksF);
+          const berneC = fToC(berneF);
+          if (berneC <= brooksC - 2){
+            box.style.display = 'block';
+          } else {
+            box.style.display = 'none';
+          }
+        } catch(e){
+          const box = document.getElementById('east-flow-watch');
+          if (box) box.style.display = 'none';
+        }
+      }
+
+      function convertTemp(fahrenheit, toMetric = false) {
+        if (toMetric) {
+          return Math.round((fahrenheit - 32) * 5/9 * 10) / 10;
+        }
+        return fahrenheit;
+      }
+
+      function convertDepth(inches, toMetric = false) {
+        if (toMetric) {
+          return Math.round(inches * 2.54 * 10) / 10;
+        }
+        return Math.round(inches * 10) / 10;
+      }
+
+      function getTempUnit() {
+        return currentUnits === 'metric' ? '°C' : '°F';
+      }
+
+      function getDepthUnit() {
+        return currentUnits === 'metric' ? ' cm' : ' in';
+      }
+
+      function convertElevation(feet, toMetric = false) {
+        if (toMetric) {
+          return Math.round(feet * 0.3048);
+        }
+        return feet;
+      }
+
+      function getElevationString(site) {
+        const elevation = parseInt(site.elevation);
+        if (currentUnits === 'metric') {
+          const meters = convertElevation(elevation, true);
+          return `${meters} m`;
+        }
+        return site.elevation;
+      }
+
+      function createMarker(site, dataType) {
+        const siteData = allMapData[site.id];
+        if (!siteData || !siteData[site.elevation_key]) {
+          return null;
+        }
+        const data = siteData[site.elevation_key];
+        let value, color, unit, labelText, displayNumber, displayValue;
+        if (dataType === 'snow-depth') {
+          value = data.snowDepth;
+          if (value === null) return null;
+          color = getSnowColor(value);
+          unit = getDepthUnit();
+          labelText = 'Snow Depth';
+          const converted = convertDepth(value, currentUnits === 'metric');
+          displayValue = converted;
+          displayNumber = Math.round(converted);
+        } else if (dataType === 'temperature') {
+          value = data.temp;
+          if (value === null) return null;
+          color = getTempColor(value);
+          unit = getTempUnit();
+          labelText = 'Temperature';
+          const converted = convertTemp(value, currentUnits === 'metric');
+          displayValue = converted;
+          displayNumber = Math.round(converted);
+        } else if (dataType === 'snow-interval') {
+          value = data.snowInterval;
+          if (value === null) return null;
+          color = getIntervalColor(value);
+          unit = getDepthUnit();
+          labelText = 'Snow Interval (24h)';
+          const converted = convertDepth(value, currentUnits === 'metric');
+          displayValue = converted;
+          displayNumber = Math.round(converted);
+        }
+        const fullText = `${displayValue}${unit}`;
+        const icon = L.divIcon({
+          className: 'weather-marker',
+          html: `<div style="
+            background-color: ${color};
+            border: 2px solid #333;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          ">${displayNumber}</div>`,
+          iconSize: [50, 50],
+          popupAnchor: [0, -25]
+        });
+        const marker = L.marker([site.lat, site.lon], { icon: icon }).addTo(map);
+        marker.bindPopup(`
+          <strong>${site.name}</strong><br>
+          Elevation: ${getElevationString(site)}<br>
+          ${labelText}: <strong>${fullText}</strong>
+        `);
+        return marker;
+      }
+
+      function updateMarkers(dataType) {
+        currentDataType = dataType;
+        Object.values(mapMarkers).forEach(marker => {
+          if (marker) map.removeLayer(marker);
+        });
+        mapMarkers = {};
+        sites.forEach((site, index) => {
+          const marker = createMarker(site, dataType);
+          if (marker) {
+            mapMarkers[index] = marker;
+          }
+        });
+        updateEastFlowWatch();
+      }
+
+      // Info toggle wiring
+      (function(){
+        const btn = document.getElementById('east-flow-info-toggle');
+        const panel = document.getElementById('east-flow-info');
+        if (btn && panel){
+          btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+          });
+        }
+      })();
+
+      function updateUnitDropdown(dataType) {
+        const unitToggle = document.getElementById('unit-toggle');
+        if (!unitToggle) return;
+        const currentValue = unitToggle.value;
+        if (dataType === 'temperature') {
+          unitToggle.innerHTML = `
+            <option value="imperial">°F</option>
+            <option value="metric">°C</option>
+          `;
+        } else {
+          unitToggle.innerHTML = `
+            <option value="imperial">in</option>
+            <option value="metric">cm</option>
+          `;
+        }
+        unitToggle.value = currentValue;
+      }
+
+      function addMarkersToMap() {
+        allMapData = getAllDataFromPage();
+        updateMarkers('snow-depth');
+        updateColorScale('snow-depth');
+        updateUnitDropdown('snow-depth');
+        const select = document.getElementById('map-data-select');
+        if (select) {
+          select.addEventListener('change', function(e) {
+            updateMarkers(e.target.value);
+            updateColorScale(e.target.value);
+            updateUnitDropdown(e.target.value);
+          });
+        }
+        const unitToggle = document.getElementById('unit-toggle');
+        if (unitToggle) {
+          unitToggle.addEventListener('change', function(e) {
+            currentUnits = e.target.value;
+            updateMarkers(currentDataType);
+            updateColorScale(currentDataType);
+          });
+        }
+      }
+
+      function updateColorScale(dataType) {
+        document.getElementById('snow-depth-scale').style.display = 'none';
+        document.getElementById('temperature-scale').style.display = 'none';
+        document.getElementById('snow-interval-scale').style.display = 'none';
+        if (dataType === 'snow-depth') {
+          updateSnowDepthScale();
+          document.getElementById('snow-depth-scale').style.display = 'block';
+          document.getElementById('east-flow-watch').style.display = 'none';
+        } else if (dataType === 'temperature') {
+          updateTemperatureScale();
+          document.getElementById('temperature-scale').style.display = 'block';
+          updateEastFlowWatch();
+        } else if (dataType === 'snow-interval') {
+          updateSnowIntervalScale();
+          document.getElementById('snow-interval-scale').style.display = 'block';
+          document.getElementById('east-flow-watch').style.display = 'none';
+        }
+      }
+
+      function updateTemperatureScale() {
+        const tempRanges = [
+          { minF: -50, maxF: 20, imperialLabel: '≤20°F', metricLabel: '≤-7°C', color: '#00008B' },
+          { minF: 20, maxF: 32, imperialLabel: '20-32°F', metricLabel: '-7-0°C', color: '#4169E1' },
+          { minF: 32, maxF: 40, imperialLabel: '32-40°F', metricLabel: '0-4°C', color: '#87CEEB' },
+          { minF: 40, maxF: 50, imperialLabel: '40-50°F', metricLabel: '4-10°C', color: '#FFD700' },
+          { minF: 50, maxF: 100, imperialLabel: '50°F+', metricLabel: '10°C+', color: '#FF4500' }
+        ];
+        const segments = [];
+        tempRanges.forEach(range => {
+          const label = currentUnits === 'metric' ? range.metricLabel : range.imperialLabel;
+          segments.push({
+            label: label,
+            color: range.color
+          });
+        });
+        const scaleBar = document.querySelector('#temperature-scale .scale-bar');
+        if (scaleBar) {
+          scaleBar.innerHTML = segments.map(seg => 
+            `<div class="scale-segment" style="background-color: ${seg.color};">${seg.label}</div>`
+          ).join('');
+        }
+      }
+
+      function updateSnowDepthScale() {
+        let min = Infinity, max = -Infinity;
+        Object.values(allMapData).forEach(siteData => {
+          Object.values(siteData).forEach(elevData => {
+            if (elevData.snowDepth !== null) {
+              min = Math.min(min, elevData.snowDepth);
+              max = Math.max(max, elevData.snowDepth);
+            }
+          });
+        });
+        if (min === Infinity) {
+          min = 0;
+          max = 24;
+        }
+        snowDepthMin = min;
+        snowDepthMax = max;
+        const range = max - min;
+        const step = range / 10;
+        const segments = [];
+        const colorStops = [
+          '#E0F2F7', '#BFE5F2', '#7FD4F1', '#3FA8E8', '#1F7FD4',
+          '#1E5BA8', '#6B46A8', '#8B2F8B', '#AA0040', '#550000'
+        ];
+        for (let i = 0; i < 10; i++) {
+          const binMin = min + (i * step);
+          const binMax = min + ((i + 1) * step);
+          let label;
+          if (currentUnits === 'metric') {
+            const minCm = Math.round(convertDepth(binMin, true));
+            const maxCm = Math.round(convertDepth(binMax, true));
+            label = i === 9 
+              ? `${minCm} cm+` 
+              : `${minCm}-${maxCm} cm`;
+          } else {
+            const minIn = Math.round(binMin);
+            const maxIn = Math.round(binMax);
+            label = i === 9 
+              ? `${minIn}"` 
+              : `${minIn}-${maxIn}"`;
+          }
+          segments.push({
+            label: label,
+            color: colorStops[i]
+          });
+        }
+        const scaleBar = document.querySelector('#snow-depth-scale .scale-bar');
+        if (scaleBar) {
+          scaleBar.innerHTML = segments.map(seg => 
+            `<div class="scale-segment" style="background-color: ${seg.color};">${seg.label}</div>`
+          ).join('');
+        }
+      }
+
+      function updateSnowIntervalScale() {
+        const nwsColors = [
+          { threshold: 1.0, imperialLabel: '0-1"', metricLabel: '0-3 cm', color: '#E0F2F7' },
+          { threshold: 2.0, imperialLabel: '1-2"', metricLabel: '3-5 cm', color: '#BFE5F2' },
+          { threshold: 4.0, imperialLabel: '2-4"', metricLabel: '5-10 cm', color: '#7FD4F1' },
+          { threshold: 6.0, imperialLabel: '4-6"', metricLabel: '10-15 cm', color: '#3FA8E8' },
+          { threshold: 8.0, imperialLabel: '6-8"', metricLabel: '15-20 cm', color: '#1F7FD4' },
+          { threshold: 12.0, imperialLabel: '8-12"', metricLabel: '20-31 cm', color: '#1E5BA8' },
+          { threshold: 16.0, imperialLabel: '12-16"', metricLabel: '31-41 cm', color: '#6B46A8' },
+          { threshold: 20.0, imperialLabel: '16-20"', metricLabel: '41-51 cm', color: '#8B2F8B' },
+          { threshold: 24.0, imperialLabel: '20-24"', metricLabel: '51-61 cm', color: '#AA0040' },
+          { threshold: Infinity, imperialLabel: '24"+', metricLabel: '61+ cm', color: '#550000' }
+        ];
+        const segments = [];
+        nwsColors.forEach(nws => {
+          const label = currentUnits === 'metric' ? nws.metricLabel : nws.imperialLabel;
+          segments.push({
+            label: label,
+            color: nws.color
+          });
+        });
+        const scaleBar = document.querySelector('#snow-interval-scale .scale-bar');
+        if (scaleBar) {
+          scaleBar.innerHTML = segments.map(seg => 
+            `<div class="scale-segment" style="background-color: ${seg.color};">${seg.label}</div>`
+          ).join('');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        addMarkersToMap();
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addMarkersToMap);
+      } else {
+        addMarkersToMap();
+      }
+    </script>
+    <script>
+      fetch('../data/stevens_snow.json')
         .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
           return response.json();
