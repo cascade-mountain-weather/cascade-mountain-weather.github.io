@@ -15,14 +15,15 @@
         <meta property="og:description" content="GFS and ECMWF weather model analysis for Washington Cascade Range forecasting.">
         <meta property="og:url" content="https://www.cascademountainweather.com/tools/model-tools-synoptic.html">
         <meta property="og:site_name" content="Cascade Mountain Weather">
-        <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/logo_draft.png">
+        <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="Synoptic Weather Tools | Cascade Mountain Weather">
         <meta name="twitter:description" content="Weather model analysis for Cascade Range forecasting.">
-        <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/logo_draft.png">
+        <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
         
+        <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
         <link rel="stylesheet" href="../style.css">
     </head>
 
@@ -56,25 +57,22 @@
         </ul>
     </nav>
 
-        <section id="latest-post" class="hero">
-            <div class="synoptic-grid">
-                <!-- Row: Integrated Vapor Transport -->
-            <!-- Row: Integrated Vapor Transport (GFS left, ECMWF right) -->
-            <div class="tool-card">
-            <figure>
-                <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
-                <div class="ivt-controls">
-                <button type="button" onclick="ivtPrev('gfs')">◀</button>
-                <span id="gfs-ivt-hour">F00</span>
-                <button type="button" onclick="ivtNext('gfs')">▶</button>
-                <button type="button" onclick="ivtPlay('gfs')">Play</button>
-                <button type="button" onclick="ivtStop('gfs')">Stop</button>
-                </div>
-                <img id="gfs-ivt-img" class="SynopticPlot"
-                    src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F00.png"
-                    alt="GFS Integrated Vapor Transport" />
-            </figure>
-            </div>
+                <section id="latest-post" class="hero">
+                        <!-- Controls: choose which tools row to display -->
+                           <div class="tool-row-selector" style="text-align: center;">
+                            <label for="synoptic-row-select" style="font-weight:600; color:#1e3c72;">Show:</label>
+                            <select id="synoptic-row-select" style="margin-left:0.5rem; padding:0.4rem 0.6rem;">
+                                    <option value="ivt" selected>IVT (Integrated Vapor Transport)</option>
+                                    <option value="utah">Utah Synoptic (ECMWF HRES + GFS)</option>
+                                    <option value="temp850">850 mb Temperature</option>
+                                    <option value="vort500">500 mb Vorticity</option>
+                                    <option value="ar_landfall">Atmospheric River Landfall</option>
+                            </select>
+                        </div>
+                        <div class="synoptic-grid">
+                                <!-- Row: Integrated Vapor Transport -->
+                                <div class="tools-row" data-row="ivt">
+            <!-- Row: Integrated Vapor Transport (ECMWF left, GFS right) -->
             <div class="tool-card">
             <figure>
                 <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
@@ -90,23 +88,25 @@
                     alt="ECMWF Integrated Vapor Transport" />
             </figure>
             </div>
-
-            <!-- Row: Utah Weather Synoptic (GFS 0.25° left, HRES Extended right) -->
             <div class="tool-card">
             <figure>
-                <figcaption class="tool-title">GFS 0.25° Synoptic 4-Panel</figcaption>
+                <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
                 <div class="ivt-controls">
-                <button type="button" onclick="utPrev('utah_gfs')">◀</button>
-                <span id="utah_gfs-hour">F000</span>
-                <button type="button" onclick="utNext('utah_gfs')">▶</button>
-                <button type="button" onclick="utPlay('utah_gfs')">Play</button>
-                <button type="button" onclick="utStop('utah_gfs')">Stop</button>
+                <button type="button" onclick="ivtPrev('gfs')">◀</button>
+                <span id="gfs-ivt-hour">F00</span>
+                <button type="button" onclick="ivtNext('gfs')">▶</button>
+                <button type="button" onclick="ivtPlay('gfs')">Play</button>
+                <button type="button" onclick="ivtStop('gfs')">Stop</button>
                 </div>
-                <img id="utah_gfs-img" class="SynopticPlot"
-                    src=""
-                    alt="Utah Weather GFS 0.25° Synoptic" />
+                <img id="gfs-ivt-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F00.png"
+                    alt="GFS Integrated Vapor Transport" />
             </figure>
             </div>
+            </div>
+
+            <!-- Row: Utah Weather Synoptic (ECMWF HRES left, GFS 0.25° right) -->
+            <div class="tools-row" data-row="utah">
             <div class="tool-card">
             <figure>
                 <figcaption class="tool-title">HRES ECMWF Synoptic 4-Panel</figcaption>
@@ -122,23 +122,25 @@
                     alt="Utah Weather HRES Extended Synoptic" />
             </figure>
             </div>
-
-            <!-- Row: 850 hPa Temperature (GFS left, ECMWF right) -->
             <div class="tool-card">
             <figure>
-                <figcaption class="tool-title">GFS — 850 hPa Temperature</figcaption>
+                <figcaption class="tool-title">GFS 0.25° Synoptic 4-Panel</figcaption>
                 <div class="ivt-controls">
-                <button type="button" onclick="tempPrev('gfs850')">◀</button>
-                <span id="gfs850-hour">F000</span>
-                <button type="button" onclick="tempNext('gfs850')">▶</button>
-                <button type="button" onclick="tempPlay('gfs850')">Play</button>
-                <button type="button" onclick="tempStop('gfs850')">Stop</button>
+                <button type="button" onclick="utPrev('utah_gfs')">◀</button>
+                <span id="utah_gfs-hour">F000</span>
+                <button type="button" onclick="utNext('utah_gfs')">▶</button>
+                <button type="button" onclick="utPlay('utah_gfs')">Play</button>
+                <button type="button" onclick="utStop('utah_gfs')">Stop</button>
                 </div>
-                <img id="gfs850-img" class="SynopticPlot"
-                    src="https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F0.png"
-                    alt="GFS model 850mb temperature and winds forecast for Washington Cascades and Pacific Northwest" />
+                <img id="utah_gfs-img" class="SynopticPlot"
+                    src=""
+                    alt="Utah Weather GFS 0.25° Synoptic" />
             </figure>
             </div>
+            </div>
+
+            <!-- Row: 850 hPa Temperature (ECMWF left, GFS right) -->
+            <div class="tools-row" data-row="temp850">
             <div class="tool-card">
             <figure>
                 <figcaption class="tool-title">ECMWF — 850 hPa Temperature</figcaption>
@@ -154,21 +156,25 @@
                     alt="ECMWF model 850mb temperature and winds forecast for Washington Cascades and Pacific Northwest" />
             </figure>
             </div>
-
-                <!-- Row: 500 mb Vorticity & Geopotential Height (GFS left, ECMWF right) -->
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
-                        <div class="ivt-controls">
-                        <button type="button" onclick="vortPrev('gfs500')">◀</button>
-                        <span id="gfs500-hour">F000</span>
-                        <button type="button" onclick="vortNext('gfs500')">▶</button>
-                        <button type="button" onclick="vortPlay('gfs500')">Play</button>
-                        <button type="button" onclick="vortStop('gfs500')">Stop</button>
-                        </div>
-                        <img id="gfs500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F0.png" alt="GFS 500mb Vorticity and Geopotential Height" />
-                    </figure>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS — 850 hPa Temperature</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="tempPrev('gfs850')">◀</button>
+                <span id="gfs850-hour">F000</span>
+                <button type="button" onclick="tempNext('gfs850')">▶</button>
+                <button type="button" onclick="tempPlay('gfs850')">Play</button>
+                <button type="button" onclick="tempStop('gfs850')">Stop</button>
                 </div>
+                <img id="gfs850-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F0.png"
+                    alt="GFS model 850mb temperature and winds forecast for Washington Cascades and Pacific Northwest" />
+            </figure>
+            </div>
+            </div>
+
+                <!-- Row: 500 mb Vorticity & Geopotential Height (ECMWF left, GFS right) -->
+                <div class="tools-row" data-row="vort500">
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">ECMWF — 500mb Vorticity &amp; Geopotential Height </figcaption>
@@ -182,7 +188,22 @@
                         <img id="ecmwf500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F0.png" alt="ECMWF 500mb Vorticity and Geopotential Height" />
                     </figure>
                 </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
+                        <div class="ivt-controls">
+                        <button type="button" onclick="vortPrev('gfs500')">◀</button>
+                        <span id="gfs500-hour">F000</span>
+                        <button type="button" onclick="vortNext('gfs500')">▶</button>
+                        <button type="button" onclick="vortPlay('gfs500')">Play</button>
+                        <button type="button" onclick="vortStop('gfs500')">Stop</button>
+                        </div>
+                        <img id="gfs500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F0.png" alt="GFS 500mb Vorticity and Geopotential Height" />
+                    </figure>
+                </div>
+                </div>
                 <!-- Row: AR Timeseries -->
+                <div class="tools-row" data-row="ar_landfall">
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">GEFS — AR Landfall Tool</figcaption>
@@ -194,6 +215,7 @@
                         <figcaption class="tool-title">EPS — AR Landfall Tool</figcaption>
                         <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ensemble/LandfallTool/US-west/ECMWF_LandfallTool_250_coast_current.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
                     </figure>
+                </div>
                 </div>
             </div>
         </section>
@@ -447,7 +469,7 @@
         }
     });
 
-    // Initialize to first available per model (GFS→F24, ECMWF→F12)
+        // Initialize to first available per model (GFS→F24, ECMWF→F12)
     setImage('gfs');
     setImage('ecmwf');
     setUtahImage('utah_gfs');
@@ -456,7 +478,29 @@
     setTempImage('ecmwf850');
     setVortImage('gfs500');
     setVortImage('ecmwf500');
+
+        // Row selector: show one tools row at a time
+        (function initRowSelector(){
+            const select = document.getElementById('synoptic-row-select');
+            const rows = Array.from(document.querySelectorAll('.tools-row'));
+            function applySelection(){
+                const val = select.value;
+                rows.forEach(r => {
+                    r.style.display = (r.getAttribute('data-row') === val) ? '' : 'none';
+                });
+            }
+            if(select){
+                // default to IVT visible
+                select.value = 'ivt';
+                applySelection();
+                select.addEventListener('change', applySelection);
+            }
+        })();
     })();
     </script>
+    <footer>
+        <p>&copy; 2024 Cascade Mountain Weather | Washington Backcountry Forecasts</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">This site is for educational purposes. Always check official sources before heading into the backcountry.</p>
+    </footer>
 </body>
 </html>
