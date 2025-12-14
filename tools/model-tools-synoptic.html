@@ -3,13 +3,12 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Synoptic Weather Tools | Cascade Mountain Weather - GFS & ECMWF Models</title>
+                    <li><a href="../tools/model-tools-current-weather.html">Current Weather</a></li>
         <meta name="description" content="Synoptic-scale weather tools for Cascade Mountain Weather forecasting. View GFS and ECMWF model outputs, integrated vapor transport, and atmospheric river forecasts for Washington.">
         <meta name="keywords" content="Cascade Mountain Weather synoptic, GFS model, ECMWF model, atmospheric river forecast, IVT forecast, Washington weather models, mountain weather analysis">
         <meta name="author" content="Cascade Mountain Weather">
         <meta name="robots" content="index, follow">
         <link rel="canonical" href="https://www.cascademountainweather.com/tools/model-tools-synoptic.html">
-        <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
         
         <!-- Open Graph / Social Media -->
         <meta property="og:type" content="website">
@@ -42,13 +41,12 @@
                 <ul id="primary-nav">
             <a href="../index.html">Home</a>
             <li><a href="../index.html#latest-post">Latest Forecast</a></li>
-            <li><a href="../index.html#ski-areas">Ski Areas</a></li>
+                        <li><a href="../tools/model-tools-current-weather.html">Current Weather</a></li>
             <li><a href="../posts/archive.html">Archive</a></li>
               <li><a href="../evaluation.html">Evaluation</a></li>
               <li class="nav-item dropdown">
                   <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
                 <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                  <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
                   <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
                   <li role="none"><a role="menuitem" href="model-tools-precipitation.html">Precipitation</a></li>
                 </ul>
@@ -160,13 +158,27 @@
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F24.png" alt="GFS 500mb Vorticity and Geopotential Height" />
+                        <div class="ivt-controls">
+                        <button type="button" onclick="vortPrev('gfs500')">◀</button>
+                        <span id="gfs500-hour">F000</span>
+                        <button type="button" onclick="vortNext('gfs500')">▶</button>
+                        <button type="button" onclick="vortPlay('gfs500')">Play</button>
+                        <button type="button" onclick="vortStop('gfs500')">Stop</button>
+                        </div>
+                        <img id="gfs500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F0.png" alt="GFS 500mb Vorticity and Geopotential Height" />
                     </figure>
                 </div>
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">ECMWF — 500mb Vorticity &amp; Geopotential Height </figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F36.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
+                        <div class="ivt-controls">
+                        <button type="button" onclick="vortPrev('ecmwf500')">◀</button>
+                        <span id="ecmwf500-hour">F000</span>
+                        <button type="button" onclick="vortNext('ecmwf500')">▶</button>
+                        <button type="button" onclick="vortPlay('ecmwf500')">Play</button>
+                        <button type="button" onclick="vortStop('ecmwf500')">Stop</button>
+                        </div>
+                        <img id="ecmwf500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F0.png" alt="ECMWF 500mb Vorticity and Geopotential Height" />
                     </figure>
                 </div>
                 <!-- Row: AR Timeseries -->
@@ -205,6 +217,12 @@
     const tempState = {
         gfs850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F', hours: hours180 },
         ecmwf850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/850Temp/ECMWF_850Temp_USWC_latest_F', hours: hours180 }
+    };
+
+    // 500 hPa vorticity state
+    const vortState = {
+        gfs500: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F', hours: hours180 },
+        ecmwf500: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F', hours: hours180 }
     };
 
     // Build Utah Weather base URLs using current UTC date and cycle hour (like mt-baker pages)
@@ -271,6 +289,16 @@
         if (label) label.textContent = 'F' + String(h).padStart(3, '0');
     }
 
+    function setVortImage(model){
+        const s = vortState[model];
+        const h = s.hours[s.idx];
+        const url = s.base + h + '.png'; // uses no zero-pad in provided URLs
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
     function step(model, dir){
         const s = state[model];
         s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
@@ -289,6 +317,12 @@
         setTempImage(model);
     }
 
+    function vortStep(model, dir){
+        const s = vortState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setVortImage(model);
+    }
+
     function play(model){
         const s = state[model];
         if (s.timer) return; // already playing
@@ -305,6 +339,12 @@
         const s = tempState[model];
         if (s.timer) return;
         s.timer = setInterval(() => tempStep(model, +1), 1000);
+    }
+
+    function vortPlay(model){
+        const s = vortState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => vortStep(model, +1), 1000);
     }
 
     function stop(model){
@@ -331,6 +371,14 @@
         }
     }
 
+    function vortStop(model){
+        const s = vortState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
     // Expose handlers
     window.ivtPrev = (model) => step(model, -1);
     window.ivtNext = (model) => step(model, +1);
@@ -348,6 +396,12 @@
     window.tempNext = (model) => tempStep(model, +1);
     window.tempPlay = (model) => tempPlay(model);
     window.tempStop = (model) => tempStop(model);
+
+    // Expose vorticity handlers
+    window.vortPrev = (model) => vortStep(model, -1);
+    window.vortNext = (model) => vortStep(model, +1);
+    window.vortPlay = (model) => vortPlay(model);
+    window.vortStop = (model) => vortStop(model);
 
     // Keyboard controls: ArrowLeft/ArrowRight step both models; Space stops both
     document.addEventListener('keydown', (e) => {
@@ -367,6 +421,8 @@
             utStep('utah_hres', -1);
             tempStep('gfs850', -1);
             tempStep('ecmwf850', -1);
+            vortStep('gfs500', -1);
+            vortStep('ecmwf500', -1);
         } else if (e.key === 'ArrowRight') {
             e.preventDefault();
             step('gfs', +1);
@@ -375,6 +431,8 @@
             utStep('utah_hres', +1);
             tempStep('gfs850', +1);
             tempStep('ecmwf850', +1);
+            vortStep('gfs500', +1);
+            vortStep('ecmwf500', +1);
         } else if (e.code === 'Space' || e.key === ' ') {
             e.preventDefault();
             stop('gfs');
@@ -383,6 +441,8 @@
             utStop('utah_hres');
             tempStop('gfs850');
             tempStop('ecmwf850');
+            vortStop('gfs500');
+            vortStop('ecmwf500');
         }
     });
 
@@ -393,6 +453,8 @@
     setUtahImage('utah_hres');
     setTempImage('gfs850');
     setTempImage('ecmwf850');
+    setVortImage('gfs500');
+    setVortImage('ecmwf500');
     })();
     </script>
 </body>
