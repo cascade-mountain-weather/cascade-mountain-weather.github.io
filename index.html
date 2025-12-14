@@ -25,6 +25,40 @@
     <meta name="twitter:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas.">
     <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/logo_draft.png">
     
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1e3c72">
+    
+    <!-- Structured Data / Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Cascade Mountain Weather",
+      "url": "https://www.cascademountainweather.com",
+      "logo": "https://www.cascademountainweather.com/assets/images/logo_draft.png",
+      "description": "Mountain weather and snow forecasts for Washington's Cascade Range ski areas",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "areaServed": "US-WA"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Cascade Mountain Weather",
+      "url": "https://www.cascademountainweather.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.cascademountainweather.com/posts/archive.html?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
     <link rel="stylesheet" href="style.css">
 
     <!-- Google Analytics -->
@@ -150,7 +184,7 @@
                             SPC Dendritic Growth Zone Analysis
                             <span class="info-icon" onclick="showInfo(event)">i</span>
                         </figcaption>
-                        <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="SPC Dendritic Growth Zone Analysis" />
+                        <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="NOAA Storm Prediction Center dendritic growth zone analysis for optimal snowflake formation" />
                     </figure>
                     <div class="info-popup">
                         <h3>What is this?</h3>
@@ -170,7 +204,7 @@
                             GFS Dendritic Growth Zone
                             <span class="info-icon" onclick="showInfo(event)">i</span>
                         </figcaption>
-                        <img class="SynopticPlot" src="assets/images/gfs_dgz_F24.png" alt="GFS F24 Dendritic Growth Zone" />
+                        <img class="SynopticPlot" src="assets/images/gfs_dgz_F24.png" alt="GFS model 24-hour forecast of dendritic growth zone depth for Washington Cascades snowfall quality" />
                     </figure>
                     <div class="info-popup">
                         <h3>What is this?</h3>
@@ -211,7 +245,7 @@
     </main>
 
     <footer>
-        <p>Cascade Mountain Weather | Washington Ski Area Forecasts</p>
+        <p>Cascade Mountain Weather | Washington Ski Area Forecasts | <a href="sitemap-page.html" style="color: #fff; text-decoration: underline;">Sitemap</a></p>
         <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
     </footer>
         <!-- Load latest post summary and populate recent posts -->
