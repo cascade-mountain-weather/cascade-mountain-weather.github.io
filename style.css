@@ -216,7 +216,8 @@ h3 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem; /* space between figures */
+    gap: 0; /* no gap for synoptic tools */
+    padding: 0.5rem 1rem; /* minimal padding override */
 }
 
 .hero figure {
@@ -269,6 +270,11 @@ h3 {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-top: 1.5rem;
+}
+
+/* Ensure area-grid items display properly */
+.area-grid .area-card {
+    display: block;
 }
 
 .area-card {
@@ -376,21 +382,56 @@ footer p {
 
     nav ul {
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
         display: none;
         width: 100%;
     }
 
     nav.open ul {
         display: flex;
+        margin-top: 0.5rem; /* small gap between the X toggle and first item */
     }
 
+    /* Ensure all items (including bare anchors) align and stretch uniformly */
     nav li {
         border-top: 1px solid #e0e0e0;
+        width: 100%;
+    }
+
+    nav ul > a {
+        display: block;
+        width: 100%;
+        padding: 0.85rem 1.25rem;
+        text-align: center;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    nav ul > li {
+        width: 100%;
+    }
+
+    nav ul > li > a,
+    nav ul > li > .dropdown-toggle {
+        width: 100%;
+        text-align: center;
+        display: block;
+    }
+
+    .dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    nav.open ul {
+        display: flex;
     }
 
     nav a {
         padding: 0.85rem 1.25rem;
+        text-align: center;
+        width: 100%;
     }
 
     .nav-toggle {
@@ -412,12 +453,23 @@ figure img {
      centered and keep their aspect ratio. */
 .UtahSnowEnsemble,
 .PlotFormat,
+/* General figure styling */
+figure { margin: 0; }
 figure img {
     display: block;
-    /* width: clamp(320px, 70vw, 1200px); dynamic: min 320px, ideal 80% viewport, max 1200px */
     max-width: 100%;
     height: auto;
     margin: 0.75rem auto;
+}
+
+/* Synoptic-specific tight spacing */
+.synoptic-grid figure { margin: 0; padding: 0; }
+.synoptic-grid figure img {
+    display: block;
+    width: 100%; /* ensure image fits card to avoid spill */
+    max-width: 100%;
+    height: auto;
+    margin: 0; /* no margins */
 }
 
 /* Synoptic tools grid: two columns (GFS left, ECMWF right) with multiple rows.
@@ -425,20 +477,28 @@ figure img {
      layout collapses to a single column. */
 .synoptic-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem 2rem;
+    grid-template-columns: 1fr 1fr; /* 2 columns for side-by-side plots */
+    gap: 0.75rem 1rem;
     align-items: start;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+.tools-row {
+    display: contents; /* allow children to participate in parent grid */
 }
 .tool-card {
     background: #fff;
     left: auto !important;
     right: 0% !important;
     top: 10% !important;
-    padding: 0.5rem;
+    padding: 0.25rem; /* minimal padding */
     border-radius: 6px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     text-align: center;
     position: relative; /* for any future absolute children */
+    overflow: hidden; /* prevent plot bleed outside card */
+    box-sizing: border-box;
 }
 /* Stronger selector for right column flipping */
 .tool-card.centered > .info-popup,
@@ -447,24 +507,82 @@ figure img {
   right: 0% !important;
   top: 10% !important;
 }
+figcaption { margin: 0; padding: 0; }
 .tool-card .tool-title {
     font-weight: 700;
     color: #1e3c72;
-    margin: 0.25rem 0 0.5rem 0;
+    margin: 0;
+    padding: 0.15rem 0;
+}
+/* Themed select for synoptic tools row selector */
+.tool-row-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.tool-row-selector label {
+    font-weight: 600;
+    color: #1e3c72;
+}
+.tool-row-selector select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.4rem 2rem 0.4rem 0.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%231e3c72" viewBox="0 0 16 16"><path d="M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 16px 16px;
+}
+.tool-row-selector select:focus {
+    outline: none;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30,60,114,0.15);
+}
+
+@media (max-width: 768px) {
+    .tool-row-selector {
+        flex-wrap: wrap;
+        gap: 0.4rem 0.6rem;
+    }
+    .tool-row-selector select {
+        width: 100%;
+        max-width: 420px;
+    }
 }
 
 @media (max-width: 900px) {
     .synoptic-grid { grid-template-columns: 1fr; }
+    .tools-row { display: block; }
 }
 
 /* create a new figure class for synoptic plots that are slightly smaller */
-.SynopticPlot,
-figure .SynopticPlot img {
+.synoptic-grid .SynopticPlot,
+.synoptic-grid figure .SynopticPlot img {
     display: block;
-    width: clamp(280px, 50vw, 1000px); /* dynamic: min 280px, ideal 60% viewport, max 1000px */
+    width: 100%;
     max-width: 100%;
     height: auto;
-    margin: 0.75rem auto;
+    margin: 0;
+}
+
+/* Reduce space between selector and plots */
+.tool-row-selector { 
+    margin: 0 0 0.25rem 0; 
+    padding: 0;
+}
+
+/* Tighten control button spacing */
+.ivt-controls {
+    margin: 0.25rem 0;
+    padding: 0;
 }
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -559,7 +677,9 @@ nav a,
 
 .nav-item.dropdown {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .nav-item.dropdown > .dropdown-menu {
@@ -574,24 +694,33 @@ nav a,
     display: block;
 }
 
-/* On small / touch screens: keep menu hidden (no hover available) */
-/* This prevents the dropdown from opening on taps — users should navigate to model-tools.html */
+/* On small / touch screens: stack the nav and allow dropdown to open on tap */
 @media (max-width: 800px) {
-    .dropdown-menu {
+    /* Override the more specific desktop rule so mobile uses inline stacking */
+    .nav-item.dropdown .dropdown-menu {
         position: static;
         box-shadow: none;
         border: none;
         padding: 0;
         margin-top: 0.25rem;
         min-width: auto;
+        left: auto;
+        transform: none;
         display: none;
     }
-  .dropdown-menu a {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  /* If your mobile nav is vertical, ensure overall nav layout adapts, but submenu will remain hidden */
-  .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
+    nav.open .nav-item.dropdown.open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu a {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        text-align: center;
+    }
+    .dropdown-menu {
+        width: 100%;
+        text-align: center;
+    }
+    .main-nav { flex-direction: column; align-items: stretch; gap: 0; }
 }
 
 .data-sources {
