@@ -1,0 +1,12 @@
+# robots.txt for cascademountainweather.com
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.cascademountainweather.com/sitemap.xml
+
+# Disallow test/draft files
+Disallow: /scripts/models-tools-current-weather.test.html
+Disallow: /scripts/
+Disallow: /posts/TEMPLATE-post.html
+Disallow: /posts/latest-post-summary.html
