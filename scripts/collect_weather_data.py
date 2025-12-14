@@ -6,7 +6,8 @@ STATIONS = ['STS48', 'STS48']
 RESORTS_TO_STATIONS = {
     'stevens_pass': {
         'mid': 'STB48',
-        'summit': 'STS52'
+        'summit': 'STS52',
+        'tye': 'STS54'
     },
     'mt_baker': {
         'base': 'MTB42',
@@ -28,10 +29,14 @@ RESORTS_TO_STATIONS = {
         'summit': 'ALP55'
     },
     'white_pass':{
-        'base':'WPS45'
+        'base':'WPS45',
+        'pigtail':'WPS60'
     },
     'blewett':{
         'base': 'BLT41'
+    },
+    'berne':{
+        'base': 'BRN27'
     }
 }
 
