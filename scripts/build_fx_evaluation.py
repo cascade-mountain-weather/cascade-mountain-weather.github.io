@@ -25,15 +25,22 @@ import numpy as np
 def load_forecast(site, output_dir):
     """Load forecast data for a specific date"""
     # check if today is a Thursday
+    saved_path = output_dir / f"{site}.csv"
+    
+    if site == "Crystal" or site == "Paradise":
+        return None  # No forecast available for these sites
+    
     if datetime.today().weekday() != 3:  # 3 corresponds to Thursday
+        print("Today is not Thursday, using existing forecast file if available.")
+        if site == 'TBLEW':
+            saved_path = output_dir / "Blewett Pass.csv"
+        elif site == 'HURW1':
+            saved_path = output_dir / "Hurricane Ridge.csv"
         return saved_path  # Only download on Thursdays
     
-    saved_path = output_dir / f"{site}.csv"
     # delete file to replace it
     if os.path.exists(saved_path):
         os.remove(saved_path)
-    if site == "Crystal" or site == "Paradise":
-        return None  # No forecast available for these sites
     if site =="Blewett Pass":
         site = "TBLEW"
     if site == "Hurricane Ridge":
@@ -354,14 +361,17 @@ def scrape_forecast_ranges(html_file_path):
                 print("Parsing item:", text)
 
                 match = re.match(
-                    r'(.+?):\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)[^\d]*',
-                    text
-                )
+                            r'(.+?):\s*(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*"',
+                            text
+                        )
 
                 if match:
                     site_name = normalize_site_name(match.group(1)).split(" (")[0]
+
                     min_snow = float(match.group(2))
-                    max_snow = float(match.group(3))
+                    max_snow = (
+                        float(match.group(3)) if match.group(3) is not None else min_snow
+                    )
 
                     forecast_ranges[site_name] = [
                         round(min_snow, 1),
@@ -569,6 +579,21 @@ def generate_evaluation_report(sites, output_dir, min_snow_level=None, max_snow_
             report.append(f"    NBM Forecast: {sf['forecast']} inches")
             if sf['nbm_error']:
                 report.append(f"    Error:    {sf['nbm_error']['error']} inches ({sf['nbm_error']['percent_error']}%)")
+            else:
+                # If NBM error not available, fall back to our forecast error
+                # Use the available our_min/our_max errors to compute a mean absolute error
+                vals = []
+                pcts = []
+                if sf.get('our_min_error'):
+                    vals.append(sf['our_min_error'].get('absolute_error'))
+                    pcts.append(sf['our_min_error'].get('percent_error'))
+                if sf.get('our_max_error'):
+                    vals.append(sf['our_max_error'].get('absolute_error'))
+                    pcts.append(sf['our_max_error'].get('percent_error'))
+                if vals:
+                    mean_abs = round(sum([v for v in vals if v is not None]) / len(vals), 1)
+                    mean_pct = round(sum([p for p in pcts if p is not None]) / len(pcts), 1) if pcts else 0
+                    report.append(f"    Error:    {mean_abs} inches ({mean_pct}%)")
             report.append(f"    Within NBM IQR range: {'✓ Yes' if sf.get('nbm_within_range', False) else '✗ No'}")
             report.append(f"    ------- Our Forecast -------")
             report.append(f"    Our Forecast Range: {sf['our_forecast'][0]} - {sf['our_forecast'][1]} inches")
@@ -652,11 +677,17 @@ def _build_summary_from_reports(report_dir: Path, days: int | None = None, as_of
                         'nbm_within_range_count': 0,
                         'total': 0
                     }
-            elif line.startswith("Error:") and current_area:
-                parts = line.split()
-                error_value = float(parts[1])
-                area_stats[current_area]['errors'].append(abs(error_value))
+                # Each evaluation report contributes one forecast count for this area
                 area_stats[current_area]['total'] += 1
+            elif line.startswith("Error:") and current_area:
+                # Parse error value but DO NOT increment total here (we count once per area per file)
+                parts = line.split()
+                try:
+                    error_value = float(parts[1])
+                    area_stats[current_area]['errors'].append(abs(error_value))
+                except Exception:
+                    # ignore parse errors
+                    pass
             elif line.startswith("Within NBM IQR range:") and current_area:
                 if '✓ Yes' in line:
                     area_stats[current_area]['nbm_within_range_count'] += 1
@@ -671,11 +702,14 @@ def _build_summary_from_reports(report_dir: Path, days: int | None = None, as_of
     summary.append("=" * 60)
     
     for area, stats in area_stats.items():
-        if stats['errors']:
-            mae = statistics.mean(stats['errors'])
+        # Include any area that had at least one forecast counted, even if no
+        # explicit "Error:" lines were found — this ensures areas like
+        # Crystal and Paradise appear in the seasonal summary.
+        if stats['total'] > 0:
+            mae = statistics.mean(stats['errors']) if stats['errors'] else 0.0
             our_accuracy = (stats['within_range_count'] / stats['total'] * 100) if stats['total'] > 0 else 0
             nbm_accuracy = (stats['nbm_within_range_count'] / stats['total'] * 100) if stats['total'] > 0 else 0
-            
+
             summary.append(f"\n{area.upper()}")
             summary.append(f"  Forecasts: {stats['total']}")
             summary.append(f"  Mean Absolute Error (NBM): {mae:.1f} inches")
@@ -739,11 +773,18 @@ if __name__ == '__main__':
             forecast_ranges = scrape_forecast_ranges(latest_post)
             print(f"Scraped forecast ranges: {forecast_ranges}")
             
-            # Step 2: Update forecast files with scraped ranges
-            print("\n[Step 2] Updating forecast files with scraped ranges...")
-            forecast_json_files = OUTPUT_DIR.glob('eval_forecast_*.json')
-            for forecast_file in forecast_json_files:
-                update_forecast_with_our_forecast(forecast_file, forecast_ranges)
+            # Step 2: Update forecast file for the current forecast date with scraped ranges
+            # (Do NOT update all historical eval_forecast files.)
+            print("\n[Step 2] Updating today's forecast file with scraped ranges...")
+            # determine the forecast date (most recent past Thursday)
+            forecast_date = (datetime.today() - timedelta(days=(datetime.today().weekday() - 3) % 7)).strftime('%Y-%m-%d')
+            target_forecast_file = OUTPUT_DIR / f'eval_forecast_{forecast_date}.json'
+            # Ensure the target file exists (copy template if needed)
+            if not target_forecast_file.exists():
+                shutil.copyfile(OUTPUT_DIR / 'eval_forecast_template.json', target_forecast_file)
+
+            # Update only the target file with our forecast ranges
+            update_forecast_with_our_forecast(target_forecast_file, forecast_ranges)
         else:
             print("Warning: No recent forecast post found. Skipping forecast range update.")
         
