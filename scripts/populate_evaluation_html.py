@@ -46,7 +46,7 @@ def parse_season_summary(filepath):
     """
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     data = {
         'total_forecasts': 0,
         'overall_mae': 0.0,
@@ -54,55 +54,88 @@ def parse_season_summary(filepath):
         'overall_our_within': '0%',
         'areas': {}
     }
-    
-    # Split by area sections
-    area_pattern = r'^([A-Z][A-Z\s\.]+)\n\s+Forecasts:\s+(\d+)\n\s+Mean Absolute Error \(NBM\):\s+([\d.]+)\s+inches\n\s+Was the NBM within range? Range:\s+(\d+)/(\d+)\s+\(([\d.]+)%\)\n\s+Our Forecast Within Range:\s+(\d+)/(\d+)\s+\(([\d.]+)%\)'
-    
-    matches = re.finditer(area_pattern, content, re.MULTILINE)
-    
+
+    # Line-based, forgiving parser: find area headers and read the next
+    # few lines for the expected metrics.
+    lines = content.splitlines()
+    i = 0
+
     total_nbm_within = 0
     total_nbm_forecasts = 0
     total_our_within = 0
-    total_our_forecasts = 0
-    total_mae_sum = 0.0
-    area_count = 0
-    
-    for match in matches:
-        area_name = match.group(1).strip()
-        forecasts = int(match.group(2))
-        mae = float(match.group(3))
-        nbm_within = int(match.group(4))
-        nbm_total = int(match.group(5))
-        nbm_pct = match.group(6)
-        our_within = int(match.group(7))
-        our_total = int(match.group(8))
-        our_pct = match.group(9)
-        
-        data['areas'][area_name] = {
-            'forecasts': forecasts,
-            'mae': mae,
-            'nbm_within': f"{nbm_within}/{nbm_total}",
-            'nbm_within_pct': f"{nbm_pct}%",
-            'our_within': f"{our_within}/{our_total}",
-            'our_within_pct': f"{our_pct}%"
-        }
-        
-        data['total_forecasts'] += forecasts
-        total_nbm_within += nbm_within
-        total_nbm_forecasts += nbm_total
-        total_our_within += our_within
-        total_our_forecasts += our_total
-        total_mae_sum += mae
-        area_count += 1
-    
-    # Calculate overall statistics
-    if area_count > 0:
-        data['overall_mae'] = round(total_mae_sum / area_count, 1)
+    weighted_mae_sum = 0.0
+
+    while i < len(lines):
+        line = lines[i].strip()
+        # area header: all caps and not the file-level header
+        if line and line == line.upper() and not line.startswith('=') and not line.lower().startswith('season'):
+            area_name = line
+            # look ahead for the next few lines
+            forecasts = 0
+            mae = 0.0
+            nbm_within = 0
+            nbm_total = 0
+            our_within = 0
+            our_total = 0
+
+            j = i + 1
+            while j < i + 8 and j < len(lines):
+                l = lines[j].strip()
+                if l.startswith('Forecasts:'):
+                    try:
+                        forecasts = int(l.split(':', 1)[1].strip())
+                    except Exception:
+                        forecasts = 0
+                elif l.startswith('Mean Absolute Error'):
+                    m = re.search(r'([\d.]+)', l)
+                    if m:
+                        mae = float(m.group(1))
+                elif 'Was the NBM within range' in l and 'Range:' in l:
+                    m = re.search(r'Range:\s*(\d+)/(\d+)', l)
+                    if m:
+                        nbm_within = int(m.group(1))
+                        nbm_total = int(m.group(2))
+                elif l.startswith('Our Forecast Within Range:'):
+                    m = re.search(r'(\d+)/(\d+)', l)
+                    if m:
+                        our_within = int(m.group(1))
+                        our_total = int(m.group(2))
+                j += 1
+
+            data['areas'][area_name] = {
+                'forecasts': forecasts,
+                'mae': mae,
+                'nbm_within': f"{nbm_within}/{nbm_total}",
+                'nbm_within_pct': f"{round(100 * nbm_within / nbm_total, 1) if nbm_total>0 else 0}%",
+                'our_within': f"{our_within}/{our_total}",
+                'our_within_pct': f"{round(100 * our_within / our_total, 1) if our_total>0 else 0}%"
+            }
+
+            data['total_forecasts'] += forecasts
+            total_nbm_within += nbm_within
+            total_nbm_forecasts += nbm_total
+            total_our_within += our_within
+            weighted_mae_sum += mae * (forecasts if forecasts>0 else 1)
+            # advance only one line so we don't accidentally skip nearby headers
+            i += 1
+        else:
+            i += 1
+
+    # overall calculations
     if total_nbm_forecasts > 0:
-        data['overall_nbm_within'] = f"{round(100 * total_nbm_within / total_nbm_forecasts, 1)}%"
-    if total_our_forecasts > 0:
-        data['overall_our_within'] = f"{round(100 * total_our_within / total_our_forecasts, 1)}%"
-    
+        nbm_pct = round(100 * total_nbm_within / total_nbm_forecasts, 1)
+        data['overall_nbm_within'] = f"{total_nbm_within}/{total_nbm_forecasts} ({nbm_pct}%)"
+    else:
+        data['overall_nbm_within'] = '0%'
+
+    if data['total_forecasts'] > 0:
+        our_pct = round(100 * total_our_within / data['total_forecasts'], 1)
+        data['overall_our_within'] = f"{total_our_within}/{data['total_forecasts']} ({our_pct}%)"
+        data['overall_mae'] = round(weighted_mae_sum / data['total_forecasts'], 1)
+    else:
+        data['overall_our_within'] = '0%'
+        data['overall_mae'] = 0.0
+
     return data
 
 
@@ -286,23 +319,50 @@ def populate_html(html_path, season_data, recent_evals):
     with open(html_path, 'r', encoding='utf-8') as f:
         html = f.read()
     
-    # Update season statistics cards
-    html = re.sub(
-        r'(<div class="stat-label">Total Forecasts Evaluated</div>\s+<div class="stat-number">)--',
-        r'\g<1>' + str(season_data['total_forecasts']),
-        html
-    )
+    # Count blog posts that start with YYYY-MM-DD in the posts directory
+    script_dir = Path(__file__).parent
+    repo_root = script_dir.parent
+    posts_dir = repo_root / 'posts'
+    blog_count = 0
+    try:
+        for p in posts_dir.iterdir():
+            if p.is_file():
+                # filename starts with YYYY-MM-DD
+                if re.match(r"^\d{4}-\d{2}-\d{2}", p.name):
+                    blog_count += 1
+    except Exception:
+        blog_count = 0
     
+    # Update season statistics cards by replacing whatever is currently
+    # inside the corresponding <div class="stat-number"> element. This
+    # avoids requiring placeholder tokens like '--' and works whether the
+    # HTML currently contains placeholders or prior numeric values.
     html = re.sub(
-        r'(<div class="stat-label">Within Range</div>\s+<div class="stat-number">)--%',
-        r'\g<1>' + season_data['overall_our_within'],
-        html
+        r'(<div class="stat-label">Total Blogs Written</div>\s*<div class="stat-number">)(.*?)(</div>)',
+        lambda m: m.group(1) + str(blog_count) + m.group(3),
+        html,
+        flags=re.DOTALL
     )
-    
+
     html = re.sub(
-        r'(<div class="stat-label">Mean Error</div>\s+<div class="stat-number">)--\s+in',
-        r'\g<1>' + f"{season_data['overall_mae']:.1f} in",
-        html
+        r'(<div class="stat-label">Total Forecasts Evaluated</div>\s*<div class="stat-number">)(.*?)(</div>)',
+        lambda m: m.group(1) + str(season_data.get('total_forecasts', 0)) + m.group(3),
+        html,
+        flags=re.DOTALL
+    )
+
+    html = re.sub(
+        r'(<div class="stat-label">Within Range</div>\s*<div class="stat-number">)(.*?)(</div>)',
+        lambda m: m.group(1) + season_data.get('overall_our_within', '0%') + m.group(3),
+        html,
+        flags=re.DOTALL
+    )
+
+    html = re.sub(
+        r'(<div class="stat-label">Mean Error</div>\s*<div class="stat-number">)(.*?)(</div>)',
+        lambda m: m.group(1) + f"{season_data.get('overall_mae', 0.0):.1f} in" + m.group(3),
+        html,
+        flags=re.DOTALL
     )
     
     # Build recent forecast evaluation cards
@@ -415,22 +475,63 @@ def populate_html(html_path, season_data, recent_evals):
     # that doesn't cross h3 tags
     
     def update_area_section(html, area_key, html_heading):
-        """Update a single area section with data."""
-        if area_key not in season_data['areas']:
+        """Update a single area section with data.
+
+        If the area is missing from `season_data`, fall back to the most
+        recent evaluation (`recent_evals`) and use our forecast error
+        (and our within-range flag) so Crystal and Paradise (or others)
+        still get populated.
+        """
+        # Try to get season-level data first
+        area_data = season_data['areas'].get(area_key)
+
+        # Find a matching recent evaluation (by displayed heading)
+        recent_eval = None
+        for ev in recent_evals:
+            if ev['area'] == html_heading:
+                recent_eval = ev
+                break
+
+        # If season data is missing, construct a fallback from recent eval
+        if area_data is None and recent_eval is not None:
+            # compute our mid and error if available
+            if recent_eval.get('our_forecast_low') is not None and recent_eval.get('actual') is not None:
+                our_mid = (recent_eval['our_forecast_low'] + recent_eval['our_forecast_high']) / 2
+                our_error = abs(recent_eval['actual'] - our_mid)
+            else:
+                our_error = 0.0
+
+            area_data = {
+                'forecasts': 1,
+                'mae': our_error,
+                'nbm_within': recent_eval.get('nbm_within_range', False),
+                'nbm_within_pct': '0.0%',
+                'our_within': f"{1 if recent_eval.get('our_within_range') else 0}/{1}",
+                'our_within_pct': f"{100.0 if recent_eval.get('our_within_range') else 0.0}%"
+            }
+
+        # If still no data, nothing to do
+        if area_data is None:
             return html
-        
-        area_data = season_data['areas'][area_key]
-        
-        # Pattern that matches only within one h3 section
+
+        # Prefer our-forecast-based MAE when recent eval exists, else season MAE
+        display_mae = area_data.get('mae', 0.0)
+        if recent_eval is not None and recent_eval.get('our_forecast_low') is not None and recent_eval.get('actual') is not None:
+            our_mid = (recent_eval['our_forecast_low'] + recent_eval['our_forecast_high']) / 2
+            display_mae = abs(recent_eval['actual'] - our_mid)
+
+        # Replace Forecasts Evaluated
         pattern = rf'(<h3>{re.escape(html_heading)}</h3>\s+<p><strong>Forecasts Evaluated:</strong>)\s+--'
         html = re.sub(pattern, r'\g<1> ' + str(area_data['forecasts']), html)
-        
+
+        # Replace Mean Absolute Error (use our-based MAE when available)
         pattern = rf'(<h3>{re.escape(html_heading)}</h3>\s+<p><strong>Forecasts Evaluated:</strong>[^<]+</p>\s+<p><strong>Mean Absolute Error:</strong>)\s+--\s+inches'
-        html = re.sub(pattern, r'\g<1> ' + f"{area_data['mae']:.1f} inches", html)
-        
+        html = re.sub(pattern, r'\g<1> ' + f"{display_mae:.1f} inches", html)
+
+        # Replace Within Range
         pattern = rf'(<h3>{re.escape(html_heading)}</h3>\s+<p><strong>Forecasts Evaluated:</strong>[^<]+</p>\s+<p><strong>Mean Absolute Error:</strong>[^<]+</p>\s+<p><strong>Within Range:</strong>)\s+--/--\s+\(--(%)\)'
         html = re.sub(pattern, r'\g<1> ' + area_data['our_within'] + f" ({area_data['our_within_pct']})", html)
-        
+
         return html
     
     # Update all areas
@@ -443,6 +544,67 @@ def populate_html(html_path, season_data, recent_evals):
     html = update_area_section(html, 'HURRICANE RIDGE', 'Hurricane Ridge')
     html = update_area_section(html, 'WASHINGTON PASS', 'Washington Pass')
     html = update_area_section(html, 'PARADISE', 'Paradise')
+
+    # Update the seasonal-card blocks (hidden) that use the data-region slug
+    # These cards list Forecasts Evaluated, NBM MAE, NBM Within Range, Our MAE,
+    # and Were we within range?. We'll prefer our-forecast-based MAE when the
+    # recent evaluation has our forecast; otherwise use season_data values.
+    region_map = [
+        ('mt-baker', 'Mt. Baker', 'MT. BAKER'),
+        ('stevens-pass', 'Stevens Pass', 'STEVENS PASS'),
+        ('crystal-mountain', 'Crystal Mountain', 'CRYSTAL'),
+        ('snoqualmie-pass', 'Snoqualmie Pass', 'SNOQUALMIE PASS'),
+        ('blewett-pass', 'Blewett Pass', 'BLEWETT PASS'),
+        ('white-pass', 'White Pass', 'WHITE PASS'),
+        ('hurricane-ridge', 'Hurricane Ridge', 'HURRICANE RIDGE'),
+        ('washington-pass', 'Washington Pass', 'WASHINGTON PASS'),
+        ('paradise', 'Paradise', 'PARADISE')
+    ]
+
+    def update_seasonal_card(html, slug, heading, area_key):
+        # find recent eval for this heading
+        recent_eval = next((e for e in recent_evals if e['area'] == heading), None)
+
+        season_area = season_data['areas'].get(area_key)
+
+        # compute values
+        if season_area:
+            forecasts_val = str(season_area['forecasts'])
+            nbm_mae_val = f"{season_area['mae']:.1f}\""
+            nbm_within_val = season_area['nbm_within'] + f" ({season_area['nbm_within_pct']})"
+            our_within_val = season_area['our_within'] + f" ({season_area['our_within_pct']})"
+        else:
+            forecasts_val = '0'
+            nbm_mae_val = '--'
+            nbm_within_val = '--'
+            our_within_val = '--'
+
+        # Our MAE: prefer recent_eval our-error if available
+        our_mae_val = '--'
+        were_within_val = our_within_val
+        if recent_eval and recent_eval.get('our_forecast_low') is not None and recent_eval.get('actual') is not None:
+            our_mid = (recent_eval['our_forecast_low'] + recent_eval['our_forecast_high']) / 2
+            our_mae_val = f"{abs(recent_eval['actual'] - our_mid):.1f}\""
+            were_within_val = f"{1 if recent_eval.get('our_within_range') else 0}/1 ({100.0 if recent_eval.get('our_within_range') else 0.0}%)"
+            # if no season data, reflect a single forecast evaluated
+            if not season_area:
+                forecasts_val = '1'
+
+        # helper to replace a single seasonal-stat-value inside the card
+        def replace_in_card(html, label, newval):
+            pattern = rf'(<div class="seasonal-card" data-region="{re.escape(slug)}">.*?<span class="seasonal-stat-label">{re.escape(label)}</span>\s*<span class="seasonal-stat-value">)(.*?)(</span>)'
+            return re.sub(pattern, lambda m: m.group(1) + newval + m.group(3), html, flags=re.DOTALL)
+
+        html = replace_in_card(html, 'Forecasts Evaluated', forecasts_val)
+        html = replace_in_card(html, 'NBM MAE', nbm_mae_val)
+        html = replace_in_card(html, 'NBM Within Range', nbm_within_val)
+        html = replace_in_card(html, 'Our MAE', our_mae_val)
+        html = replace_in_card(html, 'Were we within range?', were_within_val)
+
+        return html
+
+    for slug, heading, area_key in region_map:
+        html = update_seasonal_card(html, slug, heading, area_key)
     
     # Write updated HTML
     with open(html_path, 'w', encoding='utf-8') as f:
