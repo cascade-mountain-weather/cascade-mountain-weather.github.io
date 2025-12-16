@@ -3,13 +3,11 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Synoptic Weather Tools | Cascade Mountain Weather - GFS & ECMWF Models</title>
         <meta name="description" content="Synoptic-scale weather tools for Cascade Mountain Weather forecasting. View GFS and ECMWF model outputs, integrated vapor transport, and atmospheric river forecasts for Washington.">
         <meta name="keywords" content="Cascade Mountain Weather synoptic, GFS model, ECMWF model, atmospheric river forecast, IVT forecast, Washington weather models, mountain weather analysis">
         <meta name="author" content="Cascade Mountain Weather">
         <meta name="robots" content="index, follow">
         <link rel="canonical" href="https://www.cascademountainweather.com/tools/model-tools-synoptic.html">
-        <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
         
         <!-- Open Graph / Social Media -->
         <meta property="og:type" content="website">
@@ -17,12 +15,15 @@
         <meta property="og:description" content="GFS and ECMWF weather model analysis for Washington Cascade Range forecasting.">
         <meta property="og:url" content="https://www.cascademountainweather.com/tools/model-tools-synoptic.html">
         <meta property="og:site_name" content="Cascade Mountain Weather">
+        <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="Synoptic Weather Tools | Cascade Mountain Weather">
         <meta name="twitter:description" content="Weather model analysis for Cascade Range forecasting.">
+        <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
         
+        <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
         <link rel="stylesheet" href="../style.css">
     </head>
 
@@ -42,13 +43,12 @@
                 <ul id="primary-nav">
             <a href="../index.html">Home</a>
             <li><a href="../index.html#latest-post">Latest Forecast</a></li>
-            <li><a href="../index.html#ski-areas">Ski Areas</a></li>
+                        <li><a href="../tools/model-tools-current-weather.html">Current Weather</a></li>
             <li><a href="../posts/archive.html">Archive</a></li>
               <li><a href="../evaluation.html">Evaluation</a></li>
               <li class="nav-item dropdown">
                   <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
                 <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                  <li role="none"><a role="menuitem" href="model-tools-current-weather.html">Current Weather</a></li>
                   <li role="none"><a role="menuitem" href="model-tools-synoptic.html">Synoptic-scale Tools</a></li>
                   <li role="none"><a role="menuitem" href="model-tools-precipitation.html">Precipitation</a></li>
                 </ul>
@@ -57,36 +57,153 @@
         </ul>
     </nav>
 
-        <section id="latest-post" class="hero">
-            <div class="synoptic-grid">
-                <!-- Row: Integrated Vapor Transport -->
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F24.png" alt="GFS Integrated Vapor Transport" />
-                    </figure>
+                <section id="latest-post" class="hero">
+                        <!-- Controls: choose which tools row to display -->
+                           <div class="tool-row-selector" style="text-align: center;">
+                            <label for="synoptic-row-select" style="font-weight:600; color:#1e3c72;">Show:</label>
+                            <select id="synoptic-row-select" style="margin-left:0.5rem; padding:0.4rem 0.6rem;">
+                                    <option value="ivt" selected>IVT (Integrated Vapor Transport)</option>
+                                    <option value="utah">Utah Synoptic (ECMWF HRES + GFS)</option>
+                                    <option value="temp850">850 mb Temperature</option>
+                                    <option value="vort500">500 mb Vorticity</option>
+                                    <option value="ar_landfall">Atmospheric River Landfall</option>
+                            </select>
+                        </div>
+                        <div class="synoptic-grid">
+                                <!-- Row: Integrated Vapor Transport -->
+                                <div class="tools-row" data-row="ivt">
+            <!-- Row: Integrated Vapor Transport (ECMWF left, GFS right) -->
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="ivtPrev('ecmwf')">◀</button>
+                <span id="ecmwf-ivt-hour">F00</span>
+                <button type="button" onclick="ivtNext('ecmwf')">▶</button>
+                <button type="button" onclick="ivtPlay('ecmwf')">Play</button>
+                <button type="button" onclick="ivtStop('ecmwf')">Stop</button>
                 </div>
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">ECMWF — Integrated Vapor Transport</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F12.png" alt="ECMWF Integrated Vapor Transport (placeholder)" />
-                    </figure>
+                <img id="ecmwf-ivt-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F00.png"
+                    alt="ECMWF Integrated Vapor Transport" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS — Integrated Vapor Transport</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="ivtPrev('gfs')">◀</button>
+                <span id="gfs-ivt-hour">F00</span>
+                <button type="button" onclick="ivtNext('gfs')">▶</button>
+                <button type="button" onclick="ivtPlay('gfs')">Play</button>
+                <button type="button" onclick="ivtStop('gfs')">Stop</button>
                 </div>
+                <img id="gfs-ivt-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F00.png"
+                    alt="GFS Integrated Vapor Transport" />
+            </figure>
+            </div>
+            </div>
 
-                <!-- Row: 500 mb Vorticity & Geopotential Height -->
-                <div class="tool-card">
-                    <figure>
-                        <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F24.png" alt="GFS 500mb Vorticity and Geopotential Height" />
-                    </figure>
+            <!-- Row: Utah Weather Synoptic (ECMWF HRES left, GFS 0.25° right) -->
+            <div class="tools-row" data-row="utah">
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">HRES ECMWF Synoptic 4-Panel</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="utPrev('utah_hres')">◀</button>
+                <span id="utah_hres-hour">F000</span>
+                <button type="button" onclick="utNext('utah_hres')">▶</button>
+                <button type="button" onclick="utPlay('utah_hres')">Play</button>
+                <button type="button" onclick="utStop('utah_hres')">Stop</button>
                 </div>
+                <img id="utah_hres-img" class="SynopticPlot"
+                    src=""
+                    alt="Utah Weather HRES Extended Synoptic" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS 0.25° Synoptic 4-Panel</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="utPrev('utah_gfs')">◀</button>
+                <span id="utah_gfs-hour">F000</span>
+                <button type="button" onclick="utNext('utah_gfs')">▶</button>
+                <button type="button" onclick="utPlay('utah_gfs')">Play</button>
+                <button type="button" onclick="utStop('utah_gfs')">Stop</button>
+                </div>
+                <img id="utah_gfs-img" class="SynopticPlot"
+                    src=""
+                    alt="Utah Weather GFS 0.25° Synoptic" />
+            </figure>
+            </div>
+            </div>
+
+            <!-- Row: 850 hPa Temperature (ECMWF left, GFS right) -->
+            <div class="tools-row" data-row="temp850">
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">ECMWF — 850 hPa Temperature</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="tempPrev('ecmwf850')">◀</button>
+                <span id="ecmwf850-hour">F000</span>
+                <button type="button" onclick="tempNext('ecmwf850')">▶</button>
+                <button type="button" onclick="tempPlay('ecmwf850')">Play</button>
+                <button type="button" onclick="tempStop('ecmwf850')">Stop</button>
+                </div>
+                <img id="ecmwf850-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/ECMWF/850Temp/ECMWF_850Temp_USWC_latest_F0.png"
+                    alt="ECMWF model 850mb temperature and winds forecast for Washington Cascades and Pacific Northwest" />
+            </figure>
+            </div>
+            <div class="tool-card">
+            <figure>
+                <figcaption class="tool-title">GFS — 850 hPa Temperature</figcaption>
+                <div class="ivt-controls">
+                <button type="button" onclick="tempPrev('gfs850')">◀</button>
+                <span id="gfs850-hour">F000</span>
+                <button type="button" onclick="tempNext('gfs850')">▶</button>
+                <button type="button" onclick="tempPlay('gfs850')">Play</button>
+                <button type="button" onclick="tempStop('gfs850')">Stop</button>
+                </div>
+                <img id="gfs850-img" class="SynopticPlot"
+                    src="https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F0.png"
+                    alt="GFS model 850mb temperature and winds forecast for Washington Cascades and Pacific Northwest" />
+            </figure>
+            </div>
+            </div>
+
+                <!-- Row: 500 mb Vorticity & Geopotential Height (ECMWF left, GFS right) -->
+                <div class="tools-row" data-row="vort500">
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">ECMWF — 500mb Vorticity &amp; Geopotential Height </figcaption>
-                        <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F36.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
+                        <div class="ivt-controls">
+                        <button type="button" onclick="vortPrev('ecmwf500')">◀</button>
+                        <span id="ecmwf500-hour">F000</span>
+                        <button type="button" onclick="vortNext('ecmwf500')">▶</button>
+                        <button type="button" onclick="vortPlay('ecmwf500')">Play</button>
+                        <button type="button" onclick="vortStop('ecmwf500')">Stop</button>
+                        </div>
+                        <img id="ecmwf500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F0.png" alt="ECMWF 500mb Vorticity and Geopotential Height" />
                     </figure>
                 </div>
+                <div class="tool-card">
+                    <figure>
+                        <figcaption class="tool-title">GFS — 500mb Vorticity &amp; Geopotential Height</figcaption>
+                        <div class="ivt-controls">
+                        <button type="button" onclick="vortPrev('gfs500')">◀</button>
+                        <span id="gfs500-hour">F000</span>
+                        <button type="button" onclick="vortNext('gfs500')">▶</button>
+                        <button type="button" onclick="vortPlay('gfs500')">Play</button>
+                        <button type="button" onclick="vortStop('gfs500')">Stop</button>
+                        </div>
+                        <img id="gfs500-img" class="SynopticPlot" src="https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F0.png" alt="GFS 500mb Vorticity and Geopotential Height" />
+                    </figure>
+                </div>
+                </div>
                 <!-- Row: AR Timeseries -->
+                <div class="tools-row" data-row="ar_landfall">
                 <div class="tool-card">
                     <figure>
                         <figcaption class="tool-title">GEFS — AR Landfall Tool</figcaption>
@@ -99,8 +216,291 @@
                         <img class="SynopticPlot" src="https://cw3e.ucsd.edu/images/ECMWF/ensemble/LandfallTool/US-west/ECMWF_LandfallTool_250_coast_current.png" alt="ECMWF 500mb Vorticity and Geopotential Height (placeholder)" />
                     </figure>
                 </div>
+                </div>
             </div>
         </section>
     <script src="../assets/header.js" defer></script>
+    <script>
+    (function(){
+    // Forecast hours 0–144 in 6-hr steps
+    // IVT products on CW3E often begin at later lead times.
+    // Use per-model hour arrays to skip unavailable F00/F06 frames.
+    const hoursGFS = Array.from({length: 23}, (_, i) => 12 + i * 6); // [12,18,...,144]
+    const hoursECMWF = Array.from({length: 23}, (_, i) => 12 + i * 6); // [12,18,...,144]
+    const hours240 = Array.from({length: 41}, (_, i) => i * 6); // [0,6,...,240]
+    const hours180 = Array.from({length: 31}, (_, i) => i * 6); // [0,6,...,180]
+
+    // Per-model state
+    const state = {
+        gfs: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/ivt/GFS_ivt_NEPac_latest_F', hours: hoursGFS },
+        ecmwf: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/ivt/ECMWF_ivt_NEPac_latest_F', hours: hoursECMWF }
+    };
+
+    // 850 hPa temperature state
+    const tempState = {
+        gfs850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/850Temp/GFS_850Temp_USWC_latest_F', hours: hours180 },
+        ecmwf850: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/850Temp/ECMWF_850Temp_USWC_latest_F', hours: hours180 }
+    };
+
+    // 500 hPa vorticity state
+    const vortState = {
+        gfs500: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/gfs/500Vort/GFS_500Vort_NEPac_latest_F', hours: hours180 },
+        ecmwf500: { idx: 0, timer: null, base: 'https://cw3e.ucsd.edu/images/ECMWF/500Vort/ECMWF_500Vort_NEPac_latest_F', hours: hours180 }
+    };
+
+    // Build Utah Weather base URLs using current UTC date and cycle hour (like mt-baker pages)
+    function buildUtahBase() {
+        let date = new Date();
+        // shift before 12 UTC to previous day for consistency with Utah site update cadence
+        if (date.getUTCHours() < 12) {
+            date = new Date(date.setUTCDate(date.getUTCDate() - 1));
+        }
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const year = date.getUTCFullYear();
+        const dmyString = `${year}${month}${day}`; // e.g., 20251213
+
+        // Choose cycle: use 12Z if current UTC hour >= 12, else 00Z
+        const cycle = (new Date().getUTCHours() >= 12) ? '12' : '00';
+
+        const gfsFolder = `https://weather.utah.edu/${dmyString}/images/models/gfs0p25/`;
+        const hresFolder = `https://weather.utah.edu/${dmyString}/images/models/hresext/`;
+
+        // Example full: GFSSY_WS2025121312F000.png
+        const gfsPrefix = `GFSSY_WS${dmyString}${cycle}F`;
+        const hresPrefix = `HRESSY_WS${dmyString}${cycle}F`;
+
+        return {
+            utah_gfs: { idx: 0, timer: null, folder: gfsFolder, prefix: gfsPrefix, hours: hours240 },
+            utah_hres: { idx: 0, timer: null, folder: hresFolder, prefix: hresPrefix, hours: hours240 }
+        };
+    }
+    const utahState = buildUtahBase();
+
+    function padHour(h){
+        // F0 → F00, F6 → F06, F12 → F12, etc.
+        return String(h).padStart(2, '0');
+    }
+
+    function setImage(model){
+        const s = state[model];
+        const h = s.hours[s.idx];
+        const url = s.base + padHour(h) + '.png';
+        const img = document.getElementById(model + '-ivt-img');
+        const label = document.getElementById(model + '-ivt-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + padHour(h);
+    }
+
+    function setUtahImage(model){
+        const s = utahState[model];
+        const h = s.hours[s.idx];
+        const url = s.folder + s.prefix + String(h).padStart(3, '0') + '.png'; // F000..F240
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
+    function setTempImage(model){
+        const s = tempState[model];
+        const h = s.hours[s.idx];
+        const url = s.base + h + '.png'; // uses no zero-pad in provided URLs
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
+    function setVortImage(model){
+        const s = vortState[model];
+        const h = s.hours[s.idx];
+        const url = s.base + h + '.png'; // uses no zero-pad in provided URLs
+        const img = document.getElementById(model + '-img');
+        const label = document.getElementById(model + '-hour');
+        if (img) img.src = url;
+        if (label) label.textContent = 'F' + String(h).padStart(3, '0');
+    }
+
+    function step(model, dir){
+        const s = state[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setImage(model);
+    }
+
+    function utStep(model, dir){
+        const s = utahState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setUtahImage(model);
+    }
+
+    function tempStep(model, dir){
+        const s = tempState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setTempImage(model);
+    }
+
+    function vortStep(model, dir){
+        const s = vortState[model];
+        s.idx = (s.idx + dir + s.hours.length) % s.hours.length;
+        setVortImage(model);
+    }
+
+    function play(model){
+        const s = state[model];
+        if (s.timer) return; // already playing
+        s.timer = setInterval(() => step(model, +1), 1000); // 1s per frame; adjust as needed
+    }
+
+    function utPlay(model){
+        const s = utahState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => utStep(model, +1), 1000);
+    }
+
+    function tempPlay(model){
+        const s = tempState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => tempStep(model, +1), 1000);
+    }
+
+    function vortPlay(model){
+        const s = vortState[model];
+        if (s.timer) return;
+        s.timer = setInterval(() => vortStep(model, +1), 1000);
+    }
+
+    function stop(model){
+        const s = state[model];
+        if (s.timer){
+        clearInterval(s.timer);
+        s.timer = null;
+        }
+    }
+
+    function utStop(model){
+        const s = utahState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
+    function tempStop(model){
+        const s = tempState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
+    function vortStop(model){
+        const s = vortState[model];
+        if (s.timer){
+            clearInterval(s.timer);
+            s.timer = null;
+        }
+    }
+
+    // Expose handlers
+    window.ivtPrev = (model) => step(model, -1);
+    window.ivtNext = (model) => step(model, +1);
+    window.ivtPlay = (model) => play(model);
+    window.ivtStop = (model) => stop(model);
+
+    // Expose Utah handlers
+    window.utPrev = (model) => utStep(model, -1);
+    window.utNext = (model) => utStep(model, +1);
+    window.utPlay = (model) => utPlay(model);
+    window.utStop = (model) => utStop(model);
+
+    // Expose 850-temp handlers
+    window.tempPrev = (model) => tempStep(model, -1);
+    window.tempNext = (model) => tempStep(model, +1);
+    window.tempPlay = (model) => tempPlay(model);
+    window.tempStop = (model) => tempStop(model);
+
+    // Expose vorticity handlers
+    window.vortPrev = (model) => vortStep(model, -1);
+    window.vortNext = (model) => vortStep(model, +1);
+    window.vortPlay = (model) => vortPlay(model);
+    window.vortStop = (model) => vortStop(model);
+
+    // Keyboard controls: ArrowLeft/ArrowRight step both models; Space stops both
+    document.addEventListener('keydown', (e) => {
+        // Skip if typing in inputs or content-editable elements
+        const t = e.target;
+        const isTyping =
+            t instanceof HTMLInputElement ||
+            t instanceof HTMLTextAreaElement ||
+            t.isContentEditable;
+        if (isTyping) return;
+
+        if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            step('gfs', -1);
+            step('ecmwf', -1);
+            utStep('utah_gfs', -1);
+            utStep('utah_hres', -1);
+            tempStep('gfs850', -1);
+            tempStep('ecmwf850', -1);
+            vortStep('gfs500', -1);
+            vortStep('ecmwf500', -1);
+        } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            step('gfs', +1);
+            step('ecmwf', +1);
+            utStep('utah_gfs', +1);
+            utStep('utah_hres', +1);
+            tempStep('gfs850', +1);
+            tempStep('ecmwf850', +1);
+            vortStep('gfs500', +1);
+            vortStep('ecmwf500', +1);
+        } else if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            stop('gfs');
+            stop('ecmwf');
+            utStop('utah_gfs');
+            utStop('utah_hres');
+            tempStop('gfs850');
+            tempStop('ecmwf850');
+            vortStop('gfs500');
+            vortStop('ecmwf500');
+        }
+    });
+
+        // Initialize to first available per model (GFS→F24, ECMWF→F12)
+    setImage('gfs');
+    setImage('ecmwf');
+    setUtahImage('utah_gfs');
+    setUtahImage('utah_hres');
+    setTempImage('gfs850');
+    setTempImage('ecmwf850');
+    setVortImage('gfs500');
+    setVortImage('ecmwf500');
+
+        // Row selector: show one tools row at a time
+        (function initRowSelector(){
+            const select = document.getElementById('synoptic-row-select');
+            const rows = Array.from(document.querySelectorAll('.tools-row'));
+            function applySelection(){
+                const val = select.value;
+                rows.forEach(r => {
+                    r.style.display = (r.getAttribute('data-row') === val) ? '' : 'none';
+                });
+            }
+            if(select){
+                // default to IVT visible
+                select.value = 'ivt';
+                applySelection();
+                select.addEventListener('change', applySelection);
+            }
+        })();
+    })();
+    </script>
+    <footer>
+        <p>&copy; 2024 Cascade Mountain Weather | Washington Backcountry Forecasts</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">This site is for educational purposes. Always check official sources before heading into the backcountry.</p>
+    </footer>
 </body>
 </html>

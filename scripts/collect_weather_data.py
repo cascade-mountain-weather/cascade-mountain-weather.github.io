@@ -6,7 +6,8 @@ STATIONS = ['STS48', 'STS48']
 RESORTS_TO_STATIONS = {
     'stevens_pass': {
         'mid': 'STB48',
-        'summit': 'STS52'
+        'summit': 'STS52',
+        'tye': 'STS54'
     },
     'mt_baker': {
         'base': 'MTB42',
@@ -28,10 +29,38 @@ RESORTS_TO_STATIONS = {
         'summit': 'ALP55'
     },
     'white_pass':{
-        'base':'WPS45'
+        'base':'WPS45',
+        'pigtail':'WPS60'
     },
     'blewett':{
         'base': 'BLT41'
+    },
+    'berne':{
+        'base': 'BRN27'
+    },
+    'waterhole':{
+        'base': 'WHSW1'
+    },
+    'harts_pass':{
+        'base': 'HRPW1'
+    },
+    'easy_pass':{
+        'base': 'EPSW1'
+    },
+    'swift_creek':{
+        'base': 'SWCW1'
+    },
+    'lyman_lake':{
+        'base': 'LYLW1'
+    },
+    'wells_creek':{
+        'base': 'WCSW1'
+    },
+    'olallie_meadows':{
+        'base': 'OMWW1'
+    },
+    'stampede_pass':{
+        'base': 'SMPW1'
     }
 }
 
@@ -56,18 +85,18 @@ RESULTS = {
 
 }
 
-# collect data for each resort at each elevation
+# Add Washington Pass stations
+RESORTS_TO_STATIONS['washington_pass'] = {
+    'base': 'WAP55',   # 48.53/-120.66 @ 5450 ft
+    'upper': 'WAP67'   # 48.53/-120.65 @ 6680 ft
+}
+
+# collect data for each resort at each elevation (support arbitrary keys like base/mid/summit/upper)
 for resort, stations in RESORTS_TO_STATIONS.items():
-    base = stations.get('base', None)
-    mid = stations.get('mid', None)
-    summit = stations.get('summit', None)
     RESULTS[resort] = dict()
-    if base is not None:
-        RESULTS[resort]['base'] = synoptic_api_pull(base)
-    if mid is not None:
-        RESULTS[resort]['mid'] = synoptic_api_pull(mid)
-    if summit is not None:
-        RESULTS[resort]['summit'] = synoptic_api_pull(summit)
+    for level, station_id in stations.items():
+        if station_id:
+            RESULTS[resort][level] = synoptic_api_pull(station_id)
 
 # Read the template
 with open('scripts/models-tools-current-weather.tpl.html', 'r') as f:
