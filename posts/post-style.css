@@ -240,6 +240,55 @@ p {
     align-self: center;
   }
 
+/* Snow Totals Grid Table */
+.snow-totals-grid {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.snow-totals-grid thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #2a5298;
+}
+
+.snow-totals-grid th,
+.snow-totals-grid td {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+}
+
+.snow-totals-grid th:last-child,
+.snow-totals-grid td:last-child {
+    border-right: none;
+}
+
+.snow-totals-grid th {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.snow-totals-grid tbody tr:nth-child(odd) {
+    background: #f9f9f9;
+}
+
+.snow-totals-grid tbody tr:hover {
+    background: #f0f5ff;
+}
+
+.snow-totals-grid td:first-child {
+    text-align: left;
+    font-weight: 500;
+}
+
+.snow-totals-grid td:first-child strong {
+    color: #1e3c72;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .post-header {
@@ -258,5 +307,15 @@ p {
     
     .forecast-section h2 {
         font-size: 1.5rem;
+    }
+    
+    .snow-totals-grid th,
+    .snow-totals-grid td {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+    }
+    
+    .snow-totals-grid th {
+        font-size: 0.8rem;
     }
 }
