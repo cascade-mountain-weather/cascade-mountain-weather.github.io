@@ -660,7 +660,7 @@
         { name: 'Stevens Pass - Skyline', lat: 47.73, lon: -121.11, elevation: '5250 ft', id: 'stevens', elevation_key: '5200' },
         { name: 'Stevens Pass - Tye Mill', lat: 47.73, lon: -121.09, elevation: '5180 ft', id: 'stevens', elevation_key: '5180' },
         { name: 'Alpental - Base', lat: 47.44, lon: -121.42, elevation: '3100 ft', id: 'snoqualmie', elevation_key: '3100' },
-        { name: 'Alpental - Mid-mountain', lat: 47.43, lon: -121.43, elevation: '4350 ft', id: 'snoqualmie', elevation_key: '4400' },
+        { name: 'Alpental - Mid-mountain', lat: 47.435, lon: -121.43, elevation: '4350 ft', id: 'snoqualmie', elevation_key: '4400' },
         { name: 'Alpental - Summit', lat: 47.44, lon: -121.44, elevation: '5470 ft', id: 'snoqualmie', elevation_key: '5500' },
         { name: 'Blewett Pass', lat: 47.33, lon: -120.58, elevation: '4100 ft', id: 'blewett', elevation_key: '4100' },
         { name: 'Crystal Mountain - Base', lat: 46.93132, lon: -121.47600, elevation: '4600 ft', id: 'crystal', elevation_key: '4600' },
@@ -793,8 +793,8 @@
       }
 
       const map = L.map('snow-map').setView([47.5, -121.5], 8);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
         maxZoom: 13
       }).addTo(map);
 
@@ -807,16 +807,20 @@
 
       function updateEastFlowWatch(){
         try {
-          const stevens = allMapData['stevens'];
-          const berne = allMapData['berne'];
-          const brooksF = stevens && stevens['4800'] && stevens['4800'].temp != null ? stevens['4800'].temp : null; // Brooks
-          const berneF = berne && berne['2700'] && berne['2700'].temp != null ? berne['2700'].temp : null; // Berne base
+          const alpental = allMapData['alpental'];
+          const baseF = alpental && alpental['3100'] && alpental['3100'].temp != null ? alpental['3100'].temp : null; // Alpental base
+          const midF = alpental && alpental['5400'] && alpental['5400'].temp != null ? alpental['5400'].temp : null; // Alpental mid
+          const summitF = alpental && alpental['6800'] && alpental['6800'].temp != null ? alpental['6800'].temp : null; // Alpental summit
           const box = document.getElementById('east-flow-watch');
           if (!box) return;
-          if (brooksF == null || berneF == null){ box.style.display = 'none'; return; }
-          const brooksC = fToC(brooksF);
-          const berneC = fToC(berneF);
-          if (berneC <= brooksC - 2){
+          if (baseF == null || (midF == null && summitF == null)){ box.style.display = 'none'; return; }
+          const baseC = fToC(baseF);
+          const midC = midF != null ? fToC(midF) : null;
+          const summitC = summitF != null ? fToC(summitF) : null;
+          // Check if base is at least 2C colder than either mid or summit
+          const colderThanMid = midC != null && baseC <= midC - 2;
+          const colderThanSummit = summitC != null && baseC <= summitC - 2;
+          if (colderThanMid || colderThanSummit){
             box.style.display = 'block';
           } else {
             box.style.display = 'none';
@@ -907,18 +911,18 @@
             background-color: ${color};
             border: 2px solid #333;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 16px;
             color: #fff;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
           ">${displayNumber}</div>`,
-          iconSize: [50, 50],
-          popupAnchor: [0, -25]
+          iconSize: [40, 40],
+          popupAnchor: [0, -20]
         });
         const marker = L.marker([site.lat, site.lon], { icon: icon }).addTo(map);
         const snotelSites = ['waterhole', 'harts_pass', 'easy_pass', 'swift_creek', 'lyman_lake', 'wells_creek', 'olallie_meadows', 'stampede_pass'];
