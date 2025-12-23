@@ -312,6 +312,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
 def scrape_forecast_ranges(html_file_path):
     """
     Scrape the weekend snow accumulation forecast ranges from the most recent forecast HTML post.
+    Extracts values from the rightmost column of the forecast table.
     
     Args:
         html_file_path: Path to the forecast HTML file
@@ -322,7 +323,7 @@ def scrape_forecast_ranges(html_file_path):
     forecast_ranges = {}
 
     def normalize_site_name(name: str) -> str:
-        # Drop any parenthetical like "(Heather Meadows)" and trim
+        # Drop any parenthetical like "(4500')" or "(Heather Meadows)" and trim
         cleaned = re.sub(r"\s*\(.*?\)", "", name).strip()
         return cleaned
     
@@ -332,58 +333,61 @@ def scrape_forecast_ranges(html_file_path):
         
         soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Look for the paragraph/strong text that marks the weekend totals, then the following ul with class 'totals'
-        totals_ul = None
-        # weekend_label = soup.find(string=re.compile(r"Weekend\s+Snow\s+Accumulation", re.IGNORECASE))
-        # if weekend_label:
-        #     candidate = weekend_label.parent if hasattr(weekend_label, 'parent') else None
-        #     if candidate:
-        #         totals_ul = candidate.find_next('ul')
-        #         # If the immediate next is not classed totals, try the next ul
-        #         if totals_ul and totals_ul.get('class') and 'totals' not in totals_ul.get('class', []):
-        #             totals_ul = totals_ul.find_next('ul')
-        # Last-resort fallback: last ul under any forecast-section h2 containing "Precipitation"
-        if totals_ul is None:
-            for section in soup.find_all('div', class_='forecast-details'):
-                # find all h3 elements in this section (safer if there are nested tags)
-                for h3 in section.find_all('h3'):
-                    txt = h3.get_text(strip=True).lower()
-                    if 'weekend snow accumulation' in txt:
-                        uls = section.find_all('ul')
-                        if uls:
-                            totals_ul = uls[-1]
-                            break
-                if totals_ul:
+        # Find the Weekend Snow Accumulation section and its table
+        forecast_table = None
+        for section in soup.find_all('div', class_='forecast-details'):
+            for h3 in section.find_all('h3'):
+                txt = h3.get_text(strip=True).lower()
+                if 'weekend snow accumulation' in txt:
+                    # Find the table in this section
+                    forecast_table = section.find('table')
                     break
-        if totals_ul:
-            for item in totals_ul.find_all('li'):
-                text = item.get_text(strip=True)
-                print("Parsing item:", text)
-
-                match = re.match(
-                            r'(.+?):\s*(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*"',
-                            text
-                        )
-
+            if forecast_table:
+                break
+        
+        if forecast_table:
+            # Process each row in the table body
+            rows = forecast_table.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) < 2:
+                    continue
+                
+                # First cell contains the site name (may include elevation)
+                site_cell = cells[0].get_text(strip=True)
+                # Last cell contains the weekend total range
+                total_cell = cells[-1].get_text(strip=True)
+                
+                print(f"Parsing row: {site_cell} | rightmost cell: {total_cell}")
+                
+                # Skip header rows
+                if 'site' in site_cell.lower() or not total_cell:
+                    continue
+                
+                # Normalize the site name (strip elevation parentheses)
+                site_name = normalize_site_name(site_cell)
+                
+                # Parse the total: could be "24-36" or just "24"
+                # Match patterns like "24-36" or "24" (with optional quotes)
+                match = re.search(r'(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?', total_cell)
                 if match:
-                    site_name = normalize_site_name(match.group(1)).split(" (")[0]
-
-                    min_snow = float(match.group(2))
-                    max_snow = (
-                        float(match.group(3)) if match.group(3) is not None else min_snow
-                    )
-
+                    min_snow = float(match.group(1))
+                    max_snow = float(match.group(2)) if match.group(2) else min_snow
+                    
                     forecast_ranges[site_name] = [
                         round(min_snow, 1),
                         round(max_snow, 1)
                     ]
+                    print(f"  Extracted: {site_name} -> {min_snow}-{max_snow} inches")
         else:
-            print("Weekend totals list not found in HTML; no forecast ranges scraped.")
+            print("Weekend totals table not found in HTML; no forecast ranges scraped.")
         
         return forecast_ranges
     
     except Exception as e:
         print(f"Error scraping forecast ranges from {html_file_path}: {e}")
+        import traceback
+        traceback.print_exc()
         return {}
 
 def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges):
@@ -398,15 +402,37 @@ def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges):
         with open(forecast_file_path, 'r', encoding='utf-8') as f:
             forecast_data = json.load(f)
         
-        # Update each area with the scraped forecast range
-        for site_name, forecast_range in forecast_ranges.items():
-            # check if site_name
-            if site_name in forecast_data['areas']:
-                forecast_data['areas'][site_name]['accumulated_snowfall']['our_forecast']['range'] = forecast_range
-                print(f"Updated {site_name}: {forecast_range[0]}-{forecast_range[1]} inches")
-        for fx_sites in forecast_data['areas']:
-            if fx_sites not in forecast_ranges.keys():
-                forecast_data['areas'][site_name]['accumulated_snowfall']['our_forecast']['range'] = [None, None]
+        # Build a normalized map of area keys to handle names like NAME (ELEVATION)
+        def normalize(n: str) -> str:
+            return re.sub(r"\s*\(.*?\)", "", n).strip().lower()
+
+        # Filter to only valid area dictionaries (skip metadata like 'created_at')
+        area_keys = [k for k, v in forecast_data.get('areas', {}).items() 
+                     if isinstance(v, dict) and 'accumulated_snowfall' in v]
+        normalized_map = {normalize(k): k for k in area_keys}
+
+        # Provide a small synonyms map for consistency
+        synonyms = {
+            'mt. baker ski area': 'mt. baker',
+            'heather meadows': 'mt. baker',
+            'crystal mountain': 'crystal'
+        }
+
+        # Update each area with the scraped forecast range using normalized matching
+        for scraped_name, forecast_range in forecast_ranges.items():
+            norm = normalize(scraped_name)
+            # apply synonyms to the normalized key if needed
+            norm = synonyms.get(norm, norm)
+            # find matching area key
+            target_key = normalized_map.get(norm)
+            if target_key:
+                forecast_data['areas'][target_key]['accumulated_snowfall']['our_forecast']['range'] = forecast_range
+                print(f"Updated {target_key}: {forecast_range[0]}-{forecast_range[1]} inches")
+
+        # For areas without scraped ranges, set None
+        for fx_key in area_keys:
+            if normalize(fx_key) not in {normalize(n) for n in forecast_ranges.keys()}:
+                forecast_data['areas'][fx_key]['accumulated_snowfall']['our_forecast']['range'] = [None, None]
         
         # Write updated data back to file
         with open(forecast_file_path, 'w', encoding='utf-8') as f:
