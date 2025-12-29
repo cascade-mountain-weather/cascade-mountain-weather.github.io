@@ -17,8 +17,8 @@
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        1.0
+                        8.0,
+                        12.0
                     ],
                     "units": "inches"
                 }
@@ -36,17 +36,17 @@
         "Washington Pass": {
             "accumulated_snowfall": {
                 "nbm_forecast": {
-                    "deterministic": null,
+                    "deterministic": 2.3,
                     "ensemble_iqr_range": [
-                        null,
-                        null
+                        0.4,
+                        2.3
                     ],
                     "units": "inches"
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        2.0
+                        3.0,
+                        6.0
                     ],
                     "units": "inches"
                 }
@@ -54,8 +54,8 @@
             "snow_level": {
                 "nbm_forecast": {
                     "weekend_min_max": [
-                        null,
-                        null
+                        4015.7,
+                        6535.4
                     ],
                     "units": "feet"
                 }
@@ -73,8 +73,8 @@
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        1.0
+                        12.0,
+                        18.0
                     ],
                     "units": "inches"
                 }
@@ -92,17 +92,17 @@
         "Snoqualmie Pass": {
             "accumulated_snowfall": {
                 "nbm_forecast": {
-                    "deterministic": null,
+                    "deterministic": 17.8,
                     "ensemble_iqr_range": [
-                        null,
-                        null
+                        8.4,
+                        17.5
                     ],
                     "units": "inches"
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        0.0
+                        10.0,
+                        16.0
                     ],
                     "units": "inches"
                 }
@@ -110,8 +110,8 @@
             "snow_level": {
                 "nbm_forecast": {
                     "weekend_min_max": [
-                        null,
-                        null
+                        0.0,
+                        3937.0
                     ],
                     "units": "feet"
                 }
@@ -129,8 +129,8 @@
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        0.0
+                        6.0,
+                        10.0
                     ],
                     "units": "inches"
                 }
@@ -157,8 +157,8 @@
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        0.0
+                        8.0,
+                        12.0
                     ],
                     "units": "inches"
                 }
@@ -185,8 +185,8 @@
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        0.0
+                        12.0,
+                        14.0
                     ],
                     "units": "inches"
                 }
@@ -204,17 +204,17 @@
         "White Pass": {
             "accumulated_snowfall": {
                 "nbm_forecast": {
-                    "deterministic": null,
+                    "deterministic": 0.0,
                     "ensemble_iqr_range": [
-                        null,
-                        null
+                        0.0,
+                        0.0
                     ],
                     "units": "inches"
                 },
                 "our_forecast": {
                     "range": [
-                        null,
-                        null
+                        6.0,
+                        12.0
                     ],
                     "units": "inches"
                 }
@@ -222,8 +222,8 @@
             "snow_level": {
                 "nbm_forecast": {
                     "weekend_min_max": [
-                        null,
-                        null
+                        6089.2,
+                        8582.7
                     ],
                     "units": "feet"
                 }
@@ -232,17 +232,17 @@
         "Hurricane Ridge": {
             "accumulated_snowfall": {
                 "nbm_forecast": {
-                    "deterministic": null,
+                    "deterministic": 0.1,
                     "ensemble_iqr_range": [
-                        null,
-                        null
+                        0.0,
+                        0.0
                     ],
                     "units": "inches"
                 },
                 "our_forecast": {
                     "range": [
-                        0.0,
-                        0.0
+                        16.0,
+                        24.0
                     ],
                     "units": "inches"
                 }
@@ -250,8 +250,8 @@
             "snow_level": {
                 "nbm_forecast": {
                     "weekend_min_max": [
-                        null,
-                        null
+                        4566.9,
+                        7795.3
                     ],
                     "units": "feet"
                 }
