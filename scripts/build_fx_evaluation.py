@@ -173,7 +173,7 @@ def new_snow_estimate(swe, temp):
 def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     """Load observation data for an area and month"""
     start_date = fx_date + pd.Timedelta(days=1)
-    end_date = start_date + pd.Timedelta(days=4)
+    end_date = start_date + pd.Timedelta(days=3)
     sites ={
     "Mt. Baker" : "909:WA:SNTL",
     "Stevens Pass" : "791:WA:SNTL",
