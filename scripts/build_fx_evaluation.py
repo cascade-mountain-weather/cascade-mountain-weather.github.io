@@ -30,7 +30,7 @@ def load_forecast(site, output_dir):
     if site == "Crystal" or site == "Paradise":
         return None  # No forecast available for these sites
     
-    if datetime.today().weekday() != 3:  # 3 corresponds to Thursday
+    if datetime.today().weekday() != 4:  # 3 corresponds to Thursday
         print("Today is not Thursday, using existing forecast file if available.")
         if site == 'TBLEW':
             saved_path = output_dir / "Blewett Pass.csv"
