@@ -273,7 +273,7 @@
       <div id="snow-map">
         <div id="east-flow-watch" class="east-flow-watch">🚨 East Flow Watch <span id="east-flow-info-toggle" class="info-icon east-flow-info-inline">i</span>
           <div id="east-flow-info" class="east-flow-info-panel">
-            <p>This triggers when Berne (2700') is at least 2°C colder than Stevens Pass — Brooks (4800'). This suggests an atmospheric temperature inversion with potential easterly gap flow at the pass and lower snow levels.</p>
+            <p>This triggers when Alpental Base (3100') is at least 1°C colder than Alpental Summit (5500'). This suggests an atmospheric temperature inversion with potential easterly gap flow and lower snow levels near the pass.</p>
             <button class="east-flow-close-btn" onclick="document.getElementById('east-flow-info').style.display='none'">×</button>
           </div>
         </div>
@@ -815,20 +815,16 @@
 
       function updateEastFlowWatch(){
         try {
-          const alpental = allMapData['alpental'];
+          const alpental = allMapData['snoqualmie'];
           const baseF = alpental && alpental['3100'] && alpental['3100'].temp != null ? alpental['3100'].temp : null; // Alpental base
-          const midF = alpental && alpental['5400'] && alpental['5400'].temp != null ? alpental['5400'].temp : null; // Alpental mid
-          const summitF = alpental && alpental['6800'] && alpental['6800'].temp != null ? alpental['6800'].temp : null; // Alpental summit
+          const summitF = alpental && alpental['5500'] && alpental['5500'].temp != null ? alpental['5500'].temp : null; // Alpental summit
           const box = document.getElementById('east-flow-watch');
           if (!box) return;
-          if (baseF == null || (midF == null && summitF == null)){ box.style.display = 'none'; return; }
+          if (baseF == null || summitF == null){ box.style.display = 'none'; return; }
           const baseC = fToC(baseF);
-          const midC = midF != null ? fToC(midF) : null;
-          const summitC = summitF != null ? fToC(summitF) : null;
-          // Check if base is at least 2C colder than either mid or summit
-          const colderThanMid = midC != null && baseC <= midC - 2;
-          const colderThanSummit = summitC != null && baseC <= summitC - 2;
-          if (colderThanMid || colderThanSummit){
+          const summitC = fToC(summitF);
+          // Check if base is at least 1C colder than summit
+          if (baseC <= summitC - 1){
             box.style.display = 'block';
           } else {
             box.style.display = 'none';
