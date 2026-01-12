@@ -181,7 +181,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     "Snoqualmie Pass" : "672:WA:SNTL",
     "Crystal" : "418:WA:SNTL",
     "Paradise" : "679:WA:SNTL",
-    "White Pass" : "863:WA:SNTL",
+    "White Pass" : "692:WA:SNTL",
     "Hurricane Ridge" : "974:WA:SNTL",
     "Washington Pass" : "515:WA:SNTL"
     }
