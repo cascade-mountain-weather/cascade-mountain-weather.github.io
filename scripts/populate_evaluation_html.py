@@ -307,7 +307,70 @@ def get_latest_evaluation_report(reports_dir):
     return report_files[0]
 
 
-def populate_html(html_path, season_data, recent_evals):
+def calculate_our_forecast_stats(reports_dir):
+    """
+    Calculate Our MAE and mean bias for each area across all evaluation reports.
+    
+    Returns:
+        dict: {
+            'MT. BAKER': {'mae': float, 'bias': float, 'count': int},
+            'STEVENS PASS': {'mae': float, 'bias': float, 'count': int},
+            ...
+        }
+    """
+    report_files = list(Path(reports_dir).glob('evaluation_*.txt'))
+    if not report_files:
+        return {}
+    
+    # Collect errors for each area
+    area_errors = {}
+    
+    for report_file in report_files:
+        evaluations = parse_recent_evaluation(report_file)
+        
+        for eval_item in evaluations:
+            # Skip if no forecast was issued
+            if eval_item.get('our_forecast_low') is None or eval_item.get('actual') is None:
+                continue
+            
+            # Get area name in ALL CAPS format
+            area_name = eval_item['area']
+            # Convert back to ALL CAPS key format
+            reverse_map = {
+                'Mt. Baker': 'MT. BAKER',
+                'Stevens Pass': 'STEVENS PASS',
+                'Crystal Mountain': 'CRYSTAL',
+                'Paradise': 'PARADISE',
+                'Snoqualmie Pass': 'SNOQUALMIE PASS',
+                'Blewett Pass': 'BLEWETT PASS',
+                'White Pass': 'WHITE PASS',
+                'Hurricane Ridge': 'HURRICANE RIDGE',
+                'Washington Pass': 'WASHINGTON PASS'
+            }
+            area_key = reverse_map.get(area_name, area_name.upper())
+            
+            # Calculate error (forecast midpoint - actual)
+            our_mid = (eval_item['our_forecast_low'] + eval_item['our_forecast_high']) / 2
+            error = our_mid - eval_item['actual']  # positive = overforecast, negative = underforecast
+            
+            if area_key not in area_errors:
+                area_errors[area_key] = []
+            area_errors[area_key].append(error)
+    
+    # Calculate MAE and mean bias for each area
+    stats = {}
+    for area_key, errors in area_errors.items():
+        if errors:
+            stats[area_key] = {
+                'mae': sum(abs(e) for e in errors) / len(errors),
+                'bias': sum(errors) / len(errors),
+                'count': len(errors)
+            }
+    
+    return stats
+
+
+def populate_html(html_path, season_data, recent_evals, our_forecast_stats):
     """
     Update evaluation.html with parsed data.
     
@@ -315,6 +378,7 @@ def populate_html(html_path, season_data, recent_evals):
         html_path: Path to evaluation.html
         season_data: Dict from parse_season_summary
         recent_evals: List of dicts from parse_recent_evaluation
+        our_forecast_stats: Dict from calculate_our_forecast_stats with MAE and bias
     """
     with open(html_path, 'r', encoding='utf-8') as f:
         html = f.read()
@@ -566,6 +630,7 @@ def populate_html(html_path, season_data, recent_evals):
         recent_eval = next((e for e in recent_evals if e['area'] == heading), None)
 
         season_area = season_data['areas'].get(area_key)
+        our_stats = our_forecast_stats.get(area_key)
 
         # compute values
         if season_area:
@@ -579,26 +644,67 @@ def populate_html(html_path, season_data, recent_evals):
             nbm_within_val = '--'
             our_within_val = '--'
 
-        # Our MAE: prefer recent_eval our-error if available
-        our_mae_val = '--'
+        # Our MAE and bias from calculated stats
+        our_mae_val = 'N/A'
+        our_bias_val = 'N/A'
         were_within_val = our_within_val
-        if recent_eval and recent_eval.get('our_forecast_low') is not None and recent_eval.get('actual') is not None:
+        
+        if our_stats:
+            our_mae_val = f"{our_stats['mae']:.1f}\""
+            # Format bias with sign to show over/underprediction
+            bias_sign = '+' if our_stats['bias'] >= 0 else ''
+            our_bias_val = f"{bias_sign}{our_stats['bias']:.1f}\""
+            if our_stats['count'] > 0 and not season_area:
+                forecasts_val = str(our_stats['count'])
+        
+        # Only use recent_eval data if we don't have season data
+        if not season_area and recent_eval and recent_eval.get('our_forecast_low') is not None and recent_eval.get('actual') is not None:
             our_mid = (recent_eval['our_forecast_low'] + recent_eval['our_forecast_high']) / 2
             our_mae_val = f"{abs(recent_eval['actual'] - our_mid):.1f}\""
             were_within_val = f"{1 if recent_eval.get('our_within_range') else 0}/1 ({100.0 if recent_eval.get('our_within_range') else 0.0}%)"
-            # if no season data, reflect a single forecast evaluated
-            if not season_area:
-                forecasts_val = '1'
+            forecasts_val = '1'
 
         # helper to replace a single seasonal-stat-value inside the card
         def replace_in_card(html, label, newval):
             pattern = rf'(<div class="seasonal-card" data-region="{re.escape(slug)}">.*?<span class="seasonal-stat-label">{re.escape(label)}</span>\s*<span class="seasonal-stat-value">)(.*?)(</span>)'
             return re.sub(pattern, lambda m: m.group(1) + newval + m.group(3), html, flags=re.DOTALL)
+        
+        # helper to add a field if it doesn't exist (inserts after Our MAE)
+        def add_field_if_missing(html, label, value):
+            # Check if the field already exists in THIS card
+            pattern = rf'<div class="seasonal-card" data-region="{re.escape(slug)}">.*?<span class="seasonal-stat-label">{re.escape(label)}</span>.*?</div>\s*</div>\s*</div>'
+            if re.search(pattern, html, flags=re.DOTALL):
+                return html  # Field already exists in this card
+            
+            # Insert after Our MAE field within this specific card
+            insert_pattern = rf'(<div class="seasonal-card" data-region="{re.escape(slug)}">.*?<span class="seasonal-stat-label">Our MAE</span>\s*<span class="seasonal-stat-value">.*?</span>\s*</div>)(\s*<div class="seasonal-stat">)'
+            
+            # If there's a field immediately after Our MAE, insert before it
+            if re.search(insert_pattern, html, flags=re.DOTALL):
+                insert_html = f'''\\1
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">{label}</span>
+                            <span class="seasonal-stat-value">{value}</span>
+                        </div>\\2'''
+                return re.sub(insert_pattern, insert_html, html, count=1, flags=re.DOTALL)
+            
+            # Otherwise, try to insert before the closing of seasonal-stats-grid
+            alt_pattern = rf'(<div class="seasonal-card" data-region="{re.escape(slug)}">.*?<span class="seasonal-stat-label">Our MAE</span>\s*<span class="seasonal-stat-value">.*?</span>\s*</div>)(\s*</div>\s*</div>\s*</div>)'
+            insert_html = f'''\\1
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">{label}</span>
+                            <span class="seasonal-stat-value">{value}</span>
+                        </div>\\2'''
+            return re.sub(alt_pattern, insert_html, html, count=1, flags=re.DOTALL)
+
+        # Add Mean Bias field if it doesn't exist
+        html = add_field_if_missing(html, 'Mean Bias', our_bias_val)
 
         html = replace_in_card(html, 'Forecasts Evaluated', forecasts_val)
         html = replace_in_card(html, 'NBM MAE', nbm_mae_val)
         html = replace_in_card(html, 'NBM Within Range', nbm_within_val)
         html = replace_in_card(html, 'Our MAE', our_mae_val)
+        html = replace_in_card(html, 'Mean Bias', our_bias_val)
         html = replace_in_card(html, 'Were we within range?', were_within_val)
 
         return html
@@ -650,8 +756,14 @@ def main():
         recent_evals = []
         print()
     
+    # Calculate Our MAE and bias from all evaluation reports
+    print("Calculating 'Our Forecast' statistics from all evaluation reports...")
+    our_forecast_stats = calculate_our_forecast_stats(reports_dir)
+    print(f"  Calculated stats for {len(our_forecast_stats)} areas")
+    print()
+    
     # Update HTML
-    populate_html(html_path, season_data, recent_evals)
+    populate_html(html_path, season_data, recent_evals, our_forecast_stats)
     print()
     print("Done! Open evaluation.html in a browser to see the updated statistics.")
 
