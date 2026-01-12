@@ -38,6 +38,39 @@ header h1 {
     opacity: 0.9;
 }
 
+/* Buy Me a Coffee Button */
+.buy-coffee-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 20;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+    opacity: 0.9;
+}
+
+.buy-coffee-btn:hover {
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.buy-coffee-btn img {
+    height: 40px;
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+    .buy-coffee-btn {
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    .buy-coffee-btn img {
+        height: 32px;
+    }
+}
+
 /* Navigation */
 nav {
     background-color: white;
