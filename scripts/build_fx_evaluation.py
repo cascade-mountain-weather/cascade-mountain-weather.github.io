@@ -181,7 +181,7 @@ def load_observations(site, fx_date, min_snow_level=None, max_snow_level=None):
     "Snoqualmie Pass" : "672:WA:SNTL",
     "Crystal" : "418:WA:SNTL",
     "Paradise" : "679:WA:SNTL",
-    "White Pass" : "863:WA:SNTL",
+    "White Pass" : "692:WA:SNTL",
     "Hurricane Ridge" : "974:WA:SNTL",
     "Washington Pass" : "515:WA:SNTL"
     }
@@ -793,7 +793,7 @@ if __name__ == '__main__':
         
         # Step 1: Scrape the most recent forecast HTML post
         print("\n[Step 1] Scraping forecast ranges from latest post...")
-        latest_post = max(posts_dir.glob('2025-*-weekend-forecast.html'), default=None)
+        latest_post = max(posts_dir.glob('2026-*-weekend-forecast.html'), default=None)
         if latest_post:
             print(f"Found latest post: {latest_post.name}")
             forecast_ranges = scrape_forecast_ranges(latest_post)
