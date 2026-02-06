@@ -115,7 +115,6 @@ def get_forecast_file(site, output_dir):
         # get date for m
         # add site manually to avoid KeyError later and fill with all null values
         eval_forecast_data['areas'][site]['accumulated_snowfall']['nbm_forecast']['deterministic'] = None
-    
         eval_forecast_data['areas'][site]['accumulated_snowfall']['nbm_forecast']['ensemble_iqr_range'] = [None, None]
         # add snow level info
         eval_forecast_data['areas'][site]['snow_level']['nbm_forecast']['weekend_min_max'] = [None, None]
