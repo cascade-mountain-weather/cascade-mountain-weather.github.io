@@ -1,0 +1,262 @@
+{
+    "post_date": "2026-02-01",
+    "valid_dates": [
+        "2026-02-02 00:00:00",
+        "2026-02-05"
+    ],
+    "areas": {
+        "Mt. Baker": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": 1.8,
+                    "ensemble_iqr_range": [
+                        0.0,
+                        2.2
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        1.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        2860.9,
+                        6929.1
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Washington Pass": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        2.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Stevens Pass": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        1.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Snoqualmie Pass": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        0.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Blewett Pass": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        0.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Crystal": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        0.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Paradise": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        0.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "White Pass": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "Hurricane Ridge": {
+            "accumulated_snowfall": {
+                "nbm_forecast": {
+                    "deterministic": null,
+                    "ensemble_iqr_range": [
+                        null,
+                        null
+                    ],
+                    "units": "inches"
+                },
+                "our_forecast": {
+                    "range": [
+                        0.0,
+                        0.0
+                    ],
+                    "units": "inches"
+                }
+            },
+            "snow_level": {
+                "nbm_forecast": {
+                    "weekend_min_max": [
+                        null,
+                        null
+                    ],
+                    "units": "feet"
+                }
+            }
+        },
+        "created_at": "2025-11-30"
+    }
+}
