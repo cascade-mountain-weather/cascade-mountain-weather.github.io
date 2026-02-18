@@ -30,7 +30,7 @@ def load_forecast(site, output_dir):
     if site == "Crystal" or site == "Paradise":
         return None  # No forecast available for these sites
     
-    if datetime.today().weekday() != 3:  # 3 corresponds to Thursday
+    if datetime.today().weekday() != 4:  # 3 corresponds to Thursday
         print("Today is not Thursday, using existing forecast file if available.")
         if site == 'TBLEW':
             saved_path = output_dir / "Blewett Pass.csv"
@@ -99,7 +99,7 @@ def get_forecast_file(site, output_dir):
         dict: Evaluation results
     """
     saved_path = load_forecast(site, output_dir)
-    # get date of most recent past thursday
+    # get date of most recent past friday
     forecast_date = (datetime.today() - timedelta(days=(datetime.today().weekday() - 3) % 7)).strftime('%Y-%m-%d')
     
     # copy the template file if it doesnt exist:
