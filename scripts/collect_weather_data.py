@@ -61,6 +61,30 @@ RESORTS_TO_STATIONS = {
     },
     'stampede_pass':{
         'base': 'SMPW1'
+    },
+    'fish_lake':{
+        'base': 'FISW1'
+    },
+    'sasse_ridge':{
+        'base': 'SASW1'
+    },
+    'mf_nooksack':{
+        'base': 'MNOW1'
+    },
+    'mt_crag':{
+        'base': 'MTCW1'
+    },
+    'dungeness':{
+        'base': 'DGSW1'
+    },
+    'corral_pass':{
+        'base': 'COPW1'
+    },
+    'grouse_camp':{
+        'base': 'GRCW1'
+    },
+    'june_lake':{
+        'base': 'MRBW1'
     }
 }
 
