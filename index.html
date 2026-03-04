@@ -520,6 +520,41 @@
                         .catch(err => console.log('Service Worker registration failed', err));
                 });
             }
+
+            // Offline detection and warning
+            (function() {
+                function showOfflineWarning() {
+                    const existing = document.getElementById('offline-notice');
+                    if (existing) return;
+
+                    const notice = document.createElement('div');
+                    notice.id = 'offline-notice';
+                    notice.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff9800;color:#000;padding:0.75rem;text-align:center;z-index:10000;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
+                    notice.innerHTML = '⚠️ No internet connection - Data may be outdated';
+                    document.body.appendChild(notice);
+                }
+
+                function hideOfflineWarning() {
+                    const notice = document.getElementById('offline-notice');
+                    if (notice) notice.remove();
+                }
+
+                function checkConnection() {
+                    if (!navigator.onLine) {
+                        showOfflineWarning();
+                    } else {
+                        hideOfflineWarning();
+                    }
+                }
+
+                // Check on load
+                window.addEventListener('load', checkConnection);
+                // Monitor connection changes
+                window.addEventListener('online', hideOfflineWarning);
+                window.addEventListener('offline', showOfflineWarning);
+                // Check immediately
+                checkConnection();
+            })();
         </script>
 </body>
 </html>
