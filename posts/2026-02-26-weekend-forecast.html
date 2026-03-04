@@ -14,6 +14,13 @@
     <meta name="robots" content="index, follow">
 
     <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="../manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CMW">
+    <link rel="apple-touch-icon" href="../assets/images/favicon.svg">
 
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="post-style.css">
@@ -345,5 +352,15 @@
         <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
     </footer>
         <script src="../assets/header.js" defer></script>
+        <script>
+            // Register service worker for PWA
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('../service-worker.js')
+                        .then(reg => console.log('Service Worker registered', reg))
+                        .catch(err => console.log('Service Worker registration failed', err));
+                });
+            }
+        </script>
 </body>
 </html>
