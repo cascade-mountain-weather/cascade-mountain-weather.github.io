@@ -462,6 +462,9 @@
 
                 if (!loader || !output || !body) return;
 
+                // Check if this is the first visit
+                const hasVisited = localStorage.getItem('cmw_visited');
+                
                 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
                 const finish = (delay = 0) => {
@@ -471,6 +474,15 @@
                         setTimeout(() => loader.remove(), 500);
                     }, delay);
                 };
+
+                // Skip animation if user has visited before
+                if (hasVisited) {
+                    finish(0);
+                    return;
+                }
+
+                // Mark as visited for future loads
+                localStorage.setItem('cmw_visited', 'true');
 
                 if (reduceMotion) {
                     output.textContent = targetText;
