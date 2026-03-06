@@ -1073,7 +1073,7 @@
           popupAnchor: [0, -20]
         });
         const marker = L.marker([site.lat, site.lon], { icon: icon }).addTo(map);
-        const snotelSites = ['waterhole', 'harts_pass', 'easy_pass', 'swift_creek', 'lyman_lake', 'wells_creek', 'olallie_meadows', 'stampede_pass', 'fish_lake', 'sasse_ridge', 'mf_nooksack', 'mt_crag', 'dungeness', 'corral_pass', 'grouse_camp', 'june_lake'];
+        const snotelSites = ['waterhole', 'harts_pass', 'easy_pass', 'swift_creek', 'lyman_lake', 'wells_creek', 'olallie_meadows', 'stampede_pass'];
         const source = snotelSites.includes(site.id) ? 'SNOTEL' : 'NWAC';
         marker.bindPopup(`
           <strong>${site.name}</strong><br>
