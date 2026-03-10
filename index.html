@@ -158,6 +158,29 @@
             </ul>
         </section>
 
+        <section id="satellite-looper" class="satellite-looper">
+            <h2>GOES + Radar Looper</h2>
+            <p class="satellite-subtitle">
+                Integrated GOES true color and radar loop for the Pacific Northwest. Updated every 2 hours.
+            </p>
+            <div class="satellite-stage">
+                <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
+            </div>
+            <div class="satellite-controls">
+                <button id="satellite-prev" type="button" aria-label="Previous frame">Prev</button>
+                <button id="satellite-play" type="button" aria-label="Play animation">Play</button>
+                <button id="satellite-pause" type="button" aria-label="Pause animation" disabled>Pause</button>
+                <button id="satellite-next" type="button" aria-label="Next frame">Next</button>
+                <input id="satellite-scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Satellite loop frame scrubber" />
+            </div>
+            <p id="satellite-status" class="satellite-status">Loading latest satellite loop…</p>
+            <p class="satellite-links">
+                <a id="satellite-gif-link" href="assets/images/satellite/cod_nw_truecolor_radar.gif" target="_blank" rel="noopener noreferrer">Open full GIF</a>
+                <span class="dot-sep">|</span>
+                <a href="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" target="_blank" rel="noopener noreferrer">Source: College of DuPage SatRad</a>
+            </p>
+        </section>
+
 
         <section id="latest-post" class="hero">
             <h2>Welcome to the Dendritic Growth Zone!</h2>
@@ -392,6 +415,139 @@
             function hideInfo(event) {
                 event.target.closest('.info-popup').style.display = 'none';
             }
+        </script>
+        <script>
+            (function () {
+                const frameEl = document.getElementById('satellite-frame');
+                const statusEl = document.getElementById('satellite-status');
+                const scrubberEl = document.getElementById('satellite-scrubber');
+                const prevEl = document.getElementById('satellite-prev');
+                const nextEl = document.getElementById('satellite-next');
+                const playEl = document.getElementById('satellite-play');
+                const pauseEl = document.getElementById('satellite-pause');
+                const gifLinkEl = document.getElementById('satellite-gif-link');
+
+                if (!frameEl || !statusEl || !scrubberEl || !prevEl || !nextEl || !playEl || !pauseEl) {
+                    return;
+                }
+
+                let frames = [];
+                let currentFrame = 0;
+                let isPlaying = false;
+                let timer = null;
+
+                function stopPlayback() {
+                    isPlaying = false;
+                    playEl.disabled = false;
+                    pauseEl.disabled = true;
+                    if (timer) {
+                        window.clearTimeout(timer);
+                        timer = null;
+                    }
+                }
+
+                function setStatusForFrame() {
+                    statusEl.textContent = `Frame ${currentFrame + 1} of ${frames.length}`;
+                }
+
+                function renderFrame(index) {
+                    if (!frames.length) {
+                        return;
+                    }
+                    currentFrame = (index + frames.length) % frames.length;
+                    const frame = frames[currentFrame];
+                    frameEl.src = frame.src;
+                    scrubberEl.value = String(currentFrame);
+                    setStatusForFrame();
+                }
+
+                function playLoop() {
+                    if (!isPlaying || !frames.length) {
+                        return;
+                    }
+                    const frame = frames[currentFrame];
+                    const delay = Math.max(100, Number(frame.durationMs || 0) || 350);
+                    timer = window.setTimeout(function () {
+                        renderFrame(currentFrame + 1);
+                        playLoop();
+                    }, delay);
+                }
+
+                async function initSatelliteLooper() {
+                    const cacheBust = `?v=${Date.now()}`;
+                    const manifestPath = `assets/images/satellite/satellite_manifest.json${cacheBust}`;
+                    const fallbackGifPath = `assets/images/satellite/cod_nw_truecolor_radar.gif${cacheBust}`;
+
+                    try {
+                        const response = await fetch(manifestPath);
+                        if (!response.ok) {
+                            throw new Error('manifest unavailable');
+                        }
+                        const manifest = await response.json();
+                        if (!manifest || !Array.isArray(manifest.frames) || manifest.frames.length === 0) {
+                            throw new Error('manifest has no frames');
+                        }
+
+                        frames = manifest.frames.map(function (f) {
+                            return {
+                                src: `assets/images/satellite/frames/${f.file}${cacheBust}`,
+                                durationMs: Number(f.duration_ms || 0),
+                            };
+                        });
+
+                        scrubberEl.max = String(frames.length - 1);
+                        renderFrame(0);
+
+                        if (manifest.updated_utc) {
+                            const updatedDate = new Date(manifest.updated_utc);
+                            if (!Number.isNaN(updatedDate.getTime())) {
+                                statusEl.textContent = `Frame 1 of ${frames.length}. Updated ${updatedDate.toLocaleString()}`;
+                            }
+                        }
+
+                        const gifFile = manifest.gif_file || 'cod_nw_truecolor_radar.gif';
+                        if (gifLinkEl) {
+                            gifLinkEl.href = `assets/images/satellite/${gifFile}`;
+                        }
+                    } catch (err) {
+                        frames = [{ src: fallbackGifPath, durationMs: 500 }];
+                        scrubberEl.max = '0';
+                        renderFrame(0);
+                        statusEl.textContent = 'Latest frame manifest not available yet. Showing the full GIF.';
+                    }
+                }
+
+                scrubberEl.addEventListener('input', function (event) {
+                    const next = Number(event.target.value || 0);
+                    renderFrame(next);
+                });
+
+                prevEl.addEventListener('click', function () {
+                    stopPlayback();
+                    renderFrame(currentFrame - 1);
+                });
+
+                nextEl.addEventListener('click', function () {
+                    stopPlayback();
+                    renderFrame(currentFrame + 1);
+                });
+
+                playEl.addEventListener('click', function () {
+                    if (!frames.length) {
+                        return;
+                    }
+                    isPlaying = true;
+                    playEl.disabled = true;
+                    pauseEl.disabled = false;
+                    playLoop();
+                });
+
+                pauseEl.addEventListener('click', function () {
+                    stopPlayback();
+                });
+
+                initSatelliteLooper();
+            })();
         </script>
 </body>
 </html>

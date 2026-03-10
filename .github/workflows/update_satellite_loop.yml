@@ -1,0 +1,51 @@
+name: Update Satellite Looper
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-satellite-loop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pillow
+
+      - name: Build COD GOES + radar loop
+        run: |
+          python scripts/build_cod_satellite_loop.py \
+            --url "https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" \
+            --output-dir assets/images/satellite \
+            --gif-name cod_nw_truecolor_radar.gif \
+            --manifest-name satellite_manifest.json \
+            --frames-subdir frames \
+            --max-frames 24 \
+            --delay-ms 250
+
+      - name: Commit and push updated loop assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/images/satellite/cod_nw_truecolor_radar.gif
+          git add assets/images/satellite/frames
+          git add assets/images/satellite/satellite_manifest.json
+          git commit -m "Update satellite looper assets [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
