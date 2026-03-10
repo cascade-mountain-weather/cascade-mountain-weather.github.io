@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import os
+import shutil
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from selenium import webdriver
@@ -13,6 +16,46 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from selenium.webdriver.common.action_chains import ActionChains
+
+
+def extract_gif_frames(
+	gif_path: Path,
+	frames_dir: Path,
+	manifest_path: Path | None = None,
+	frame_prefix: str = "frame",
+	source_url: str | None = None,
+):
+	"""Extract GIF frames to PNG files, replacing the previous frame set."""
+	try:
+		from PIL import Image, ImageSequence
+	except ImportError as exc:
+		raise RuntimeError("Pillow is required for frame extraction. Install with: pip install pillow") from exc
+
+	if frames_dir.exists():
+		shutil.rmtree(frames_dir)
+	frames_dir.mkdir(parents=True, exist_ok=True)
+
+	frames = []
+	with Image.open(gif_path) as img:
+		default_duration = int(img.info.get("duration", 0) or 0)
+		for idx, frame in enumerate(ImageSequence.Iterator(img)):
+			frame_name = f"{frame_prefix}-{idx:03d}.png"
+			frame_path = frames_dir / frame_name
+			frame_duration = int(frame.info.get("duration", default_duration) or default_duration)
+			frame.convert("RGBA").save(frame_path, format="PNG", optimize=True)
+			frames.append({"index": idx, "file": frame_name, "duration_ms": frame_duration})
+
+	if manifest_path is not None:
+		manifest_path.parent.mkdir(parents=True, exist_ok=True)
+		manifest = {
+			"updated_utc": datetime.now(timezone.utc).isoformat(),
+			"gif_file": gif_path.name,
+			"source_url": source_url,
+			"frame_count": len(frames),
+			"frames": frames,
+		}
+		manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
 def get_open_modal(driver: webdriver.Chrome) -> object:
 	"""Return the visible modal/dialog container if present."""
 	candidates = [
@@ -100,7 +143,7 @@ def click_save_animation(driver: webdriver.Chrome, debug: bool = False, modal_ti
 
 	# Wait for modal presence indicating Save dialog opened
 	try:
-		wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'modal') or contains(@role,'dialog')]//button[contains(., 'Save Animated GIF') or contains(., 'Save GIF')"])))
+		wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'modal') or contains(@role,'dialog')]//button[contains(., 'Save Animated GIF') or contains(., 'Save GIF')]")))
 		log("Save dialog detected")
 		return
 	except Exception:
@@ -405,6 +448,9 @@ def main():
 	parser.add_argument("--modal-timeout-ms", type=int, default=8000, help="Maximum time to wait for the save modal to appear (ms)")
 	parser.add_argument("--save-button-timeout-ms", type=int, default=8000, help="Maximum time to wait for Save GIF button to become clickable (ms)")
 	parser.add_argument("--download-timeout", type=int, default=180, help="Maximum seconds to wait for GIF download to complete")
+	parser.add_argument("--extract-frames-dir", type=str, default=None, help="Directory where extracted PNG frames are written")
+	parser.add_argument("--manifest", type=str, default=None, help="Path to JSON manifest for extracted frames")
+	parser.add_argument("--frame-prefix", type=str, default="frame", help="Filename prefix for extracted frame PNG files")
 
 	args = parser.parse_args()
 	download_dir = Path(args.out)
@@ -498,9 +544,30 @@ def main():
 				if target_path.exists():
 					target_path.unlink()
 				gif_path.rename(target_path)
+				gif_path = target_path
 				print(f"✓ Saved GIF as: {target_path}")
 			except Exception:
 				print(f"✓ Downloaded GIF: {gif_path} (rename to {target_path.name} failed)")
+
+			if args.extract_frames_dir:
+				extract_dir = Path(args.extract_frames_dir)
+				if not extract_dir.is_absolute():
+					extract_dir = (Path.cwd() / extract_dir).resolve()
+
+				manifest_path = None
+				if args.manifest:
+					manifest_path = Path(args.manifest)
+					if not manifest_path.is_absolute():
+						manifest_path = (Path.cwd() / manifest_path).resolve()
+
+				extract_gif_frames(
+					gif_path=gif_path,
+					frames_dir=extract_dir,
+					manifest_path=manifest_path,
+					frame_prefix=args.frame_prefix,
+					source_url=url,
+				)
+				print(f"Extracted GIF frames to: {extract_dir}")
 		else:
 			print("⚠ Timed out waiting for GIF download. Check selectors or site state.")
 	finally:
