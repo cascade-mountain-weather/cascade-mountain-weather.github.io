@@ -389,13 +389,14 @@ def scrape_forecast_ranges(html_file_path):
         traceback.print_exc()
         return {}
 
-def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges):
+def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges, clear_missing=False):
     """
     Update the forecast JSON file with our_forecast ranges from scraped HTML data.
     
     Args:
         forecast_file_path: Path to the eval_forecast JSON file
         forecast_ranges: Dict mapping site names to [min, max] forecast ranges
+        clear_missing: If True, set areas not present in scraped data to [None, None]
     """
     try:
         with open(forecast_file_path, 'r', encoding='utf-8') as f:
@@ -428,10 +429,12 @@ def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges):
                 forecast_data['areas'][target_key]['accumulated_snowfall']['our_forecast']['range'] = forecast_range
                 print(f"Updated {target_key}: {forecast_range[0]}-{forecast_range[1]} inches")
 
-        # For areas without scraped ranges, set None
-        for fx_key in area_keys:
-            if normalize(fx_key) not in {normalize(n) for n in forecast_ranges.keys()}:
-                forecast_data['areas'][fx_key]['accumulated_snowfall']['our_forecast']['range'] = [None, None]
+        # Optionally clear ranges for areas without scraped values.
+        # Default is False to avoid accidentally wiping data if scraping fails/changes.
+        if clear_missing:
+            for fx_key in area_keys:
+                if normalize(fx_key) not in {normalize(n) for n in forecast_ranges.keys()}:
+                    forecast_data['areas'][fx_key]['accumulated_snowfall']['our_forecast']['range'] = [None, None]
         
         # Write updated data back to file
         with open(forecast_file_path, 'w', encoding='utf-8') as f:
@@ -443,6 +446,62 @@ def update_forecast_with_our_forecast(forecast_file_path, forecast_ranges):
     except Exception as e:
         print(f"Error updating forecast file {forecast_file_path}: {e}")
         return False
+
+
+def precheck_and_sync_our_forecast(posts_dir, output_dir, forecast_date):
+    """Validate and sync our_forecast ranges from the matching post before evaluation."""
+    post_file = posts_dir / f"{forecast_date}-weekend-forecast.html"
+    if not post_file.exists():
+        print(f"Pre-check: post file not found for {forecast_date} ({post_file.name}). Skipping sync.")
+        return False
+
+    target_forecast_file = output_dir / f'eval_forecast_{forecast_date}.json'
+    if not target_forecast_file.exists():
+        template_file = output_dir / 'eval_forecast_template.json'
+        shutil.copyfile(template_file, target_forecast_file)
+        print(f"Pre-check: created missing forecast file from template: {target_forecast_file.name}")
+
+    forecast_ranges = scrape_forecast_ranges(post_file)
+    if not forecast_ranges:
+        print("Pre-check: no forecast ranges scraped; leaving existing our_forecast values unchanged.")
+        return False
+
+    # Show differences before writing so the run has a clear audit trail.
+    with open(target_forecast_file, 'r', encoding='utf-8') as f:
+        forecast_data = json.load(f)
+
+    def normalize(n: str) -> str:
+        return re.sub(r"\s*\(.*?\)", "", n).strip().lower()
+
+    normalized_map = {
+        normalize(k): k
+        for k, v in forecast_data.get('areas', {}).items()
+        if isinstance(v, dict) and 'accumulated_snowfall' in v
+    }
+    synonyms = {
+        'mt. baker ski area': 'mt. baker',
+        'heather meadows': 'mt. baker',
+        'crystal mountain': 'crystal'
+    }
+
+    changes = []
+    for scraped_name, new_range in forecast_ranges.items():
+        norm = synonyms.get(normalize(scraped_name), normalize(scraped_name))
+        target_key = normalized_map.get(norm)
+        if not target_key:
+            continue
+        current_range = forecast_data['areas'][target_key]['accumulated_snowfall']['our_forecast']['range']
+        if current_range != new_range:
+            changes.append((target_key, current_range, new_range))
+
+    if changes:
+        print(f"Pre-check: found {len(changes)} range updates for {target_forecast_file.name}.")
+        for area, old_range, new_range in changes:
+            print(f"  {area}: {old_range} -> {new_range}")
+    else:
+        print("Pre-check: our_forecast ranges already match the post.")
+
+    return update_forecast_with_our_forecast(target_forecast_file, forecast_ranges, clear_missing=False)
 
 def calculate_forecast_error(forecast_value, actual_value):
     """Calculate forecast error and related metrics"""
@@ -790,31 +849,15 @@ if __name__ == '__main__':
         print(f"Starting forecast evaluation for {len(sites)} ski areas...")
         print(f"Output directory: {OUTPUT_DIR}")
         
-        # Step 1: Scrape the most recent forecast HTML post
-        print("\n[Step 1] Scraping forecast ranges from latest post...")
-        latest_post = max(posts_dir.glob('2026-*-weekend-forecast.html'), default=None)
-        if latest_post:
-            print(f"Found latest post: {latest_post.name}")
-            forecast_ranges = scrape_forecast_ranges(latest_post)
-            print(f"Scraped forecast ranges: {forecast_ranges}")
-            
-            # Step 2: Update forecast file for the current forecast date with scraped ranges
-            # (Do NOT update all historical eval_forecast files.)
-            print("\n[Step 2] Updating today's forecast file with scraped ranges...")
-            # determine the forecast date (most recent past Thursday)
-            forecast_date = (datetime.today() - timedelta(days=(datetime.today().weekday() - 3) % 7)).strftime('%Y-%m-%d')
-            target_forecast_file = OUTPUT_DIR / f'eval_forecast_{forecast_date}.json'
-            # Ensure the target file exists (copy template if needed)
-            if not target_forecast_file.exists():
-                shutil.copyfile(OUTPUT_DIR / 'eval_forecast_template.json', target_forecast_file)
+        # determine the forecast date (most recent past Thursday)
+        forecast_date = (datetime.today() - timedelta(days=(datetime.today().weekday() - 3) % 7)).strftime('%Y-%m-%d')
 
-            # Update only the target file with our forecast ranges
-            update_forecast_with_our_forecast(target_forecast_file, forecast_ranges)
-        else:
-            print("Warning: No recent forecast post found. Skipping forecast range update.")
+        # Step 1: Pre-check + sync our_forecast ranges from the matching forecast post.
+        print("\n[Step 1] Pre-checking our_forecast ranges before full evaluation...")
+        precheck_and_sync_our_forecast(posts_dir, OUTPUT_DIR, forecast_date)
         
-        # Step 3: Generate evaluation report
-        print("\n[Step 3] Generating evaluation report...")
+        # Step 2: Generate evaluation report
+        print("\n[Step 2] Generating evaluation report...")
         report_text = generate_evaluation_report(sites, OUTPUT_DIR, min_snow_level=snow_lvl_min, max_snow_level=snow_lvl_max)
         
         # Save the report

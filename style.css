@@ -621,8 +621,68 @@ figcaption { margin: 0; padding: 0; }
 
 /* Tighten control button spacing */
 .ivt-controls {
-    margin: 0.25rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 0.35rem 0 0.2rem;
     padding: 0;
+}
+
+.ivt-controls button {
+    border: 1px solid #1e3c72;
+    background: #f8fbff;
+    color: #1e3c72;
+    border-radius: 999px;
+    padding: 0.3rem 0.72rem;
+    min-height: 30px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.ivt-controls button:hover {
+    background: #1e3c72;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.25);
+}
+
+.ivt-controls button:active {
+    transform: translateY(1px);
+}
+
+.ivt-controls button:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+}
+
+.ivt-controls span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.8rem;
+    min-height: 30px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: #e6eefc;
+    color: #12305f;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+@media (max-width: 640px) {
+    .ivt-controls {
+        gap: 0.3rem;
+    }
+
+    .ivt-controls button,
+    .ivt-controls span {
+        min-height: 34px;
+    }
 }
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -877,3 +937,100 @@ nav a,
   .contact-form button:hover {
     background: #0f172a;
   }
+
+.satellite-looper {
+    background: linear-gradient(180deg, #f7fbff 0%, #ecf4ff 100%);
+}
+
+.satellite-subtitle {
+    margin-bottom: 1rem;
+    color: #334155;
+}
+
+.satellite-stage {
+    width: 100%;
+    background: #0f172a;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+}
+
+#satellite-frame {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+    object-fit: contain;
+    background: #020617;
+}
+
+.satellite-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(72px, auto)) 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.satellite-controls button {
+    border: 1px solid #94a3b8;
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.satellite-controls button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+#satellite-scrubber {
+    width: 100%;
+}
+
+.satellite-status {
+    margin-top: 0.75rem;
+    color: #1e3c72;
+    font-weight: 600;
+}
+
+.satellite-links {
+    margin-top: 0.5rem;
+}
+
+.satellite-links a {
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+.satellite-links a:hover {
+    text-decoration: underline;
+}
+
+.dot-sep {
+    margin: 0 0.4rem;
+    color: #64748b;
+}
+
+@media (max-width: 768px) {
+    .satellite-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #satellite-scrubber {
+        grid-column: 1 / -1;
+    }
+
+    .dot-sep {
+        display: none;
+    }
+
+    .satellite-links a {
+        display: inline-block;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+}
