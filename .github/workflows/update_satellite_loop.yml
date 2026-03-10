@@ -33,8 +33,12 @@ jobs:
             --gif-name cod_nw_truecolor_radar.gif \
             --manifest-name satellite_manifest.json \
             --frames-subdir frames \
-            --max-frames 24 \
-            --delay-ms 250
+            --max-frames 12 \
+            --delay-ms 300 \
+            --max-width 1280 \
+            --frame-format webp \
+            --frame-quality 78 \
+            --latest-frame-name latest_frame.webp
 
       - name: Commit and push updated loop assets
         env:
@@ -44,6 +48,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git add assets/images/satellite/cod_nw_truecolor_radar.gif
+          git add assets/images/satellite/latest_frame.webp
           git add assets/images/satellite/frames
           git add assets/images/satellite/satellite_manifest.json
           git commit -m "Update satellite looper assets [skip ci]" || echo "No changes to commit"

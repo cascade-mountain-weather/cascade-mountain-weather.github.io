@@ -94,16 +94,21 @@ def main() -> None:
     parser.add_argument("--frames-subdir", default="frames", help="Subdirectory for extracted frame PNGs")
     parser.add_argument("--max-frames", type=int, default=24, help="Maximum number of newest frames to keep")
     parser.add_argument("--delay-ms", type=int, default=250, help="GIF delay in milliseconds")
+    parser.add_argument("--max-width", type=int, default=1280, help="Maximum frame width in pixels (no upscale)")
+    parser.add_argument("--frame-format", choices=["png", "webp"], default="webp", help="Frame image format")
+    parser.add_argument("--frame-quality", type=int, default=78, help="Frame quality (used for webp)")
+    parser.add_argument("--latest-frame-name", default="latest_frame.webp", help="Fallback static frame filename")
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
     frames_dir = output_dir / args.frames_subdir
     gif_path = output_dir / args.gif_name
     manifest_path = output_dir / args.manifest_name
+    latest_frame_path = output_dir / args.latest_frame_name
 
     output_dir.mkdir(parents=True, exist_ok=True)
     frames_dir.mkdir(parents=True, exist_ok=True)
-    for old_frame in frames_dir.glob("frame-*.png"):
+    for old_frame in frames_dir.glob("frame-*.*"):
         try:
             old_frame.unlink()
         except OSError:
@@ -169,7 +174,14 @@ def main() -> None:
 
     product_frames = deduped_products
     radar_frames = deduped_radars
-    selected_products = product_frames[-max(1, args.max_frames) :]
+    target_frames = max(1, args.max_frames)
+    selected_products = product_frames[-target_frames:]
+
+    # If the upstream page has fewer timestamps than requested, pad using the
+    # oldest available frame so frontend controls remain stable in size.
+    if selected_products and len(selected_products) < target_frames:
+        pad_count = target_frames - len(selected_products)
+        selected_products = [selected_products[0]] * pad_count + selected_products
 
     map_img = fetch_image(session, map_overlay_url) if map_overlay_url else None
 
@@ -187,9 +199,17 @@ def main() -> None:
         if map_img:
             base.alpha_composite(map_img)
 
-        frame_name = f"frame-{idx:03d}.png"
+        if args.max_width and base.width > args.max_width:
+            new_height = int(base.height * (args.max_width / base.width))
+            base = base.resize((args.max_width, new_height), Image.LANCZOS)
+
+        frame_ext = "webp" if args.frame_format == "webp" else "png"
+        frame_name = f"frame-{idx:03d}.{frame_ext}"
         frame_path = frames_dir / frame_name
-        base.save(frame_path, format="PNG", optimize=True)
+        if args.frame_format == "webp":
+            base.convert("RGB").save(frame_path, format="WEBP", quality=args.frame_quality, method=6)
+        else:
+            base.save(frame_path, format="PNG", optimize=True)
 
         gif_images.append(base.convert("P", palette=Image.ADAPTIVE))
         manifest_frames.append(
@@ -202,6 +222,12 @@ def main() -> None:
                 "source_radar": radar.url if radar else None,
             }
         )
+
+    # Lightweight fallback image used when manifest fetch fails or times out.
+    if manifest_frames:
+        latest_src = frames_dir / manifest_frames[-1]["file"]
+        latest_img = Image.open(latest_src)
+        latest_img.save(latest_frame_path, format="WEBP", quality=min(90, max(60, args.frame_quality + 5)), method=6)
 
     if not gif_images:
         raise RuntimeError("No frames could be built")
@@ -220,6 +246,7 @@ def main() -> None:
         "updated_utc": datetime.now(timezone.utc).isoformat(),
         "source_url": args.url,
         "gif_file": args.gif_name,
+        "latest_frame_file": args.latest_frame_name,
         "frame_count": len(manifest_frames),
         "frames": manifest_frames,
     }
