@@ -1,0 +1,36 @@
+{
+  "name": "Cascade Mountain Weather",
+  "short_name": "CMW",
+  "description": "Mountain weather and snow forecasts for Washington's Cascade Range ski areas",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f1b2d",
+  "theme_color": "#1e3c72",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/images/cmw_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["weather", "sports", "news"],
+  "shortcuts": [
+    {
+      "name": "Latest Forecast",
+      "url": "/index.html#latest-post",
+      "description": "View the latest weekend forecast"
+    },
+    {
+      "name": "Current Weather",
+      "url": "/tools/model-tools-current-weather.html",
+      "description": "Check current mountain weather conditions"
+    },
+    {
+      "name": "Archive",
+      "url": "/posts/archive.html",
+      "description": "Browse past forecasts"
+    }
+  ]
+}
