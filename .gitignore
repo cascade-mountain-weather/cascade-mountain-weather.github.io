@@ -213,3 +213,21 @@ assets/images/archive/*.jpg
 
 # Allow data directories for evaluation but ignore potentially large files
 # data/ directories will be tracked but you can add specific exclusions as needed
+
+# Flutter/Dart build artifacts and dependencies
+cascade_weather_app/build/
+cascade_weather_app/.dart_tool/
+cascade_weather_app/.flutter-plugins
+cascade_weather_app/.flutter-plugins-dependencies
+cascade_weather_app/.packages
+cascade_weather_app/pubspec.lock
+cascade_weather_app/.pub-cache/
+cascade_weather_app/.pub/
+cascade_weather_app/ios/Pods/
+cascade_weather_app/ios/Podfile.lock
+cascade_weather_app/ios/.symlinks/
+cascade_weather_app/ios/Flutter/
+cascade_weather_app/ios/ephemeral/
+cascade_weather_app/.gradle
+cascade_weather_app/local.properties
+cascade_weather_app/generatedPlugins.gradle
