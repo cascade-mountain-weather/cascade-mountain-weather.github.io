@@ -1,0 +1,50 @@
+name: Update Sitemap
+
+on:
+  push:
+    branches:
+      - clinton
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-sitemap:
+    # Prevent infinite loop when this workflow commits sitemap.xml
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Regenerate sitemap.xml
+        run: python scripts/generate_sitemap.py
+
+      - name: Commit and push sitemap updates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+
+          if git diff --quiet sitemap.xml; then
+            echo "No sitemap changes detected"
+            exit 0
+          fi
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add sitemap.xml
+          git commit -m "Auto-update sitemap [skip ci]"
+          git pull --rebase origin "$BRANCH"
+          git push origin "$BRANCH"
