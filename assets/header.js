@@ -32,6 +32,36 @@
     });
   }catch(err){ console.warn('header behavior error', err); }
 
+  // Replace the header title text with the CMW logo across pages.
+  try{
+    const headerTitle = document.querySelector('header h1');
+    if(headerTitle && !headerTitle.querySelector('.cmw-header-main-logo')){
+      const logo = document.createElement('img');
+      logo.className = 'cmw-header-main-logo';
+      logo.alt = 'Cascade Mountain Weather logo';
+      logo.decoding = 'async';
+      logo.loading = 'eager';
+
+      const logoCandidates = [
+        'assets/images/cmw_logo.png',
+        '../assets/images/cmw_logo.png',
+        '../../assets/images/cmw_logo.png'
+      ];
+      let logoIndex = 0;
+      logo.src = logoCandidates[logoIndex];
+      logo.addEventListener('error', function(){
+        logoIndex += 1;
+        if(logoIndex < logoCandidates.length){
+          logo.src = logoCandidates[logoIndex];
+        }
+      });
+
+      headerTitle.textContent = '';
+      headerTitle.classList.add('cmw-header-logo-wrap');
+      headerTitle.appendChild(logo);
+    }
+  }catch(err){ console.warn('header title logo injection error', err); }
+
   // Mobile nav hamburger toggle
   try{
     const nav = document.querySelector('nav');
@@ -264,6 +294,112 @@
       observer.observe(sentinel);
     }catch(err){
       console.warn('init infinite forecast scroll error', err);
+    }
+  })();
+
+  // Add time zone translation guide below the site name heading
+  (function injectTimeZoneGuideBelowHeading(){
+    try{
+      if(document.querySelector('.time-scale-container')) return; // already injected
+
+      // Only show this guide on precipitation-focused pages.
+      const isPrecipitationPage = (
+        window.location.pathname.toLowerCase().includes('model-tools-precipitation') ||
+        !!document.querySelector(
+          'img#utah-weather-url, ' +
+          'img#utah-rrfsqsf-url, ' +
+          'img.PlotFormat[src*="/wwrf/images/ensemble/West-WRF_Acc"], ' +
+          'img.PlotFormat[src*="/freezingLevelImages/"]'
+        )
+      );
+      if(!isPrecipitationPage) return;
+      
+      const buildTimeScaleContainer = function(){
+        const scaleContainer = document.createElement('div');
+        scaleContainer.className = 'time-scale-container';
+        scaleContainer.setAttribute('role', 'note');
+        scaleContainer.setAttribute('aria-label', 'Time zone translation guide');
+
+        const title = document.createElement('div');
+        title.className = 'scale-title';
+        title.textContent = 'Time Zone Translation Guide';
+        scaleContainer.appendChild(title);
+
+        // UTC scale (0-24)
+        const utcScale = document.createElement('div');
+        utcScale.className = 'time-scale';
+        const utcLabel = document.createElement('div');
+        utcLabel.className = 'scale-label';
+        utcLabel.textContent = 'UTC';
+        utcScale.appendChild(utcLabel);
+        const utcBar = document.createElement('div');
+        utcBar.className = 'scale-bar';
+        for(let i = 0; i <= 24; i += 6){
+          const tick = document.createElement('span');
+          tick.className = 'scale-tick';
+          tick.textContent = i.toString().padStart(2, '0');
+          utcBar.appendChild(tick);
+        }
+        utcScale.appendChild(utcBar);
+
+        // PST scale with AM/PM format
+        const pstScale = document.createElement('div');
+        pstScale.className = 'time-scale';
+        const pstLabel = document.createElement('div');
+        pstLabel.className = 'scale-label';
+        pstLabel.textContent = 'PST (UTC-8)';
+        pstScale.appendChild(pstLabel);
+        const pstBar = document.createElement('div');
+        pstBar.className = 'scale-bar';
+        for(let i = 0; i <= 24; i += 6){
+          const pstHour = (16 + i) % 24;
+          let ampm = '';
+          if(pstHour === 0) ampm = '12 AM';
+          else if(pstHour < 12) ampm = pstHour + ' AM';
+          else if(pstHour === 12) ampm = '12 PM';
+          else ampm = (pstHour - 12) + ' PM';
+          
+          const tick = document.createElement('span');
+          tick.className = 'scale-tick';
+          tick.textContent = ampm;
+          pstBar.appendChild(tick);
+        }
+        pstScale.appendChild(pstBar);
+
+        scaleContainer.appendChild(utcScale);
+        scaleContainer.appendChild(pstScale);
+        return scaleContainer;
+      };
+
+      // Prefer the location heading (e.g., "Stevens Pass") over the site banner heading.
+      const heading = document.querySelector('#latest-post .PlotTitle, .hero .PlotTitle, h1.PlotTitle')
+        || document.querySelector('h2, h3');
+      if(!heading) return;
+      
+      const guide = buildTimeScaleContainer();
+      heading.parentNode.insertBefore(guide, heading.nextSibling);
+    }catch(err){
+      console.warn('time zone guide injection error', err);
+    }
+  })();
+
+  // Add a simple UTC -> Pacific time conversion axis below Utah meteogram PNGs.
+  (function injectPacificTimeAxis(){
+    try{
+      const targets = document.querySelectorAll('img#utah-weather-url, img#utah-rrfsqsf-url');
+      if(!targets.length) return;
+
+      targets.forEach((img) => {
+        if(img.dataset.ptAxisInjected === 'true') return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'utah-image-wrap';
+        img.parentNode.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+        img.dataset.ptAxisInjected = 'true';
+      });
+    }catch(err){
+      console.warn('utc to pacific axis injection error', err);
     }
   })();
 })();
