@@ -85,7 +85,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build local COD GOES+radar loop from SatRad HTML")
     parser.add_argument(
         "--url",
-        default="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined",
+        default="https://weather.cod.edu/satrad/?parms=subregional-Pac_NW-truecolor-24-1-100-4&checked=radar-ushw-usint-map&colorbar=undefined",
         help="SatRad page URL",
     )
     parser.add_argument("--output-dir", default="assets/images/satellite", help="Output directory for gif/frames/manifest")
