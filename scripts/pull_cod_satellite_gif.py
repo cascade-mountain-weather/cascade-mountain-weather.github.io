@@ -427,7 +427,7 @@ def wait_for_download(download_dir: Path, timeout: int = 60) -> Path | None:
 
 def main():
 	parser = argparse.ArgumentParser(description="Download COD satellite GIF via automation")
-	parser.add_argument("--url", default="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=map&colorbar=undefined", help="COD SatRad URL")
+	parser.add_argument("--url", default="https://weather.cod.edu/satrad/?parms=subregional-Pac_NW-truecolor-24-1-100-4&checked=radar-ushw-usint-map&colorbar=undefined", help="COD SatRad URL")
 	parser.add_argument("--out", default=str((Path(__file__).parent.parent / "assets" / "images").resolve()), help="Download directory")
 	parser.add_argument("--width", type=int, default=None, help="GIF width")
 	parser.add_argument("--height", type=int, default=None, help="GIF height")
