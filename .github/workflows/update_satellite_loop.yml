@@ -28,7 +28,7 @@ jobs:
       - name: Build COD GOES + radar loop
         run: |
           python scripts/build_cod_satellite_loop.py \
-            --url "https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" \
+            --url "https://weather.cod.edu/satrad/?parms=subregional-Pac_NW-truecolor-24-1-100-4&checked=radar-ushw-usint-map&colorbar=undefined" \
             --output-dir assets/images/satellite \
             --gif-name cod_nw_truecolor_radar.gif \
             --manifest-name satellite_manifest.json \
