@@ -1,0 +1,100 @@
+<!-- Click-to-enlarge lightbox for data figures. See assets/lightbox.js for
+     which images are matched (opt-in via class: PlotFormat, SynopticPlot,
+     lightbox-img). -->
+<style>
+    img.PlotFormat,
+    img.SynopticPlot,
+    img.lightbox-img {
+        cursor: zoom-in;
+    }
+
+    #cmw-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 10001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.9);
+        padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    }
+
+    #cmw-lightbox.open {
+        display: flex;
+    }
+
+    body.cmw-lightbox-open {
+        overflow: hidden;
+    }
+
+    .cmw-lightbox-img {
+        max-width: 92vw;
+        max-height: 82vh;
+        object-fit: contain;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .cmw-lightbox-caption {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        text-align: center;
+        color: #fff;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .cmw-lightbox-close,
+    .cmw-lightbox-prev,
+    .cmw-lightbox-next {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .cmw-lightbox-close {
+        top: calc(1rem + env(safe-area-inset-top, 0px));
+        right: 1rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.6rem;
+    }
+
+    .cmw-lightbox-prev,
+    .cmw-lightbox-next {
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3rem;
+        height: 3rem;
+        font-size: 2rem;
+    }
+
+    .cmw-lightbox-prev {
+        left: 0.5rem;
+    }
+
+    .cmw-lightbox-next {
+        right: 0.5rem;
+    }
+
+    .cmw-lightbox-close:hover,
+    .cmw-lightbox-prev:hover,
+    .cmw-lightbox-next:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    @media (max-width: 700px) {
+        .cmw-lightbox-prev,
+        .cmw-lightbox-next {
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.6rem;
+        }
+    }
+</style>
+<script src="{{ '/assets/lightbox.js' | relative_url }}" defer></script>
