@@ -1,0 +1,22 @@
+<nav>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+    </button>
+    <ul id="primary-nav">
+        <li><a href="{{ '/index.html' | relative_url }}">Home</a></li>
+        <li><a href="{{ '/index.html' | relative_url }}#latest-post">Latest Forecast</a></li>
+        <li><a href="{{ '/tools/model-tools-current-weather.html' | relative_url }}">Current Weather</a></li>
+        <li><a href="{{ '/posts/archive.html' | relative_url }}">Archive</a></li>
+        <li><a href="{{ '/evaluation.html' | relative_url }}">Evaluation</a></li>
+        <li class="nav-item dropdown">
+            <a href="{{ '/model-tools.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
+                <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-synoptic.html' | relative_url }}">Synoptic-scale Tools</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-precipitation.html' | relative_url }}">Precipitation</a></li>
+            </ul>
+        </li>
+        <li><a href="{{ '/about.html' | relative_url }}">About</a></li>
+    </ul>
+</nav>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include head.html %}
+</head>
+<body>
+{% include header.html %}
+{% include nav.html %}
+
+<main{% if page.main_class %} class="{{ page.main_class }}"{% endif %}>
+{{ content }}
+</main>
+
+{% include footer.html %}
+{% include pwa-scripts.html %}
+</body>
+</html>

@@ -1,0 +1,47 @@
+Goals: 
+1. For this season, I want to give readers and users a broader range of tools, from custom ones I create (will describe what I want below) that are simple to use and provide quick and easy answers for users, to more nitty gritty and raw data that they can do with what they want. 
+2. I want to improve the evaluation page and its methodology. I kind of threw it together, but I want a more robust way to estimate these things. This would mean grabbing the SNOTEL data, cleaning it, and presenting the information in plots and tables more interactively/automatically updating.  This will update on Monday mornings.
+3. I want better mobile functionality that makes it easier for a user to click through images that show data I am presenting, whether that is a timeseries of modeled output or satellite data images. 
+4. I want to more simply host older, archived posts with greater efficientc 
+5. I want to build a radiosonde tool to visualize the radiosonde data from certain sites that is collected each day and be able to incorporate that information into forecast creation and later evaluation (mostly for freezing level and dendritic growth zone stuff). I want to also include precipitatble water in here, if I can estimate that data. This will update twice daily for the morning and afternoon soundings. Can also build upon request as a script.
+6. We want to build out the newsletter that will send out the forecast to those who sign up each week. We are setting this up with mail chimp, but just want the sign up to work. This will be done for us using mailchimp, but we will need to prep a forecast for it.
+7. I want to make a some flags for dendritic growth zone height, east flow/strong inversions, atmospheric river signal. This will update with model conditions
+8. I want to run some additional analyses myself for some "reading the tea leaves" ideas. That is I want pages to look at the states of the Pacific North American climate teleconnection, the Madden-Julian Oscialltion and the status of the ENSO state. I want to run a rudimentary analysis on the phases of the MJO that locally have corresponded to good conditions for snow (e.g. cold and wet). This will update weekly, but I will need to work through the analysis myself to build the background. We will do this later. Under consturction for now.
+9. I want a page on climate outlooks, taking estimates from ensembles and the CPC from NOAA that can populate with toggles between product types. This will update on Thursday's alongside the forecast for the longer term outlooks.We can also add this to the reading the tea leaves page (longer term outlooks)
+10. I want to improve how the CW3E/University of Utah data is presented to the user. I want it to be an easier click through/play/pause set up. And i want a better presentation of the time conversion from UTC to Pacific Standard time. this is currently done in a very clunky and ugly manner. I also want a click/map for these locations so we have an easier time navigating. This will update with each posting, which I think is every 6 hours. 
+11. I want to find a way to access and present UW WRF data. Their page is free and open to the public but I would like to see if we can find a way to grab their data for presentation purposes. This might be possible, we will try. 
+12. We want to make a merchendise page that will link to a simple and clean merch provider. I think there are some low cost/free ones we can try to use, I'll look into that later. Provide some options if there are any. I've seen it where you can upload a logo and the site will process and print and ship all your stuff, so you dont actually have to hold onto inventory and deal with shipping. This should be able to run in the background on its own.
+13. On the main page, I also want to show bar plot comparisons of % normal conditions for accumulated precipitation (for day of year), SWE (for day of year), and temperature anomaly (for prior week [was it colder or warmer than normal], and up temperature anomaly up to that day of the water year) for each ski area we reference. This will update daily. 
+
+Development goals: tools to be constructed in the background before posting
+1. The primary tool I want to develop is one that allows a site visitor to select several options to create a recommendation for where they should ski. This should essentially be a simple ML model, or something like a decision tree, to recommend the ski area of choice. The options I want the user to be able to balance are: Drive time (up to 5 hours), precipitation chances,snow quality (powder/fresh/corn/cascade concrete/I don't care), temperature (do you want it to be warm or are you okay with it being cold?), visibility (are you okay with clouds and fog? Or do you want bluebird?), driving hazard/difficulty (pass closure risk?), windy/not windy (caveat with uncertainty), elevation range, avalanche danger flag (directly taken from NWAC, DO NOT RECOMMEND during a high danger day ANYWHERE, considerable danger is also bad). We can recommend any of the ski resorts in Washington and souther British Columbia. We will use these as jumping off points for backcountry touring. So that means: Snoqualmie, Stevens, Crystal, White Pass, Mission Ridge, Mazama, Mt. Baker, Whistleyr, Vancouver ski hills,. Also, no recommendation/ a null recommendation can be provided if criterion are not met/something like a huge AR is coming or there are a bunch of pass closures. So essentially we would have somehting like a pass closure risk flag/warning. Then we can provide "what we would do" ski type recommendation  (nordic, downhill, backcountry -- nordic would be okay with slightly different conditions and can recommend any sno-park with a nordic ski area that is groomed), could also update with parking restrictions (need sno-park pass, free parking, ski resort reservation needed, etc. -- would have to research this). We can work through questions for this part of the project.
+2. I eventually want to build a simple "corn" model. That is estimate the time, aspects, and elevations where corn will be good. This will essentially be an energy balance model. We could either build it ourselves or try and use an open source snowpack energy balance model. The thing is we only really have to worry about the top 6 inches or so of the snowpack for this to work effectively. Corn is best to ski when it is like 2-10 centimeters. This will essentially require inputs of short and longwave radiation, windspeed, temperature, humidity (an use bulk aerodynamic methods to estimate latent and sensible heat fluxes), a terrain dem, and a solar angle model. The vision is a map of the region with a toggle for the day (upcoming from Thursday-Sunday), a time of day slider, and shading for optimal corn timing. For example, most north facing slopes would not have good corn during this period, but a southwesterly slope at lets say 11am would be pretty good on a May day after a freeze. The model would require a freeze. We could test out the model using observations from nearby SNOTEL sites and days that I found the corn skiing to be pretty good. We can then compare those obs based model results to forcing data from model output. Mayb e achived HRRR if we can get it? It would be nice to also use something like RRFS, HRDPS, or data from the NBM. This would also require a warning for days since the last snowfall. A few days are required before the snow metamorphoses into melt forms that are good for skiing. We could use SNOWPACK, or a simple snow metamorphosis model to estimate when snow starts to become melt forms, or just do a simple number of melt freezecycles greater than 2.
+
+
+UI changes: pages and components to redo, with screenshots or sketches of what you like elsewhere.
+New tools: each one with its data source, the page it lives on, and how often it updates.
+Constraints: it stays static and hosted on GitHub Pages, and existing URLs must not break because of SEO and the sitemap.
+Non-goals: what you're deliberately not doing.
+Phases: ordered, each small enough to ship on its own.
+Open questions: decisions you haven't made yet.
+
+For this plan, check the docs/plan-images figures for the examples.
+Sounding page example:
+https://github.com/clinton-alden/clinton-alden.github.io/blob/main/radiosonde.html
+This provides the data I am looking for. I want this to create a Skew-T
+but also I am looking to make it an interactive plot, like on the windy app. I only need soundings for a few select places (Quillyute, Salem, Spokane, Port Hardy). I may eventually add more. 
+UW WRF - ensemble output:
+https://a.atmos.washington.edu/wrfrt/ensembles/plumes.html
+
+Scripts for HRRR data aquistion and sounding data:
+https://github.com/clinton-alden/clinton-alden.github.io/tree/main/scripts
+
+NBM viewer and data downloader:
+https://apps.gsl.noaa.gov/nbmviewer/?col=2&hgt=1&obs=false&fontsize=1&location=Downtown+Seattle&selectedgroup=Default&darkmode=on&graph=fa-chart-bar&probfield=Tmax&proboperator=%3E%3D&probvalue=40&colorfriendly=false&whiskers=false&boxes=true&median=false&det=true&tz=local
+- see figure in plan-images of screenshot
+
+West WRF figures from CW3E
+- https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms?station=US2
+  
+CW3E freezing level and precipitation maps
+- https://cw3e.ucsd.edu/DSMaps/DS_freezing.html

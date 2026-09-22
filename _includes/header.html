@@ -1,0 +1,12 @@
+<header>
+    {% if page.newsletter_button %}
+    <span class="newsletter-btn" aria-label="Newsletter coming soon">Newsletter (coming<br>soon)</span>
+    {% endif %}
+    <h1>Cascade Mountain Weather</h1>
+    <p class="tagline">{{ site.tagline }}</p>
+    {% if page.coffee_button %}
+    <a href="https://buymeacoffee.com/cascademtnwx" target="_blank" rel="noopener noreferrer" class="buy-coffee-btn" aria-label="Support us on Buy Me a Coffee">
+        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" />
+    </a>
+    {% endif %}
+</header>

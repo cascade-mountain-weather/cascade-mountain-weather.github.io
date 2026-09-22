@@ -1,31 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Track the accuracy of Cascade Mountain Weather forecasts. See how our predictions compare to actual conditions at Washington Cascade ski areas including Mt. Baker, Stevens Pass, and Crystal Mountain.">
-    <meta name="keywords" content="Cascade Mountain Weather accuracy, ski forecast verification, Washington snow forecast evaluation, mountain weather prediction accuracy, PNW weather forecast">
-    <meta name="author" content="Cascade Mountain Weather">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://www.cascademountainweather.com/evaluation.html">
-    
-    <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Forecast Evaluation | Cascade Mountain Weather">
-    <meta property="og:description" content="Track the accuracy of our mountain weather forecasts for Washington Cascade ski areas.">
-    <meta property="og:url" content="https://www.cascademountainweather.com/evaluation.html">
-    <meta property="og:site_name" content="Cascade Mountain Weather">
-    <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Forecast Evaluation | Cascade Mountain Weather">
-    <meta name="twitter:description" content="Track the accuracy of our Cascade Range ski forecasts.">
-    <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-    <link rel="stylesheet" href="style.css">
-    <style>
+---
+layout: page
+title: "Forecast Evaluation | Cascade Mountain Weather"
+description: "Track the accuracy of Cascade Mountain Weather forecasts. See how our predictions compare to actual conditions at Washington Cascade ski areas including Mt. Baker, Stevens Pass, and Crystal Mountain."
+keywords: "Cascade Mountain Weather accuracy, ski forecast verification, Washington snow forecast evaluation, mountain weather prediction accuracy, PNW weather forecast"
+og_description: "Track the accuracy of our mountain weather forecasts for Washington Cascade ski areas."
+---
+<style>
         .evaluation-intro {
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             padding: 2rem;
@@ -288,46 +268,8 @@
             color: #1e3c72;
         }
     </style>
-        <!-- Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZQLW3ZS2F"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);} 
-            gtag('js', new Date());
-            gtag('config', 'G-4ZQLW3ZS2F');
-        </script>
-</head>
-<body>
-    <header>
-        <h1>Cascade Mountain Weather</h1>
-        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
-    </header>
 
-    <nav>
-        <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
-        </button>
-        <ul id="primary-nav">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="index.html#latest-post">Latest Forecast</a></li>
-                        <li><a href="tools/model-tools-current-weather.html">Current Weather</a></li>
-            <li><a href="posts/archive.html">Archive</a></li>
-            <li><a href="evaluation.html">Evaluation</a></li>
-            <li class="nav-item dropdown">
-                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
-                <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                  <li role="none"><a role="menuitem" href="tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
-                  <li role="none"><a role="menuitem" href="tools/model-tools-precipitation.html">Precipitation</a></li>
-                </ul>
-              </li>
-            <li><a href="about.html">About</a></li>
-        </ul>
-      </nav>
-
-    <main>
-        <section class="evaluation-intro">
+<section class="evaluation-intro">
             <h2>📊 Forecast Evaluation</h2>
             <p><strong>Transparency and accountability matter!</strong> This page tracks the accuracy of our weekend ski forecasts by comparing predictions against actual observed conditions.</p>
             <p>Data is collected from SNOTEL stations, NWS observations, and resort reports. Evaluation helps improve future forecasts and builds trust with readers.</p>
@@ -1051,13 +993,7 @@
             </ul>
             <p> Paraphrasing George Box: "All forecasts are wrong, but some are useful!" </p>
         </section>
-    </main>
 
-    <footer>
-        <p>Cascade Mountain Weather | Washington Backcountry Forecasts</p>
-        <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
-    </footer>
-    <script src="assets/header.js?v=2" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const selector = document.getElementById('region-selector');
