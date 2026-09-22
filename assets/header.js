@@ -1,34 +1,51 @@
 // Shared header behavior: click/tap toggle for dropdown, hover keep-open, outside click and Escape to close
 (function(){
   try{
-    const dropdownToggle = document.querySelector('.nav-item.dropdown > .dropdown-toggle');
-    if(!dropdownToggle) return;
-    const dropdown = dropdownToggle.closest('.nav-item.dropdown');
-    let leaveTimer = null;
+    // Support any number of nav dropdowns (Home, Forecast, Current Weather &
+    // Observations, Model Tools, ...), not just the first one on the page.
+    const dropdowns = Array.from(document.querySelectorAll('.nav-item.dropdown')).map(function(dropdown){
+      return { dropdown: dropdown, toggle: dropdown.querySelector(':scope > .dropdown-toggle') };
+    }).filter(function(pair){ return !!pair.toggle; });
 
-    // Toggle on click/tap: one press to open, one press to close
-    dropdownToggle.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();           // ADD THIS LINE
-      const isOpen = dropdown.classList.toggle('open');
-      dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if(!dropdowns.length) return;
+
+    function closeAll(except){
+      dropdowns.forEach(function(pair){
+        if(pair.dropdown === except) return;
+        pair.dropdown.classList.remove('open');
+        pair.toggle.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    dropdowns.forEach(function(pair){
+      const dropdown = pair.dropdown;
+      const dropdownToggle = pair.toggle;
+
+      // Toggle on click/tap: one press to open, one press to close. Opening
+      // one dropdown closes any other that's currently open.
+      dropdownToggle.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = dropdown.classList.toggle('open');
+        dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if(isOpen) closeAll(dropdown);
+      });
     });
 
-    // Close when clicking outside (ignore clicks on the toggle itself)
+    // Close when clicking outside any dropdown (ignore clicks on a toggle itself)
     document.addEventListener('click', function(e){
-      if(dropdownToggle.contains(e.target)) return;
-      if(!dropdown.contains(e.target)){
-        dropdown.classList.remove('open');
-        dropdownToggle.setAttribute('aria-expanded','false');
-      }
+      dropdowns.forEach(function(pair){
+        if(pair.toggle.contains(e.target)) return;
+        if(!pair.dropdown.contains(e.target)){
+          pair.dropdown.classList.remove('open');
+          pair.toggle.setAttribute('aria-expanded','false');
+        }
+      });
     });
 
     // Close on Escape
     document.addEventListener('keydown', function(e){
-      if(e.key === 'Escape'){
-        dropdown.classList.remove('open');
-        dropdownToggle.setAttribute('aria-expanded','false');
-      }
+      if(e.key === 'Escape') closeAll(null);
     });
   }catch(err){ console.warn('header behavior error', err); }
 
