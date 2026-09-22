@@ -5,19 +5,36 @@
         <span class="nav-toggle-bar"></span>
     </button>
     <ul id="primary-nav">
-        <li><a href="{{ '/index.html' | relative_url }}">Home</a></li>
-        <li><a href="{{ '/index.html' | relative_url }}#latest-post">Latest Forecast</a></li>
-        <li><a href="{{ '/tools/model-tools-current-weather.html' | relative_url }}">Current Weather</a></li>
-        <li><a href="{{ '/posts/archive.html' | relative_url }}">Archive</a></li>
-        <li><a href="{{ '/evaluation.html' | relative_url }}">Evaluation</a></li>
         <li class="nav-item dropdown">
-            <a href="{{ '/model-tools.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
+            <a href="{{ '/index.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Home <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Home subpages">
+                <li role="none"><a role="menuitem" href="{{ '/index.html' | relative_url }}">Home</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/about.html' | relative_url }}">Who We Are</a></li>
+            </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a href="{{ '/posts/archive.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Forecast <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Forecast subpages">
+                <li role="none"><a role="menuitem" href="{{ '/index.html' | relative_url }}#latest-post">Latest Forecast</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/posts/archive.html' | relative_url }}">Archive</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/evaluation.html' | relative_url }}">Evaluation</a></li>
+            </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a href="{{ '/tools/model-tools-current-weather.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Current Weather &amp; Observations <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Current weather and observations subpages">
+                <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-current-weather.html' | relative_url }}">Live Conditions</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/tools/satellite-loop.html' | relative_url }}">Satellite Loop</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/tools/radiosonde.html' | relative_url }}">Skew-T / Soundings</a></li>
+            </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a href="{{ '/model-tools.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model Tools <span class="dropdown-caret">▾</span></a>
             <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
                 <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-synoptic.html' | relative_url }}">Synoptic-scale Tools</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-precipitation.html' | relative_url }}">Precipitation</a></li>
             </ul>
         </li>
         <li><a href="{{ '/merch.html' | relative_url }}">Merch</a></li>
-        <li><a href="{{ '/about.html' | relative_url }}">About</a></li>
     </ul>
 </nav>
