@@ -41,6 +41,7 @@ Ruby/Jekyll are installed locally. From the repo root: `jekyll build` (or `bundl
 - The README, QUICK-GUIDE, and EVALUATION-GUIDE predate the Jekyll migration and describe the old structure (raw HTML posts, manual archive/homepage edits, `Dawg-Winter-Weather-Blog` repo name). Trust this file and the code over them until they're rewritten.
 - Image files in `assets/images/*_fx/` are large (up to several MB). Don't re-encode or delete them without asking.
 - Paths contain spaces (`OneDrive - UW`), so quote them in shell commands. Shell is PowerShell on Windows, with Git Bash also available; Bash invocations in this OneDrive-synced folder can take ~90s to start (first-run/AV scan), not a hang — give commands time before assuming they're stuck.
+- `_includes/lightbox.html` (wired into all three layouts) gives click-to-enlarge/swipe-through behavior to `<img>` tags, but it's opt-in via class: add `PlotFormat` (the existing convention for post/tools-page figures), `SynopticPlot` (synoptic tools page), or the generic `lightbox-img` class to any new image that should get it. See `assets/lightbox.js`.
 
 ## Skills in this repo
 

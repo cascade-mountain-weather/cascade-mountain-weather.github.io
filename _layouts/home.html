@@ -69,76 +69,10 @@
             font-size: 0.8rem;
         }
     }
-
-    body.loading {
-        overflow: hidden;
-    }
-
-    #page-loader {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #000;
-        z-index: 9999;
-        opacity: 1;
-        visibility: visible;
-        transition: opacity 0.45s ease, visibility 0.45s ease;
-    }
-
-    #page-loader.hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
-
-    #loader-text {
-        color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        font-size: clamp(1.6rem, 4.8vw, 3rem);
-        letter-spacing: 0.08em;
-        text-transform: lowercase;
-        white-space: pre-line;
-        display: inline-block;
-        text-align: left;
-        line-height: 1.2;
-    }
-
-    #loader-text::after {
-        content: '|';
-        display: inline-block;
-        width: 0.7ch;
-        margin-left: 0.08em;
-        color: #fff;
-        font-weight: 700;
-        animation: loader-blink 0.8s steps(1, end) infinite;
-        vertical-align: baseline;
-        transform: scaleY(1);
-        transform-origin: center bottom;
-    }
-
-    @keyframes loader-blink {
-        50% {
-            opacity: 0;
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        #loader-text::after {
-            animation: none;
-        }
-    }
 </style>
 </head>
 
-<body class="loading">
-    <div id="page-loader" aria-hidden="true">
-        <div id="loader-text-wrap">
-            <span id="loader-text"></span>
-        </div>
-    </div>
-
+<body>
 {% include header.html %}
 {% include nav.html %}
 
@@ -148,65 +82,7 @@
 
 {% include footer.html %}
 {% include pwa-scripts.html %}
-
-<script>
-    (function () {
-        const targetText = 'Cascade\nMountain\nWeather\n.com';
-        const loader = document.getElementById('page-loader');
-        const output = document.getElementById('loader-text');
-        const body = document.body;
-
-        if (!loader || !output || !body) return;
-
-        const hasVisited = localStorage.getItem('cmw_visited');
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        const finish = (delay = 0) => {
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                body.classList.remove('loading');
-                setTimeout(() => loader.remove(), 500);
-            }, delay);
-        };
-
-        if (hasVisited) {
-            finish(0);
-            return;
-        }
-
-        localStorage.setItem('cmw_visited', 'true');
-
-        if (reduceMotion) {
-            output.textContent = targetText;
-            finish(250);
-            return;
-        }
-
-        let charIndex = 0;
-        const typeTimer = setInterval(() => {
-            charIndex += 1;
-            output.textContent = targetText.slice(0, charIndex);
-
-            if (charIndex >= targetText.length) {
-                clearInterval(typeTimer);
-                finish(1130);
-            }
-        }, 50);
-
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                loader.classList.add('hidden');
-                body.classList.remove('loading');
-            }
-        });
-    })();
-</script>
-<script>
-    const mcScript = document.createElement('script');
-    mcScript.id = 'mcjs';
-    mcScript.async = true;
-    mcScript.src = 'https://chimpstatic.com/mcjs-connected/js/users/2728db0dca375a55c95c27394/8440e70da6816b7eed0edf4c8.js';
-    document.body.appendChild(mcScript);
-</script>
+{% include lightbox.html %}
+{% include mailchimp.html %}
 </body>
 </html>

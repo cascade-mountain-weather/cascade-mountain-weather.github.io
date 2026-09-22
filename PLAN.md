@@ -17,31 +17,88 @@ Development goals: tools to be constructed in the background before posting
 1. The primary tool I want to develop is one that allows a site visitor to select several options to create a recommendation for where they should ski. This should essentially be a simple ML model, or something like a decision tree, to recommend the ski area of choice. The options I want the user to be able to balance are: Drive time (up to 5 hours), precipitation chances,snow quality (powder/fresh/corn/cascade concrete/I don't care), temperature (do you want it to be warm or are you okay with it being cold?), visibility (are you okay with clouds and fog? Or do you want bluebird?), driving hazard/difficulty (pass closure risk?), windy/not windy (caveat with uncertainty), elevation range, avalanche danger flag (directly taken from NWAC, DO NOT RECOMMEND during a high danger day ANYWHERE, considerable danger is also bad). We can recommend any of the ski resorts in Washington and souther British Columbia. We will use these as jumping off points for backcountry touring. So that means: Snoqualmie, Stevens, Crystal, White Pass, Mission Ridge, Mazama, Mt. Baker, Whistleyr, Vancouver ski hills,. Also, no recommendation/ a null recommendation can be provided if criterion are not met/something like a huge AR is coming or there are a bunch of pass closures. So essentially we would have somehting like a pass closure risk flag/warning. Then we can provide "what we would do" ski type recommendation  (nordic, downhill, backcountry -- nordic would be okay with slightly different conditions and can recommend any sno-park with a nordic ski area that is groomed), could also update with parking restrictions (need sno-park pass, free parking, ski resort reservation needed, etc. -- would have to research this). We can work through questions for this part of the project.
 2. I eventually want to build a simple "corn" model. That is estimate the time, aspects, and elevations where corn will be good. This will essentially be an energy balance model. We could either build it ourselves or try and use an open source snowpack energy balance model. The thing is we only really have to worry about the top 6 inches or so of the snowpack for this to work effectively. Corn is best to ski when it is like 2-10 centimeters. This will essentially require inputs of short and longwave radiation, windspeed, temperature, humidity (an use bulk aerodynamic methods to estimate latent and sensible heat fluxes), a terrain dem, and a solar angle model. The vision is a map of the region with a toggle for the day (upcoming from Thursday-Sunday), a time of day slider, and shading for optimal corn timing. For example, most north facing slopes would not have good corn during this period, but a southwesterly slope at lets say 11am would be pretty good on a May day after a freeze. The model would require a freeze. We could test out the model using observations from nearby SNOTEL sites and days that I found the corn skiing to be pretty good. We can then compare those obs based model results to forcing data from model output. Mayb e achived HRRR if we can get it? It would be nice to also use something like RRFS, HRDPS, or data from the NBM. This would also require a warning for days since the last snowfall. A few days are required before the snow metamorphoses into melt forms that are good for skiing. We could use SNOWPACK, or a simple snow metamorphosis model to estimate when snow starts to become melt forms, or just do a simple number of melt freezecycles greater than 2.
 
+---
 
-UI changes: pages and components to redo, with screenshots or sketches of what you like elsewhere.
-New tools: each one with its data source, the page it lives on, and how often it updates.
-Constraints: it stays static and hosted on GitHub Pages, and existing URLs must not break because of SEO and the sitemap.
-Non-goals: what you're deliberately not doing.
-Phases: ordered, each small enough to ship on its own.
-Open questions: decisions you haven't made yet.
+## UI changes
 
-For this plan, check the docs/plan-images figures for the examples.
-Sounding page example:
-https://github.com/clinton-alden/clinton-alden.github.io/blob/main/radiosonde.html
-This provides the data I am looking for. I want this to create a Skew-T
-but also I am looking to make it an interactive plot, like on the windy app. I only need soundings for a few select places (Quillyute, Salem, Spokane, Port Hardy). I may eventually add more. 
-UW WRF - ensemble output:
-https://a.atmos.washington.edu/wrfrt/ensembles/plumes.html
+- Visual redesign of shared chrome (header/nav/footer, color/type system) now that `_layouts`/`_includes` centralize it (jekyll-migration, landed Sept 2026) — one place to change, not ~35 pages.
+- Mobile: lightbox/swipe click-through for figure-heavy pages (forecast posts, model-tools pages, satellite looper) instead of plain inline `<img>` tags.
+- Homepage: add daily bar-plot widgets (Phase 3) alongside the existing hero/recent-posts/ski-areas grid.
+- CW3E/UW model-tools pages: replace the current static image links with a play/pause carousel (reuse the satellite-looper JS pattern already built for the homepage), fix the UTC→Pacific time display, add a clickable station map.
+- Screenshots/sketches: see `docs/plan-images/` (windy_sounding.png, NBM-viewer.png, CW3E_frz-level.png, west-WRF.png, tropical-tidbits-example.png) for the interaction style Danny likes — play/pause sliders, hover tooltips, clickable maps rather than static dropdowns.
 
-Scripts for HRRR data aquistion and sounding data:
-https://github.com/clinton-alden/clinton-alden.github.io/tree/main/scripts
+## New tools
+
+| Tool | Data source | Page | Update cadence |
+|---|---|---|---|
+| Radiosonde / Skew-T viewer | IEM RAOB JSON API (`mesonet.agron.iastate.edu/json/raob.py?ts=...&station=...`), rendered client-side with MetPy running in-browser via Pyodide — same technique as `clinton-alden.github.io/radiosonde.html` | new `tools/radiosonde.html` | Twice daily (00Z/12Z soundings), client fetches on page load — no server/cron needed |
+| Newsletter signup | Mailchimp embedded form | homepage (button already stubbed via `newsletter_button` front matter flag) | N/A — static form |
+| Merch page | Print-on-demand provider (TBD — research Printful/Bonfire/Threadless) | new `merch.html` | N/A — static |
+| SNOTEL evaluation dashboard | SNOTEL obs via `metloom` (already used in `scripts/build_fx_evaluation.py`) + saved forecast JSON | `evaluation.html` rework | Monday mornings (new scheduled GitHub Action) |
+| Homepage normals widgets | Same SNOTEL pipeline as above, plus climatological normals | `index.html` | Daily |
+| DGZ / east-flow / inversion / AR flags | Derived from existing CW3E/UW/NBM model data already scraped by `synoptic.yml` | model-tools pages, referenced in forecast posts | Updates with model runs |
+| Climate outlook + teleconnections page | NOAA CPC products: [PNA ensemble](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna_index_ensm.shtml), [MJO](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml), [ENSO](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/enso.shtml), plus CPC ensemble outlook toggles | new `tools/climate-outlook.html` | Start with CPC's own charts embedded/linked (Thursdays alongside the forecast); Danny's own MJO-phase/local-snow correlation analysis layers in later once he's built it |
+| UW WRF ensemble viewer | `a.atmos.washington.edu/wrfrt/ensembles/plumes.html` — feasibility TBD (see Open questions) | model-tools pages | With each UW WRF run (~every 6 hrs) |
+| Ski-area recommendation tool | Composes: NWAC avalanche danger, pass-closure/driving-hazard flags, CW3E/model conditions, drive time | new `tools/find-your-ski-day.html` (name TBD) | Live, driven by current forecast/model data |
+| Corn model | Energy-balance model (shortwave/longwave, wind, temp, humidity, terrain DEM, solar angle) validated against SNOTEL obs and Danny's own field observations of good corn days; forcing from HRRR/RRFS/HRDPS/NBM if accessible | new `tools/corn-model.html` (see `.claude/skills/corn-forecast-model/SKILL.md`) | Thu-Sun outlook, spring season only |
+
+## Constraints
+
+- Stays static and hosted on GitHub Pages — any new "backend" work has to be either (a) a scheduled GitHub Action that writes data/HTML the static site reads, or (b) client-side compute (like the Pyodide/MetPy Skew-T approach).
+- Existing URLs must not break (SEO, sitemap) — this held throughout the Jekyll migration via `permalink` config; new tools get new URLs, nothing existing gets renamed without a redirect plan.
+- Never fabricate forecast numbers, model output, or observations — always cite the data source.
+- Large binary assets (looper frames, DEM data for the corn model, etc.) need to stay reasonable for a GitHub-hosted static site; watch repo size as new tools land.
+
+## Non-goals
+
+- Not building a server/database-backed app — everything stays static + client-side or scheduled-Action-generated.
+- Not converting old forecast posts to Markdown (decided during the Jekyll migration — HTML content stays as-is).
+- Not attempting real-time/sub-hourly data for anything — cadences above (daily, twice-daily, per-model-run) are the ceiling.
+- Not building the full PNA/MJO/ENSO correlation analysis up front — ships first as a straightforward display of NOAA CPC's existing products; the custom "which MJO phases mean good local snow" analysis is Danny's own work, layered in once it exists.
+- Not committing to the UW WRF tool or the merch provider until the open questions below are resolved.
+
+## Phases
+
+1. **Quick wins** — newsletter signup (Mailchimp embed wiring), merch page, mobile image click-through/lightbox.
+2. **Radiosonde / Skew-T tool** — Pyodide+MetPy client-side approach, 4 stations (Quillayute, Salem, Spokane, Port Hardy).
+3. **SNOTEL data pipeline** — shared infrastructure feeding both the evaluation-page rework (Monday mornings) and the homepage normals bar plots (daily); new scheduled GitHub Action, same pattern as the existing bots (`synoptic.yml` etc.).
+4. **CW3E/UW presentation revamp + flags** — play/pause carousel, timezone fix, station map, DGZ/east-flow/inversion/AR flags.
+5. **Climate outlook + teleconnections page** — CPC PNA/MJO/ENSO + ensemble outlook toggles, starting with NOAA's own charts.
+6. **UW WRF feasibility spike** — short, timeboxed investigation into whether the ensemble plumes page is scrapeable before committing to building against it.
+7. **Ski-area recommendation tool** — capstone; composes outputs from phases 3-6 (avalanche flag, closure risk, model conditions, drive time).
+8. **Corn model** — physics/validation work can happen through winter, but real-world testing needs actual corn conditions, so target a March launch rather than racing it now.
+
+## Open questions
+
+- UW WRF ensemble page: is `plumes.html` actually scrapeable, or does it need a different access path? (Phase 6 spike will answer this.)
+- Merch provider: which print-on-demand service — Printful, Bonfire, Threadless, something else? Needs a quick comparison of cost/quality/ease of logo upload.
+- Corn model: build the energy-balance model from scratch, or adapt an existing open-source snow-metamorphosis model (e.g. a simplified SNOWPACK)? Depends on what forcing data (HRRR/RRFS/HRDPS/NBM) turns out to be accessible.
+- Ski-recommendation tool: exact decision logic (weighting/thresholds for each input) needs to be worked through with Danny before building — this is a "we can work through questions for this part" item, not something to guess at.
+- Radiosonde PW (precipitable water) estimate: worth scoping once the base Skew-T tool is working — may just be a derived MetPy calculation from the same sounding data.
+
+## Reference links
+
+Sounding page example (Skew-T rendering approach to reuse):
+- https://github.com/clinton-alden/clinton-alden.github.io/blob/main/radiosonde.html
+- Confirmed technique: MetPy running client-side via Pyodide, sounding data from IEM's RAOB JSON API (`mesonet.agron.iastate.edu/json/raob.py?ts=...&station=...`). Only need soundings for Quillayute, Salem, Spokane, Port Hardy for now; may add more later.
+
+UW WRF ensemble output:
+- https://a.atmos.washington.edu/wrfrt/ensembles/plumes.html
+
+Scripts for HRRR data acquisition and sounding data (reference implementation):
+- https://github.com/clinton-alden/clinton-alden.github.io/tree/main/scripts
 
 NBM viewer and data downloader:
-https://apps.gsl.noaa.gov/nbmviewer/?col=2&hgt=1&obs=false&fontsize=1&location=Downtown+Seattle&selectedgroup=Default&darkmode=on&graph=fa-chart-bar&probfield=Tmax&proboperator=%3E%3D&probvalue=40&colorfriendly=false&whiskers=false&boxes=true&median=false&det=true&tz=local
-- see figure in plan-images of screenshot
+- https://apps.gsl.noaa.gov/nbmviewer/?col=2&hgt=1&obs=false&fontsize=1&location=Downtown+Seattle&selectedgroup=Default&darkmode=on&graph=fa-chart-bar&probfield=Tmax&proboperator=%3E%3D&probvalue=40&colorfriendly=false&whiskers=false&boxes=true&median=false&det=true&tz=local
+- See `docs/plan-images/NBM-viewer.png` for a screenshot.
 
-West WRF figures from CW3E
+West WRF figures from CW3E:
 - https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms?station=US2
-  
-CW3E freezing level and precipitation maps
+
+CW3E freezing level and precipitation maps:
 - https://cw3e.ucsd.edu/DSMaps/DS_freezing.html
+
+NOAA CPC teleconnection/outlook products (for the climate outlook + teleconnections page):
+- PNA ensemble: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna_index_ensm.shtml
+- MJO: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml
+- ENSO: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/enso.shtml
