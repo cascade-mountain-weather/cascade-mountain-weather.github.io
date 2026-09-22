@@ -1,846 +1,406 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cascade Mountain Weather | Washington Ski & Snow Forecasts</title>
-    <meta name="description" content="Cascade Mountain Weather provides accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas including Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more.">
-    <meta name="keywords" content="Cascade Mountain Weather, Washington ski forecast, Cascade Range weather, Mt Baker snow forecast, Stevens Pass weather, Crystal Mountain forecast, Snoqualmie Pass snow, PNW ski weather, backcountry skiing Washington">
-    <meta name="author" content="Cascade Mountain Weather">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://www.cascademountainweather.com/">
-    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
-    
-    <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Cascade Mountain Weather | Washington Ski & Snow Forecasts">
-    <meta property="og:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas. Your trusted source for PNW backcountry weather.">
-    <meta property="og:url" content="https://www.cascademountainweather.com/">
-    <meta property="og:site_name" content="Cascade Mountain Weather">
-    <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Cascade Mountain Weather | Washington Ski & Snow Forecasts">
-    <meta name="twitter:description" content="Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas.">
-    <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#1e3c72">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CMW">
-    <link rel="apple-touch-icon" href="assets/images/favicon.svg">
-    
-    <!-- Structured Data / Schema.org -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Cascade Mountain Weather",
-      "url": "https://www.cascademountainweather.com",
-    "logo": "https://www.cascademountainweather.com/assets/images/favicon.svg",
-      "description": "Mountain weather and snow forecasts for Washington's Cascade Range ski areas",
-      "sameAs": [],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "Customer Service",
-        "areaServed": "US-WA"
-      }
-    }
-    </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Cascade Mountain Weather",
-      "url": "https://www.cascademountainweather.com",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.cascademountainweather.com/posts/archive.html?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    
-    <link rel="stylesheet" href="style.css">
+---
+layout: home
+title: "Cascade Mountain Weather | Washington Ski & Snow Forecasts"
+description: "Cascade Mountain Weather provides accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas including Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more."
+keywords: "Cascade Mountain Weather, Washington ski forecast, Cascade Range weather, Mt Baker snow forecast, Stevens Pass weather, Crystal Mountain forecast, Snoqualmie Pass snow, PNW ski weather, backcountry skiing Washington"
+og_description: "Accurate mountain weather and snow forecasts for Washington's Cascade Range ski areas. Your trusted source for PNW backcountry weather."
+newsletter_button: true
+coffee_button: true
+pwa_meta: true
+---
+<section id="latest-post" class="hero">
+    <h2>The Dendritic Growth Zone</h2>
+    {% assign latest = site.posts.first %}
+    <div class="post-preview" id="latest-post-preview">
+        {% if latest %}
+        <h3><a href="{{ latest.url | relative_url }}">{{ latest.tagline | default: latest.title }}</a></h3>
+        <p class="post-date">Posted: {{ latest.date | date: "%B %-d, %Y" }}</p>
+        <p class="post-summary">{{ latest.summary | default: latest.description }}</p>
+        <a href="{{ latest.url | relative_url }}" class="read-more">Read Full Forecast →</a>
+        {% else %}
+        <h3>No recent forecast found</h3>
+        {% endif %}
+    </div>
+</section>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZQLW3ZS2F"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-4ZQLW3ZS2F');
-    </script>
-
-        <style>
-            header {
-                position: relative;
-            }
-
-            .newsletter-btn {
-                position: absolute;
-                top: 1rem;
-                left: 1rem;
-                z-index: 5;
-                display: inline-flex;
-                align-items: center;
-                padding: 0.55rem 0.9rem;
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.92);
-                color: #1e3c72;
-                font-size: 0.85rem;
-                font-weight: 700;
-                text-decoration: none;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-                border: 1px solid rgba(30, 60, 114, 0.18);
-            }
-
-            .newsletter-btn:hover {
-                background: #fff;
-                text-decoration: underline;
-            }
-
-            @media (max-width: 700px) {
-                .newsletter-btn {
-                    top: 0.75rem;
-                    left: 0.75rem;
-                    padding: 0.45rem 0.75rem;
-                    font-size: 0.8rem;
-                }
-            }
-
-            body.loading {
-                overflow: hidden;
-            }
-
-            #page-loader {
-                position: fixed;
-                inset: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #000;
-                z-index: 9999;
-                opacity: 1;
-                visibility: visible;
-                transition: opacity 0.45s ease, visibility 0.45s ease;
-            }
-
-            #page-loader.hidden {
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
-            }
-
-            #loader-text {
-                color: #fff;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                font-size: clamp(1.6rem, 4.8vw, 3rem);
-                letter-spacing: 0.08em;
-                text-transform: lowercase;
-                white-space: pre-line;
-                display: inline-block;
-                text-align: left;
-                line-height: 1.2;
-            }
-
-            #loader-text::after {
-                content: '|';
-                display: inline-block;
-                width: 0.7ch;
-                margin-left: 0.08em;
-                color: #fff;
-                font-weight: 700;
-                animation: loader-blink 0.8s steps(1, end) infinite;
-                vertical-align: baseline;
-                transform: scaleY(1);
-                transform-origin: center bottom;
-            }
-
-            @keyframes loader-blink {
-                50% {
-                    opacity: 0;
-                }
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-                #loader-text::after {
-                    animation: none;
-                }
-            }
-        </style>
-</head>
-
-<body class="loading">
-        <div id="page-loader" aria-hidden="true">
-                <div id="loader-text-wrap">
-            <span id="loader-text"></span>
-                </div>
-        </div>
-    <header>
-        <span class="newsletter-btn" aria-label="Newsletter coming soon">Newsletter (coming<br>soon)</span>
-        <h1>Cascade Mountain Weather</h1>
-        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
-        <a href="https://buymeacoffee.com/cascademtnwx" target="_blank" rel="noopener noreferrer" class="buy-coffee-btn" aria-label="Support us on Buy Me a Coffee">
-            <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" />
+<section id="ski-areas" class="ski-areas">
+    <h2>Areas we cover</h2>
+    <div class="area-grid">
+        <a href="{{ '/tools/mt-baker.html' | relative_url }}" class="area-card">
+            <h3>Mt. Baker Backcountry Heather Meadows</h3>
+            <p class="elevation">Base: 3,500' | Summit: 5,089'</p>
         </a>
-    </header>
+        <a href="{{ '/tools/stevens-pass.html' | relative_url }}" class="area-card">
+            <h3>Stevens Pass</h3>
+            <p>Central Cascades</p>
+            <p class="elevation">Base: 4,061' | Summit: 5,845'</p>
+        </a>
+        <a href="{{ '/tools/snoqualmie-pass.html' | relative_url }}" class="area-card">
+            <h3>Alpental Backcountry</h3>
+            <p>Summit Central, West, East, Alpental</p>
+            <p class="elevation">Base: 3,000' | Summit: 5,420'</p>
+        </a>
+        <a href="{{ '/tools/blewett-pass.html' | relative_url }}" class="area-card">
+            <h3>Blewett Pass</h3>
+            <p class="elevation">Elevation: ~4,100'</p>
+        </a>
+        <a href="{{ '/tools/crystal-mountain.html' | relative_url }}" class="area-card">
+            <h3>Crystal Mountain</h3>
+            <p class="elevation">Base: 4,400' | Summit: 7,012'</p>
+        </a>
+        <a href="{{ '/tools/paradise.html' | relative_url }}" class="area-card">
+            <h3>Paradise - Mt. Rainier</h3>
+            <p>Muir and Tatoosh Access</p>
+            <p class="elevation">Base: 5,400' | Summit: 10,000'</p>
+        <a href="{{ '/tools/white-pass.html' | relative_url }}" class="area-card">
+            <h3>White Pass</h3>
+            <p>South Cascades - US 12 Corridor</p>
+            <p class="elevation">Base: 4,500' | Summit: 6,000'</p>
+        </a>
+    </div>
+</section>
 
-    <nav>
-        <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
-            <span class="nav-toggle-bar"></span>
-            <span class="nav-toggle-bar"></span>
-            <span class="nav-toggle-bar"></span>
-        </button>
-        <ul id="primary-nav">
-            <a href="index.html">Home</a>
-            <li><a href="index.html#latest-post">Latest Forecast</a></li>
-               <li><a href="tools/model-tools-current-weather.html">Current Weather</a></li>
-            <li><a href="posts/archive.html">Archive</a></li>
-            <li><a href="evaluation.html">Evaluation</a></li>
-            <li class="nav-item dropdown">
-                <a href="model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
-                <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                  <li role="none"><a role="menuitem" href="tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
-                  <li role="none"><a role="menuitem" href="tools/model-tools-precipitation.html">Precipitation</a></li>
-                </ul>
-              </li>
-            <li><a href="about.html">About</a></li>
-        </ul>
-    </nav>
+<section id="recent-posts" class="recent-posts">
+    <h2>Recent Forecasts</h2>
+    <ul class="post-list" id="recent-posts-list">
+        {% for post in site.posts limit:3 %}
+        <li>
+            <a href="{{ post.url | relative_url }}">
+                <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                <span class="post-title">{{ post.title }}</span>
+            </a>
+        </li>
+        {% else %}
+        <li>No recent posts found.</li>
+        {% endfor %}
+    </ul>
+</section>
 
-    <main>
-        <section id="latest-post" class="hero">
-            <h2>The Dendritic Growth Zone</h2>
-            <div class="post-preview" id="latest-post-preview">
-                <h3><a id="post-link" href="#">Loading latest forecast…</a></h3>
-                <p class="post-date" id="post-date">&nbsp;</p>
-                <p class="post-summary" id="post-summary">If you see this, the site is looking for the most recent forecast.</p>
-                <a id="read-more" href="#" class="read-more">Read Full Forecast →</a>
+<section id="satellite-looper" class="satellite-looper">
+    <h2>GOES + Radar Looper</h2>
+    <p class="satellite-subtitle">
+        Integrated GOES true color and radar loop for the Pacific Northwest. Updated every 2 hours.
+    </p>
+    <div class="satellite-stage">
+        <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
+    </div>
+    <div class="satellite-controls">
+        <button id="satellite-prev" type="button" aria-label="Previous frame">Prev</button>
+        <button id="satellite-play" type="button" aria-label="Play animation">Play</button>
+        <button id="satellite-pause" type="button" aria-label="Pause animation" disabled>Pause</button>
+        <button id="satellite-next" type="button" aria-label="Next frame">Next</button>
+        <input id="satellite-scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Satellite loop frame scrubber" />
+    </div>
+    <p id="satellite-status" class="satellite-status">Loading latest satellite loop…</p>
+    <p id="satellite-timing" class="satellite-timing">Time range and frame interval will appear after load.</p>
+    <p class="satellite-links">
+        <a id="satellite-gif-link" href="{{ '/assets/images/satellite/cod_nw_truecolor_radar.gif' | relative_url }}" target="_blank" rel="noopener noreferrer">Open full GIF</a>
+        <span class="dot-sep">|</span>
+        <a href="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" target="_blank" rel="noopener noreferrer">Source: College of DuPage SatRad</a>
+    </p>
+</section>
+
+<section id="latest-post" class="hero">
+    <h2>Welcome to the Dendritic Growth Zone!</h2>
+    <p>
+        While also the name of our blog, the Dendritic Growth Zone (DGZ)
+        is key to understanding snow forecasting. What is the dendritic growth zone? Simply put, it's
+        a layer in the atmosphere where our favorite snowflakes grow. When we ski or ride that perfect
+        blower powder, we are enjoying the fruits of the DGZ's labor: millions of these stellar dendrite
+        snowflakes. These classic six-sided snowflakes are what dreams are made of. Their intricate arms and branches
+        leave plenty of room for air in between the snowflakes, providing low-density
+        powder we all know and love.
+        For a more scientific description, the DGZ is defined as the layer of the atmosphere between -10&deg;C and
+        -20&deg;C. When these temperatures combine with other favorable conditions such as high relative humidity
+        and upward motions, the DGZ is highly efficient at growing stellar dendrites through the Bergeron-Findeisen
+        process. The Bergeron-Findeisen process grows ice crystals and snowflakes by depositing supercooled water vapor
+        molecules in the clouds. As water vapor deposits onto ice crystals, the drop in vapor pressure around water droplets
+        causes them to evaporate, providing more water vapor to deposit onto the ice crystals and allowing ice crystals to grow rapidly in size and complexity.
+    </p>
+    <h3 style="margin-bottom:-5rem;">Here are two plots that can help us analyize the DGZ. </h3>
+    <div class="synoptic-grid">
+        <!-- Row: Integrated Vapor Transport -->
+        <div class="tool-card centered" style="position:relative;">
+            <figure>
+                <figcaption class="tool-title">
+                    SPC Dendritic Growth Zone Analysis
+                    <span class="info-icon" onclick="showInfo(event)">i</span>
+                </figcaption>
+                <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="NOAA Storm Prediction Center dendritic growth zone analysis for optimal snowflake formation" />
+            </figure>
+            <div class="info-popup">
+                <h3>What is this?</h3>
+                <p>This figure shows current atmospheric conditions in the Dendritic Growth Zone (DGZ) from the Storm Prediction Center. The green contours/shading represent relative humidity in the DGZ layer of the atmosphere. The purple numbers represent vertical motions in the DGZ (ω, omega), measured in units of pressure decrease per second.</p>
+                <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+                <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for green hatched areas inside purple contours</strong>. More negative ω values show stronger upward motions in the atmosphere (better for dendrite growth). The more moisture (darker green) combined with strong upward motions (more negative purple values), the better conditions for stellar dendrite formation.</p>
+                <h4 style="margin-top:2rem;">Source:</h4>
+                <a href="https://www.spc.noaa.gov/exper/mesoanalysis/" target="_blank">
+                    https://www.spc.noaa.gov/exper/mesoanalysis/
+                </a>
+                <button class="close-btn" onclick="hideInfo(event)">×</button>
             </div>
-        </section>
-
-        <section id="ski-areas" class="ski-areas">
-            <h2>Areas we cover</h2>
-            <div class="area-grid">
-                <a href="./tools/mt-baker.html" class="area-card">
-                    <h3>Mt. Baker Backcountry Heather Meadows</h3>
-                    <p class="elevation">Base: 3,500' | Summit: 5,089'</p>
+        </div>
+        <div class="tool-card centered" style="position:relative;">
+            <figure>
+                <figcaption class="tool-title">
+                    GFS Dendritic Growth Zone
+                    <span class="info-icon" onclick="showInfo(event)">i</span>
+                </figcaption>
+                <img class="SynopticPlot" src="{{ '/assets/images/gfs_dgz_F24.png' | relative_url }}" alt="GFS model 24-hour forecast of dendritic growth zone depth for Washington Cascades snowfall quality" />
+            </figure>
+            <div class="info-popup">
+                <h3>What is this?</h3>
+                <p>This is a 24hr forecast for dendrite growth efficiency (ω times relative humidity) shown in blue shading. The red contours show where surface temperatures are below freezing. This plot updates every 6 hours via GitHub Actions at 10Z and 22Z (2am and 2pm Pacific Standard Time).</p>
+                <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
+                <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for dark blue to purple shading inside the red contours</strong>. The plot is valid for the UTC time listed in the title. For example, in November Washington is 8 hours behind UTC, so 2025-11-29 06Z is valid at 6am UTC on November 29th / 10pm PST on November 28th.</p>
+                <h4 style="margin-top:2rem;">Source:</h4>
+                <a href="https://github.com/SamBrandtMeteo/DGZ_efficiency" target="_blank">
+                    Code from Sam Brandt
                 </a>
-                <a href="./tools/stevens-pass.html" class="area-card">
-                    <h3>Stevens Pass</h3>
-                    <p>Central Cascades</p>
-                    <p class="elevation">Base: 4,061' | Summit: 5,845'</p>
-                </a>
-                <a href="./tools/snoqualmie-pass.html" class="area-card">
-                    <h3>Alpental Backcountry</h3>
-                    <p>Summit Central, West, East, Alpental</p>
-                    <p class="elevation">Base: 3,000' | Summit: 5,420'</p>
-                </a>
-                <a href="./tools/blewett-pass.html" class="area-card">
-                    <h3>Blewett Pass</h3>
-                    <p class="elevation">Elevation: ~4,100'</p>
-                </a>
-                <a href="./tools/crystal-mountain.html" class="area-card">
-                    <h3>Crystal Mountain</h3>
-                    <p class="elevation">Base: 4,400' | Summit: 7,012'</p>
-                </a>
-                <a href="./tools/paradise.html" class="area-card">
-                    <h3>Paradise - Mt. Rainier</h3>
-                    <p>Muir and Tatoosh Access</p>
-                    <p class="elevation">Base: 5,400' | Summit: 10,000'</p>
-                <a href="./tools/white-pass.html" class="area-card">
-                    <h3>White Pass</h3>
-                    <p>South Cascades - US 12 Corridor</p>
-                    <p class="elevation">Base: 4,500' | Summit: 6,000'</p>
-                </a>
+                <button class="close-btn" onclick="hideInfo(event)">×</button>
             </div>
-        </section>
+        </div>
+        <div style="height: 3rem;"></div>
+    </div>
+</section>
+<center>
+    <h3>Have a comment or suggestion?</h3>
+</center>
+<form class="contact-form" action="https://formspree.io/f/xeobnrzz" method="POST">
+    <label>
+      Name <span style="color: red">*</span>
+      <input name="name" />
+    </label>
 
-        <section id="recent-posts" class="recent-posts">
-            <h2>Recent Forecasts</h2>
-            <ul class="post-list" id="recent-posts-list">
-                <li class="placeholder">Loading recent posts…</li>
-            </ul>
-        </section>
+    <label>
+      Email <span style="color: red">*</span>
+      <input name="email" type="email" required />
+    </label>
 
-        <section id="satellite-looper" class="satellite-looper">
-            <h2>GOES + Radar Looper</h2>
-            <p class="satellite-subtitle">
-                Integrated GOES true color and radar loop for the Pacific Northwest. Updated every 2 hours.
-            </p>
-            <div class="satellite-stage">
-                <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
-            </div>
-            <div class="satellite-controls">
-                <button id="satellite-prev" type="button" aria-label="Previous frame">Prev</button>
-                <button id="satellite-play" type="button" aria-label="Play animation">Play</button>
-                <button id="satellite-pause" type="button" aria-label="Pause animation" disabled>Pause</button>
-                <button id="satellite-next" type="button" aria-label="Next frame">Next</button>
-                <input id="satellite-scrubber" type="range" min="0" max="0" value="0" step="1" aria-label="Satellite loop frame scrubber" />
-            </div>
-            <p id="satellite-status" class="satellite-status">Loading latest satellite loop…</p>
-            <p id="satellite-timing" class="satellite-timing">Time range and frame interval will appear after load.</p>
-            <p class="satellite-links">
-                <a id="satellite-gif-link" href="assets/images/satellite/cod_nw_truecolor_radar.gif" target="_blank" rel="noopener noreferrer">Open full GIF</a>
-                <span class="dot-sep">|</span>
-                <a href="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" target="_blank" rel="noopener noreferrer">Source: College of DuPage SatRad</a>
-            </p>
-        </section>
+    <label>
+      Message <span style="color: red">*</span>
+      <textarea name="message"></textarea>
+    </label>
 
+    <button type="submit">Send</button>
+  </form>
 
-        <section id="latest-post" class="hero">
-            <h2>Welcome to the Dendritic Growth Zone!</h2>
-            <p>
-                While also the name of our blog, the Dendritic Growth Zone (DGZ)
-                is key to understanding snow forecasting. What is the dendritic growth zone? Simply put, it's
-                a layer in the atmosphere where our favorite snowflakes grow. When we ski or ride that perfect 
-                blower powder, we are enjoying the fruits of the DGZ's labor: millions of these stellar dendrite 
-                snowflakes. These classic six-sided snowflakes are what dreams are made of. Their intricate arms and branches
-                leave plenty of room for air in between the snowflakes, providing low-density
-                powder we all know and love.
-                For a more scientific description, the DGZ is defined as the layer of the atmosphere between -10&deg;C and 
-                -20&deg;C. When these temperatures combine with other favorable conditions such as high relative humidity 
-                and upward motions, the DGZ is highly efficient at growing stellar dendrites through the Bergeron-Findeisen 
-                process. The Bergeron-Findeisen process grows ice crystals and snowflakes by depositing supercooled water vapor 
-                molecules in the clouds. As water vapor deposits onto ice crystals, the drop in vapor pressure around water droplets 
-                causes them to evaporate, providing more water vapor to deposit onto the ice crystals and allowing ice crystals to grow rapidly in size and complexity.
-            </p>
-            <h3 style="margin-bottom:-5rem;">Here are two plots that can help us analyize the DGZ. </h3> 
-            <div class="synoptic-grid">
-                <!-- Row: Integrated Vapor Transport -->
-                <div class="tool-card centered" style="position:relative;">
-                    <figure>
-                        <figcaption class="tool-title">
-                            SPC Dendritic Growth Zone Analysis
-                            <span class="info-icon" onclick="showInfo(event)">i</span>
-                        </figcaption>
-                        <img class="SynopticPlot" src="https://www.spc.noaa.gov/exper/mesoanalysis/s11/dendrh/dendrh.gif?1764264632202" alt="NOAA Storm Prediction Center dendritic growth zone analysis for optimal snowflake formation" />
-                    </figure>
-                    <div class="info-popup">
-                        <h3>What is this?</h3>
-                        <p>This figure shows current atmospheric conditions in the Dendritic Growth Zone (DGZ) from the Storm Prediction Center. The green contours/shading represent relative humidity in the DGZ layer of the atmosphere. The purple numbers represent vertical motions in the DGZ (ω, omega), measured in units of pressure decrease per second.</p>
-                        <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
-                        <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for green hatched areas inside purple contours</strong>. More negative ω values show stronger upward motions in the atmosphere (better for dendrite growth). The more moisture (darker green) combined with strong upward motions (more negative purple values), the better conditions for stellar dendrite formation.</p>
-                        <h4 style="margin-top:2rem;">Source:</h4>
-                        <a href="https://www.spc.noaa.gov/exper/mesoanalysis/" target="_blank">
-                            https://www.spc.noaa.gov/exper/mesoanalysis/
-                        </a>
-                        <button class="close-btn" onclick="hideInfo(event)">×</button>
-                    </div>
-                </div>
-                <div class="tool-card centered" style="position:relative;">
-                    <figure>
-                        <figcaption class="tool-title">
-                            GFS Dendritic Growth Zone
-                            <span class="info-icon" onclick="showInfo(event)">i</span>
-                        </figcaption>
-                        <img class="SynopticPlot" src="assets/images/gfs_dgz_F24.png" alt="GFS model 24-hour forecast of dendritic growth zone depth for Washington Cascades snowfall quality" />
-                    </figure>
-                    <div class="info-popup">
-                        <h3>What is this?</h3>
-                        <p>This is a 24hr forecast for dendrite growth efficiency (ω times relative humidity) shown in blue shading. The red contours show where surface temperatures are below freezing. This plot updates every 6 hours via GitHub Actions at 10Z and 22Z (2am and 2pm Pacific Standard Time).</p>
-                        <h3 style="margin-top:2rem; margin-bottom:0.5rem;">How to use:</h3>
-                        <p>To find where <strong>dendrites</strong> are growing in the atmosphere, <strong>look for dark blue to purple shading inside the red contours</strong>. The plot is valid for the UTC time listed in the title. For example, in November Washington is 8 hours behind UTC, so 2025-11-29 06Z is valid at 6am UTC on November 29th / 10pm PST on November 28th.</p>
-                        <h4 style="margin-top:2rem;">Source:</h4>
-                        <a href="https://github.com/SamBrandtMeteo/DGZ_efficiency" target="_blank">
-                            Code from Sam Brandt
-                        </a>
-                        <button class="close-btn" onclick="hideInfo(event)">×</button>
-                    </div>
-                </div>
-                <div style="height: 3rem;"></div>
-            </div>
-        </section>
-        <center>
-            <h3>Have a comment or suggestion?</h3>
-        </center>
-        <form class="contact-form" action="https://formspree.io/f/xeobnrzz" method="POST">
-            <label>
-              Name <span style="color: red">*</span>
-              <input name="name" />
-            </label>
-          
-            <label>
-              Email <span style="color: red">*</span>
-              <input name="email" type="email" required />
-            </label>
-          
-            <label>
-              Message <span style="color: red">*</span>
-              <textarea name="message"></textarea>
-            </label>
-          
-            <button type="submit">Send</button>
-          </form>
-    </main>
+<script>
+    function showInfo(event) {
+        const toolCard = event.target.closest('.tool-card');
+        const popup = toolCard.querySelector('.info-popup');
+        popup.style.display = 'block';
+        const rect = event.target.getBoundingClientRect();
+        popup.style.position = 'absolute';
+        popup.style.left = (rect.left - toolCard.getBoundingClientRect().left + 24) + 'px';
+        popup.style.top = (rect.top - toolCard.getBoundingClientRect().top - 8) + 'px';
+    }
+    function hideInfo(event) {
+        event.target.closest('.info-popup').style.display = 'none';
+    }
+</script>
+<script>
+    (function () {
+        const frameEl = document.getElementById('satellite-frame');
+        const statusEl = document.getElementById('satellite-status');
+        const timingEl = document.getElementById('satellite-timing');
+        const scrubberEl = document.getElementById('satellite-scrubber');
+        const prevEl = document.getElementById('satellite-prev');
+        const nextEl = document.getElementById('satellite-next');
+        const playEl = document.getElementById('satellite-play');
+        const pauseEl = document.getElementById('satellite-pause');
+        const gifLinkEl = document.getElementById('satellite-gif-link');
 
-    <footer>
-        <p>Cascade Mountain Weather | Washington Backcountry Forecasts | <a href="sitemap-page.html" style="color: #fff; text-decoration: underline;">Sitemap</a></p>
-        <p>For educational purposes only. Always check official sources and avalanche forecasts before heading to the mountains. We are not liable for any damages or injuries resulting from the use of this information.</p>
-    </footer>
-        <!-- Load latest post summary and populate recent posts -->
-        <script>
-        (async function(){
-            const setText = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
-            const setHref = (id, href) => { const el = document.getElementById(id); if(el) el.href = href; };
+        if (!frameEl || !statusEl || !scrubberEl || !prevEl || !nextEl || !playEl || !pauseEl || !timingEl) {
+            return;
+        }
 
-            async function fetchLatestSummary(){
-                try{
-                    const res = await fetch('posts/latest-post-summary.html');
-                    if(!res.ok) throw new Error('no summary');
-                    const text = await res.text();
-                    const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/i);
-                    if(scriptMatch){
-                        try{ (new Function(scriptMatch[1]))(); }catch(e){}
-                    }
-                    const temp = document.createElement('div');
-                    temp.innerHTML = text;
-                    const tagline = (typeof post_tagline !== 'undefined' && post_tagline) ? post_tagline : (temp.querySelector('#post-tagline')?.textContent || '');
-                    const date = (typeof post_date !== 'undefined' && post_date) ? post_date : (temp.querySelector('#post-date')?.textContent || '');
-                    const summary = (typeof post_summary !== 'undefined' && post_summary) ? post_summary : (temp.querySelector('#post-summary')?.textContent || '');
-                    const href = (typeof post_href !== 'undefined' && post_href) ? post_href : (temp.querySelector('#post-href')?.getAttribute('href') || '');
-                    return {tagline,date,summary,href};
-                }catch(e){
-                    return null;
+        let frames = [];
+        let currentFrame = 0;
+        let isPlaying = false;
+        let timer = null;
+
+        function stopPlayback() {
+            isPlaying = false;
+            playEl.disabled = false;
+            pauseEl.disabled = true;
+            if (timer) {
+                window.clearTimeout(timer);
+                timer = null;
+            }
+        }
+
+        function setStatusForFrame() {
+            statusEl.textContent = `Frame ${currentFrame + 1} of ${frames.length}`;
+        }
+
+        function renderFrame(index) {
+            if (!frames.length) {
+                return;
+            }
+            currentFrame = (index + frames.length) % frames.length;
+            const frame = frames[currentFrame];
+            frameEl.src = frame.src;
+            scrubberEl.value = String(currentFrame);
+            setStatusForFrame();
+        }
+
+        function playLoop() {
+            if (!isPlaying || !frames.length) {
+                return;
+            }
+            const frame = frames[currentFrame];
+            const delay = Math.max(100, Number(frame.durationMs || 0) || 350);
+            timer = window.setTimeout(function () {
+                renderFrame(currentFrame + 1);
+                playLoop();
+            }, delay);
+        }
+
+        async function fetchWithTimeout(url, timeoutMs) {
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(function () {
+                controller.abort();
+            }, timeoutMs);
+            try {
+                return await fetch(url, { signal: controller.signal });
+            } finally {
+                window.clearTimeout(timeoutId);
+            }
+        }
+
+        function preloadFrames(startIndex, count) {
+            const last = Math.min(frames.length, startIndex + count);
+            for (let i = startIndex; i < last; i += 1) {
+                const img = new Image();
+                img.src = frames[i].src;
+            }
+        }
+
+        function formatDateTime(dt) {
+            return dt.toLocaleString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZoneName: 'short',
+            });
+        }
+
+        function setTimingTextFromManifest(manifest) {
+            const timestamps = (manifest.frames || [])
+                .map(function (f) {
+                    const raw = f.timestamp_utc;
+                    const parsed = raw ? new Date(raw) : null;
+                    return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+                })
+                .filter(Boolean);
+
+            if (!timestamps.length) {
+                timingEl.textContent = 'Frame timing metadata unavailable.';
+                return;
+            }
+
+            const sorted = timestamps.slice().sort(function (a, b) { return a - b; });
+            const start = sorted[0];
+            const end = sorted[sorted.length - 1];
+
+            let intervalMin = null;
+            if (sorted.length > 1) {
+                let totalMin = 0;
+                for (let i = 1; i < sorted.length; i += 1) {
+                    totalMin += (sorted[i] - sorted[i - 1]) / 60000;
                 }
+                intervalMin = totalMin / (sorted.length - 1);
             }
 
-            async function exists(path){
-                try{
-                    const res = await fetch(path, {method:'HEAD'});
-                    if(res && res.ok) return true;
-                    const res2 = await fetch(path);
-                    return res2 && res2.ok;
-                }catch(e){ return false; }
-            }
-
-            async function fetchPostTitle(path){
-                try{
-                    const res = await fetch(path);
-                    if(!res.ok) return null;
-                    const text = await res.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(text, 'text/html');
-                    const postHeader = doc.querySelector('.post-header');
-                    if(postHeader){
-                        const h = postHeader.querySelector('h1, h2');
-                        if(h && h.textContent.trim()) return h.textContent.replace(/\s+/g,' ').trim();
-                    }
-                    const hAnywhere = doc.querySelector('h1, h2');
-                    if(hAnywhere) return hAnywhere.textContent.replace(/\s+/g,' ').trim();
-                    const t = doc.querySelector('title');
-                    if(t) return t.textContent.replace(/\s+/g,' ').trim();
-                }catch(e){}
-                return null;
-            }
-
-            function dateToPath(d){
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth()+1).padStart(2,'0');
-                const dd = String(d.getDate()).padStart(2,'0');
-                return `posts/${yyyy}-${mm}-${dd}-weekend-forecast.html`;
-            }
-
-            async function findRecentWeekends(maxDays=365, maxResults=3){
-                const results = [];
-                const today = new Date();
-                for(let i=0;i<maxDays && results.length<maxResults;i++){
-                    const d = new Date();
-                    d.setDate(today.getDate()-i);
-                    const path = dateToPath(d);
-                    if(await exists(path)){
-                        const title = await fetchPostTitle(path);
-                        results.push({href:path, date:d, title});
-                    }
-                }
-                return results;
-            }
-
-            async function findLatestWeekend(maxDays=90){
-                const r = await findRecentWeekends(maxDays,1);
-                return r.length? r[0] : null;
-            }
-
-            // populate latest post area (existing behavior)
-            const summary = await fetchLatestSummary();
-            let href = summary && summary.href ? summary.href : '';
-            if(!href){
-                const found = await findLatestWeekend(90);
-                if(found) href = found.href;
-            }
-            if(summary){
-                if(summary.tagline) setText('post-link', summary.tagline);
-                if(summary.date) setText('post-date', 'Posted: ' + summary.date);
-                if(summary.summary) setText('post-summary', summary.summary);
-            }
-            if(href){
-                setHref('post-link', href);
-                setHref('read-more', href);
+            const rangeText = `${formatDateTime(start)} to ${formatDateTime(end)}`;
+            if (intervalMin !== null) {
+                timingEl.textContent = `Time range: ${rangeText}. Frame step: ~${Math.round(intervalMin)} min.`;
             } else {
-                setText('post-link', 'No recent forecast found');
-                setText('read-more', '');
+                timingEl.textContent = `Time range: ${rangeText}.`;
             }
+        }
 
-            // populate up to 3 recent posts
-            const recentContainer = document.getElementById('recent-posts-list');
-            if(recentContainer){
-                recentContainer.innerHTML = '<li class="placeholder">Searching for recent posts…</li>';
-                const recent = await findRecentWeekends(365, 3);
-                recentContainer.innerHTML = '';
-                if(recent.length===0){
-                    recentContainer.innerHTML = '<li>No recent posts found.</li>';
-                } else {
-                    for(const p of recent){
-                        const li = document.createElement('li');
-                        const a = document.createElement('a'); a.href = p.href;
-                        const spanDate = document.createElement('span'); spanDate.className='post-date';
-                        spanDate.textContent = p.date.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
-                        const spanTitle = document.createElement('span'); spanTitle.className='post-title';
-                        spanTitle.textContent = p.title ? p.title : p.href.split('/').pop().replace(/-/g,' ').replace('.html','');
-                        a.appendChild(spanDate); a.appendChild(document.createTextNode(' ')); a.appendChild(spanTitle);
-                        li.appendChild(a);
-                        recentContainer.appendChild(li);
+        async function initSatelliteLooper() {
+            statusEl.textContent = 'Loading latest satellite loop...';
+            timingEl.textContent = 'Reading frame timing...';
+            const manifestPath = `{{ '/assets/images/satellite/satellite_manifest.json' | relative_url }}?v=${Date.now()}`;
+            const fallbackStaticPath = `{{ '/assets/images/satellite/latest_frame.webp' | relative_url }}?v=${Date.now()}`;
+
+            try {
+                const response = await fetchWithTimeout(manifestPath, 8000);
+                if (!response.ok) {
+                    throw new Error('manifest unavailable');
+                }
+                const manifest = await response.json();
+                if (!manifest || !Array.isArray(manifest.frames) || manifest.frames.length === 0) {
+                    throw new Error('manifest has no frames');
+                }
+
+                const version = encodeURIComponent(manifest.updated_utc || Date.now());
+
+                frames = manifest.frames.map(function (f) {
+                    return {
+                        src: `{{ '/assets/images/satellite/frames/' | relative_url }}${f.file}?v=${version}`,
+                        durationMs: Number(f.duration_ms || 0),
+                    };
+                });
+
+                scrubberEl.max = String(frames.length - 1);
+                renderFrame(0);
+                preloadFrames(1, 3);
+                setTimingTextFromManifest(manifest);
+
+                if (manifest.updated_utc) {
+                    const updatedDate = new Date(manifest.updated_utc);
+                    if (!Number.isNaN(updatedDate.getTime())) {
+                        statusEl.textContent = `Frame 1 of ${frames.length}. Updated ${updatedDate.toLocaleString()}`;
                     }
                 }
+
+                const gifFile = manifest.gif_file || 'cod_nw_truecolor_radar.gif';
+                if (gifLinkEl) {
+                    gifLinkEl.href = `{{ '/assets/images/satellite/' | relative_url }}${gifFile}`;
+                }
+            } catch (err) {
+                frames = [{ src: fallbackStaticPath, durationMs: 1000 }];
+                scrubberEl.max = '0';
+                renderFrame(0);
+                statusEl.textContent = 'Satellite loop is temporarily unavailable. Showing latest static frame.';
+                timingEl.textContent = 'Frame timing unavailable while loop data is loading.';
             }
+        }
 
-        })();
-        </script>
-        <!-- Shared header behavior loaded from assets -->
-        <script src="assets/header.js" defer></script>
-        <script>
-            (function () {
-                const targetText = 'Cascade\nMountain\nWeather\n.com';
-                const loader = document.getElementById('page-loader');
-                const output = document.getElementById('loader-text');
-                const body = document.body;
+        scrubberEl.addEventListener('input', function (event) {
+            const next = Number(event.target.value || 0);
+            renderFrame(next);
+        });
 
-                if (!loader || !output || !body) return;
+        prevEl.addEventListener('click', function () {
+            stopPlayback();
+            renderFrame(currentFrame - 1);
+        });
 
-                // Check if this is the first visit
-                const hasVisited = localStorage.getItem('cmw_visited');
-                
-                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        nextEl.addEventListener('click', function () {
+            stopPlayback();
+            renderFrame(currentFrame + 1);
+        });
 
-                const finish = (delay = 0) => {
-                    setTimeout(() => {
-                        loader.classList.add('hidden');
-                        body.classList.remove('loading');
-                        setTimeout(() => loader.remove(), 500);
-                    }, delay);
-                };
-
-                // Skip animation if user has visited before
-                if (hasVisited) {
-                    finish(0);
-                    return;
-                }
-
-                // Mark as visited for future loads
-                localStorage.setItem('cmw_visited', 'true');
-
-                if (reduceMotion) {
-                    output.textContent = targetText;
-                    finish(250);
-                    return;
-                }
-
-                let charIndex = 0;
-                const typeTimer = setInterval(() => {
-                    charIndex += 1;
-                    output.textContent = targetText.slice(0, charIndex);
-
-                    if (charIndex >= targetText.length) {
-                        clearInterval(typeTimer);
-                        finish(1130);
-                    }
-                }, 50);
-
-                window.addEventListener('pageshow', (event) => {
-                    if (event.persisted) {
-                        loader.classList.add('hidden');
-                        body.classList.remove('loading');
-                    }
-                });
-            })();
-        </script>
-        <script>
-            function showInfo(event) {
-                const toolCard = event.target.closest('.tool-card');
-                const popup = toolCard.querySelector('.info-popup');
-                popup.style.display = 'block';
-                const rect = event.target.getBoundingClientRect();
-                popup.style.position = 'absolute';
-                popup.style.left = (rect.left - toolCard.getBoundingClientRect().left + 24) + 'px';
-                popup.style.top = (rect.top - toolCard.getBoundingClientRect().top - 8) + 'px';
+        playEl.addEventListener('click', function () {
+            if (!frames.length) {
+                return;
             }
-            function hideInfo(event) {
-                event.target.closest('.info-popup').style.display = 'none';
-            }
-        </script>
-        <script>
+            isPlaying = true;
+            playEl.disabled = true;
+            pauseEl.disabled = false;
+            playLoop();
+        });
 
-            (function () {
-                const frameEl = document.getElementById('satellite-frame');
-                const statusEl = document.getElementById('satellite-status');
-                const timingEl = document.getElementById('satellite-timing');
-                const scrubberEl = document.getElementById('satellite-scrubber');
-                const prevEl = document.getElementById('satellite-prev');
-                const nextEl = document.getElementById('satellite-next');
-                const playEl = document.getElementById('satellite-play');
-                const pauseEl = document.getElementById('satellite-pause');
-                const gifLinkEl = document.getElementById('satellite-gif-link');
+        pauseEl.addEventListener('click', function () {
+            stopPlayback();
+        });
 
-                if (!frameEl || !statusEl || !scrubberEl || !prevEl || !nextEl || !playEl || !pauseEl || !timingEl) {
-                    return;
-                }
-
-                let frames = [];
-                let currentFrame = 0;
-                let isPlaying = false;
-                let timer = null;
-
-                function stopPlayback() {
-                    isPlaying = false;
-                    playEl.disabled = false;
-                    pauseEl.disabled = true;
-                    if (timer) {
-                        window.clearTimeout(timer);
-                        timer = null;
-                    }
-                }
-
-                function setStatusForFrame() {
-                    statusEl.textContent = `Frame ${currentFrame + 1} of ${frames.length}`;
-                }
-
-                function renderFrame(index) {
-                    if (!frames.length) {
-                        return;
-                    }
-                    currentFrame = (index + frames.length) % frames.length;
-                    const frame = frames[currentFrame];
-                    frameEl.src = frame.src;
-                    scrubberEl.value = String(currentFrame);
-                    setStatusForFrame();
-                }
-
-                function playLoop() {
-                    if (!isPlaying || !frames.length) {
-                        return;
-                    }
-                    const frame = frames[currentFrame];
-                    const delay = Math.max(100, Number(frame.durationMs || 0) || 350);
-                    timer = window.setTimeout(function () {
-                        renderFrame(currentFrame + 1);
-                        playLoop();
-                    }, delay);
-                }
-
-                async function fetchWithTimeout(url, timeoutMs) {
-                    const controller = new AbortController();
-                    const timeoutId = window.setTimeout(function () {
-                        controller.abort();
-                    }, timeoutMs);
-                    try {
-                        return await fetch(url, { signal: controller.signal });
-                    } finally {
-                        window.clearTimeout(timeoutId);
-                    }
-                }
-
-                function preloadFrames(startIndex, count) {
-                    const last = Math.min(frames.length, startIndex + count);
-                    for (let i = startIndex; i < last; i += 1) {
-                        const img = new Image();
-                        img.src = frames[i].src;
-                    }
-                }
-
-                function formatDateTime(dt) {
-                    return dt.toLocaleString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        timeZoneName: 'short',
-                    });
-                }
-
-                function setTimingTextFromManifest(manifest) {
-                    const timestamps = (manifest.frames || [])
-                        .map(function (f) {
-                            const raw = f.timestamp_utc;
-                            const parsed = raw ? new Date(raw) : null;
-                            return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
-                        })
-                        .filter(Boolean);
-
-                    if (!timestamps.length) {
-                        timingEl.textContent = 'Frame timing metadata unavailable.';
-                        return;
-                    }
-
-                    const sorted = timestamps.slice().sort(function (a, b) { return a - b; });
-                    const start = sorted[0];
-                    const end = sorted[sorted.length - 1];
-
-                    let intervalMin = null;
-                    if (sorted.length > 1) {
-                        let totalMin = 0;
-                        for (let i = 1; i < sorted.length; i += 1) {
-                            totalMin += (sorted[i] - sorted[i - 1]) / 60000;
-                        }
-                        intervalMin = totalMin / (sorted.length - 1);
-                    }
-
-                    const rangeText = `${formatDateTime(start)} to ${formatDateTime(end)}`;
-                    if (intervalMin !== null) {
-                        timingEl.textContent = `Time range: ${rangeText}. Frame step: ~${Math.round(intervalMin)} min.`;
-                    } else {
-                        timingEl.textContent = `Time range: ${rangeText}.`;
-                    }
-                }
-
-                async function initSatelliteLooper() {
-                    statusEl.textContent = 'Loading latest satellite loop...';
-                    timingEl.textContent = 'Reading frame timing...';
-                    const manifestPath = `assets/images/satellite/satellite_manifest.json?v=${Date.now()}`;
-                    const fallbackStaticPath = `assets/images/satellite/latest_frame.webp?v=${Date.now()}`;
-
-                    try {
-                        const response = await fetchWithTimeout(manifestPath, 8000);
-                        if (!response.ok) {
-                            throw new Error('manifest unavailable');
-                        }
-                        const manifest = await response.json();
-                        if (!manifest || !Array.isArray(manifest.frames) || manifest.frames.length === 0) {
-                            throw new Error('manifest has no frames');
-                        }
-
-                        const version = encodeURIComponent(manifest.updated_utc || Date.now());
-
-                        frames = manifest.frames.map(function (f) {
-                            return {
-                                src: `assets/images/satellite/frames/${f.file}?v=${version}`,
-                                durationMs: Number(f.duration_ms || 0),
-                            };
-                        });
-
-                        scrubberEl.max = String(frames.length - 1);
-                        renderFrame(0);
-                        preloadFrames(1, 3);
-                        setTimingTextFromManifest(manifest);
-
-                        if (manifest.updated_utc) {
-                            const updatedDate = new Date(manifest.updated_utc);
-                            if (!Number.isNaN(updatedDate.getTime())) {
-                                statusEl.textContent = `Frame 1 of ${frames.length}. Updated ${updatedDate.toLocaleString()}`;
-                            }
-                        }
-
-                        const gifFile = manifest.gif_file || 'cod_nw_truecolor_radar.gif';
-                        if (gifLinkEl) {
-                            gifLinkEl.href = `assets/images/satellite/${gifFile}`;
-                        }
-                    } catch (err) {
-                        frames = [{ src: fallbackStaticPath, durationMs: 1000 }];
-                        scrubberEl.max = '0';
-                        renderFrame(0);
-                        statusEl.textContent = 'Satellite loop is temporarily unavailable. Showing latest static frame.';
-                        timingEl.textContent = 'Frame timing unavailable while loop data is loading.';
-                    }
-                }
-
-                scrubberEl.addEventListener('input', function (event) {
-                    const next = Number(event.target.value || 0);
-                    renderFrame(next);
-                });
-
-                prevEl.addEventListener('click', function () {
-                    stopPlayback();
-                    renderFrame(currentFrame - 1);
-                });
-
-                nextEl.addEventListener('click', function () {
-                    stopPlayback();
-                    renderFrame(currentFrame + 1);
-                });
-
-                playEl.addEventListener('click', function () {
-                    if (!frames.length) {
-                        return;
-                    }
-                    isPlaying = true;
-                    playEl.disabled = true;
-                    pauseEl.disabled = false;
-                    playLoop();
-                });
-
-                pauseEl.addEventListener('click', function () {
-                    stopPlayback();
-                });
-
-                initSatelliteLooper();
-            })();
-        </script>
-        <script>
-            const mcScript = document.createElement('script');
-            mcScript.id = 'mcjs';
-            mcScript.async = true;
-            mcScript.src = 'https://chimpstatic.com/mcjs-connected/js/users/2728db0dca375a55c95c27394/8440e70da6816b7eed0edf4c8.js';
-            document.body.appendChild(mcScript);
-        </script>
-        <script>
-            // Register service worker for PWA
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then(reg => console.log('Service Worker registered', reg))
-                        .catch(err => console.log('Service Worker registration failed', err));
-                });
-            }
-
-            // Offline detection and warning
-            (function() {
-                function showOfflineWarning() {
-                    const existing = document.getElementById('offline-notice');
-                    if (existing) return;
-
-                    const notice = document.createElement('div');
-                    notice.id = 'offline-notice';
-                    notice.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff9800;color:#000;padding:0.75rem;text-align:center;z-index:10000;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
-                    notice.innerHTML = '⚠️ No internet connection - Data may be outdated';
-                    document.body.appendChild(notice);
-                }
-
-                function hideOfflineWarning() {
-                    const notice = document.getElementById('offline-notice');
-                    if (notice) notice.remove();
-                }
-
-                function checkConnection() {
-                    if (!navigator.onLine) {
-                        showOfflineWarning();
-                    } else {
-                        hideOfflineWarning();
-                    }
-                }
-
-                // Check on load
-                window.addEventListener('load', checkConnection);
-                // Monitor connection changes
-                window.addEventListener('online', hideOfflineWarning);
-                window.addEventListener('offline', showOfflineWarning);
-                // Check immediately
-                checkConnection();
-            })();
-        </script>
-</body>
-</html>
+        initSatelliteLooper();
+    })();
+</script>

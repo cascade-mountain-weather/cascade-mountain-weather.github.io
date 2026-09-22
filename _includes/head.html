@@ -1,0 +1,69 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+{% assign page_title = page.title | default: site.title %}
+{% if page.layout == 'post' %}{% assign page_title = page_title | append: " | Cascade Mountain Weather" %}{% endif %}
+{% assign og_title = page.og_title | default: page_title %}
+
+<title>{{ page_title }}</title>
+<meta name="description" content="{{ page.description | default: site.description }}">
+<meta name="keywords" content="{{ page.keywords | default: site.keywords }}">
+<meta name="author" content="Cascade Mountain Weather">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+<link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+
+<!-- Open Graph / Social Media -->
+<meta property="og:type" content="{{ page.og_type | default: 'website' }}">
+<meta property="og:title" content="{{ og_title }}">
+<meta property="og:description" content="{{ page.og_description | default: page.description | default: site.description }}">
+<meta property="og:url" content="{{ page.url | absolute_url }}">
+<meta property="og:site_name" content="Cascade Mountain Weather">
+<meta property="og:image" content="{{ '/assets/images/favicon.svg' | absolute_url }}">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ og_title }}">
+<meta name="twitter:description" content="{{ page.og_description | default: page.description | default: site.description }}">
+<meta name="twitter:image" content="{{ '/assets/images/favicon.svg' | absolute_url }}">
+
+{% if page.pwa_meta %}
+<meta name="theme-color" content="#1e3c72">
+<link rel="manifest" href="{{ '/manifest.json' | relative_url }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CMW">
+<link rel="apple-touch-icon" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+{% endif %}
+
+{% if page.structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ page.title | jsonify }},
+  "description": {{ page.description | default: site.description | jsonify }},
+  "author": { "@type": "Organization", "name": "Cascade Mountain Weather" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Cascade Mountain Weather",
+    "logo": { "@type": "ImageObject", "url": "{{ '/assets/images/favicon.svg' | absolute_url }}" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "{{ page.url | absolute_url }}" },
+  "datePublished": "{{ page.date | date_to_xmlschema }}",
+  "dateModified": "{{ page.date | date_to_xmlschema }}"
+}
+</script>
+{% endif %}
+
+<link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
+{% if page.layout == 'post' %}<link rel="stylesheet" href="{{ '/posts/post-style.css' | relative_url }}">{% endif %}
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZQLW3ZS2F"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-4ZQLW3ZS2F');
+</script>

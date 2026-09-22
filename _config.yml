@@ -1,0 +1,57 @@
+title: Cascade Mountain Weather
+tagline: "Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts"
+description: >-
+  Cascade Mountain Weather provides accurate mountain weather and snow forecasts
+  for Washington's Cascade Range ski areas including Mt. Baker, Stevens Pass,
+  Crystal Mountain, Snoqualmie Pass, and more.
+keywords: "Cascade Mountain Weather, Washington ski forecast, Cascade Range weather, Mt Baker snow forecast, Stevens Pass weather, Crystal Mountain forecast, Snoqualmie Pass snow, PNW ski weather, backcountry skiing Washington"
+url: "https://www.cascademountainweather.com"
+baseurl: ""
+
+# All posts live in _posts/ but keep the historical URL scheme:
+# /posts/YYYY-MM-DD-weekend-forecast.html
+permalink: /posts/:year-:month-:day-:title.html
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      coffee_button: true
+      pwa_meta: true
+      structured_data: true
+  - scope:
+      path: ""
+    values:
+      layout: page
+
+plugins:
+  - jekyll-sitemap
+
+# Folders/files that are inputs to Python scripts and GitHub Actions, not
+# part of the built site. Anything NOT excluded here gets copied into _site
+# and deployed, so double-check before adding to this list.
+exclude:
+  - posts/TEMPLATE-post.html
+  - docs
+  - cascade_weather_app
+  - scripts
+  - data
+  - requirements.txt
+  - README.md
+  - QUICK-GUIDE.md
+  - EVALUATION-GUIDE.md
+  - GETTING-STARTED.md
+  - PWA-INSTALLATION.md
+  - PLAN.md
+  - CLAUDE.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .claude
+  - "*.gemspec"
+
+# jekyll-sitemap already excludes pages marked `sitemap: false`

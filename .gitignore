@@ -1,3 +1,11 @@
+# Jekyll build output/cache
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.sass-cache/
+.bundle/
+vendor/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

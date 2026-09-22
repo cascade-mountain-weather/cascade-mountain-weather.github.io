@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include head.html %}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Cascade Mountain Weather",
+  "url": "{{ site.url }}",
+  "logo": "{{ '/assets/images/favicon.svg' | absolute_url }}",
+  "description": "{{ site.description }}",
+  "sameAs": [],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "Customer Service",
+    "areaServed": "US-WA"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Cascade Mountain Weather",
+  "url": "{{ site.url }}",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ '/posts/archive.html' | absolute_url }}?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<style>
+    header {
+        position: relative;
+    }
+
+    .newsletter-btn {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        z-index: 5;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #1e3c72;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(30, 60, 114, 0.18);
+    }
+
+    .newsletter-btn:hover {
+        background: #fff;
+        text-decoration: underline;
+    }
+
+    @media (max-width: 700px) {
+        .newsletter-btn {
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    body.loading {
+        overflow: hidden;
+    }
+
+    #page-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        z-index: 9999;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+    }
+
+    #page-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    #loader-text {
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: clamp(1.6rem, 4.8vw, 3rem);
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        white-space: pre-line;
+        display: inline-block;
+        text-align: left;
+        line-height: 1.2;
+    }
+
+    #loader-text::after {
+        content: '|';
+        display: inline-block;
+        width: 0.7ch;
+        margin-left: 0.08em;
+        color: #fff;
+        font-weight: 700;
+        animation: loader-blink 0.8s steps(1, end) infinite;
+        vertical-align: baseline;
+        transform: scaleY(1);
+        transform-origin: center bottom;
+    }
+
+    @keyframes loader-blink {
+        50% {
+            opacity: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #loader-text::after {
+            animation: none;
+        }
+    }
+</style>
+</head>
+
+<body class="loading">
+    <div id="page-loader" aria-hidden="true">
+        <div id="loader-text-wrap">
+            <span id="loader-text"></span>
+        </div>
+    </div>
+
+{% include header.html %}
+{% include nav.html %}
+
+<main>
+{{ content }}
+</main>
+
+{% include footer.html %}
+{% include pwa-scripts.html %}
+
+<script>
+    (function () {
+        const targetText = 'Cascade\nMountain\nWeather\n.com';
+        const loader = document.getElementById('page-loader');
+        const output = document.getElementById('loader-text');
+        const body = document.body;
+
+        if (!loader || !output || !body) return;
+
+        const hasVisited = localStorage.getItem('cmw_visited');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const finish = (delay = 0) => {
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                body.classList.remove('loading');
+                setTimeout(() => loader.remove(), 500);
+            }, delay);
+        };
+
+        if (hasVisited) {
+            finish(0);
+            return;
+        }
+
+        localStorage.setItem('cmw_visited', 'true');
+
+        if (reduceMotion) {
+            output.textContent = targetText;
+            finish(250);
+            return;
+        }
+
+        let charIndex = 0;
+        const typeTimer = setInterval(() => {
+            charIndex += 1;
+            output.textContent = targetText.slice(0, charIndex);
+
+            if (charIndex >= targetText.length) {
+                clearInterval(typeTimer);
+                finish(1130);
+            }
+        }, 50);
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                loader.classList.add('hidden');
+                body.classList.remove('loading');
+            }
+        });
+    })();
+</script>
+<script>
+    const mcScript = document.createElement('script');
+    mcScript.id = 'mcjs';
+    mcScript.async = true;
+    mcScript.src = 'https://chimpstatic.com/mcjs-connected/js/users/2728db0dca375a55c95c27394/8440e70da6816b7eed0edf4c8.js';
+    document.body.appendChild(mcScript);
+</script>
+</body>
+</html>

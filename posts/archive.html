@@ -1,223 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Browse past weekend weather forecasts from Cascade Mountain Weather. Access our archive of Washington Cascade Range ski area forecasts for Mt. Baker, Stevens Pass, Crystal Mountain, and more.">
-    <meta name="keywords" content="Cascade Mountain Weather archive, past ski forecasts, Washington snow forecast history, Cascade Range weather history, historical mountain weather">
-    <meta name="author" content="Cascade Mountain Weather">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://www.cascademountainweather.com/posts/archive.html">
-    
-    <!-- Open Graph / Social Media -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Forecast Archive | Cascade Mountain Weather">
-    <meta property="og:description" content="Browse past weekend ski forecasts for Washington Cascade Range ski areas.">
-    <meta property="og:url" content="https://www.cascademountainweather.com/posts/archive.html">
-    <meta property="og:site_name" content="Cascade Mountain Weather">
-    <meta property="og:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Forecast Archive | Cascade Mountain Weather">
-    <meta name="twitter:description" content="Browse past ski forecasts for Washington Cascade ski areas.">
-    <meta name="twitter:image" content="https://www.cascademountainweather.com/assets/images/favicon.svg">
-    
-    <link rel="icon" type="image/svg+xml" href="../assets/images/favicon.svg">
-    <link rel="stylesheet" href="../style.css">
-        <!-- Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZQLW3ZS2F"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);} 
-            gtag('js', new Date());
-            gtag('config', 'G-4ZQLW3ZS2F');
-        </script>
-</head>
-<body>
-    <header>
-        <h1>Cascade Mountain Weather </h1>
-        <p class="tagline">Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts</p>
-    </header>
+---
+layout: page
+title: "Forecast Archive | Cascade Mountain Weather"
+description: "Browse past weekend weather forecasts from Cascade Mountain Weather. Access our archive of Washington Cascade Range ski area forecasts for Mt. Baker, Stevens Pass, Crystal Mountain, and more."
+keywords: "Cascade Mountain Weather archive, past ski forecasts, Washington snow forecast history, Cascade Range weather history, historical mountain weather"
+og_title: "Forecast Archive | Cascade Mountain Weather"
+og_description: "Browse past weekend ski forecasts for Washington Cascade Range ski areas."
+---
+<section class="archive">
+    <h2>📚 Forecast Archive</h2>
 
-        <nav>
-                <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primary-nav">
-                    <span class="nav-toggle-bar"></span>
-                    <span class="nav-toggle-bar"></span>
-                    <span class="nav-toggle-bar"></span>
-                </button>
-                <ul id="primary-nav">
-            <li><a href="../index.html">Home</a></li>
-            <li><a href="../index.html#latest-post">Latest Forecast</a></li>
-            <li><a href="../tools/model-tools-current-weather.html">Current Weather</a></li>
-            <li><a href="../posts/archive.html">Archive</a></li>
-            <li><a href="../evaluation.html">Evaluation</a></li>
-            <li class="nav-item dropdown">
-                <a href="../model-tools.html" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Model tools <span class="dropdown-caret">▾</span></a>
-                <ul class="dropdown-menu" role="menu" aria-label="Model tools subpages">
-                  <li role="none"><a role="menuitem" href="../tools/model-tools-synoptic.html">Synoptic-scale Tools</a></li>
-                  <li role="none"><a role="menuitem" href="../tools/model-tools-precipitation.html">Precipitation</a></li>
-                </ul>
-              </li>
-            <li><a href="../about.html">About</a></li>
-        </ul>
-      </nav>
+    <div id="archive-list">
+        {% assign posts_by_month = site.posts | group_by_exp: "post", "post.date | date: '%B %Y'" %}
+        {% for month in posts_by_month %}
+        <div class="archive-section">
+            <h3>{{ month.name }}</h3>
+            <ul class="post-list">
+                {% for post in month.items %}
+                <li>
+                    <a href="{{ post.url | relative_url }}">
+                        <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                        <span class="post-title">{{ post.title }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <p>No archive posts found.</p>
+        {% endfor %}
+    </div>
+</section>
 
-    <main>
-        <section class="archive">
-            <h2>📚 Forecast Archive</h2>
-
-            <div id="archive-list">
-                <p>Loading archive…</p>
-            </div>
-
-        </section>
-        
-        <section class="about">
-            <h2>About the Archive</h2>
-            <p>Browse past forecasts to see how conditions evolved throughout the season. This archive helps track snow patterns and verify forecast accuracy over time.</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>Cascade Mountain Weather | Washington Backcountry Forecasts</p>
-        <p>For educational purposes. Always check official sources and avalanche forecasts before heading to the mountains.</p>
-    </footer>
-    <script src="../assets/header.js" defer></script>
-        <script>
-        (function(){
-            // Config: earliest date to scan (inclusive). Edit as needed to cover all posts.
-            const START_DATE = new Date('2025-01-01');
-            const END_DATE = new Date(); // today
-            const CONCURRENCY = 12; // number of parallel probes
-
-            function formatFilename(d){
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth()+1).padStart(2,'0');
-                const dd = String(d.getDate()).padStart(2,'0');
-                return `${yyyy}-${mm}-${dd}-weekend-forecast.html`;
-            }
-
-            async function exists(href){
-                try{
-                    const head = await fetch(href, {method:'HEAD'});
-                    if(head && head.ok) return true;
-                    // Some hosts don't allow HEAD — fall back to GET but only check status
-                    const get = await fetch(href, {method:'GET'});
-                    return get && get.ok;
-                }catch(e){
-                    return false;
-                }
-            }
-
-            async function fetchTitle(href){
-                try{
-                    const res = await fetch(href);
-                    if(!res.ok) return null;
-                    const text = await res.text();
-                    // Prefer the title inside an element with class "post-header"
-                    try{
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(text, 'text/html');
-                        const postHeader = doc.querySelector('.post-header');
-                        if(postHeader){
-                            const h = postHeader.querySelector('h1, h2');
-                            if(h && h.textContent.trim()) return h.textContent.replace(/\s+/g,' ').trim();
-                        }
-                    }catch(e){}
-                    // Fallback: try to find an H1 or H2 anywhere
-                    const matchH = text.match(/<(h1|h2)[^>]*>([\s\S]*?)<\/(h1|h2)>/i);
-                    if(matchH) return matchH[2].replace(/\s+/g,' ').trim();
-                    // Final fallback: use the document <title>
-                    const matchT = text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-                    if(matchT) return matchT[1].replace(/\s+/g,' ').trim();
-                }catch(e){}
-                return null;
-            }
-
-            function dayIterator(start, end){
-                const arr = [];
-                let d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-                const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-                while(d <= last){ arr.push(new Date(d)); d.setDate(d.getDate()+1); }
-                return arr;
-            }
-
-            async function scan(){
-                const container = document.getElementById('archive-list');
-                container.innerHTML = '<p>Scanning posts — this may take a few seconds...</p>';
-                const days = dayIterator(START_DATE, END_DATE);
-                const results = [];
-
-                // probe in batches to limit concurrent requests
-                for(let i=0;i<days.length;i+=CONCURRENCY){
-                    const batch = days.slice(i, i+CONCURRENCY).map(async d => {
-                        const fname = formatFilename(d);
-                        if(await exists(fname)){
-                            const title = await fetchTitle(fname);
-                            return {date: new Date(d), href: fname, title};
-                        }
-                        return null;
-                    });
-                    const settled = await Promise.all(batch);
-                    for(const r of settled) if(r) results.push(r);
-                }
-
-                if(results.length===0){
-                    container.innerHTML = '<p>No archive posts found in the scanned date range.</p>';
-                    return;
-                }
-
-                // sort newest -> oldest
-                results.sort((a,b)=> b.date - a.date);
-
-                // group by month-year
-                const groups = {};
-                for(const p of results){
-                    const key = p.date.toLocaleString(undefined, {year:'numeric', month:'long'});
-                    if(!groups[key]) groups[key]=[];
-                    groups[key].push(p);
-                }
-
-                // render
-                container.innerHTML = '';
-                for(const key of Object.keys(groups)){
-                    const section = document.createElement('div');
-                    section.className = 'archive-section';
-                    const h3 = document.createElement('h3'); h3.textContent = key; section.appendChild(h3);
-                    const ul = document.createElement('ul'); ul.className = 'post-list';
-                    for(const p of groups[key]){
-                        const li = document.createElement('li');
-                        const a = document.createElement('a'); a.href = p.href;
-                        const spanDate = document.createElement('span'); spanDate.className='post-date';
-                        spanDate.textContent = p.date.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
-                        const spanTitle = document.createElement('span'); spanTitle.className='post-title';
-                        spanTitle.textContent = p.title ? p.title : `Weekend of ${spanDate.textContent}`;
-                        a.appendChild(spanDate); a.appendChild(document.createTextNode(' ')); a.appendChild(spanTitle);
-                        li.appendChild(a); ul.appendChild(li);
-                    }
-                    section.appendChild(ul);
-                    container.appendChild(section);
-                }
-            }
-
-            // Run scan asynchronously — keep UI responsive
-            setTimeout(scan, 20);
-        })();
-        </script>
-      
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const dropdown = document.querySelector('.nav-item.dropdown');
-      const toggle = dropdown.querySelector('.dropdown-toggle');
-      toggle.addEventListener('click', function(e) {
-        if (window.innerWidth <= 800) {
-          e.preventDefault();
-          dropdown.classList.toggle('open');
-          toggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
-        }
-      });
-    });
-    </script>
-</body>
-</html>
+<section class="about">
+    <h2>About the Archive</h2>
+    <p>Browse past forecasts to see how conditions evolved throughout the season. This archive helps track snow patterns and verify forecast accuracy over time.</p>
+</section>
