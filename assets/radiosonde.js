@@ -13,6 +13,21 @@
 // steps to find the nearest cycle that actually has data. This matters
 // because two of our four stations have real, permanent data-availability
 // quirks (see STATIONS below) that a fixed 3-day lookback would miss.
+//
+// The primary diagram is an interactive Plotly chart, not a static image.
+// MetPy still does all of the actual thermodynamics (dry/moist adiabats,
+// mixing lines, parcel lifts, LCL) via its normal matplotlib SkewT axes --
+// we just never rasterize that axes to a PNG for the main view. Instead we
+// read each MetPy-generated line/curve back out in its original (T, P) data
+// coordinates and run it through that same axes' `transData` (the object
+// that actually implements the skew + log-pressure projection) to get pixel
+// coordinates, which we hand to Plotly as plain x/y numbers with the axes
+// hidden and a locked aspect ratio. That reproduces MetPy's exact skew-T
+// geometry without having to reimplement the skew transform by hand, while
+// letting Plotly provide hover tooltips (temperature/dew point/parcel value
+// and parcel-vs-environment difference at any level) and pan/zoom. The full
+// composite image (hodograph, wind barbs, implied thermal advection) is
+// still rendered as a static PNG, available behind a "full analysis" toggle.
 
 const IEM_RAOB_BASE = 'https://mesonet.agron.iastate.edu/json/raob.py';
 const PYODIDE_VERSION = 'v0.26.4';
@@ -80,8 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
         cycleLabel: document.getElementById('selected-cycle'),
         status: document.getElementById('sounding-status'),
         stationNote: document.getElementById('station-note'),
+        plotContainer: document.getElementById('skewt-plot'),
         output: document.getElementById('skewt-output'),
         placeholder: document.getElementById('plot-placeholder'),
+        detailToggle: document.getElementById('detail-toggle'),
+        detailImage: document.getElementById('skewt-detail-image'),
         diagnostics: document.getElementById('sounding-diagnostics'),
         dataSource: document.getElementById('data-source-link'),
         spcSource: document.getElementById('spc-source-link'),
@@ -92,6 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderStationButtons();
     els.older.addEventListener('click', () => stepCycle(-1));
     els.newer.addEventListener('click', () => stepCycle(1));
+    els.detailToggle.addEventListener('click', () => {
+        const showing = els.detailImage.classList.toggle('is-visible');
+        els.detailToggle.textContent = showing
+            ? 'Hide full analysis'
+            : 'Show full analysis (hodograph, wind barbs, thermal advection)';
+    });
 
     selectStation(getStationRequestedInUrl() || state.station);
 });
@@ -216,6 +240,9 @@ async function selectStation(stationId) {
     els.placeholder.classList.add('is-visible');
     els.placeholder.textContent = `Looking for the most recent ${stationId} sounding...`;
     els.output.classList.remove('is-visible');
+    els.plotContainer.classList.remove('is-visible');
+    els.detailImage.classList.remove('is-visible');
+    els.detailToggle.hidden = true;
     els.diagnostics.hidden = true;
 
     const requestId = ++state.activeRequest;
@@ -450,6 +477,50 @@ def temperature_advection_profile(arr, latitude):
     return target_p, advection, u_interp, v_interp
 
 
+def _mag(value):
+    return value.magnitude if hasattr(value, "magnitude") else value
+
+
+def _clean(value):
+    value = float(value)
+    if np.isnan(value) or np.isinf(value):
+        return None
+    return value
+
+
+def _clean_list(seq):
+    return [_clean(v) for v in np.asarray(_mag(seq), dtype=float)]
+
+
+def _transform_xy(transform, xs, ys):
+    # Runs a set of (x, y) data-space points (e.g. temperature-in-degC,
+    # pressure-in-hPa) through a matplotlib SkewT axes' transData, which is
+    # what actually implements the skew-T's skew + log-pressure projection.
+    # The result is plain pixel coordinates that reproduce MetPy's geometry
+    # without us having to hand-derive the skew transform ourselves.
+    pts = np.column_stack([
+        np.asarray(_mag(xs), dtype=float),
+        np.asarray(_mag(ys), dtype=float),
+    ])
+    finite = np.isfinite(pts).all(axis=1)
+    out_x = [None] * len(pts)
+    out_y = [None] * len(pts)
+    if np.any(finite):
+        transformed = transform.transform(pts[finite])
+        for idx, (px, py) in zip(np.nonzero(finite)[0], transformed):
+            out_x[int(idx)] = _clean(px)
+            out_y[int(idx)] = _clean(py)
+    return out_x, out_y
+
+
+def _segments_pixel(collection, transform):
+    lines = []
+    for seg in collection.get_segments():
+        xs, ys = _transform_xy(transform, seg[:, 0], seg[:, 1])
+        lines.append({"x": xs, "y": ys})
+    return lines
+
+
 def make_skewt(profile_json, station, cycle_label, station_latitude):
     arr = parse_iem_profile(profile_json)
     p = arr[:, 0] * units.hPa
@@ -466,14 +537,23 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     skew.plot(p, t, color="#d95f02", linewidth=2.0, label="Temperature")
     skew.plot(p, td, color="#1b9e77", linewidth=2.0, label="Dew point")
 
+    surface_parcel_geo = None
     try:
         lcl_p, lcl_t = lcl(p[0], t[0], td[0])
         prof = parcel_profile(p, t[0], td[0]).to("degC")
         skew.plot(p, prof, color="#7570b3", linewidth=1.5, linestyle="--", label="Surface parcel")
         skew.ax.plot(lcl_t, lcl_p, marker="o", color="#7570b3", markersize=5)
+        surface_parcel_geo = {
+            "p_raw": _mag(p),
+            "t_raw": _mag(prof),
+            "diff_raw": _mag(prof) - _mag(t),
+            "lcl_p_raw": _mag(lcl_p),
+            "lcl_t_raw": _mag(lcl_t.to("degC")),
+        }
     except Exception:
         pass
 
+    mixed_parcel_geo = None
     try:
         _, mixed_t, mixed_td = mixed_parcel(p, t, td, depth=100 * units.hPa)
         mixed_prof = parcel_profile(p, mixed_t, mixed_td).to("degC")
@@ -481,14 +561,15 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
             p, mixed_prof, color="#7570b3", linewidth=1.5, linestyle=":",
             label="100-hPa mixed parcel",
         )
+        mixed_parcel_geo = {"p_raw": _mag(p), "t_raw": _mag(mixed_prof)}
     except Exception:
         pass
 
     skew.ax.set_ylim(1050, 100)
     skew.ax.set_xlim(-40, 45)
-    skew.plot_dry_adiabats(alpha=0.35, linewidth=0.7)
-    skew.plot_moist_adiabats(alpha=0.35, linewidth=0.7)
-    skew.plot_mixing_lines(alpha=0.25, linewidth=0.7)
+    dry_collection = skew.plot_dry_adiabats(alpha=0.35, linewidth=0.7)
+    moist_collection = skew.plot_moist_adiabats(alpha=0.35, linewidth=0.7)
+    mixing_collection = skew.plot_mixing_lines(alpha=0.25, linewidth=0.7)
     if diagnostics["dgz_p_bottom"] is not None:
         skew.ax.axhspan(
             diagnostics["dgz_p_top"], diagnostics["dgz_p_bottom"],
@@ -548,6 +629,85 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
         pass
 
     fig.canvas.draw()
+
+    # Build the interactive-plot geometry by running MetPy's already-computed
+    # curves (dry/moist adiabats, mixing lines, the observed profile, parcel
+    # paths) through this axes' transData -- see _transform_xy for why.
+    transform = skew.ax.transData
+    xlim = skew.ax.get_xlim()
+    ylim = skew.ax.get_ylim()
+    bbox = skew.ax.get_window_extent()
+
+    interactive = {
+        "dry_adiabats": _segments_pixel(dry_collection, transform),
+        "moist_adiabats": _segments_pixel(moist_collection, transform),
+        "mixing_lines": _segments_pixel(mixing_collection, transform),
+        "frame": {
+            "x0": float(bbox.x0), "x1": float(bbox.x1),
+            "y0": float(bbox.y0), "y1": float(bbox.y1),
+        },
+    }
+
+    isobars = []
+    for level in (1000, 850, 700, 500, 400, 300, 250, 200, 150, 100):
+        xs, ys = _transform_xy(transform, [xlim[0], xlim[1]], [level, level])
+        isobars.append({"p": level, "x0": xs[0], "x1": xs[1], "y": ys[0]})
+    interactive["isobars"] = isobars
+
+    isotherms = []
+    for temp_c in range(-40, 41, 10):
+        xs, ys = _transform_xy(transform, [temp_c, temp_c], [ylim[0], ylim[1]])
+        isotherms.append({"t": temp_c, "x0": xs[0], "y0": ys[0], "x1": xs[1], "y1": ys[1]})
+    interactive["isotherms"] = isotherms
+
+    env_x, env_y = _transform_xy(transform, arr[:, 2], arr[:, 0])
+    interactive["temperature"] = {
+        "x": env_x, "y": env_y,
+        "p": _clean_list(arr[:, 0]), "t": _clean_list(arr[:, 2]),
+        "h": _clean_list(arr[:, 1]), "wd": _clean_list(arr[:, 4]), "ws": _clean_list(arr[:, 5]),
+    }
+    dew_x, dew_y = _transform_xy(transform, arr[:, 3], arr[:, 0])
+    interactive["dewpoint"] = {
+        "x": dew_x, "y": dew_y,
+        "p": _clean_list(arr[:, 0]), "td": _clean_list(arr[:, 3]),
+    }
+
+    interactive["surface_parcel"] = None
+    if surface_parcel_geo is not None:
+        px, py = _transform_xy(transform, surface_parcel_geo["t_raw"], surface_parcel_geo["p_raw"])
+        lcl_x, lcl_y = _transform_xy(
+            transform, [surface_parcel_geo["lcl_t_raw"]], [surface_parcel_geo["lcl_p_raw"]],
+        )
+        interactive["surface_parcel"] = {
+            "x": px, "y": py,
+            "p": _clean_list(surface_parcel_geo["p_raw"]),
+            "t": _clean_list(surface_parcel_geo["t_raw"]),
+            "diff": _clean_list(surface_parcel_geo["diff_raw"]),
+            "lcl": {
+                "x": lcl_x[0], "y": lcl_y[0],
+                "p": _clean(surface_parcel_geo["lcl_p_raw"]),
+                "t": _clean(surface_parcel_geo["lcl_t_raw"]),
+            },
+        }
+
+    interactive["mixed_parcel"] = None
+    if mixed_parcel_geo is not None:
+        mx, my = _transform_xy(transform, mixed_parcel_geo["t_raw"], mixed_parcel_geo["p_raw"])
+        interactive["mixed_parcel"] = {
+            "x": mx, "y": my,
+            "p": _clean_list(mixed_parcel_geo["p_raw"]),
+            "t": _clean_list(mixed_parcel_geo["t_raw"]),
+        }
+
+    interactive["dgz_rect"] = None
+    if diagnostics["dgz_p_bottom"] is not None:
+        _, y_bottom = _transform_xy(transform, [xlim[0]], [diagnostics["dgz_p_bottom"]])
+        _, y_top = _transform_xy(transform, [xlim[0]], [diagnostics["dgz_p_top"]])
+        interactive["dgz_rect"] = {
+            "x0": float(bbox.x0), "x1": float(bbox.x1),
+            "y0": y_bottom[0], "y1": y_top[0],
+        }
+
     skew_position = skew.ax.get_position()
     barb_left = skew_position.x1 + 0.012
     barb_width = 0.07
@@ -601,6 +761,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     return json.dumps({
         "image": "data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii"),
         "diagnostics": diagnostics,
+        "interactive": interactive,
     })
 `);
         state.pyodide = pyodide;
@@ -647,6 +808,9 @@ async function renderCycle(stationId, cycle, profile) {
     els.placeholder.textContent = `Rendering ${stationId} from ${cycle.label} with MetPy...`;
     els.placeholder.classList.add('is-visible');
     els.output.classList.remove('is-visible');
+    els.plotContainer.classList.remove('is-visible');
+    els.detailImage.classList.remove('is-visible');
+    els.detailToggle.hidden = true;
     els.diagnostics.hidden = true;
     setStatus('Loading MetPy in the browser (first plot takes longest)...');
 
@@ -675,11 +839,151 @@ async function renderCycle(stationId, cycle, profile) {
     }
 }
 
+// Turns one polyline of pixel coordinates (as produced by _transform_xy /
+// _segments_pixel in the Python above) into a low-key background Plotly
+// trace -- used for dry/moist adiabats and mixing lines.
+function backgroundLineTrace(line, color, opacity) {
+    return {
+        x: line.x, y: line.y, mode: 'lines',
+        line: { color, width: 1 }, opacity,
+        hoverinfo: 'skip', showlegend: false,
+    };
+}
+
+function gridLineTrace(x0, y0, x1, y1) {
+    return {
+        x: [x0, x1], y: [y0, y1], mode: 'lines',
+        line: { color: 'rgba(100,116,139,0.45)', width: 1, dash: 'dot' },
+        hoverinfo: 'skip', showlegend: false,
+    };
+}
+
+function buildSkewTraces(interactive) {
+    const traces = [];
+    (interactive.dry_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#f4a261', 0.55)));
+    (interactive.moist_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#2a9d8f', 0.55)));
+    (interactive.mixing_lines || []).forEach(line => traces.push(backgroundLineTrace(line, '#94a3b8', 0.4)));
+
+    (interactive.isobars || []).forEach(bar => traces.push(gridLineTrace(bar.x0, bar.y, bar.x1, bar.y)));
+    (interactive.isotherms || []).forEach(iso => traces.push(gridLineTrace(iso.x0, iso.y0, iso.x1, iso.y1)));
+
+    const temp = interactive.temperature;
+    traces.push({
+        x: temp.x, y: temp.y, mode: 'lines', name: 'Temperature',
+        line: { color: '#d95f02', width: 2.5 },
+        customdata: temp.p.map((p, i) => [p, temp.t[i], temp.h[i], temp.wd[i], temp.ws[i]]),
+        hovertemplate: '%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} m)<br>' +
+            'Temp: %{customdata[1]:.1f}°C<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} kt<extra>Temperature</extra>',
+    });
+
+    const dew = interactive.dewpoint;
+    traces.push({
+        x: dew.x, y: dew.y, mode: 'lines', name: 'Dew point',
+        line: { color: '#1b9e77', width: 2.5 },
+        customdata: dew.p.map((p, i) => [p, dew.td[i]]),
+        hovertemplate: '%{customdata[0]:.0f} hPa<br>Dew point: %{customdata[1]:.1f}°C<extra>Dew point</extra>',
+    });
+
+    if (interactive.surface_parcel) {
+        const sp = interactive.surface_parcel;
+        traces.push({
+            x: sp.x, y: sp.y, mode: 'lines', name: 'Surface parcel',
+            line: { color: '#7570b3', width: 2, dash: 'dash' },
+            customdata: sp.p.map((p, i) => [p, sp.t[i], sp.diff[i]]),
+            hovertemplate: '%{customdata[0]:.0f} hPa<br>Parcel: %{customdata[1]:.1f}°C<br>' +
+                '%{customdata[2]:+.1f}°C vs. environment<extra>Surface parcel</extra>',
+        });
+        if (sp.lcl) {
+            traces.push({
+                x: [sp.lcl.x], y: [sp.lcl.y], mode: 'markers', name: 'LCL',
+                marker: { color: '#7570b3', size: 8, symbol: 'circle' },
+                customdata: [[sp.lcl.p, sp.lcl.t]],
+                hovertemplate: 'LCL: %{customdata[0]:.0f} hPa, %{customdata[1]:.1f}°C<extra></extra>',
+            });
+        }
+    }
+
+    if (interactive.mixed_parcel) {
+        const mp = interactive.mixed_parcel;
+        traces.push({
+            x: mp.x, y: mp.y, mode: 'lines', name: '100-hPa mixed parcel',
+            line: { color: '#7570b3', width: 1.5, dash: 'dot' },
+            customdata: mp.p.map((p, i) => [p, mp.t[i]]),
+            hovertemplate: '%{customdata[0]:.0f} hPa<br>Mixed parcel: %{customdata[1]:.1f}°C<extra>Mixed parcel</extra>',
+        });
+    }
+
+    return traces;
+}
+
+function buildSkewLayout(interactive, title) {
+    const shapes = [];
+    if (interactive.dgz_rect) {
+        const rect = interactive.dgz_rect;
+        shapes.push({
+            type: 'rect', xref: 'x', yref: 'y',
+            x0: rect.x0, x1: rect.x1, y0: rect.y0, y1: rect.y1,
+            fillcolor: '#56b4e9', opacity: 0.16, line: { width: 0 }, layer: 'below',
+        });
+    }
+
+    const annotations = (interactive.isobars || []).map(bar => ({
+        x: bar.x0, y: bar.y, xanchor: 'right', yanchor: 'middle', xshift: -4,
+        text: `${bar.p}`, showarrow: false, font: { size: 10, color: '#64748b' },
+    })).concat((interactive.isotherms || []).map(iso => ({
+        x: iso.x0, y: iso.y0, xanchor: 'center', yanchor: 'top', yshift: -4,
+        text: `${iso.t}°`, showarrow: false, font: { size: 10, color: '#64748b' },
+    })));
+
+    return {
+        title: { text: title, font: { size: 13 } },
+        margin: { l: 45, r: 20, t: 36, b: 30 },
+        xaxis: { visible: false, fixedrange: false },
+        yaxis: { visible: false, fixedrange: false, scaleanchor: 'x', scaleratio: 1 },
+        shapes,
+        annotations,
+        hovermode: 'closest',
+        showlegend: true,
+        legend: { orientation: 'h', y: -0.03, font: { size: 10 } },
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+    };
+}
+
+function renderInteractivePlot(stationId, cycle, interactive) {
+    const traces = buildSkewTraces(interactive);
+    const layout = buildSkewLayout(interactive, `${stationId} Observed Sounding — ${cycle.label}`);
+    const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] };
+    Plotly.react(els.plotContainer, traces, layout, config);
+}
+
 function showPlot(stationId, cycle, result) {
-    els.output.src = result.image;
-    els.output.alt = `MetPy skew-T plot for ${stationId} at ${cycle.label}`;
-    els.output.classList.add('is-visible');
     els.placeholder.classList.remove('is-visible');
+
+    if (result.interactive && window.Plotly) {
+        try {
+            renderInteractivePlot(stationId, cycle, result.interactive);
+            els.plotContainer.classList.add('is-visible');
+            els.output.classList.remove('is-visible');
+        } catch (error) {
+            console.error('Interactive skew-T rendering failed, falling back to static image:', error);
+            els.plotContainer.classList.remove('is-visible');
+            els.output.src = result.image;
+            els.output.alt = `MetPy skew-T plot for ${stationId} at ${cycle.label}`;
+            els.output.classList.add('is-visible');
+        }
+    } else {
+        els.plotContainer.classList.remove('is-visible');
+        els.output.src = result.image;
+        els.output.alt = `MetPy skew-T plot for ${stationId} at ${cycle.label}`;
+        els.output.classList.add('is-visible');
+    }
+
+    els.detailImage.src = result.image;
+    els.detailImage.classList.remove('is-visible');
+    els.detailToggle.hidden = false;
+    els.detailToggle.textContent = 'Show full analysis (hodograph, wind barbs, thermal advection)';
+
     renderDiagnostics(result.diagnostics);
     setStatus(`Showing ${stationId} from ${cycle.label}.`);
     els.older.disabled = false;
