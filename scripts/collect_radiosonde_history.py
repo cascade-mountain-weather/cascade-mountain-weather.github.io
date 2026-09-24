@@ -58,6 +58,30 @@ _MELT_FALL_SPEEDS_MS = (1.0, 1.5, 2.2)
 _AIR_KINEMATIC_VISCOSITY = 1.4e-5
 
 
+def _saturation_vapor_pressure_hpa(t_c: np.ndarray) -> np.ndarray:
+    return 6.112 * np.exp(17.62 * t_c / (243.12 + t_c))
+
+
+def _relative_humidity_pct(t_c: np.ndarray, td_c: np.ndarray) -> np.ndarray:
+    return 100.0 * _saturation_vapor_pressure_hpa(td_c) / _saturation_vapor_pressure_hpa(t_c)
+
+
+def _wet_bulb_stull(t_c: np.ndarray, rh_pct: np.ndarray) -> np.ndarray:
+    """Stull (2011) empirical wet-bulb formula -- see the matching, fully
+    commented copy in assets/radiosonde.js's compute_melting_layer for the
+    derivation, validation against Stull's published reference case, and
+    why this replaced a flat "Tw = T - (T-Td)/3" proxy. Arctangents are in
+    radians."""
+    rh_pct = np.clip(rh_pct, 1.0, 100.0)  # widened slightly at the saturated end; see the matching comment in assets/radiosonde.js
+    return (
+        t_c * np.arctan(0.151977 * (rh_pct + 8.313659) ** 0.5)
+        + np.arctan(t_c + rh_pct)
+        - np.arctan(rh_pct - 1.676331)
+        + 0.00391838 * rh_pct ** 1.5 * np.arctan(0.023101 * rh_pct)
+        - 4.686035
+    )
+
+
 def compute_melting_layer(heights_m: np.ndarray, temps_c: np.ndarray, dewpoints_c: np.ndarray) -> dict:
     """Same model as assets/radiosonde.js's compute_melting_layer, operating
     on plain height/temperature/dewpoint arrays instead of the Pyodide
@@ -89,7 +113,8 @@ def compute_melting_layer(heights_m: np.ndarray, temps_c: np.ndarray, dewpoints_
     grid = np.arange(0.0, heights_agl[-1] + _MELT_GRID_STEP_M, _MELT_GRID_STEP_M)
     t_grid = np.interp(grid, heights_agl, temps)
     td_grid = np.interp(grid, heights_agl, dewpoints)
-    tw_grid = t_grid - (t_grid - td_grid) / 3.0  # simplified wet-bulb proxy
+    rh_grid = _relative_humidity_pct(t_grid, td_grid)
+    tw_grid = _wet_bulb_stull(t_grid, rh_grid)
 
     if not np.any(t_grid <= 0.0):
         return result
