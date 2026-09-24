@@ -389,6 +389,36 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
             </dl>
             <p id="melting-note" class="radiosonde-status" hidden></p>
 
+            <h3>Surface Precipitation Type</h3>
+            <dl>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Most Likely <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="precip_type_summary">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>A simplified version of the Modified Bourgouin technique (Birk et al. 2021, <em>Weather and Forecasting</em>, building on Bourgouin 2000), which classifies rain/snow/sleet/freezing rain from how much melting energy exists aloft versus how much refreezing energy exists near the surface. Unlike the Snow Level model above, this handles "warm nose" soundings -- a melting layer aloft over sub-freezing surface air -- which is exactly the sleet/freezing-rain setup that model isn't designed for. Percentages are independent (not required to sum to 100%) since mixed precipitation is physically possible.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
+                </div>
+                <div class="diagnostic-item">
+                    <dt>Rain</dt>
+                    <dd data-diagnostic="prob_rain">&mdash;</dd>
+                </div>
+                <div class="diagnostic-item">
+                    <dt>Snow</dt>
+                    <dd data-diagnostic="prob_snow">&mdash;</dd>
+                </div>
+                <div class="diagnostic-item">
+                    <dt>Sleet (Ice Pellets)</dt>
+                    <dd data-diagnostic="prob_sleet">&mdash;</dd>
+                </div>
+                <div class="diagnostic-item">
+                    <dt>Freezing Rain</dt>
+                    <dd data-diagnostic="prob_freezing_rain">&mdash;</dd>
+                </div>
+            </dl>
+            <p id="precip-type-note" class="radiosonde-status" hidden></p>
+
             <h3>Convection</h3>
             <dl>
                 <div class="diagnostic-item">
