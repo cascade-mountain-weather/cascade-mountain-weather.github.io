@@ -33,6 +33,15 @@ header h1 {
     margin-bottom: 0.5rem;
 }
 
+.header-home-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+.header-home-link:hover {
+    opacity: 0.92;
+}
+
 .cmw-header-logo-wrap {
     display: flex;
     justify-content: center;
