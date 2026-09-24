@@ -323,12 +323,12 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         <section id="sounding-diagnostics" aria-labelledby="diagnostics-title" hidden>
             <h2 id="diagnostics-title">Sounding Diagnostics</h2>
             <dl>
-                <div class="diagnostic-item diagnostic-wide">
-                    <dt>Snow Level <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
-                    <dd data-diagnostic="snow_level">&mdash;</dd>
+                <div class="diagnostic-item">
+                    <dt>Freezing Level <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="freezing_level">&mdash;</dd>
                     <div class="info-popup">
                         <h3>What is this?</h3>
-                        <p>The altitude where a falling ensemble of small/medium/large snowflakes has melted at least 95% of its mass, from a simplified Matsuo &amp; Sasyo (1981) melting-rate model run on this sounding, using the sub-cloud air exactly as observed. This is usually meaningfully lower than the freezing level or wet-bulb-zero height below, since snow keeps melting as it falls through above-freezing air. If this sounding was launched during dry/non-precipitating conditions, see "Snow Level (Saturated Column)" for why this number can look surprisingly low.</p>
+                        <p>The height above ground where the air temperature first drops to 0&deg;C as you go up. On its own this doesn't tell you where snow reaches the ground -- see the two Snow Level estimates below.</p>
                         <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
                     </div>
                 </div>
@@ -337,34 +337,16 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
                     <dd data-diagnostic="snow_level_saturated">&mdash;</dd>
                     <div class="info-popup">
                         <h3>What is this?</h3>
-                        <p>The same snow-level calculation, but assuming the sub-cloud air is fully saturated (dewpoint = temperature) rather than using this sounding's actual, possibly-drier dewpoint. This approximates what happens once precipitation has been falling long enough to saturate that layer through evaporative cooling. If it's noticeably higher than the plain Snow Level above, this sounding was likely dry/non-precipitating at launch -- the real snow level right now depends on whether (and how long) it's actually been snowing/raining, so treat these two numbers as a plausible range rather than picking one.</p>
+                        <p>Assumes the air below the clouds has already been moistened by falling precipitation, which is what typically happens once a storm has been going for a while. This is usually the more realistic number during an active, steady storm.</p>
                         <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
                     </div>
                 </div>
-                <div class="diagnostic-item">
-                    <dt>Freezing Level <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
-                    <dd data-diagnostic="freezing_level">&mdash;</dd>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Snow Level (Modeled) <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="snow_level">&mdash;</dd>
                     <div class="info-popup">
                         <h3>What is this?</h3>
-                        <p>The height above ground where the observed (dry-bulb) air temperature first drops to 0&deg;C. This is the classic "freezing level," but by itself it doesn't tell you where snow actually reaches the ground -- see Snow Level.</p>
-                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
-                    </div>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Wet-Bulb Zero <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
-                    <dd data-diagnostic="wet_bulb_zero">&mdash;</dd>
-                    <div class="info-popup">
-                        <h3>What is this?</h3>
-                        <p>The height where the wet-bulb temperature (which accounts for evaporative cooling in unsaturated air) drops to 0&deg;C. This is always at or below the dry-bulb freezing level, and marks where a falling snowflake actually starts melting.</p>
-                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
-                    </div>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Melting Distance <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
-                    <dd data-diagnostic="melting_distance">&mdash;</dd>
-                    <div class="info-popup">
-                        <h3>What is this?</h3>
-                        <p>How far (vertically) a medium-size (3 mm) snowflake falls below the wet-bulb-zero height before it's fully melted, per this model. A short distance means a sharp rain/snow transition; a long distance means a mushy, gradual one.</p>
+                        <p>Uses this sounding's actual measured dewpoints instead of assuming saturation. When the air is this dry, a falling snowflake loses moisture to its surroundings (sublimates) instead of warming up and melting, so it can survive much closer to the ground than the temperature alone would suggest. If this sounding was measured before precipitation started, this number can look surprisingly low -- once it's actually been snowing or raining for a while, the real snow level is likely closer to the Saturated Column estimate above.</p>
                         <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
                     </div>
                 </div>
@@ -388,36 +370,6 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
                 </div>
             </dl>
             <p id="melting-note" class="radiosonde-status" hidden></p>
-
-            <h3>Surface Precipitation Type</h3>
-            <dl>
-                <div class="diagnostic-item diagnostic-wide">
-                    <dt>Most Likely <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
-                    <dd data-diagnostic="precip_type_summary">&mdash;</dd>
-                    <div class="info-popup">
-                        <h3>What is this?</h3>
-                        <p>A simplified version of the Modified Bourgouin technique (Birk et al. 2021, <em>Weather and Forecasting</em>, building on Bourgouin 2000), which classifies rain/snow/sleet/freezing rain from how much melting energy exists aloft versus how much refreezing energy exists near the surface. Unlike the Snow Level model above, this handles "warm nose" soundings -- a melting layer aloft over sub-freezing surface air -- which is exactly the sleet/freezing-rain setup that model isn't designed for. Percentages are independent (not required to sum to 100%) since mixed precipitation is physically possible.</p>
-                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
-                    </div>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Rain</dt>
-                    <dd data-diagnostic="prob_rain">&mdash;</dd>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Snow</dt>
-                    <dd data-diagnostic="prob_snow">&mdash;</dd>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Sleet (Ice Pellets)</dt>
-                    <dd data-diagnostic="prob_sleet">&mdash;</dd>
-                </div>
-                <div class="diagnostic-item">
-                    <dt>Freezing Rain</dt>
-                    <dd data-diagnostic="prob_freezing_rain">&mdash;</dd>
-                </div>
-            </dl>
-            <p id="precip-type-note" class="radiosonde-status" hidden></p>
 
             <h3>Convection</h3>
             <dl>
