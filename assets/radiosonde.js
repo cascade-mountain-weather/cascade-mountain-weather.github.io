@@ -121,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         detailImage: document.getElementById('skewt-detail-image'),
         diagnostics: document.getElementById('sounding-diagnostics'),
         meltingNote: document.getElementById('melting-note'),
-        precipTypeNote: document.getElementById('precip-type-note'),
         dataSource: document.getElementById('data-source-link'),
         spcSource: document.getElementById('spc-source-link'),
         historyPlot: document.getElementById('history-plot'),
@@ -850,189 +849,6 @@ def compute_melting_layer(arr):
     return result
 
 
-# --- Surface precipitation type (Modified Bourgouin technique) ------------
-# Handles what compute_melting_layer above deliberately doesn't: soundings
-# with a "warm nose" aloft (an elevated melting layer over sub-freezing air
-# at the surface), which can produce rain, freezing rain, or ice pellets
-# (sleet) depending on how much melting happens aloft vs. how much
-# refreezing happens in the cold layer beneath it. Implements a simplified
-# version of the Modified Bourgouin technique -- Birk, K., E. Lenning, K.
-# Donofrio, and M. T. Friedlein, 2021: "A Revised Bourgouin Precipitation-
-# Type Algorithm," Wea. Forecasting, 36, 425-438
-# (https://doi.org/10.1175/WAF-D-20-0118.1), building on Bourgouin, P.,
-# 2000: "A Method to Determine Precipitation Types," Wea. Forecasting, 15,
-# 583-592 -- using the published energy-area formula and the appendix's
-# published probability equations verbatim, not reinvented or guessed.
-#
-# Two simplifications from the full published method, both bounded and
-# disclosed here rather than silently assumed:
-#   - ProbIce (the chance ice crystals are actually present aloft, so a
-#     phase change from ice can occur at all) is approximated from the
-#     coldest dry-bulb temperature above the highest melting layer, rather
-#     than the paper's full relative-humidity-based saturated-cloud-layer
-#     detection (which needs a >1 km deep, >75% RH-with-respect-to-ice
-#     layer -- more than a single sounding's coarse levels reliably
-#     resolve).
-#   - Layer bookkeeping directly handles the two canonical cases that
-#     cover the vast majority of real events: all-frozen (plain snow), and
-#     one elevated melting layer over one surface-based refreezing layer
-#     (rain/snow/sleet/freezing rain). The paper's rarer three-layer case
-#     (an elevated refreeze sandwiched under a warm layer, which then
-#     re-melts right at the surface) is detected and flagged qualitatively,
-#     since precisely apportioning probability there needs more than this
-#     simplified bookkeeping resolves.
-def compute_precip_type(arr):
-    """Classifies surface precipitation type (rain / snow / sleet /
-    freezing rain) from one sounding. Returns independent 0-100
-    probabilities for each type (they aren't required to sum to 100, since
-    mixes are physically possible), a plain-language 'summary', and a
-    'note' for caveats or when the profile doesn't support the
-    calculation.
-    """
-    result = {
-        "prob_rain": None,
-        "prob_snow": None,
-        "prob_sleet": None,
-        "prob_freezing_rain": None,
-        "summary": None,
-        "note": None,
-    }
-
-    profile = _build_tw_profile(arr)
-    if profile is None:
-        result["note"] = "Not enough data in this sounding to classify precipitation type."
-        return result
-    grid, t_grid, tw_grid = profile
-
-    # Split into contiguous above/below-freezing layers (ascending from the
-    # surface) and each layer's Eq. (1) wet-bulb energy area, in J/kg:
-    # energy = integral of g*(Tw_env[K] - T0[K]) / T0[K] dz.
-    tw_kelvin = tw_grid + 273.15
-    integrand = 9.81 * (tw_kelvin - 273.15) / 273.15
-    layers = []
-    current_melt = bool(tw_grid[0] > 0.0)
-    current_energy = 0.0
-    for i in range(len(grid)):
-        this_melt = bool(tw_grid[i] > 0.0)
-        if this_melt != current_melt:
-            layers.append({"melt": current_melt, "energy": abs(current_energy)})
-            current_melt = this_melt
-            current_energy = 0.0
-        current_energy += integrand[i] * _MELT_GRID_STEP_M
-    layers.append({"melt": current_melt, "energy": abs(current_energy)})
-
-    surface_is_melt = layers[0]["melt"]
-    re_tw = 0.0 if surface_is_melt else layers[0]["energy"]  # surface-based refreezing energy
-    me_tw_total = sum(l["energy"] for l in layers if l["melt"])  # all melting energy anywhere in the column
-    me_tw_aloft = sum(l["energy"] for l in layers[1:] if l["melt"])  # melting energy above the surface layer
-
-    # ProbIce (see the module comment above for the approximation used).
-    melt_indices = np.nonzero(t_grid > 0.0)[0]
-    search_from = int(melt_indices[-1]) + 1 if melt_indices.size else 0
-    coldest_aloft = float(np.min(t_grid[search_from:])) if search_from < len(t_grid) else float(np.min(t_grid))
-    if coldest_aloft <= -15.0:
-        prob_ice = 100.0
-    elif coldest_aloft >= -7.0:
-        prob_ice = 0.0
-    else:
-        T = coldest_aloft
-        prob_ice = float(np.clip(-0.065 * T**4 - 3.1544 * T**3 - 56.414 * T**2 - 449.6 * T - 1308, 0.0, 100.0))
-
-    # ProbSN -- appendix step (a), using total melting energy anywhere in
-    # the column (snow falling through any melting layer can turn to rain).
-    prob_sn_i = float(np.clip(1540.0 * np.exp(-0.29 * me_tw_total), 0.0, 100.0))
-    prob_sn = (prob_ice / 100.0) * prob_sn_i
-
-    prob_pl = 0.0
-    if not surface_is_melt and me_tw_aloft > 0.0:
-        # Elevated melting layer over a surface-based refreezing layer:
-        # appendix steps (b) and (c) discriminate PL from FZRA.
-        prob_pl_i = float(np.clip(2.3 * re_tw - 42.0 * np.log(me_tw_aloft + 1.0) + 3.0, 0.0, 100.0))
-        prob_pl = (prob_ice / 100.0) * prob_pl_i
-
-        prob_fzra_i = float(np.clip(-2.1 * re_tw + 0.2 * me_tw_aloft + 458.0, 0.0, 100.0))
-        if me_tw_aloft < 5.0:
-            prob_fzra_i *= 0.2 * me_tw_aloft  # damps over-forecasting FZRA when there's barely any melting at all
-        prob_fzra = (100.0 - prob_ice) + (prob_ice / 100.0) * prob_fzra_i
-        result["prob_freezing_rain"] = prob_fzra
-        result["prob_rain"] = 0.0
-    elif surface_is_melt:
-        # Surface wet-bulb is above freezing -- nothing can freeze on
-        # contact, so any liquid reaching the ground is plain rain.
-        result["prob_rain"] = max(0.0, 100.0 - prob_sn)
-        result["prob_freezing_rain"] = 0.0
-        if len(layers) >= 3:
-            result["note"] = (
-                "This profile re-melts right at the surface below an elevated refreezing layer -- some "
-                "ice pellets may form aloft and partially survive the trip down, but this simplified model "
-                "doesn't estimate that probability precisely for this less common layer structure."
-            )
-    else:
-        # All below freezing, no melting anywhere: plain snow.
-        result["prob_rain"] = 0.0
-        result["prob_freezing_rain"] = 0.0
-
-    result["prob_snow"] = prob_sn
-    result["prob_sleet"] = prob_pl
-
-    candidates = [
-        ("Snow", result["prob_snow"]), ("Sleet", result["prob_sleet"]),
-        ("Freezing rain", result["prob_freezing_rain"]), ("Rain", result["prob_rain"]),
-    ]
-    candidates = [pair for pair in candidates if pair[1] is not None]
-    candidates.sort(key=lambda pair: pair[1], reverse=True)
-    if candidates and candidates[0][1] > 0:
-        mix = [name for name, p in candidates if p >= 30.0] or [candidates[0][0]]
-        result["summary"] = " / ".join(mix)
-    else:
-        result["summary"] = "Unclear"
-
-    return result
-
-
-def _split_by_freezing(p_values, t_values, *extra_arrays):
-    """Splits a (pressure, temperature) profile into contiguous segments
-    above/below 0 C, inserting the exact 0 C crossing point between
-    segments (via linear interpolation) so consecutive segments still
-    connect visually with no gap. 'extra_arrays' (e.g. height, wind) are
-    carried along and interpolated at crossing points the same way, purely
-    for consistent hover values -- they don't affect the split itself.
-    Returns a list of dicts: {"above": bool, "p": [...], "t": [...],
-    "extra0": [...], "extra1": [...], ...}.
-    """
-    n = len(t_values)
-    segments = []
-    current = {"above": bool(t_values[0] >= 0.0), "p": [p_values[0]], "t": [t_values[0]]}
-    for idx, extra in enumerate(extra_arrays):
-        current[f"extra{idx}"] = [extra[0]]
-
-    for i in range(1, n):
-        this_above = bool(t_values[i] >= 0.0)
-        if this_above != current["above"]:
-            frac = (0.0 - t_values[i - 1]) / (t_values[i] - t_values[i - 1])
-            p_cross = p_values[i - 1] + frac * (p_values[i] - p_values[i - 1])
-            # Precompute all crossing values up front (one per extra array)
-            # so both the outgoing and incoming segment use each one's own
-            # value -- reusing a single loop-local variable across two
-            # separate loops here previously left every extra array's
-            # crossing value overwritten by whichever was computed last.
-            extra_crosses = [extra[i - 1] + frac * (extra[i] - extra[i - 1]) for extra in extra_arrays]
-            current["p"].append(p_cross)
-            current["t"].append(0.0)
-            for idx, value in enumerate(extra_crosses):
-                current[f"extra{idx}"].append(value)
-            segments.append(current)
-            current = {"above": this_above, "p": [p_cross], "t": [0.0]}
-            for idx, value in enumerate(extra_crosses):
-                current[f"extra{idx}"] = [value]
-        current["p"].append(p_values[i])
-        current["t"].append(t_values[i])
-        for idx, extra in enumerate(extra_arrays):
-            current[f"extra{idx}"].append(extra[i])
-    segments.append(current)
-    return segments
-
-
 def _agl_height_to_pressure(arr, height_agl):
     # Translates one of compute_melting_layer's AGL heights back to a
     # pressure level, so it can be drawn as a horizontal line on a
@@ -1060,16 +876,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     diagnostics["freezing_level_m"] = melting["freezing_level_m"]
     diagnostics["wet_bulb_zero_m"] = melting["wet_bulb_zero_m"]
     diagnostics["snow_level_m"] = melting["snow_level_m"]
-    diagnostics["total_melting_distance_m"] = melting["total_melting_distance_m"]
     diagnostics["melting_note"] = melting["note"]
-
-    precip_type = compute_precip_type(arr)
-    diagnostics["prob_rain"] = precip_type["prob_rain"]
-    diagnostics["prob_snow"] = precip_type["prob_snow"]
-    diagnostics["prob_sleet"] = precip_type["prob_sleet"]
-    diagnostics["prob_freezing_rain"] = precip_type["prob_freezing_rain"]
-    diagnostics["precip_type_summary"] = precip_type["summary"]
-    diagnostics["precip_type_note"] = precip_type["note"]
 
     # This sounding's dewpoint profile is a snapshot at launch time -- if it
     # was dry/non-precipitating, the sub-cloud air is drier (and the
@@ -1092,12 +899,12 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
         saturation_gap = melting_saturated["snow_level_m"] - melting["snow_level_m"]
     if saturation_gap is not None and saturation_gap >= 300:
         gap_note = (
-            f"This sounding's sub-cloud air looks fairly dry (the as-observed and saturated-column "
-            f"snow-level estimates differ by about {int(round(saturation_gap))} m), consistent with "
-            "non-precipitating conditions when the balloon launched. If precipitation is actually "
-            "falling now (or becomes steady/heavy), evaporative cooling would moisten and cool that "
-            "layer, pushing the real snow level up toward the Snow Level (Saturated Column) estimate "
-            "-- check current radar/precip intensity to judge which applies."
+            f"The air below the clouds looks quite dry here, which is why the Modeled snow level "
+            f"({int(round(saturation_gap))} m lower than the Saturated Column estimate) looks so low: "
+            "a falling snowflake in dry air loses moisture to its surroundings (sublimates) instead of "
+            "warming up and melting, so it survives much closer to the ground. Once it's actually been "
+            "snowing or raining for a while, that dry layer moistens up and the real snow level should "
+            "sit closer to the Saturated Column number instead."
         )
         diagnostics["melting_note"] = (
             f"{diagnostics['melting_note']} {gap_note}" if diagnostics["melting_note"] else gap_note
@@ -1111,18 +918,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     fig = plt.figure(figsize=(10.5, 9), dpi=150)
     skew = SkewT(fig, rotation=45, rect=(0.065, 0.055, 0.68, 0.91))
 
-    # Color the temperature trace by freezing threshold (red above 0 C,
-    # blue below) rather than a single flat color, so warm-nose/refreeze
-    # layers are visible at a glance rather than only inferable from the
-    # DGZ shading and reference lines.
-    temp_segments = _split_by_freezing(p.magnitude, t.magnitude)
-    for seg_index, seg in enumerate(temp_segments):
-        seg_color = "#dc2626" if seg["above"] else "#2563eb"
-        skew.plot(
-            np.array(seg["p"]) * units.hPa, np.array(seg["t"]) * units.degC,
-            color=seg_color, linewidth=2.0,
-            label="Temperature" if seg_index == 0 else None,
-        )
+    skew.plot(p, t, color="#d95f02", linewidth=2.0, label="Temperature")
     skew.plot(p, td, color="#1b9e77", linewidth=2.0, label="Dew point")
 
     surface_parcel_geo = None
@@ -1167,9 +963,8 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
 
     reference_specs = (
         ("Freezing level", "#2563eb", melting["freezing_level_m"]),
-        ("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
-        ("Snow level", "#db2777", melting["snow_level_m"]),
-        ("Snow level (saturated)", "#f9a8d4", melting_saturated["snow_level_m"]),
+        ("Snow level (saturated column)", "#f9a8d4", melting_saturated["snow_level_m"]),
+        ("Snow level (modeled)", "#db2777", melting["snow_level_m"]),
     )
     for ref_label, ref_color, ref_height_agl in reference_specs:
         ref_p = _agl_height_to_pressure(arr, ref_height_agl)
@@ -1281,23 +1076,12 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
 
     plot_mask = _within_plot(arr[:, 0])
 
-    # Split the temperature trace at 0 C so it can be colored red above /
-    # blue below (matches the static image's coloring above), rather than
-    # one flat-colored line -- makes warm-nose/refreeze layers visible at a
-    # glance on the interactive chart too.
-    raw_temp_segments = _split_by_freezing(
-        arr[plot_mask, 0], arr[plot_mask, 2],
-        arr[plot_mask, 1], arr[plot_mask, 4], arr[plot_mask, 5],
-    )
-    interactive["temperature_segments"] = []
-    for seg in raw_temp_segments:
-        seg_x, seg_y = _transform_xy(transform, seg["t"], seg["p"])
-        interactive["temperature_segments"].append({
-            "above": seg["above"],
-            "x": seg_x, "y": seg_y,
-            "p": _clean_list(seg["p"]), "t": _clean_list(seg["t"]),
-            "h": _clean_list(seg["extra0"]), "wd": _clean_list(seg["extra1"]), "ws": _clean_list(seg["extra2"]),
-        })
+    env_x, env_y = _transform_xy(transform, arr[plot_mask, 2], arr[plot_mask, 0])
+    interactive["temperature"] = {
+        "x": env_x, "y": env_y,
+        "p": _clean_list(arr[plot_mask, 0]), "t": _clean_list(arr[plot_mask, 2]),
+        "h": _clean_list(arr[plot_mask, 1]), "wd": _clean_list(arr[plot_mask, 4]), "ws": _clean_list(arr[plot_mask, 5]),
+    }
 
     dew_x, dew_y = _transform_xy(transform, arr[plot_mask, 3], arr[plot_mask, 0])
     interactive["dewpoint"] = {
@@ -1360,9 +1144,8 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     interactive["reference_lines"] = [
         line for line in (
             _reference_line("Freezing level", "#2563eb", melting["freezing_level_m"]),
-            _reference_line("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
-            _reference_line("Snow level", "#db2777", melting["snow_level_m"]),
             _reference_line("Snow level (saturated column)", "#f9a8d4", melting_saturated["snow_level_m"]),
+            _reference_line("Snow level (modeled)", "#db2777", melting["snow_level_m"]),
         )
         if line is not None
     ]
@@ -1378,9 +1161,8 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     # can still zoom/pan out to see the full grid -- this only sets where
     # the chart opens.
     data_x, data_y = [], []
-    for seg in interactive["temperature_segments"]:
-        data_x.extend(v for v in seg["x"] if v is not None)
-        data_y.extend(v for v in seg["y"] if v is not None)
+    data_x.extend(v for v in interactive["temperature"]["x"] if v is not None)
+    data_y.extend(v for v in interactive["temperature"]["y"] if v is not None)
     data_x.extend(v for v in interactive["dewpoint"]["x"] if v is not None)
     data_y.extend(v for v in interactive["dewpoint"]["y"] if v is not None)
     for key in ("surface_parcel", "mixed_parcel"):
@@ -1472,10 +1254,6 @@ function formatHeightValue(m, units) {
     return `${Math.round(converted).toLocaleString()} ${label}`;
 }
 
-function formatPct(value) {
-    return value == null ? 'Unavailable' : `${Math.round(value)}%`;
-}
-
 function renderDiagnostics(values, units) {
     const formatCape = value => (value == null ? 'Unavailable' : `${value} J/kg`);
     const aglText = m => (m == null ? 'Unavailable' : `${formatHeightValue(m, units)} AGL`);
@@ -1483,16 +1261,8 @@ function renderDiagnostics(values, units) {
         snow_level: aglText(values.snow_level_m),
         snow_level_saturated: aglText(values.snow_level_saturated_m),
         freezing_level: aglText(values.freezing_level_m),
-        wet_bulb_zero: aglText(values.wet_bulb_zero_m),
-        melting_distance: values.total_melting_distance_m == null
-            ? 'Unavailable' : formatHeightValue(values.total_melting_distance_m, units),
         advection: values.advection,
         dgz: values.dgz,
-        precip_type_summary: values.precip_type_summary || 'Unavailable',
-        prob_rain: formatPct(values.prob_rain),
-        prob_snow: formatPct(values.prob_snow),
-        prob_sleet: formatPct(values.prob_sleet),
-        prob_freezing_rain: formatPct(values.prob_freezing_rain),
         mucape: values.mucape == null ? 'Unavailable' : `${formatCape(values.mucape)} · ${aglText(values.mu_height)}`,
         mlcape: formatCape(values.mlcape),
     };
@@ -1507,14 +1277,6 @@ function renderDiagnostics(values, units) {
             els.meltingNote.hidden = false;
         } else {
             els.meltingNote.hidden = true;
-        }
-    }
-    if (els.precipTypeNote) {
-        if (values.precip_type_note) {
-            els.precipTypeNote.textContent = values.precip_type_note;
-            els.precipTypeNote.hidden = false;
-        } else {
-            els.precipTypeNote.hidden = true;
         }
     }
 }
@@ -1608,19 +1370,13 @@ function buildSkewTraces(interactive, units) {
     (interactive.isobars || []).forEach(bar => traces.push(gridLineTrace(bar.x0, bar.y, bar.x1, bar.y)));
     (interactive.isotherms || []).forEach(iso => traces.push(gridLineTrace(iso.x0, iso.y0, iso.x1, iso.y1)));
 
-    // Temperature is colored red above 0 C / blue below (matches the
-    // static image) via multiple segments sharing one legend entry --
-    // Plotly toggles same-legendgroup traces together, so clicking
-    // "Temperature" in the legend hides/shows every segment as one thing.
-    (interactive.temperature_segments || []).forEach((seg, segIndex) => {
-        traces.push({
-            x: seg.x, y: seg.y, mode: 'lines', name: 'Temperature',
-            legendgroup: 'temperature', showlegend: segIndex === 0,
-            line: { color: seg.above ? '#dc2626' : '#2563eb', width: 2.5 },
-            customdata: seg.p.map((p, i) => [p, convTemp(seg.t[i]), convHeight(seg.h[i]), seg.wd[i], convSpeed(seg.ws[i])]),
-            hovertemplate: `%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} ${heightUnit})<br>` +
-                `Temp: %{customdata[1]:.1f}${tempUnit}<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} ${speedUnit}<extra>Temperature</extra>`,
-        });
+    const temp = interactive.temperature;
+    traces.push({
+        x: temp.x, y: temp.y, mode: 'lines', name: 'Temperature',
+        line: { color: '#d95f02', width: 2.5 },
+        customdata: temp.p.map((p, i) => [p, convTemp(temp.t[i]), convHeight(temp.h[i]), temp.wd[i], convSpeed(temp.ws[i])]),
+        hovertemplate: `%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} ${heightUnit})<br>` +
+            `Temp: %{customdata[1]:.1f}${tempUnit}<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} ${speedUnit}<extra>Temperature</extra>`,
     });
 
     const dew = interactive.dewpoint;
@@ -1793,9 +1549,8 @@ function buildHistoryTraces(entries, units) {
     const x = entries.map(entry => entry.valid);
     const series = [
         { key: 'freezing_level_m', name: 'Freezing level', color: '#2563eb' },
-        { key: 'wet_bulb_zero_m', name: 'Wet-bulb zero', color: '#0891b2' },
-        { key: 'snow_level_m', name: 'Snow level', color: '#db2777' },
-        { key: 'snow_level_saturated_m', name: 'Snow level (saturated)', color: '#f9a8d4' },
+        { key: 'snow_level_saturated_m', name: 'Snow level (saturated column)', color: '#f9a8d4' },
+        { key: 'snow_level_m', name: 'Snow level (modeled)', color: '#db2777' },
     ];
     return series.map(series_item => ({
         x, y: entries.map(entry => conv(entry[series_item.key])),
