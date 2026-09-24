@@ -195,6 +195,13 @@ def main() -> None:
             if profile is not None:
                 heights, temps, dewpoints = profile
                 diagnostics = compute_melting_layer(heights, temps, dewpoints)
+                # Sensitivity check: rerun assuming a fully saturated column
+                # (dewpoint = temperature), approximating what the profile
+                # would look like once sustained precipitation has
+                # evaporatively cooled/moistened the sub-cloud air. See the
+                # matching comment in assets/radiosonde.js's make_skewt.
+                saturated = compute_melting_layer(heights, temps, temps)
+                diagnostics["snow_level_saturated_m"] = saturated["snow_level_m"]
                 existing[ts] = {
                     "cycle": ts,
                     "label": cycle.strftime("%Y-%m-%d %HZ"),
