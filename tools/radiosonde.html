@@ -1,10 +1,10 @@
 ---
 layout: page
 title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
-description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with MetPy from observed radiosonde data. Freezing level, dendritic growth zone, and precipitable water at a glance."
-keywords: "skew-t, radiosonde, sounding, dendritic growth zone, freezing level, precipitable water, Quillayute, Salem, Spokane, Port Hardy, MetPy"
+description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with MetPy from observed radiosonde data. True snow level (not just freezing level), dendritic growth zone, and CAPE at a glance."
+keywords: "skew-t, radiosonde, sounding, dendritic growth zone, freezing level, snow level, wet bulb zero, Quillayute, Salem, Spokane, Port Hardy, MetPy"
 og_title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
-og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side from observed radiosonde data."
+og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, with a true snow-level estimate, rendered client-side from observed radiosonde data."
 ---
 <style>
     .radiosonde-hero {
@@ -116,6 +116,27 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     }
     .radiosonde-meta a { color: #0077b6; }
 
+    .radiosonde-unit-toggle {
+        display: flex;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+    }
+    .radiosonde-unit-btn {
+        flex: 1;
+        border: 1px solid #1e3c72;
+        background: #f8fbff;
+        color: #1e3c72;
+        border-radius: 999px;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .radiosonde-unit-btn[aria-pressed="true"] {
+        background: #1e3c72;
+        color: #fff;
+    }
+
     .radiosonde-plot {
         background: #fff;
         border-radius: 10px;
@@ -181,6 +202,20 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         color: #1e3c72;
         margin-bottom: 0.5rem;
     }
+    #sounding-diagnostics > h3 {
+        font-size: 0.9rem;
+        color: #1e3c72;
+        margin: 1.25rem 0 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    #sounding-diagnostics .info-popup h3 {
+        font-size: 0.95rem;
+        margin: 0 0 0.35rem;
+        padding-top: 0;
+        border-top: none;
+        color: #1e3c72;
+    }
     #sounding-diagnostics dl {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -200,6 +235,42 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         font-size: 0.95rem;
     }
     .diagnostic-wide { grid-column: 1 / -1; }
+    .diagnostic-item { position: relative; }
+    #sounding-diagnostics .info-popup {
+        width: max(240px, 100%);
+        max-width: 90vw;
+    }
+    #sounding-diagnostics .info-popup p {
+        font-size: 0.85rem;
+        line-height: 1.4;
+        color: #334155;
+    }
+    #melting-note {
+        margin-top: 0.75rem;
+        font-style: italic;
+    }
+
+    .radiosonde-history {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+    .radiosonde-history h2 {
+        font-size: 1.05rem;
+        margin-bottom: 0.5rem;
+        color: #1e3c72;
+    }
+    #history-plot {
+        display: none;
+        width: 100%;
+        height: 320px;
+    }
+    #history-plot.is-visible { display: block; }
+    @media (max-width: 600px) {
+        #history-plot { height: 260px; }
+    }
 </style>
 
 <section class="radiosonde-hero">
@@ -208,14 +279,21 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         Observed soundings for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with
         <a href="https://unidata.github.io/MetPy/" target="_blank" rel="noopener">MetPy</a> from
         <a href="https://mesonet.agron.iastate.edu/json/raob.py" target="_blank" rel="noopener">IEM's RAOB data feed</a>.
-        Useful for eyeballing freezing level, the dendritic growth zone (DGZ), and precipitable water.
-        Nothing here is forecast data -- it's what the last balloon actually measured.
-        Hover the chart to read temperature, dew point, and parcel values at any level.
+        Useful for eyeballing the true snow level (not just the freezing level), the dendritic growth
+        zone (DGZ), and convective potential. Nothing here is forecast data -- it's what the last
+        balloon actually measured. Hover the chart to read temperature, dew point, and parcel values
+        at any level, in metric or imperial units.
     </p>
 </section>
 
 <section class="radiosonde-layout">
     <aside class="radiosonde-controls">
+        <h2>Units</h2>
+        <div class="radiosonde-unit-toggle" role="group" aria-label="Units">
+            <button type="button" id="unit-metric" class="radiosonde-unit-btn" aria-pressed="true">Metric</button>
+            <button type="button" id="unit-imperial" class="radiosonde-unit-btn" aria-pressed="false">Imperial</button>
+        </div>
+
         <h2>Station</h2>
         <div id="station-buttons"></div>
 
@@ -245,39 +323,101 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         <section id="sounding-diagnostics" aria-labelledby="diagnostics-title" hidden>
             <h2 id="diagnostics-title">Sounding Diagnostics</h2>
             <dl>
-                <div>
-                    <dt>MUCAPE &middot; source height</dt>
-                    <dd data-diagnostic="mucape">&mdash;</dd>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Snow Level <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="snow_level">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>The altitude where a falling ensemble of small/medium/large snowflakes has melted at least 95% of its mass, from a simplified Matsuo &amp; Sasyo (1981) melting-rate model run on this sounding. This is usually meaningfully lower than the freezing level or wet-bulb-zero height below, since snow keeps melting as it falls through above-freezing air.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
-                <div>
-                    <dt>MLCAPE</dt>
-                    <dd data-diagnostic="mlcape">&mdash;</dd>
+                <div class="diagnostic-item">
+                    <dt>Freezing Level <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="freezing_level">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>The height above ground where the observed (dry-bulb) air temperature first drops to 0&deg;C. This is the classic "freezing level," but by itself it doesn't tell you where snow actually reaches the ground -- see Snow Level.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
-                <div>
-                    <dt>SBCAPE</dt>
-                    <dd data-diagnostic="sbcape">&mdash;</dd>
+                <div class="diagnostic-item">
+                    <dt>Wet-Bulb Zero <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="wet_bulb_zero">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>The height where the wet-bulb temperature (which accounts for evaporative cooling in unsaturated air) drops to 0&deg;C. This is always at or below the dry-bulb freezing level, and marks where a falling snowflake actually starts melting.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
-                <div>
-                    <dt>DCAPE</dt>
-                    <dd data-diagnostic="dcape">&mdash;</dd>
+                <div class="diagnostic-item">
+                    <dt>Melting Distance <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="melting_distance">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>How far (vertically) a medium-size (3 mm) snowflake falls below the wet-bulb-zero height before it's fully melted, per this model. A short distance means a sharp rain/snow transition; a long distance means a mushy, gradual one.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
-                <div>
-                    <dt>Precipitable Water</dt>
-                    <dd data-diagnostic="pw">&mdash;</dd>
-                </div>
-                <div class="diagnostic-wide">
-                    <dt>Thermal-wind signal</dt>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Thermal-wind signal <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
                     <dd data-diagnostic="advection">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>Whether the wind veers (turns clockwise with height, implying warm advection) or backs (turns counterclockwise, implying cold advection) between the surface and roughly 1-2.5 km up, estimated from the thermal-wind relationship.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
-                <div class="diagnostic-wide">
-                    <dt>Dendritic growth zone</dt>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Dendritic growth zone <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
                     <dd data-diagnostic="dgz">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>The depth (in km AGL) of the layer between -12&deg;C and -18&deg;C, where stellar dendrite snowflakes grow most efficiently. Shaded blue on the skew-T above.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
+                </div>
+            </dl>
+            <p id="melting-note" class="radiosonde-status" hidden></p>
+
+            <h3>Convection</h3>
+            <dl>
+                <div class="diagnostic-item">
+                    <dt>MLCAPE <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="mlcape">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>Mixed-Layer CAPE: convective available potential energy for a parcel representing the average of roughly the lowest 100 hPa. More conservative and generally preferred by severe-weather forecasters, since it reflects what the atmosphere is actually doing as a whole rather than a single hot spot.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
+                </div>
+                <div class="diagnostic-item">
+                    <dt>MUCAPE &middot; source height <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="mucape">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>Most-Unstable CAPE: the maximum energy available to a parcel lifted from the single most unstable level in the sounding. Tells you the absolute maximum energy potential available to a storm, even if that level isn't at the surface (e.g. the ground is cold but a warm, moist layer sits just above it).</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
                 </div>
             </dl>
         </section>
     </section>
 </section>
 
+<section class="radiosonde-history" aria-label="Snow level and freezing level history">
+    <h2>Freezing Level &amp; Snow Level Trend</h2>
+    <p class="radiosonde-status">
+        Recorded automatically every few hours from observed soundings (last 2 days shown by default --
+        drag to pan/zoom further back), so you can see how a level actually evolved versus what was forecast.
+    </p>
+    <div id="history-plot"></div>
+    <p id="history-empty" class="radiosonde-status" hidden>No recorded history yet for this station -- check back after the next automated update.</p>
+</section>
+
+<script>
+    window.RADIOSONDE_HISTORY_URL = "{{ '/assets/data/radiosonde_history.json' | relative_url }}";
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.1/plotly.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script src="{{ '/assets/radiosonde.js' | relative_url }}" defer></script>
