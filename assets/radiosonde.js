@@ -32,6 +32,20 @@
 const IEM_RAOB_BASE = 'https://mesonet.agron.iastate.edu/json/raob.py';
 const PYODIDE_VERSION = 'v0.26.4';
 const SPC_BASE = 'https://www.spc.noaa.gov/exper/archive/events';
+// Set by an inline <script> in tools/radiosonde.html via Liquid, since this
+// file itself isn't processed by Jekyll. Falls back to the plain root path
+// (correct as long as the site's baseurl stays empty, per _config.yml).
+const HISTORY_URL = window.RADIOSONDE_HISTORY_URL || '/assets/data/radiosonde_history.json';
+
+// Unit conversions for hover text and diagnostics -- pressure is left in
+// hPa in both modes since that's the universal unit for upper-air charts
+// even in the US.
+const UNITS = {
+    cToF: c => (c * 9) / 5 + 32,
+    cDeltaToF: c => (c * 9) / 5, // for temperature *differences*, no +32 offset
+    mToFt: m => m * 3.28084,
+    ktToMph: kt => kt * 1.15078,
+};
 
 // Only these 4 stations are tracked (per PLAN.md). Each has a short "note"
 // describing real, observed quirks in how promptly its data shows up in the
@@ -79,10 +93,13 @@ const state = {
     pyodide: null,
     pyReady: null,
     cycleCache: new Map(), // `${station}|${timestamp}` -> profile rows array, or null if confirmed empty
-    plotCache: new Map(),  // `${station}|${timestamp}` -> { image, diagnostics }
+    plotCache: new Map(),  // `${station}|${timestamp}` -> { image, diagnostics, interactive }
     station: STATIONS[0].id,
     displayedCycle: null,  // the cycle object currently shown
     activeRequest: 0,
+    units: 'metric',       // 'metric' | 'imperial' -- affects hover text and the diagnostics table
+    current: null,         // { stationId, cycle, result } for the plot currently on screen, for unit-toggle re-renders
+    historyPromise: null,  // cached fetch of the shared history JSON (all stations)
 };
 
 const els = {};
@@ -90,6 +107,8 @@ const els = {};
 document.addEventListener('DOMContentLoaded', () => {
     Object.assign(els, {
         stationButtons: document.getElementById('station-buttons'),
+        unitMetric: document.getElementById('unit-metric'),
+        unitImperial: document.getElementById('unit-imperial'),
         older: document.getElementById('cycle-older'),
         newer: document.getElementById('cycle-newer'),
         cycleLabel: document.getElementById('selected-cycle'),
@@ -101,8 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
         detailToggle: document.getElementById('detail-toggle'),
         detailImage: document.getElementById('skewt-detail-image'),
         diagnostics: document.getElementById('sounding-diagnostics'),
+        meltingNote: document.getElementById('melting-note'),
         dataSource: document.getElementById('data-source-link'),
         spcSource: document.getElementById('spc-source-link'),
+        historyPlot: document.getElementById('history-plot'),
+        historyEmpty: document.getElementById('history-empty'),
     });
 
     if (!els.stationButtons || !els.output) return;
@@ -116,9 +138,51 @@ document.addEventListener('DOMContentLoaded', () => {
             ? 'Hide full analysis'
             : 'Show full analysis (hodograph, wind barbs, thermal advection)';
     });
+    if (els.unitMetric && els.unitImperial) {
+        els.unitMetric.addEventListener('click', () => setUnits('metric'));
+        els.unitImperial.addEventListener('click', () => setUnits('imperial'));
+    }
+    document.addEventListener('click', event => {
+        document.querySelectorAll('#sounding-diagnostics .info-popup').forEach(popup => {
+            if (popup.style.display === 'block' && !popup.contains(event.target) && !event.target.closest('.info-icon')) {
+                popup.style.display = 'none';
+            }
+        });
+    });
 
     selectStation(getStationRequestedInUrl() || state.station);
 });
+
+function setUnits(units) {
+    if (state.units === units) return;
+    state.units = units;
+    if (els.unitMetric) els.unitMetric.setAttribute('aria-pressed', String(units === 'metric'));
+    if (els.unitImperial) els.unitImperial.setAttribute('aria-pressed', String(units === 'imperial'));
+    if (state.current) {
+        showPlot(state.current.stationId, state.current.cycle, state.current.result);
+    }
+    renderHistoryChart(state.station);
+}
+
+// Diagnostic info-icon popups (mirrors the showInfo/hideInfo pattern used
+// on the homepage's DGZ tool-cards, scoped to .diagnostic-item instead of
+// .tool-card).
+function showDiagInfo(event) {
+    event.stopPropagation();
+    const item = event.target.closest('.diagnostic-item');
+    if (!item) return;
+    document.querySelectorAll('#sounding-diagnostics .info-popup').forEach(popup => {
+        if (popup !== item.querySelector('.info-popup')) popup.style.display = 'none';
+    });
+    const popup = item.querySelector('.info-popup');
+    if (popup) popup.style.display = 'block';
+}
+
+function hideDiagInfo(event) {
+    event.stopPropagation();
+    const popup = event.target.closest('.info-popup');
+    if (popup) popup.style.display = 'none';
+}
 
 function getStationRequestedInUrl() {
     const requested = new URLSearchParams(window.location.search).get('station')?.toUpperCase();
@@ -234,6 +298,7 @@ async function selectStation(stationId) {
     const meta = getStationMeta(stationId);
     updateStationButtonStates();
     els.stationNote.textContent = meta.note;
+    renderHistoryChart(stationId);
     els.older.disabled = true;
     els.newer.disabled = true;
     setStatus(`Looking for the most recent ${stationId} sounding...`);
@@ -309,15 +374,12 @@ import numpy as np
 from metpy.plots import Hodograph, SkewT
 from metpy.units import units
 from metpy.calc import (
-    downdraft_cape,
     lcl,
     mixed_layer_cape_cin,
     mixed_parcel,
     most_unstable_cape_cin,
     most_unstable_parcel,
     parcel_profile,
-    precipitable_water,
-    surface_based_cape_cin,
     wind_components,
 )
 
@@ -354,9 +416,6 @@ def calculate_diagnostics(arr, p, t, td):
         "mucape": None,
         "mu_height": None,
         "mlcape": None,
-        "sbcape": None,
-        "dcape": None,
-        "pw_mm": None,
         "advection": "Unavailable",
         "dgz": "Unavailable",
         "dgz_p_bottom": None,
@@ -372,16 +431,14 @@ def calculate_diagnostics(arr, p, t, td):
         except Exception:
             return None
 
+    # Only MLCAPE and MUCAPE are surfaced in the UI: MLCAPE is the more
+    # conservative, generally-preferred severe-weather value (it reflects
+    # what the boundary layer as a whole is doing), while MUCAPE is the
+    # absolute ceiling on convective potential even when the most unstable
+    # air isn't at the surface. SBCAPE/DCAPE aren't shown, so they aren't
+    # computed here either.
     diagnostics["mucape"] = cape_value(lambda: most_unstable_cape_cin(p, t, td))
     diagnostics["mlcape"] = cape_value(lambda: mixed_layer_cape_cin(p, t, td))
-    diagnostics["sbcape"] = cape_value(lambda: surface_based_cape_cin(p, t, td))
-    diagnostics["dcape"] = cape_value(lambda: downdraft_cape(p, t, td))
-
-    try:
-        pw = precipitable_water(p, td)
-        diagnostics["pw_mm"] = round(float(pw.to("mm").magnitude), 1)
-    except Exception:
-        pass
 
     try:
         _, _, _, mu_index = most_unstable_parcel(p, t, td)
@@ -521,12 +578,180 @@ def _segments_pixel(collection, transform):
     return lines
 
 
+# --- Snow level / melting-layer model -------------------------------------
+# Simplified Matsuo & Sasyo (1981) melting-rate model: below the height
+# where wet-bulb temperature (Tw) first exceeds 0 C, a falling ice sphere's
+# radius shrinks at a rate set by the balance of sensible heat transfer in
+# from the surrounding (positive-Tw) air against the latent heat needed to
+# melt it:
+#
+#     -dR/dt = (C_vent * K_eff * Tw) / (rho_s * L_f * R)      for Tw > 0, R > 0
+#              0                                              otherwise
+#
+# Note the 1/R term: heat conduction to a sphere in steady state scales
+# with its radius (not radius^2), so this term is required for the units
+# to work out to a rate of change of R at all (W/(m*K) * K / (kg/m^3 *
+# J/kg) alone reduces to m^2/s, not m/s) -- it's also what the underlying
+# Mason (1956) melting-sphere derivation that Matsuo & Sasyo build on
+# actually has. Leaving it out makes flakes melt roughly a thousand times
+# too slowly (tested against a synthetic sounding: a medium flake took
+# ~223 hours to melt without it, vs. ~10 minutes/~600 m of fall with it --
+# the latter matches the few-hundred-meter snow-level-below-wet-bulb-zero
+# gap forecasters typically see). It's included here on that basis.
+#
+# This tells us more than the plain 0 C freezing level (where the dry-bulb
+# temperature crosses 0 C): it estimates the "snow level" -- the altitude
+# where a representative ensemble of snowflakes has actually finished
+# melting into rain -- which is normally noticeably lower than both the
+# freezing level and the wet-bulb-zero height.
+_MELT_RHO_SNOW = 100.0          # kg/m^3, bulk density for a 10:1 snow:liquid ratio
+_MELT_LATENT_FUSION = 3.34e5    # J/kg, latent heat of fusion
+_MELT_K_EFF = 2.6e-2            # W/(m*K), combined conductive/diffusive proxy
+_MELT_C_VENT = 1.2              # dimensionless ventilation factor (~1 m/s fall speed)
+_MELT_FALL_SPEED = 1.0          # m/s, constant terminal fall speed for the ensemble
+_MELT_GRID_STEP_M = 5.0         # m, vertical resolution of the integration grid
+_MELT_ENSEMBLE_DIAMETERS_MM = (1.5, 3.0, 5.0)  # small / medium / large snowflakes
+
+
+def compute_melting_layer(arr):
+    """Estimate the freezing level, wet-bulb-zero height, and true snow
+    level from one sounding, using the melting model described above.
+
+    Heights are reported in meters AGL (above the sounding's lowest
+    reported level). Returns a dict of Nones (with an explanatory "note")
+    if the profile doesn't support the calculation -- e.g. an entirely
+    sub-freezing column, or one with no sub-cloud melting layer at all.
+    """
+    result = {
+        "freezing_level_m": None,
+        "wet_bulb_zero_m": None,
+        "snow_level_m": None,
+        "total_melting_distance_m": None,
+        "note": None,
+    }
+
+    height_mask = np.isfinite(arr[:, 1])
+    if np.count_nonzero(height_mask) < 6:
+        result["note"] = "Not enough height data in this sounding to estimate a melting layer."
+        return result
+
+    heights = arr[height_mask, 1]
+    temps = arr[height_mask, 2]
+    dewpoints = arr[height_mask, 3]
+    order = np.argsort(heights)
+    heights, temps, dewpoints = heights[order], temps[order], dewpoints[order]
+    _, unique_idx = np.unique(heights, return_index=True)
+    heights, temps, dewpoints = heights[unique_idx], temps[unique_idx], dewpoints[unique_idx]
+
+    heights_agl = heights - heights[0]
+    if heights_agl.size < 6 or heights_agl[-1] < 50:
+        result["note"] = "Sounding does not extend high enough to locate a melting layer."
+        return result
+
+    # Interpolate to a high-resolution grid for numerical stability, then
+    # approximate the wet-bulb temperature with the standard psychrometric
+    # proxy Tw ~= T - 1/3*(T - Td) (adequate for locating the melting-layer
+    # boundaries without a full iterative wet-bulb solve).
+    grid = np.arange(0.0, heights_agl[-1] + _MELT_GRID_STEP_M, _MELT_GRID_STEP_M)
+    t_grid = np.interp(grid, heights_agl, temps)
+    td_grid = np.interp(grid, heights_agl, dewpoints)
+    tw_grid = t_grid - (t_grid - td_grid) / 3.0
+
+    # Freezing level: lowest AGL height (ascending from the surface) where
+    # the dry-bulb temperature is at or below 0 C.
+    if not np.any(t_grid <= 0.0):
+        result["note"] = "Entire profile is above freezing -- no freezing level found."
+        return result
+    freezing_idx = int(np.argmax(t_grid <= 0.0))
+    result["freezing_level_m"] = float(grid[freezing_idx])
+
+    # Wet-bulb zero: same logic using Tw. Since Tw <= T everywhere, this is
+    # always at or below the freezing level -- and it's where melting of a
+    # falling snowflake actually begins.
+    if not np.any(tw_grid <= 0.0):
+        result["note"] = "No sub-cloud melting layer found (dry air aloft keeps the wet-bulb temperature above 0 C)."
+        return result
+    wbz_idx = int(np.argmax(tw_grid <= 0.0))
+    result["wet_bulb_zero_m"] = float(grid[wbz_idx])
+
+    # Integrate a 3-size snowflake ensemble downward from the wet-bulb-zero
+    # height to the surface, shrinking each flake's radius per the melting
+    # equation above at each 5-m grid step (dt = dz / fall speed).
+    radii0 = np.array([d / 2000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])  # mm diameter -> m radius
+    radii = radii0.copy()
+    total_volume0 = float(np.sum(radii0 ** 3))
+    dt = _MELT_GRID_STEP_M / _MELT_FALL_SPEED
+    melted_height = np.full(radii.shape, np.nan)
+    snow_level = None
+
+    for i in range(wbz_idx, -1, -1):
+        tw = max(0.0, float(tw_grid[i]))
+        if tw > 0.0:
+            safe_radii = np.maximum(radii, 1e-9)  # avoid divide-by-zero for already-melted flakes
+            rate = (_MELT_C_VENT * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
+            radii = np.maximum(0.0, radii - rate * dt)
+        newly_melted = np.isnan(melted_height) & (radii <= 1e-9)
+        melted_height[newly_melted] = grid[i]
+
+        # Mass (volume, at constant density) fraction melted so far, across
+        # the whole ensemble -- this is what "95% melted" is measured on,
+        # not a simple 1-of-3-flakes count.
+        melted_fraction = 1.0 - (np.sum(radii ** 3) / total_volume0)
+        if snow_level is None and melted_fraction >= 0.95:
+            snow_level = float(grid[i])
+        if np.all(radii <= 1e-9):
+            break
+
+    if snow_level is None:
+        # Ran out of profile (reached the surface) before 95% melted --
+        # this model says snow could still be reaching the ground.
+        snow_level = float(grid[0])
+        result["note"] = (
+            "The snowflake ensemble was not fully melted by the surface in this model -- "
+            "snow may be reaching the ground despite above-freezing surface air."
+        )
+    result["snow_level_m"] = snow_level
+
+    medium_melted_height = melted_height[1]  # index 1 = medium (3.0 mm) flake
+    if np.isfinite(medium_melted_height):
+        result["total_melting_distance_m"] = float(result["wet_bulb_zero_m"] - medium_melted_height)
+    else:
+        result["total_melting_distance_m"] = float(result["wet_bulb_zero_m"] - grid[0])
+        extra_note = "The medium-size (3 mm) snowflake did not fully melt within this profile."
+        result["note"] = f"{result['note']} {extra_note}" if result["note"] else extra_note
+
+    return result
+
+
+def _agl_height_to_pressure(arr, height_agl):
+    # Translates one of compute_melting_layer's AGL heights back to a
+    # pressure level, so it can be drawn as a horizontal line on a
+    # pressure-coordinate skew-T.
+    if height_agl is None:
+        return None
+    mask = np.isfinite(arr[:, 1])
+    if np.count_nonzero(mask) < 2:
+        return None
+    heights = arr[mask, 1]
+    pressures = arr[mask, 0]
+    order = np.argsort(heights)
+    heights, pressures = heights[order], pressures[order]
+    heights_agl = heights - heights[0]
+    return float(np.interp(height_agl, heights_agl, pressures))
+
+
 def make_skewt(profile_json, station, cycle_label, station_latitude):
     arr = parse_iem_profile(profile_json)
     p = arr[:, 0] * units.hPa
     t = arr[:, 2] * units.degC
     td = arr[:, 3] * units.degC
     diagnostics = calculate_diagnostics(arr, p, t, td)
+    melting = compute_melting_layer(arr)
+    diagnostics["freezing_level_m"] = melting["freezing_level_m"]
+    diagnostics["wet_bulb_zero_m"] = melting["wet_bulb_zero_m"]
+    diagnostics["snow_level_m"] = melting["snow_level_m"]
+    diagnostics["total_melting_distance_m"] = melting["total_melting_distance_m"]
+    diagnostics["melting_note"] = melting["note"]
     advection_p, advection, grid_u, grid_v = temperature_advection_profile(
         arr,
         station_latitude,
@@ -565,7 +790,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     except Exception:
         pass
 
-    skew.ax.set_ylim(1050, 100)
+    skew.ax.set_ylim(1050, 150)
     skew.ax.set_xlim(-40, 45)
     dry_collection = skew.plot_dry_adiabats(alpha=0.35, linewidth=0.7)
     moist_collection = skew.plot_moist_adiabats(alpha=0.35, linewidth=0.7)
@@ -576,6 +801,22 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
             color="#56b4e9", alpha=0.14, label="DGZ (-12 to -18 C)",
         )
     skew.ax.axvline(0, color="#444444", linewidth=1.0)
+
+    reference_specs = (
+        ("Freezing level", "#2563eb", melting["freezing_level_m"]),
+        ("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
+        ("Snow level", "#db2777", melting["snow_level_m"]),
+    )
+    for ref_label, ref_color, ref_height_agl in reference_specs:
+        ref_p = _agl_height_to_pressure(arr, ref_height_agl)
+        if ref_p is None:
+            continue
+        skew.ax.axhline(ref_p, color=ref_color, linewidth=1.3, linestyle="--", alpha=0.85, zorder=5)
+        skew.ax.text(
+            skew.ax.get_xlim()[0] + 1, ref_p, ref_label, color=ref_color,
+            fontsize=8, va="bottom", ha="left", fontweight="bold",
+        )
+
     skew.ax.set_title(f"{station} Observed Sounding - {cycle_label}", loc="left", fontsize=13)
     skew.ax.set_xlabel("Temperature (deg C)")
     skew.ax.set_ylabel("Pressure (hPa)")
@@ -649,7 +890,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     }
 
     isobars = []
-    for level in (1000, 850, 700, 500, 400, 300, 250, 200, 150, 100):
+    for level in (1000, 850, 700, 500, 400, 300, 250, 200, 150):
         xs, ys = _transform_xy(transform, [xlim[0], xlim[1]], [level, level])
         isobars.append({"p": level, "x0": xs[0], "x1": xs[1], "y": ys[0]})
     interactive["isobars"] = isobars
@@ -708,6 +949,25 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
             "y0": y_bottom[0], "y1": y_top[0],
         }
 
+    def _reference_line(label, color, height_agl):
+        p_level = _agl_height_to_pressure(arr, height_agl)
+        if p_level is None:
+            return None
+        xs, ys = _transform_xy(transform, [xlim[0], xlim[1]], [p_level, p_level])
+        return {
+            "label": label, "color": color, "p": _clean(p_level),
+            "height_m": _clean(height_agl), "x0": xs[0], "x1": xs[1], "y": ys[0],
+        }
+
+    interactive["reference_lines"] = [
+        line for line in (
+            _reference_line("Freezing level", "#2563eb", melting["freezing_level_m"]),
+            _reference_line("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
+            _reference_line("Snow level", "#db2777", melting["snow_level_m"]),
+        )
+        if line is not None
+    ]
+
     skew_position = skew.ax.get_position()
     barb_left = skew_position.x1 + 0.012
     barb_width = 0.07
@@ -716,7 +976,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
 
     barb_ax = fig.add_axes([barb_left, skew_position.y0, barb_width, skew_position.height], sharey=skew.ax)
     barb_ax.set_xlim(0, 1)
-    barb_ax.set_ylim(1050, 100)
+    barb_ax.set_ylim(1050, 150)
     barb_ax.set_axis_off()
     for guide_pressure in np.arange(100, 1001, 100):
         barb_ax.axhline(guide_pressure, color="#94a3b8", linewidth=0.5, alpha=0.22)
@@ -746,7 +1006,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
             0.5, 0.5, "Unavailable", transform=advection_ax.transAxes,
             ha="center", va="center", fontsize=9, color="#64748b",
         )
-    advection_ax.set_ylim(1050, 100)
+    advection_ax.set_ylim(1050, 150)
     advection_ax.tick_params(axis="y", labelleft=False, left=False)
     advection_ax.tick_params(axis="x", labelsize=8)
     advection_ax.grid(axis="y", alpha=0.2)
@@ -770,21 +1030,40 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     return state.pyReady;
 }
 
-function renderDiagnostics(values) {
+function formatHeightValue(m, units) {
+    if (m == null || Number.isNaN(m)) return null;
+    const converted = units === 'imperial' ? UNITS.mToFt(m) : m;
+    const label = units === 'imperial' ? 'ft' : 'm';
+    return `${Math.round(converted).toLocaleString()} ${label}`;
+}
+
+function renderDiagnostics(values, units) {
     const formatCape = value => (value == null ? 'Unavailable' : `${value} J/kg`);
+    const aglText = m => (m == null ? 'Unavailable' : `${formatHeightValue(m, units)} AGL`);
     const diagnostics = {
-        mucape: values.mucape == null ? 'Unavailable' : `${formatCape(values.mucape)} · ${values.mu_height ?? '—'} m AGL`,
-        mlcape: formatCape(values.mlcape),
-        sbcape: formatCape(values.sbcape),
-        dcape: formatCape(values.dcape),
-        pw: values.pw_mm == null ? 'Unavailable' : `${values.pw_mm} mm`,
+        snow_level: aglText(values.snow_level_m),
+        freezing_level: aglText(values.freezing_level_m),
+        wet_bulb_zero: aglText(values.wet_bulb_zero_m),
+        melting_distance: values.total_melting_distance_m == null
+            ? 'Unavailable' : formatHeightValue(values.total_melting_distance_m, units),
         advection: values.advection,
         dgz: values.dgz,
+        mucape: values.mucape == null ? 'Unavailable' : `${formatCape(values.mucape)} · ${aglText(values.mu_height)}`,
+        mlcape: formatCape(values.mlcape),
     };
     els.diagnostics.querySelectorAll('[data-diagnostic]').forEach(element => {
         element.textContent = diagnostics[element.dataset.diagnostic] || 'Unavailable';
     });
     els.diagnostics.hidden = false;
+
+    if (els.meltingNote) {
+        if (values.melting_note) {
+            els.meltingNote.textContent = values.melting_note;
+            els.meltingNote.hidden = false;
+        } else {
+            els.meltingNote.hidden = true;
+        }
+    }
 }
 
 async function renderCycle(stationId, cycle, profile) {
@@ -858,7 +1137,16 @@ function gridLineTrace(x0, y0, x1, y1) {
     };
 }
 
-function buildSkewTraces(interactive) {
+function buildSkewTraces(interactive, units) {
+    const isImperial = units === 'imperial';
+    const tempUnit = isImperial ? '°F' : '°C';
+    const heightUnit = isImperial ? 'ft' : 'm';
+    const speedUnit = isImperial ? 'mph' : 'kt';
+    const convTemp = c => (c == null ? null : (isImperial ? UNITS.cToF(c) : c));
+    const convDeltaTemp = c => (c == null ? null : (isImperial ? UNITS.cDeltaToF(c) : c));
+    const convHeight = m => (m == null ? null : (isImperial ? UNITS.mToFt(m) : m));
+    const convSpeed = kt => (kt == null ? null : (isImperial ? UNITS.ktToMph(kt) : kt));
+
     const traces = [];
     (interactive.dry_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#f4a261', 0.55)));
     (interactive.moist_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#2a9d8f', 0.55)));
@@ -871,17 +1159,17 @@ function buildSkewTraces(interactive) {
     traces.push({
         x: temp.x, y: temp.y, mode: 'lines', name: 'Temperature',
         line: { color: '#d95f02', width: 2.5 },
-        customdata: temp.p.map((p, i) => [p, temp.t[i], temp.h[i], temp.wd[i], temp.ws[i]]),
-        hovertemplate: '%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} m)<br>' +
-            'Temp: %{customdata[1]:.1f}°C<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} kt<extra>Temperature</extra>',
+        customdata: temp.p.map((p, i) => [p, convTemp(temp.t[i]), convHeight(temp.h[i]), temp.wd[i], convSpeed(temp.ws[i])]),
+        hovertemplate: `%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} ${heightUnit})<br>` +
+            `Temp: %{customdata[1]:.1f}${tempUnit}<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} ${speedUnit}<extra>Temperature</extra>`,
     });
 
     const dew = interactive.dewpoint;
     traces.push({
         x: dew.x, y: dew.y, mode: 'lines', name: 'Dew point',
         line: { color: '#1b9e77', width: 2.5 },
-        customdata: dew.p.map((p, i) => [p, dew.td[i]]),
-        hovertemplate: '%{customdata[0]:.0f} hPa<br>Dew point: %{customdata[1]:.1f}°C<extra>Dew point</extra>',
+        customdata: dew.p.map((p, i) => [p, convTemp(dew.td[i])]),
+        hovertemplate: `%{customdata[0]:.0f} hPa<br>Dew point: %{customdata[1]:.1f}${tempUnit}<extra>Dew point</extra>`,
     });
 
     if (interactive.surface_parcel) {
@@ -889,16 +1177,16 @@ function buildSkewTraces(interactive) {
         traces.push({
             x: sp.x, y: sp.y, mode: 'lines', name: 'Surface parcel',
             line: { color: '#7570b3', width: 2, dash: 'dash' },
-            customdata: sp.p.map((p, i) => [p, sp.t[i], sp.diff[i]]),
-            hovertemplate: '%{customdata[0]:.0f} hPa<br>Parcel: %{customdata[1]:.1f}°C<br>' +
-                '%{customdata[2]:+.1f}°C vs. environment<extra>Surface parcel</extra>',
+            customdata: sp.p.map((p, i) => [p, convTemp(sp.t[i]), convDeltaTemp(sp.diff[i])]),
+            hovertemplate: `%{customdata[0]:.0f} hPa<br>Parcel: %{customdata[1]:.1f}${tempUnit}<br>` +
+                `%{customdata[2]:+.1f}${tempUnit} vs. environment<extra>Surface parcel</extra>`,
         });
         if (sp.lcl) {
             traces.push({
                 x: [sp.lcl.x], y: [sp.lcl.y], mode: 'markers', name: 'LCL',
                 marker: { color: '#7570b3', size: 8, symbol: 'circle' },
-                customdata: [[sp.lcl.p, sp.lcl.t]],
-                hovertemplate: 'LCL: %{customdata[0]:.0f} hPa, %{customdata[1]:.1f}°C<extra></extra>',
+                customdata: [[sp.lcl.p, convTemp(sp.lcl.t)]],
+                hovertemplate: `LCL: %{customdata[0]:.0f} hPa, %{customdata[1]:.1f}${tempUnit}<extra></extra>`,
             });
         }
     }
@@ -908,10 +1196,20 @@ function buildSkewTraces(interactive) {
         traces.push({
             x: mp.x, y: mp.y, mode: 'lines', name: '100-hPa mixed parcel',
             line: { color: '#7570b3', width: 1.5, dash: 'dot' },
-            customdata: mp.p.map((p, i) => [p, mp.t[i]]),
-            hovertemplate: '%{customdata[0]:.0f} hPa<br>Mixed parcel: %{customdata[1]:.1f}°C<extra>Mixed parcel</extra>',
+            customdata: mp.p.map((p, i) => [p, convTemp(mp.t[i])]),
+            hovertemplate: `%{customdata[0]:.0f} hPa<br>Mixed parcel: %{customdata[1]:.1f}${tempUnit}<extra>Mixed parcel</extra>`,
         });
     }
+
+    (interactive.reference_lines || []).forEach(line => {
+        const cd = [convHeight(line.height_m), line.p];
+        traces.push({
+            x: [line.x0, line.x1], y: [line.y, line.y], mode: 'lines', name: line.label,
+            line: { color: line.color, width: 2.2, dash: 'dash' },
+            customdata: [cd, cd],
+            hovertemplate: `${line.label}: %{customdata[0]:.0f} ${heightUnit} AGL (%{customdata[1]:.0f} hPa)<extra></extra>`,
+        });
+    });
 
     return traces;
 }
@@ -950,19 +1248,20 @@ function buildSkewLayout(interactive, title) {
     };
 }
 
-function renderInteractivePlot(stationId, cycle, interactive) {
-    const traces = buildSkewTraces(interactive);
+function renderInteractivePlot(stationId, cycle, interactive, units) {
+    const traces = buildSkewTraces(interactive, units);
     const layout = buildSkewLayout(interactive, `${stationId} Observed Sounding — ${cycle.label}`);
     const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] };
     Plotly.react(els.plotContainer, traces, layout, config);
 }
 
 function showPlot(stationId, cycle, result) {
+    state.current = { stationId, cycle, result };
     els.placeholder.classList.remove('is-visible');
 
     if (result.interactive && window.Plotly) {
         try {
-            renderInteractivePlot(stationId, cycle, result.interactive);
+            renderInteractivePlot(stationId, cycle, result.interactive, state.units);
             els.plotContainer.classList.add('is-visible');
             els.output.classList.remove('is-visible');
         } catch (error) {
@@ -984,8 +1283,68 @@ function showPlot(stationId, cycle, result) {
     els.detailToggle.hidden = false;
     els.detailToggle.textContent = 'Show full analysis (hodograph, wind barbs, thermal advection)';
 
-    renderDiagnostics(result.diagnostics);
+    renderDiagnostics(result.diagnostics, state.units);
     setStatus(`Showing ${stationId} from ${cycle.label}.`);
     els.older.disabled = false;
     els.newer.disabled = false;
+}
+
+// --- History trend chart (freezing level / wet-bulb zero / snow level) ----
+// Fetches the small, bot-updated JSON asset that scripts/collect_radiosonde_history.py
+// appends to on a schedule (see .github/workflows/radiosonde_history.yml),
+// mirroring the same pattern already used for the satellite looper's
+// manifest.json. Cached once per page load since it covers all stations.
+function loadHistory() {
+    if (!state.historyPromise) {
+        state.historyPromise = fetchJson(HISTORY_URL).catch(error => {
+            console.error('Radiosonde history fetch failed:', error);
+            return null;
+        });
+    }
+    return state.historyPromise;
+}
+
+function buildHistoryTraces(entries, units) {
+    const isImperial = units === 'imperial';
+    const heightUnit = isImperial ? 'ft' : 'm';
+    const conv = m => (m == null ? null : (isImperial ? UNITS.mToFt(m) : m));
+    const x = entries.map(entry => entry.valid);
+    const series = [
+        { key: 'freezing_level_m', name: 'Freezing level', color: '#2563eb' },
+        { key: 'wet_bulb_zero_m', name: 'Wet-bulb zero', color: '#0891b2' },
+        { key: 'snow_level_m', name: 'Snow level', color: '#db2777' },
+    ];
+    return series.map(series_item => ({
+        x, y: entries.map(entry => conv(entry[series_item.key])),
+        mode: 'lines+markers', name: series_item.name,
+        line: { color: series_item.color, width: 2 }, marker: { size: 5 },
+        connectgaps: false,
+        hovertemplate: `%{x|%b %d %HZ}<br>${series_item.name}: %{y:.0f} ${heightUnit} AGL<extra></extra>`,
+    }));
+}
+
+function renderHistoryChart(stationId) {
+    if (!els.historyPlot || !window.Plotly) return;
+    loadHistory().then(data => {
+        const entries = data && data.stations && data.stations[stationId];
+        if (!entries || !entries.length) {
+            els.historyPlot.classList.remove('is-visible');
+            if (els.historyEmpty) els.historyEmpty.hidden = false;
+            return;
+        }
+        if (els.historyEmpty) els.historyEmpty.hidden = true;
+
+        const traces = buildHistoryTraces(entries, state.units);
+        const now = new Date();
+        const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+        const layout = {
+            margin: { l: 55, r: 15, t: 10, b: 40 },
+            xaxis: { type: 'date', range: [twoDaysAgo.toISOString(), now.toISOString()] },
+            yaxis: { title: state.units === 'imperial' ? 'Feet AGL' : 'Meters AGL' },
+            legend: { orientation: 'h', y: -0.2 },
+            hovermode: 'closest',
+        };
+        Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false });
+        els.historyPlot.classList.add('is-visible');
+    });
 }
