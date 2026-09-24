@@ -1,0 +1,41 @@
+name: Update Radiosonde History
+
+on:
+  schedule:
+    - cron: "20 0,6,12,18 * * *" # 20 past every 6 hours, clear of the 00Z/12Z launch window
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-radiosonde-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests numpy
+
+      - name: Collect radiosonde diagnostics history
+        run: python scripts/collect_radiosonde_history.py
+
+      - name: Commit and push updated history
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/radiosonde_history.json
+          git commit -m "Update radiosonde history [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
