@@ -328,7 +328,16 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
                     <dd data-diagnostic="snow_level">&mdash;</dd>
                     <div class="info-popup">
                         <h3>What is this?</h3>
-                        <p>The altitude where a falling ensemble of small/medium/large snowflakes has melted at least 95% of its mass, from a simplified Matsuo &amp; Sasyo (1981) melting-rate model run on this sounding. This is usually meaningfully lower than the freezing level or wet-bulb-zero height below, since snow keeps melting as it falls through above-freezing air.</p>
+                        <p>The altitude where a falling ensemble of small/medium/large snowflakes has melted at least 95% of its mass, from a simplified Matsuo &amp; Sasyo (1981) melting-rate model run on this sounding, using the sub-cloud air exactly as observed. This is usually meaningfully lower than the freezing level or wet-bulb-zero height below, since snow keeps melting as it falls through above-freezing air. If this sounding was launched during dry/non-precipitating conditions, see "Snow Level (Saturated Column)" for why this number can look surprisingly low.</p>
+                        <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
+                    </div>
+                </div>
+                <div class="diagnostic-item diagnostic-wide">
+                    <dt>Snow Level (Saturated Column) <span class="info-icon" onclick="showDiagInfo(event)">i</span></dt>
+                    <dd data-diagnostic="snow_level_saturated">&mdash;</dd>
+                    <div class="info-popup">
+                        <h3>What is this?</h3>
+                        <p>The same snow-level calculation, but assuming the sub-cloud air is fully saturated (dewpoint = temperature) rather than using this sounding's actual, possibly-drier dewpoint. This approximates what happens once precipitation has been falling long enough to saturate that layer through evaporative cooling. If it's noticeably higher than the plain Snow Level above, this sounding was likely dry/non-precipitating at launch -- the real snow level right now depends on whether (and how long) it's actually been snowing/raining, so treat these two numbers as a plausible range rather than picking one.</p>
                         <button class="close-btn" onclick="hideDiagInfo(event)">×</button>
                     </div>
                 </div>

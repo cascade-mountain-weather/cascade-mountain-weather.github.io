@@ -752,6 +752,39 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
     diagnostics["snow_level_m"] = melting["snow_level_m"]
     diagnostics["total_melting_distance_m"] = melting["total_melting_distance_m"]
     diagnostics["melting_note"] = melting["note"]
+
+    # This sounding's dewpoint profile is a snapshot at launch time -- if it
+    # was dry/non-precipitating, the sub-cloud air is drier (and the
+    # computed snow level lower) than it would be once precipitation has
+    # actually been falling for a while, since evaporative cooling from the
+    # falling hydrometeors saturates and cools that layer over time. As a
+    # sensitivity check, rerun the same model assuming a fully saturated
+    # column (Td = T everywhere, i.e. Tw = T) -- the limiting case of
+    # sustained precipitation having already conditioned the profile. This
+    # gives a second, generally higher snow-level estimate, and the gap
+    # between the two tells us how much this sounding's moisture (rather
+    # than its temperature) is driving the result.
+    arr_saturated = arr.copy()
+    arr_saturated[:, 3] = arr_saturated[:, 2]
+    melting_saturated = compute_melting_layer(arr_saturated)
+    diagnostics["snow_level_saturated_m"] = melting_saturated["snow_level_m"]
+
+    saturation_gap = None
+    if melting["snow_level_m"] is not None and melting_saturated["snow_level_m"] is not None:
+        saturation_gap = melting_saturated["snow_level_m"] - melting["snow_level_m"]
+    if saturation_gap is not None and saturation_gap >= 300:
+        gap_note = (
+            f"This sounding's sub-cloud air looks fairly dry (the as-observed and saturated-column "
+            f"snow-level estimates differ by about {int(round(saturation_gap))} m), consistent with "
+            "non-precipitating conditions when the balloon launched. If precipitation is actually "
+            "falling now (or becomes steady/heavy), evaporative cooling would moisten and cool that "
+            "layer, pushing the real snow level up toward the Snow Level (Saturated Column) estimate "
+            "-- check current radar/precip intensity to judge which applies."
+        )
+        diagnostics["melting_note"] = (
+            f"{diagnostics['melting_note']} {gap_note}" if diagnostics["melting_note"] else gap_note
+        )
+
     advection_p, advection, grid_u, grid_v = temperature_advection_profile(
         arr,
         station_latitude,
@@ -806,6 +839,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
         ("Freezing level", "#2563eb", melting["freezing_level_m"]),
         ("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
         ("Snow level", "#db2777", melting["snow_level_m"]),
+        ("Snow level (saturated)", "#f9a8d4", melting_saturated["snow_level_m"]),
     )
     for ref_label, ref_color, ref_height_agl in reference_specs:
         ref_p = _agl_height_to_pressure(arr, ref_height_agl)
@@ -901,29 +935,47 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
         isotherms.append({"t": temp_c, "x0": xs[0], "y0": ys[0], "x1": xs[1], "y1": ys[1]})
     interactive["isotherms"] = isotherms
 
-    env_x, env_y = _transform_xy(transform, arr[:, 2], arr[:, 0])
+    # MetPy's dry/moist adiabat & mixing-line collections are already
+    # bounded to the axes' ylim (they're computed from p=linspace(*ylim)),
+    # and so is the static PNG (matplotlib clips drawing to the axes box
+    # automatically). But these next few traces are built straight from the
+    # observed profile/parcel arrays, which usually extend well above our
+    # 150 hPa display cutoff -- and since we hand Plotly raw pixel numbers
+    # with no axes of its own to clip to, an unmasked point above the
+    # cutoff would just push Plotly's autorange up past it, making the grid
+    # appear to stop at 150 hPa while the data lines keep going. So mask
+    # every one of them to the plotted pressure range first.
+    def _within_plot(pressures):
+        pressures = np.asarray(pressures, dtype=float)
+        return (pressures >= ylim[1]) & (pressures <= ylim[0])
+
+    plot_mask = _within_plot(arr[:, 0])
+    env_x, env_y = _transform_xy(transform, arr[plot_mask, 2], arr[plot_mask, 0])
     interactive["temperature"] = {
         "x": env_x, "y": env_y,
-        "p": _clean_list(arr[:, 0]), "t": _clean_list(arr[:, 2]),
-        "h": _clean_list(arr[:, 1]), "wd": _clean_list(arr[:, 4]), "ws": _clean_list(arr[:, 5]),
+        "p": _clean_list(arr[plot_mask, 0]), "t": _clean_list(arr[plot_mask, 2]),
+        "h": _clean_list(arr[plot_mask, 1]), "wd": _clean_list(arr[plot_mask, 4]), "ws": _clean_list(arr[plot_mask, 5]),
     }
-    dew_x, dew_y = _transform_xy(transform, arr[:, 3], arr[:, 0])
+    dew_x, dew_y = _transform_xy(transform, arr[plot_mask, 3], arr[plot_mask, 0])
     interactive["dewpoint"] = {
         "x": dew_x, "y": dew_y,
-        "p": _clean_list(arr[:, 0]), "td": _clean_list(arr[:, 3]),
+        "p": _clean_list(arr[plot_mask, 0]), "td": _clean_list(arr[plot_mask, 3]),
     }
 
     interactive["surface_parcel"] = None
     if surface_parcel_geo is not None:
-        px, py = _transform_xy(transform, surface_parcel_geo["t_raw"], surface_parcel_geo["p_raw"])
+        parcel_mask = _within_plot(surface_parcel_geo["p_raw"])
+        px, py = _transform_xy(
+            transform, surface_parcel_geo["t_raw"][parcel_mask], surface_parcel_geo["p_raw"][parcel_mask],
+        )
         lcl_x, lcl_y = _transform_xy(
             transform, [surface_parcel_geo["lcl_t_raw"]], [surface_parcel_geo["lcl_p_raw"]],
         )
         interactive["surface_parcel"] = {
             "x": px, "y": py,
-            "p": _clean_list(surface_parcel_geo["p_raw"]),
-            "t": _clean_list(surface_parcel_geo["t_raw"]),
-            "diff": _clean_list(surface_parcel_geo["diff_raw"]),
+            "p": _clean_list(surface_parcel_geo["p_raw"][parcel_mask]),
+            "t": _clean_list(surface_parcel_geo["t_raw"][parcel_mask]),
+            "diff": _clean_list(surface_parcel_geo["diff_raw"][parcel_mask]),
             "lcl": {
                 "x": lcl_x[0], "y": lcl_y[0],
                 "p": _clean(surface_parcel_geo["lcl_p_raw"]),
@@ -933,11 +985,14 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
 
     interactive["mixed_parcel"] = None
     if mixed_parcel_geo is not None:
-        mx, my = _transform_xy(transform, mixed_parcel_geo["t_raw"], mixed_parcel_geo["p_raw"])
+        mixed_mask = _within_plot(mixed_parcel_geo["p_raw"])
+        mx, my = _transform_xy(
+            transform, mixed_parcel_geo["t_raw"][mixed_mask], mixed_parcel_geo["p_raw"][mixed_mask],
+        )
         interactive["mixed_parcel"] = {
             "x": mx, "y": my,
-            "p": _clean_list(mixed_parcel_geo["p_raw"]),
-            "t": _clean_list(mixed_parcel_geo["t_raw"]),
+            "p": _clean_list(mixed_parcel_geo["p_raw"][mixed_mask]),
+            "t": _clean_list(mixed_parcel_geo["t_raw"][mixed_mask]),
         }
 
     interactive["dgz_rect"] = None
@@ -964,6 +1019,7 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
             _reference_line("Freezing level", "#2563eb", melting["freezing_level_m"]),
             _reference_line("Wet-bulb zero", "#0891b2", melting["wet_bulb_zero_m"]),
             _reference_line("Snow level", "#db2777", melting["snow_level_m"]),
+            _reference_line("Snow level (saturated column)", "#f9a8d4", melting_saturated["snow_level_m"]),
         )
         if line is not None
     ]
@@ -1042,6 +1098,7 @@ function renderDiagnostics(values, units) {
     const aglText = m => (m == null ? 'Unavailable' : `${formatHeightValue(m, units)} AGL`);
     const diagnostics = {
         snow_level: aglText(values.snow_level_m),
+        snow_level_saturated: aglText(values.snow_level_saturated_m),
         freezing_level: aglText(values.freezing_level_m),
         wet_bulb_zero: aglText(values.wet_bulb_zero_m),
         melting_distance: values.total_melting_distance_m == null
@@ -1313,6 +1370,7 @@ function buildHistoryTraces(entries, units) {
         { key: 'freezing_level_m', name: 'Freezing level', color: '#2563eb' },
         { key: 'wet_bulb_zero_m', name: 'Wet-bulb zero', color: '#0891b2' },
         { key: 'snow_level_m', name: 'Snow level', color: '#db2777' },
+        { key: 'snow_level_saturated_m', name: 'Snow level (saturated)', color: '#f9a8d4' },
     ];
     return series.map(series_item => ({
         x, y: entries.map(entry => conv(entry[series_item.key])),
