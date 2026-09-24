@@ -759,7 +759,7 @@ def compute_melting_layer(arr):
     # everything. Detect that case explicitly rather than guess.
     if t_grid[0] <= 0.0 and np.any(t_grid > 0.0):
         result["note"] = (
-            "This sounding has a warm layer aloft over sub-freezing surface air (a \"warm nose\") -- "
+            "This sounding has a warm layer aloft over sub-freezing surface air (a 'warm nose') -- "
             "sleet or freezing rain territory. This model assumes melting happens near the surface and "
             "doesn't apply well here; see the Surface Precipitation Type diagnostic instead."
         )
