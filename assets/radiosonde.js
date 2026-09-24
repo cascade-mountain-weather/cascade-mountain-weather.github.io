@@ -151,6 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Pyodide/MetPy bootstrap (~15-25s: downloading the WASM runtime, then
+    // micropip-installing pint/pooch/traitlets/xarray/metpy) previously
+    // didn't start until after the station's sounding data had already
+    // been found -- two independent, unrelated waits stacked sequentially
+    // for no reason. Kick it off immediately, in parallel with the station
+    // lookup below; loadMetPy() itself caches the in-flight promise, so
+    // renderCycle's later `await loadMetPy()` just picks up this same
+    // already-started (often already-finished) load instead of starting a
+    // second one.
+    loadMetPy().catch(error => console.error('MetPy preload failed:', error));
+
     selectStation(getStationRequestedInUrl() || state.station);
 });
 
@@ -865,8 +876,8 @@ def compute_precip_type(arr):
     """Classifies surface precipitation type (rain / snow / sleet /
     freezing rain) from one sounding. Returns independent 0-100
     probabilities for each type (they aren't required to sum to 100, since
-    mixes are physically possible), a plain-language `summary`, and a
-    `note` for caveats or when the profile doesn't support the
+    mixes are physically possible), a plain-language 'summary', and a
+    'note' for caveats or when the profile doesn't support the
     calculation.
     """
     result = {
@@ -974,7 +985,7 @@ def _split_by_freezing(p_values, t_values, *extra_arrays):
     """Splits a (pressure, temperature) profile into contiguous segments
     above/below 0 C, inserting the exact 0 C crossing point between
     segments (via linear interpolation) so consecutive segments still
-    connect visually with no gap. `extra_arrays` (e.g. height, wind) are
+    connect visually with no gap. 'extra_arrays' (e.g. height, wind) are
     carried along and interpolated at crossing points the same way, purely
     for consistent hover values -- they don't affect the split itself.
     Returns a list of dicts: {"above": bool, "p": [...], "t": [...],
