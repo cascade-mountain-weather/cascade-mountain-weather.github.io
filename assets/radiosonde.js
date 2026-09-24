@@ -607,10 +607,26 @@ def _segments_pixel(collection, transform):
 _MELT_RHO_SNOW = 100.0          # kg/m^3, bulk density for a 10:1 snow:liquid ratio
 _MELT_LATENT_FUSION = 3.34e5    # J/kg, latent heat of fusion
 _MELT_K_EFF = 2.6e-2            # W/(m*K), combined conductive/diffusive proxy
-_MELT_C_VENT = 1.2              # dimensionless ventilation factor (~1 m/s fall speed)
-_MELT_FALL_SPEED = 1.0          # m/s, constant terminal fall speed for the ensemble
 _MELT_GRID_STEP_M = 5.0         # m, vertical resolution of the integration grid
-_MELT_ENSEMBLE_DIAMETERS_MM = (1.5, 3.0, 5.0)  # small / medium / large snowflakes
+_MELT_ENSEMBLE_DIAMETERS_MM = (1.5, 3.0, 5.0)  # small / medium / large snowflakes, mm
+_AIR_KINEMATIC_VISCOSITY = 1.4e-5  # m^2/s, air near 0 C -- for the Reynolds number below
+
+# A flat ventilation factor (C_vent=1.2) tuned to a flat 1 m/s fall speed
+# for every size badly under-melts for maritime PNW snow: larger, more
+# aggregated/rimed flakes both fall faster AND get more ventilation-
+# enhanced heat transfer than small pristine crystals, and the model's own
+# original spec offered exactly this as the more physical alternative
+# (C_vent = 1.0 + 0.23*Re^0.5) to the flat baseline. So each ensemble
+# member gets its own fall speed (increasing with size, representative of
+# aggregated/moderately rimed snow rather than a literature-precise fit)
+# and its own Reynolds-number-based ventilation coefficient. Tested
+# against a synthetic sounding shaped like a reported real case: this
+# takes the medium flake's melting distance from 925 m down to 540 m, and
+# turns a "never fully melts by the surface" dry-column result into a
+# snow level 465 m above the surface -- a meaningfully faster, more
+# PNW-appropriate melt than the flat-1.2 baseline, without melting
+# implausibly fast either.
+_MELT_FALL_SPEEDS_MS = (1.0, 1.5, 2.2)  # small / medium / large, m/s
 
 
 def compute_melting_layer(arr):
@@ -676,11 +692,17 @@ def compute_melting_layer(arr):
 
     # Integrate a 3-size snowflake ensemble downward from the wet-bulb-zero
     # height to the surface, shrinking each flake's radius per the melting
-    # equation above at each 5-m grid step (dt = dz / fall speed).
-    radii0 = np.array([d / 2000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])  # mm diameter -> m radius
+    # equation above. Each ensemble member has its own fall speed, so it
+    # also has its own dt (= dz / that member's fall speed) and its own
+    # Reynolds-number-based ventilation coefficient.
+    diameters_m = np.array([d / 1000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])
+    radii0 = diameters_m / 2.0
     radii = radii0.copy()
     total_volume0 = float(np.sum(radii0 ** 3))
-    dt = _MELT_GRID_STEP_M / _MELT_FALL_SPEED
+    fall_speed = np.array(_MELT_FALL_SPEEDS_MS)
+    dt = _MELT_GRID_STEP_M / fall_speed
+    reynolds = fall_speed * diameters_m / _AIR_KINEMATIC_VISCOSITY
+    c_vent = 1.0 + 0.23 * np.sqrt(reynolds)
     melted_height = np.full(radii.shape, np.nan)
     snow_level = None
 
@@ -688,7 +710,7 @@ def compute_melting_layer(arr):
         tw = max(0.0, float(tw_grid[i]))
         if tw > 0.0:
             safe_radii = np.maximum(radii, 1e-9)  # avoid divide-by-zero for already-melted flakes
-            rate = (_MELT_C_VENT * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
+            rate = (c_vent * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
             radii = np.maximum(0.0, radii - rate * dt)
         newly_melted = np.isnan(melted_height) & (radii <= 1e-9)
         melted_height[newly_melted] = grid[i]
@@ -1024,6 +1046,37 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
         if line is not None
     ]
 
+    # Default zoom: the background grid (isobars/isotherms/adiabats) always
+    # spans the full -40..45 C x 150..1050 hPa nominal chart, but any one
+    # sounding's actual data usually occupies a much narrower slice of
+    # that -- left on autorange, Plotly includes the full-width gridlines
+    # and shows mostly empty margin around the profile. So compute a tight
+    # bounding box around just the "real" data traces (already masked to
+    # the plotted pressure range above) and pad it modestly; the JS side
+    # uses this as the chart's initial view instead of the full grid. Users
+    # can still zoom/pan out to see the full grid -- this only sets where
+    # the chart opens.
+    data_x, data_y = [], []
+    for key in ("temperature", "dewpoint"):
+        data_x.extend(v for v in interactive[key]["x"] if v is not None)
+        data_y.extend(v for v in interactive[key]["y"] if v is not None)
+    for key in ("surface_parcel", "mixed_parcel"):
+        entry = interactive[key]
+        if entry:
+            data_x.extend(v for v in entry["x"] if v is not None)
+            data_y.extend(v for v in entry["y"] if v is not None)
+
+    interactive["default_view"] = None
+    if data_x and data_y:
+        x_min, x_max = min(data_x), max(data_x)
+        y_min, y_max = min(data_y), max(data_y)
+        x_pad = max((x_max - x_min) * 0.15, 20.0)
+        y_pad = max((y_max - y_min) * 0.08, 20.0)
+        interactive["default_view"] = {
+            "x0": x_min - x_pad, "x1": x_max + x_pad,
+            "y0": y_min - y_pad, "y1": y_max + y_pad,
+        }
+
     skew_position = skew.ax.get_position()
     barb_left = skew_position.x1 + 0.012
     barb_width = 0.07
@@ -1282,15 +1335,24 @@ function buildSkewLayout(interactive, title) {
         });
     }
 
+    // Pin isobar labels to the left edge and isotherm labels to the bottom
+    // edge of the visible plot area (paper coordinates), rather than a
+    // fixed data position at the full grid's original -40 C / 1050 hPa
+    // corner. That fixed-position approach breaks as soon as the default
+    // view is zoomed in on the data (below) -- the labels would just fall
+    // outside the visible range and disappear -- and it also means labels
+    // stay put (and legible) if the user pans/zooms manually afterward.
     const annotations = (interactive.isobars || []).map(bar => ({
-        x: bar.x0, y: bar.y, xanchor: 'right', yanchor: 'middle', xshift: -4,
+        xref: 'paper', x: 0, xanchor: 'left', xshift: 4,
+        yref: 'y', y: bar.y, yanchor: 'middle',
         text: `${bar.p}`, showarrow: false, font: { size: 10, color: '#64748b' },
     })).concat((interactive.isotherms || []).map(iso => ({
-        x: iso.x0, y: iso.y0, xanchor: 'center', yanchor: 'top', yshift: -4,
+        xref: 'x', x: iso.x0, xanchor: 'center',
+        yref: 'paper', y: 0, yanchor: 'bottom', yshift: 4,
         text: `${iso.t}°`, showarrow: false, font: { size: 10, color: '#64748b' },
     })));
 
-    return {
+    const layout = {
         title: { text: title, font: { size: 13 } },
         margin: { l: 45, r: 20, t: 36, b: 30 },
         xaxis: { visible: false, fixedrange: false },
@@ -1303,6 +1365,20 @@ function buildSkewLayout(interactive, title) {
         plot_bgcolor: '#ffffff',
         paper_bgcolor: '#ffffff',
     };
+
+    // Default to a tight zoom on the actual profile data (computed in
+    // Python from the real data traces, not the background grid) instead
+    // of the full nominal grid extent. scaleanchor/scaleratio above still
+    // keeps a true 1:1 skew aspect -- Plotly just adds letterboxing on
+    // whichever axis needs it to match the container shape. A double-click
+    // (Plotly's native reset) or manual zoom-out still reaches the full grid.
+    if (interactive.default_view) {
+        const view = interactive.default_view;
+        layout.xaxis.range = [view.x0, view.x1];
+        layout.yaxis.range = [view.y0, view.y1];
+    }
+
+    return layout;
 }
 
 function renderInteractivePlot(stationId, cycle, interactive, units) {

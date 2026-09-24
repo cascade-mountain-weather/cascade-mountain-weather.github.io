@@ -45,14 +45,17 @@ STATION_LOOKBACK_CYCLES = {
     "CYZT": 28,  # ~14 days, to comfortably clear the observed 4-5 day feed lag
 }
 
-# --- Melting-layer model (see assets/radiosonde.js for the full writeup) ---
+# --- Melting-layer model (see assets/radiosonde.js for the full writeup,
+# including why each ensemble member gets its own fall speed and a
+# Reynolds-number-based ventilation coefficient rather than one flat
+# C_vent tuned to a flat 1 m/s -- that under-melts for maritime PNW snow).
 _MELT_RHO_SNOW = 100.0
 _MELT_LATENT_FUSION = 3.34e5
 _MELT_K_EFF = 2.6e-2
-_MELT_C_VENT = 1.2
-_MELT_FALL_SPEED = 1.0
 _MELT_GRID_STEP_M = 5.0
 _MELT_ENSEMBLE_DIAMETERS_MM = (1.5, 3.0, 5.0)
+_MELT_FALL_SPEEDS_MS = (1.0, 1.5, 2.2)
+_AIR_KINEMATIC_VISCOSITY = 1.4e-5
 
 
 def compute_melting_layer(heights_m: np.ndarray, temps_c: np.ndarray, dewpoints_c: np.ndarray) -> dict:
@@ -98,10 +101,14 @@ def compute_melting_layer(heights_m: np.ndarray, temps_c: np.ndarray, dewpoints_
     wbz_idx = int(np.argmax(tw_grid <= 0.0))
     result["wet_bulb_zero_m"] = float(grid[wbz_idx])
 
-    radii0 = np.array([d / 2000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])  # mm diameter -> m radius
+    diameters_m = np.array([d / 1000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])
+    radii0 = diameters_m / 2.0
     radii = radii0.copy()
     total_volume0 = float(np.sum(radii0 ** 3))
-    dt = _MELT_GRID_STEP_M / _MELT_FALL_SPEED
+    fall_speed = np.array(_MELT_FALL_SPEEDS_MS)
+    dt = _MELT_GRID_STEP_M / fall_speed
+    reynolds = fall_speed * diameters_m / _AIR_KINEMATIC_VISCOSITY
+    c_vent = 1.0 + 0.23 * np.sqrt(reynolds)
     melted_height = np.full(radii.shape, np.nan)
     snow_level = None
 
@@ -109,7 +116,7 @@ def compute_melting_layer(heights_m: np.ndarray, temps_c: np.ndarray, dewpoints_
         tw = max(0.0, float(tw_grid[i]))
         if tw > 0.0:
             safe_radii = np.maximum(radii, 1e-9)
-            rate = (_MELT_C_VENT * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
+            rate = (c_vent * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
             radii = np.maximum(0.0, radii - rate * dt)
         newly_melted = np.isnan(melted_height) & (radii <= 1e-9)
         melted_height[newly_melted] = grid[i]
