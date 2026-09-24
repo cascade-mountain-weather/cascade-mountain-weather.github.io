@@ -363,6 +363,15 @@ async function stepCycle(direction) {
 
 async function loadMetPy() {
     if (state.pyReady) return state.pyReady;
+    // If bootstrap fails partway (a transient CDN/network hiccup fetching
+    // Pyodide itself, a package, or the micropip installs), the promise
+    // below would otherwise stay cached in its rejected state for the rest
+    // of the page session -- every later station selection would just
+    // replay that same cached failure forever, which looks exactly like
+    // "every station is broken" even though the underlying problem may
+    // have only lasted a moment. Clear the cache on failure so the next
+    // attempt (e.g. picking another station, or the same one again) gets
+    // a genuine fresh try instead of an already-doomed one.
     state.pyReady = (async () => {
         const pyodide = await loadPyodide({
             indexURL: `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
@@ -1449,7 +1458,10 @@ def make_skewt(profile_json, station, cycle_label, station_latitude):
 `);
         state.pyodide = pyodide;
         return pyodide;
-    })();
+    })().catch(error => {
+        state.pyReady = null;
+        throw error;
+    });
     return state.pyReady;
 }
 
@@ -1552,7 +1564,7 @@ async function renderCycle(stationId, cycle, profile) {
     } catch (error) {
         console.error('Skew-T rendering failed:', error);
         els.placeholder.textContent = `Plot rendering failed for ${stationId}.`;
-        setStatus('Something went wrong plotting this sounding -- try another cycle or station.');
+        setStatus('Something went wrong loading MetPy or plotting this sounding -- selecting the station again will retry.');
     } finally {
         els.older.disabled = false;
         els.newer.disabled = false;
