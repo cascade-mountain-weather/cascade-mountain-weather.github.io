@@ -1,0 +1,175 @@
+# Single source of truth for the live-conditions map, the area pages' headers,
+# and scripts/collect_live_conditions.py (which writes assets/data/live_conditions.json).
+#
+# network: NWAC   -> fetched from Synoptic by station id (e.g. STB48). Reports snow
+#                    depth but NOT SWE.
+# network: SNOTEL -> fetched from NRCS AWDB by triplet (e.g. "791:WA:SNTL"). Reports
+#                    both snow depth and SWE. (Icicle Creek 1338 is new and only exists
+#                    in AWDB, so all SNOTEL goes through AWDB.)
+#
+# primary: true  -> the station whose temp/humidity/visibility drives the area's
+#                   checklist. If omitted, the first station with fresh data is used.
+# page: null     -> no dive-deeper page yet; the popup omits the link.
+# basin:         -> USGS HUC8 watershed code the map highlights for this area. Areas can
+#                   share a basin (the popup then shows one tab per area). Polygons live in
+#                   assets/data/basins.geojson; rebuild with scripts/build_basins.py after
+#                   changing a code.
+#
+# Stations are listed in the order they were requested; the map sorts rows by
+# elevation, high to low, for display.
+
+areas:
+  - id: hurricane-ridge
+    name: Hurricane Ridge
+    basin: "17110020"
+    page: null
+    webcams:
+      - {type: windy, id: "1523123339", label: "Hurricane Hill - Mount Olympus"}
+    stations:
+      - {id: HUR53, network: NWAC, label: Hurricane Ridge, primary: true}
+      - {id: "974:WA:SNTL", network: SNOTEL, label: Waterhole}
+
+  - id: mt-baker
+    name: Mt. Baker
+    basin: "17110004"
+    page: /tools/mt-baker.html
+    webcams:
+      - {type: windy, id: "1754511676", label: "Mount Shuksan"}
+    stations:
+      - {id: MTB42, network: NWAC, label: Heather Meadows, primary: true}
+      - {id: MTB50, network: NWAC, label: Pan Dome}
+      - {id: "998:WA:SNTL", network: SNOTEL, label: Easy Pass}
+
+  - id: washington-pass
+    name: Washington Pass
+    basin: "17020008"
+    page: /tools/washington-pass.html
+    stations:
+      - {id: WAP67, network: NWAC, label: Washington Pass Upper}
+      - {id: WAP55, network: NWAC, label: Washington Pass Base, primary: true}
+      - {id: "711:WA:SNTL", network: SNOTEL, label: Rainy Pass}
+
+  - id: mazama
+    name: Mazama
+    basin: "17020008"
+    page: null
+    stations:
+      - {id: MAZ22, network: NWAC, label: Mazama, primary: true}
+
+  - id: stevens-pass
+    name: Stevens Pass
+    basin: "17110009"
+    page: /tools/stevens-pass.html
+    webcams:
+      - {type: windy, id: "1346275221", label: "US 2 at East Stevens Pass Summit"}
+      - {type: windy, id: "1793897716", label: "Dirtyface Peak - Natapoc Ridge"}
+    stations:
+      - {id: STB48, network: NWAC, label: Brooks, primary: true}
+      - {id: STS52, network: NWAC, label: Skyline}
+      - {id: STS54, network: NWAC, label: Tye Mill}
+      - {id: STS48, network: NWAC, label: Grace Lakes}
+      - {id: "791:WA:SNTL", network: SNOTEL, label: Stevens Pass}
+
+  - id: leavenworth-icicle
+    name: Leavenworth / Icicle Creek
+    basin: "17020011"
+    page: null
+    stations:
+      - {id: "1338:WA:SNTL", network: SNOTEL, label: Icicle Creek, primary: true}
+
+  - id: blewett-pass
+    name: Blewett Pass
+    basin: "17020011"
+    basins: ["17020011", "17030001"]   # straddles Wenatchee (north) and Upper Yakima (south)
+    page: /tools/blewett-pass.html
+    webcams:
+      - {type: windy, id: "1346275220", label: "US 97 Blewett Pass Summit"}
+    stations:
+      - {id: BLT41, network: NWAC, label: Blewett Pass, primary: true}
+      - {id: "352:WA:SNTL", network: SNOTEL, label: Blewett Pass}
+
+  - id: salmon-la-sac
+    name: Salmon La Sac
+    basin: "17030001"
+    page: null
+    webcams:
+      - {type: windy, id: "1667840569", label: "Ronald (north-west)"}
+    stations:
+      - {id: "734:WA:SNTL", network: SNOTEL, label: Sasse Ridge, primary: true}
+
+  - id: snoqualmie-east
+    name: Snoqualmie East
+    basin: "17110013"
+    page: /tools/snoqualmie-pass.html
+    stations:
+      - {id: "788:WA:SNTL", network: SNOTEL, label: Stampede Pass, primary: true}
+
+  - id: snoqualmie-west
+    name: Snoqualmie West
+    basin: "17110010"
+    page: /tools/snoqualmie-pass.html
+    webcams:
+      - {type: youtube, id: "w4Sno8NIjmU", label: "Summit Central (top)"}
+      - {type: windy, id: "1346275207", label: "I-90 at Snoqualmie Summit"}
+    stations:
+      - {id: "672:WA:SNTL", network: SNOTEL, label: Olallie Meadows, primary: true}
+
+  - id: alpental
+    name: Alpental
+    basin: "17110010"
+    page: /tools/snoqualmie-pass.html
+    webcams:
+      - {type: youtube, id: "8wk81COX2cg", label: "Alpental (top)"}
+    stations:
+      - {id: ALP55, network: NWAC, label: Alpental Summit}
+      - {id: ALP44, network: NWAC, label: Alpental Mid-Mountain, primary: true}
+      - {id: ALP31, network: NWAC, label: Alpental Base}
+
+  - id: crystal-mountain
+    name: Crystal Mountain
+    basin: "17110014"
+    page: /tools/crystal-mountain.html
+    stations:
+      - {id: CMT69, network: NWAC, label: Crystal Summit}
+      - {id: GRN62, network: NWAC, label: Green Valley, primary: true}
+      - {id: CCB59, network: NWAC, label: Campbell Basin}
+      - {id: CMT46, network: NWAC, label: Crystal Base}
+      - {id: "642:WA:SNTL", network: SNOTEL, label: Morse Lake}
+
+  - id: paradise
+    name: Paradise - Mt. Rainier
+    basin: "17110015"
+    page: /tools/paradise.html
+    webcams:
+      - {type: windy, id: "1384985408", label: "Henry M. Jackson Visitor Center"}
+    stations:
+      - {id: MU101, network: NWAC, label: Camp Muir}
+      - {id: PVC54, network: NWAC, label: Paradise}
+      - {id: "679:WA:SNTL", network: SNOTEL, label: Paradise, primary: true}
+
+  - id: mt-st-helens
+    name: Mt. St. Helens
+    basin: "17080002"
+    page: /tools/mt-st-helens.html
+    stations:
+      - {id: "1012:WA:SNTL", network: SNOTEL, label: Swift Creek, primary: true}
+
+  - id: white-pass
+    name: White Pass
+    basin: "17080004"
+    page: /tools/white-pass.html
+    webcams:
+      - {type: windy, id: "1459260236", label: "US 12 at White Pass Summit"}
+    stations:
+      - {id: WPS60, network: NWAC, label: Pigtail Peak}
+      - {id: WPS58, network: NWAC, label: White Pass Upper}
+      - {id: WPS45, network: NWAC, label: White Pass Base}
+      - {id: "863:WA:SNTL", network: SNOTEL, label: White Pass E.S., primary: true}
+
+  - id: mt-adams
+    name: Mt. Adams
+    basin: "17080002"
+    page: /tools/mt-adams.html
+    note: No stations sit near Mt. Adams. These are approximate conditions from Surprise Lakes SNOTEL, southwest of the mountain.
+    stations:
+      - {id: "804:WA:SNTL", network: SNOTEL, label: Surprise Lakes, primary: true}

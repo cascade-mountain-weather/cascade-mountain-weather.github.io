@@ -1,0 +1,17 @@
+---
+layout: page
+title: "Live Conditions Map | Cascade Mountain Weather"
+description: "Live temperature, wind, snow depth, SWE and precipitation from NWAC and SNOTEL stations across the Washington Cascades, updated every 2 hours."
+keywords: "Washington Cascades live conditions, NWAC stations, SNOTEL, snow depth, SWE, Stevens Pass conditions, Crystal Mountain conditions"
+og_title: "Live Conditions Map | Cascade Mountain Weather"
+og_description: "Live station conditions across the Washington Cascades, updated every 2 hours."
+---
+<section id="conditions-map-page">
+    <h2>Live Conditions Map</h2>
+    <p>
+        Current observations from NWAC and SNOTEL stations at each area we cover. Click a box on the map for the
+        station table and a 72-hour checklist, or scroll down for every area at once. A &#9888; marks data that
+        looks questionable, such as a sensor that stopped reporting or a snow depth that disagrees with its neighbors.
+    </p>
+    {% include conditions-map.html tall=true all=true %}
+</section>
