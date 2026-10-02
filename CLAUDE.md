@@ -22,7 +22,7 @@ Areas covered: Mt. Baker, Stevens Pass, Snoqualmie Pass, Blewett Pass, Crystal, 
 
 ## How things connect
 
-- The homepage "Latest Forecast" hero, "Recent Forecasts" list, and `posts/archive.html` are all driven by `site.posts` (Liquid), sorted newest-first automatically by Jekyll. There is no `latest-post-summary.html` anymore and no client-side fetch/probe JS for posts — publishing a new post file is the only step needed to update all three.
+- The homepage "Latest Forecast" card and `posts/archive.html` ("Previous Forecasts", a year/month selector over every post) are both driven by `site.posts` (Liquid), sorted newest-first automatically by Jekyll. There is no `latest-post-summary.html` anymore and no client-side fetch/probe JS for posts — publishing a new post file is the only step needed to update both.
 - `_includes/head.html` appends " | Cascade Mountain Weather" to post `<title>`/og:title automatically (posts' front matter `title` is just the plain heading text, matching what shows in the post header/archive/recent-posts list).
 
 ## Local preview
