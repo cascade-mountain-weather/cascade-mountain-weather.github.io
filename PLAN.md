@@ -42,8 +42,122 @@ Development goals: tools to be constructed in the background before posting
 | DGZ / east-flow / inversion / AR flags | Derived from existing CW3E/UW/NBM model data already scraped by `synoptic.yml` | model-tools pages, referenced in forecast posts | Updates with model runs |
 | Climate outlook + teleconnections page | NOAA CPC products: [PNA ensemble](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna_index_ensm.shtml), [MJO](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml), [ENSO](https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/enso.shtml), plus CPC ensemble outlook toggles | new `tools/climate-outlook.html` | Start with CPC's own charts embedded/linked (Thursdays alongside the forecast); Danny's own MJO-phase/local-snow correlation analysis layers in later once he's built it |
 | UW WRF ensemble viewer | `a.atmos.washington.edu/wrfrt/ensembles/plumes.html` — feasibility TBD (see Open questions) | model-tools pages | With each UW WRF run (~every 6 hrs) |
-| Ski-area recommendation tool | Composes: NWAC avalanche danger, pass-closure/driving-hazard flags, CW3E/model conditions, drive time | new `tools/find-your-ski-day.html` (name TBD) | Live, driven by current forecast/model data |
+| Ski-area recommendation tool | NWAC avalanche danger (Avalanche.org API), WSDOT pass conditions, NBM forecasts pulled with Herbie, precomputed drive times; see "Ski-area recommendation tool: design" below | new `tools/find-your-ski-day.html` (name TBD) | Scheduled Action every ~3 h writes `assets/data/ski_features.json`; scoring runs in the browser |
 | Corn model | Energy-balance model (shortwave/longwave, wind, temp, humidity, terrain DEM, solar angle) validated against SNOTEL obs and Danny's own field observations of good corn days; forcing from HRRR/RRFS/HRDPS/NBM if accessible | new `tools/corn-model.html` (see `.claude/skills/corn-forecast-model/SKILL.md`) | Thu-Sun outlook, spring season only |
+
+## Ski-area recommendation tool: design
+
+Status: draft from the Oct 2026 planning session. Items marked **(verify)** are unconfirmed and get checked in the Phase 0 spike below.
+
+### Approach
+
+A scoring problem, not a trained model: there are no labels to learn from. **Hard gates** remove a destination outright (avalanche danger, pass closure, major storm). **Weighted soft scoring** ranks the rest: each criterion is normalized to 0-1 and multiplied by the user's slider weight, so every ranking can be explained. The user picks a **mode** first (backcountry, resort, nordic); the mode decides which gates apply and which access points are candidates.
+
+### Destinations
+
+A destination is an **access point** grouped into a **zone**. Forecast, avalanche region, and road dependencies attach to the zone; the tool recommends a zone and lists its access points.
+
+| Access point type | Source | Modes |
+|---|---|---|
+| Trailhead | Clusters of day-scale start points from the CalTopo "Washington Ski Tours" export, reviewed by hand | backcountry |
+| Resort lot | Hand-entered; `parking_url` where the resort has a parking page | resort, backcountry |
+| Sno-park | Hand-entered from WA State Parks pages; coordinates and permit info come from there | nordic, backcountry |
+
+- The CalTopo tracks are guidebook-derived (Burgdorfer, Volken, Blair). Use them only to decide where zones go; do not publish the geometry, descriptions, or the guidebook difficulty/avalanche tags.
+- A guidebook start is often a summer trailhead. Every zone needs a `winter_access` point (the plowed terminus); drive time is measured to it.
+- The CalTopo clustering gives about 11 zones: Snoqualmie, Rainier-Paradise, Stevens, Mt. Baker/Hwy 542, Crystal/Chinook, Hurricane Ridge, Washington Pass, Blewett, White Pass, St. Helens, Leavenworth/Icicle. Whistler, the Vancouver hills, Mission Ridge, and Mazama have no useful tracks and are added by hand.
+- Source config lives in `data/ski/destinations.yml` (inside `data/`, already excluded from the Jekyll build). A script merges it with the live features into one `assets/data/ski_features.json`, which the page loads.
+- Pass info is a typed field, not a boolean: `pass: {type: sno_park | trail_pass | resort_ticket | none}`. Methow Trails uses its own trail pass, as far as I know **(verify)**.
+
+### Elevation (DEM): one-time script, results stored in the config
+
+No live elevation calls. A script run by hand samples a DEM and writes static values:
+- USGS 3DEP (about 10 m) for Washington via `py3dep`/`seamless-3dep`; Copernicus GLO-30 (AWS `copernicus-dem-30m`) for BC **(verify BC tile coverage)**.
+- Per access point: elevation. Per zone: `winter_access` elevation, elevation percentiles in a ~1.5 km buffer around the track cluster, and `top`/`vert`. Keep a manual override field.
+- Per forecast point: mean DEM elevation inside the 2.5 km NBM cell, used to lapse-rate-correct temperature and wind.
+- Commit only the derived numbers. Do not commit rasters (see Constraints on repo size). The same DEM and extraction code is reused by the corn model.
+
+### Forecast pipeline (Herbie + NBM)
+
+- New workflow `.github/workflows/ski_features.yml`, modeled on `radiosonde_history.yml`: `permissions: contents: write`, cron about every 3 h, `pip install` inline, commit only `assets/data/ski_features.json`, then `git pull --rebase origin main` and push.
+- Herbie finds the latest NBM cycle (fall back up to a few cycles), fetches only the needed variables via GRIB `.idx` byte ranges, and extracts values at each zone's forecast points. It needs ecCodes/cfgrib: use conda-forge or `apt-get install libeccodes-dev` **(verify which works in Actions)**.
+- **Fields already confirmed in the NBM viewer exports in `data/forecasts/*.csv`** (the viewer reads the same NBM data): `SNOWLVL`, `ASNOW` (1/6/24/48/72 h, with percentiles and exceedance probabilities), `SNOWLR`, `APCP` (percentiles and probabilities), `WIND` and `GUST` (probabilities), `TMP`/`TMP_Max`/`TMP_Min`, `TCDC`, `CEIL`, `VIS`, and `PTYPE` probabilities. Whether the GRIB files expose the same set under Herbie's search strings is **(verify)** in Phase 0.
+- `SNOWLR` (I read it as snow-to-liquid ratio, **verify** in the GRIB inventory) is a direct density proxy, so use it for powder versus "Cascade concrete" instead of inventing temperature thresholds.
+- The percentile and probability fields give uncertainty for free: show `ASNOW24` spread and `P(gust > threshold)` as the confidence caveat on snow and wind.
+- Snow level (`SNOWLVL`) is absolute (MSL), so it compares directly with the user's minimum elevation.
+- Use `zoneinfo` for the 07:00-16:00 local window. Daylight saving ends Nov 1, 2026.
+- Recent observed snow (last 24/48 h) comes from the existing Synoptic station mapping in `scripts/collect_weather_data.py` (`RESORTS_TO_STATIONS`), not from reconstructing past forecasts.
+- BC: NBM coverage of Whistler and the Vancouver hills is unconfirmed **(verify)**. Fallback is Open-Meteo (HRDPS; ask about donations being non-commercial) or Environment Canada open data.
+- Keep the existing Selenium NBM-viewer flow in `scripts/build_fx_evaluation.py` as is. The viewer only serves named locations, so it cannot supply arbitrary trailhead points.
+
+### Min elevation (rain-snow filter plus vert)
+
+The user's minimum elevation does two jobs:
+- Feasibility: fraction of window hours with `SNOWLVL` at or below (minimum elevation minus a margin parameter).
+- Vert score: `top - max(user_min, access)`, normalized.
+- Avalanche: use the worst rating among the elevation bands above the user's minimum.
+
+### Avalanche, roads, drive times
+
+- Avalanche: Avalanche.org public API, `map-layer/NWAC` (10 zones). It is off-season now: `danger_level: -1`, `off_season: true`, through about 11/21/26. Treat -1 as "no forecast", never "low". Expire ratings daily. BC: Avalanche Canada products API (terms unpublished; email it@avalanche.ca).
+- Roads: see "Pass conditions and traffic (WSDOT)" below.
+- Drive times: precomputed once from Seattle, Tacoma, Bellingham, Portland, and Olympia to each zone's `winter_access`. Free-flow only. The 5-hour cap is applied at filter time.
+
+### Pass conditions and traffic (WSDOT)
+
+- **Source:** the Traveler Information API (documented; access code by email), `GetMountainPassConditionsAsJson`, 15 passes. Fields: pass id, name, lat/lon, `DateUpdated`, `TemperatureInFahrenheit`, `ElevationInFeet`, `WeatherCondition`, `RoadCondition`, `TravelAdvisoryActive`, and `RestrictionOne`/`RestrictionTwo` (each a `TravelDirection` plus free-text `RestrictionText`). The wsdot.com mountain passes page returned only its header to my fetch, so I could not see what extra it shows. Use the documented API, not undocumented calls behind that page **(verify in a browser whether the page shows anything the API lacks)**.
+- **Free text, not codes:** map `RestrictionText` and `RoadCondition` to a severity (none / traction advised / chains / closed) with a lookup table, and treat unrecognized strings as "caution, unknown". Collect the real strings in-season before fixing the table.
+- **It reports current state, not forecast risk.** Use it two ways: (1) a current-state penalty or gate for near-term days; (2) a **pass history log**, same pattern as `radiosonde_history.json`: the bot appends only state changes per pass to `assets/data/pass_history.json`. After a season, pair that log with the NBM forecast at each pass to calibrate closure-risk thresholds (snow rate, wind, snow level) from data instead of guessing.
+- **Closures:** the Highway Alerts API is the likely source for closures and avalanche-control work, but its docs do not say closures are included. Check its event categories **(verify)**.
+- **Bot:** a small hourly workflow `pass_conditions.yml` writing `assets/data/pass_conditions.json` plus the history log, with the access code in an Actions secret. The page shows an "as of" time and treats data older than about 2 h as unknown. The browser cannot call the API directly without exposing the access code.
+- **Traffic:** current congestion only matters for same-day trips. For future days, add a tunable `peak_penalty` per route (for example I-90 or US 2 on weekend mornings) on top of free-flow drive time. WSDOT's Travel Times and Traffic Flow APIs are in the same family; which routes they cover is **(verify)**.
+- **Zone mapping:** each zone's `road_dependencies` lists pass ids. Phase 0 prints the 15 pass names and ids so the mapping is filled in from real data.
+
+### Nordic grooming
+
+| Source | Covers | What the page showed (2026-10-02) |
+|---|---|---|
+| [Kongsbergers](https://www.kongsbergers.org/GroomingReport) | Cabin Creek, Erling Stordahl | Weekly grooming schedule table (Dec 1-Mar 31); status "season has ended". In-season daily reports not seen yet. |
+| WA State Parks: [Hyak](https://parks.wa.gov/find-sno-parks/hyak-sno-park), [Crystal Springs](https://parks.wa.gov/find-sno-parks/crystal-springs-sno-park) | Hyak (7 mi non-motorized, 150 spaces), Crystal Springs (51 mi motorized and non-motorized, 150 spaces) | Dated grooming entries with snow depth; last entry 3/27/26, grooming suspended. Same report text on both pages. Sno-Park Permit required per the pages. |
+| [Methow Trails](https://methowtrails.org/conditions) | Methow winter system (200+ km) | Staff note dated 9/14/26; grooming map is an embedded Nordic Pulse widget. |
+
+Tiers:
+- **Tier 0 (beta):** link-only. Every nordic access point has `grooming_url`. Nordic ranking uses weather and snow only, and the page says it cannot tell whether a trail is groomed.
+- **Tier 1 (after the season starts and the formats are seen):** parse State Parks entries into a coarse dated status (`active`, `suspended`, `unknown`), showing the entry date and verbatim text with the link. Entries older than a set age become `unknown`. Check each site's terms/robots and contact them first **(verify)**.
+- **Tier 2:** Methow via Nordic Pulse is link-only unless Methow Trails offers a feed (ask). Kongsbergers' schedule is shown as "scheduled days", not confirmation.
+- Use the Wayback Machine only to inspect in-season page formats, not as a data source.
+
+### Gates and null recommendation
+
+- Backcountry mode: avalanche danger High or above removes the zone. Considerable adds a strong penalty and a warning. Missing or off-season ratings block backcountry recommendations.
+- Resort and nordic modes: avalanche danger does not remove a result; it is shown as an info banner. High danger does tend to coincide with pass closures and slow travel, so it raises the road-risk term (a tunable heuristic, calibrated later against `pass_history.json`).
+- All modes: pass-closure risk or a major storm (for example a strong atmospheric river with high wind) can produce a null result.
+- Any source older than its freshness limit: show "data unavailable" and recommend nothing.
+- Wording: "fits your criteria", never "safe".
+
+### Validation
+
+What exists today: 23 weekly summaries in `data/forecasts/eval_forecast_*.json` (from 2025-11-27), each holding per-area NBM accumulated snowfall and snow level next to your own forecast, plus weekly reports in `data/evaluation_reports/` with SNOTEL-observed results. That is enough to sanity-check the snow and snow-level criteria at weekend scale for the nine existing areas.
+
+It is **not** a hindcast of the full scorer. Only one hourly NBM CSV per site is kept (all from the same April 2026 run), so precipitation probability, wind, cloud, and visibility cannot be replayed. Fix that going forward: once the bot runs, it also writes a compact daily snapshot of each zone's extracted features to `data/ski/archive/YYYY-MM-DD.json` (inside the excluded `data/` folder), so a real replay set exists by midwinter.
+
+Avalanche gating cannot be replayed until NWAC forecasts resume (about late November). Save real responses once they do.
+
+### Build order
+
+- **Phase 0 (spike, no UI):** one script samples three points (Snoqualmie, Colchuck, Whistler) with Herbie, prints the GRIB inventory, records run time and file size, and compares values with the viewer CSV for the same site. Output: `docs/nbm_fields.md`.
+- **Phase 1:** `data/ski/destinations.yml` skeleton plus the DEM script. Start the daily archive snapshot as soon as the bot runs.
+- **Phase 2:** scorer and UI on mock data.
+- **Phase 3:** wire in NBM, WSDOT, and avalanche data, with staleness rules.
+- **Phase 4 (once NWAC resumes):** replay storm days, then public beta.
+
+### Open questions (ski tool)
+
+1. ~~High danger and resort/nordic~~ Resolved: it gates backcountry only; resort/nordic show a banner and a higher road-risk term.
+2. ~~Tier 1 grooming parse~~ Resolved: link-only for beta. Parsing State Parks, Kongsbergers and similar text products is a later phase.
+3. Open-Meteo: this site is a hobby funded by donations, not a business or a paid service. That is a reasonable reading of "non-commercial", but Open-Meteo's docs do not define it, so a short email would settle it. It only matters for BC if NBM covers Washington.
+4. Does `[skip ci]` on a bot commit suppress the Pages build? Three bots use it and the GFS bot does not. Untested (no API access from here). Check in the repo's Actions tab whether "pages build and deployment" runs follow bot commits, and whether the live hourly weather page updates. If it is suppressed, the new workflows commit without it.
+5. Housekeeping before launch: rotate the Synoptic token (move to an Actions secret, revoke the old one) and store the WSDOT access code as a secret from the start.
 
 ## Constraints
 
@@ -68,7 +182,7 @@ Development goals: tools to be constructed in the background before posting
 4. **CW3E/UW presentation revamp + flags** — play/pause carousel, timezone fix, station map, DGZ/east-flow/inversion/AR flags.
 5. **Climate outlook + teleconnections page** — CPC PNA/MJO/ENSO + ensemble outlook toggles, starting with NOAA's own charts.
 6. **UW WRF feasibility spike** — short, timeboxed investigation into whether the ensemble plumes page is scrapeable before committing to building against it.
-7. **Ski-area recommendation tool** — capstone; composes outputs from phases 3-6 (avalanche flag, closure risk, model conditions, drive time).
+7. **Ski-area recommendation tool** — capstone; composes the avalanche flag, closure risk, drive time, and its own NBM/Herbie forecast pipeline (it does not depend on the CW3E/UW work in phases 4-6). Start with its Phase 0 NBM spike early, since the DEM and NBM extraction code is shared with the corn model. See "Ski-area recommendation tool: design".
 8. **Corn model** — physics/validation work can happen through winter, but real-world testing needs actual corn conditions, so target a March launch rather than racing it now.
 
 ## Open questions
@@ -76,7 +190,7 @@ Development goals: tools to be constructed in the background before posting
 - UW WRF ensemble page: is `plumes.html` actually scrapeable, or does it need a different access path? (Phase 6 spike will answer this.)
 - Merch provider: which print-on-demand service — Printful, Bonfire, Threadless, something else? Needs a quick comparison of cost/quality/ease of logo upload.
 - Corn model: build the energy-balance model from scratch, or adapt an existing open-source snow-metamorphosis model (e.g. a simplified SNOWPACK)? Depends on what forcing data (HRRR/RRFS/HRDPS/NBM) turns out to be accessible.
-- Ski-recommendation tool: exact decision logic (weighting/thresholds for each input) needs to be worked through with Danny before building — this is a "we can work through questions for this part" item, not something to guess at.
+- Ski-recommendation tool: criterion thresholds (powder, corn, "Cascade concrete", visibility, wind) are placeholders to tune with Danny; the structure and open questions are in "Ski-area recommendation tool: design" above.
 - Radiosonde PW (precipitable water) estimate: worth scoping once the base Skew-T tool is working — may just be a derived MetPy calculation from the same sounding data.
 
 ## Reference links
@@ -94,6 +208,13 @@ Scripts for HRRR data acquisition and sounding data (reference implementation):
 NBM viewer and data downloader:
 - https://apps.gsl.noaa.gov/nbmviewer/?col=2&hgt=1&obs=false&fontsize=1&location=Downtown+Seattle&selectedgroup=Default&darkmode=on&graph=fa-chart-bar&probfield=Tmax&proboperator=%3E%3D&probvalue=40&colorfriendly=false&whiskers=false&boxes=true&median=false&det=true&tz=local
 - See `docs/plan-images/NBM-viewer.png` for a screenshot.
+
+Ski-recommendation tool data sources:
+- Avalanche.org public API (NWAC zones): https://api.avalanche.org/v2/public/products/map-layer/NWAC and https://github.com/NationalAvalancheCenter/Avalanche.org-Public-API-Docs
+- Avalanche Canada products API: https://docs.avalanche.ca/
+- WSDOT Traveler Information API (mountain passes): https://wsdot.wa.gov/traffic/api/
+- NBM on AWS: https://registry.opendata.aws/noaa-nbm/ and Herbie NBM docs: https://herbie.readthedocs.io/en/stable/gallery/noaa_models/nbm.html
+- Nordic grooming: https://www.kongsbergers.org/GroomingReport, https://parks.wa.gov/find-sno-parks/hyak-sno-park, https://parks.wa.gov/find-sno-parks/crystal-springs-sno-park, https://methowtrails.org/conditions
 
 West WRF figures from CW3E:
 - https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms?station=US2

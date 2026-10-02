@@ -9,21 +9,23 @@
             <a href="{{ '/index.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Home <span class="dropdown-caret">▾</span></a>
             <ul class="dropdown-menu" role="menu" aria-label="Home subpages">
                 <li role="none"><a role="menuitem" href="{{ '/index.html' | relative_url }}">Home</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/dendritic-growth-zone.html' | relative_url }}">What's the Dendritic Growth Zone?</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/about.html' | relative_url }}">About Us</a></li>
             </ul>
         </li>
         <li class="nav-item dropdown">
-            <a href="{{ '/posts/archive.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Forecast <span class="dropdown-caret">▾</span></a>
-            <ul class="dropdown-menu" role="menu" aria-label="Forecast subpages">
-                <li role="none"><a role="menuitem" href="{{ '/index.html' | relative_url }}#latest-post">Latest Forecast</a></li>
-                <li role="none"><a role="menuitem" href="{{ '/posts/archive.html' | relative_url }}">Archive</a></li>
+            <a href="{{ '/posts/archive.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Forecast Blog <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Forecast blog subpages">
+                <li role="none"><a role="menuitem" href="{{ site.posts.first.url | relative_url }}">Latest Forecast</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/posts/archive.html' | relative_url }}">Previous Forecasts</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/evaluation.html' | relative_url }}">Evaluation</a></li>
             </ul>
         </li>
         <li class="nav-item dropdown">
             <a href="{{ '/tools/model-tools-current-weather.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Current Weather &amp; Observations <span class="dropdown-caret">▾</span></a>
             <ul class="dropdown-menu" role="menu" aria-label="Current weather and observations subpages">
-                <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-current-weather.html' | relative_url }}">Live Conditions</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/tools/conditions-map.html' | relative_url }}">Live Conditions Map</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/tools/model-tools-current-weather.html' | relative_url }}">Current Weather Table</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/tools/satellite-loop.html' | relative_url }}">Satellite Loop</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/tools/radiosonde.html' | relative_url }}">Skew-T / Soundings</a></li>
             </ul>
