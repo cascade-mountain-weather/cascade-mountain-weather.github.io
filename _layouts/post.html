@@ -8,6 +8,11 @@
 {% include nav.html %}
 
 <main>
+    <div class="post-welcome">
+        <h2>Welcome to the Dendritic Growth Zone Forecast Blog <a href="{{ '/dendritic-growth-zone.html' | relative_url }}">(what's that?)</a></h2>
+        {% assign edition = page.summary | default: page.description %}
+        {% if edition %}<p class="post-edition"><strong>In this week's edition:</strong> {{ edition }}</p>{% endif %}
+    </div>
     <article class="post">
         <header class="post-header">
             <h1>{{ page.title }}</h1>

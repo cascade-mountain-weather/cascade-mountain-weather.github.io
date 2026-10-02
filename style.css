@@ -336,6 +336,183 @@ h3 {
     background-color: #1e3c72;
 }
 
+/* Homepage split: live conditions map on the left, forecast card on the right.
+   Stacks below 900px with the forecast first, since a tall map is awkward to
+   scroll past on a phone. */
+.home-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin-bottom: 2rem;
+}
+
+.home-split section {
+    margin-bottom: 0;
+}
+
+.home-intro {
+    text-align: center;
+    color: #475569;
+    margin: 0 0 1.5rem;
+}
+
+.home-intro a {
+    font-weight: 600;
+}
+
+.previous-link {
+    display: block;
+    width: fit-content;
+    margin-top: 0.6rem;
+    padding: 0.3rem 0.9rem;
+    background-color: #e2e8f0;
+    color: #475569;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.previous-link:hover {
+    background-color: #cbd5e1;
+}
+
+.post-welcome {
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.post-welcome h2 {
+    border-bottom: none;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0;
+}
+
+.post-welcome .post-edition {
+    margin: 0;
+}
+
+/* The shared .tool-card rule nudges cards down 10% (for the synoptic page);
+   on the DGZ page that pushes the plots over the content below. */
+#dgz-education .tool-card {
+    top: auto !important;
+    right: auto !important;
+}
+
+.post-welcome h2 a {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.post-edition {
+    color: #475569;
+}
+
+/* Previous Forecasts month/year selector */
+.archive-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.archive-picker[hidden] {
+    display: none;
+}
+
+/* Same look as the synoptic tools' .tool-row-selector select */
+.archive-picker label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.archive-picker select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    min-width: 9rem;
+    padding: 0.4rem 2rem 0.4rem 0.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.95rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%231e3c72" viewBox="0 0 16 16"><path d="M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 16px 16px;
+}
+
+.archive-picker select:focus {
+    outline: none;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30,60,114,0.15);
+}
+
+.archive-section[hidden] {
+    display: none;
+}
+
+.home-map-desc {
+    color: #475569;
+    margin: -0.75rem 0 1rem;
+}
+
+.home-side {
+    display: grid;
+    gap: 1.5rem;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.home-map {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+}
+
+.home-card {
+    align-items: stretch;
+    padding: 2rem;
+}
+
+@media (max-width: 900px) {
+    .home-split {
+        grid-template-columns: 1fr;
+    }
+
+    .home-split .home-map,
+    .home-split .home-side {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .home-split section {
+        padding: 1.25rem 1rem;
+    }
+
+    .home-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .home-split h2 {
+        font-size: 1.6rem;
+    }
+
+    .home-map-desc {
+        margin: 0 0 0.75rem;
+    }
+}
+
 /* Ski Areas Grid */
 .area-grid {
     display: grid;

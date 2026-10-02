@@ -1,19 +1,32 @@
 ---
 layout: page
-title: "Forecast Archive | Cascade Mountain Weather"
-description: "Browse past weekend weather forecasts from Cascade Mountain Weather. Access our archive of Washington Cascade Range ski area forecasts for Mt. Baker, Stevens Pass, Crystal Mountain, and more."
-keywords: "Cascade Mountain Weather archive, past ski forecasts, Washington snow forecast history, Cascade Range weather history, historical mountain weather"
-og_title: "Forecast Archive | Cascade Mountain Weather"
-og_description: "Browse past weekend ski forecasts for Washington Cascade Range ski areas."
+title: "Previous Forecasts | Cascade Mountain Weather"
+description: "Browse past weekend weather forecasts from Cascade Mountain Weather by month and year. Washington Cascade Range ski area forecasts for Mt. Baker, Stevens Pass, Crystal Mountain, and more."
+keywords: "Cascade Mountain Weather archive, past ski forecasts, previous forecasts, Washington snow forecast history, Cascade Range weather history, historical mountain weather"
+og_title: "Previous Forecasts | Cascade Mountain Weather"
+og_description: "Browse past weekend ski forecasts for Washington Cascade Range ski areas by month and year."
 ---
 <section class="archive">
-    <h2>📚 Forecast Archive</h2>
+    <h2>📚 Previous Forecasts</h2>
 
+    <div class="archive-picker" id="archive-picker" hidden>
+        <label>Year
+            <select id="archive-year"></select>
+        </label>
+        <label>Month
+            <select id="archive-month"></select>
+        </label>
+    </div>
+
+    {% comment %}
+      Every month is rendered so the page works without JavaScript. The script below
+      shows one month at a time using the Year/Month selectors.
+    {% endcomment %}
     <div id="archive-list">
-        {% assign posts_by_month = site.posts | group_by_exp: "post", "post.date | date: '%B %Y'" %}
+        {% assign posts_by_month = site.posts | group_by_exp: "post", "post.date | date: '%Y-%m'" %}
         {% for month in posts_by_month %}
-        <div class="archive-section">
-            <h3>{{ month.name }}</h3>
+        <div class="archive-section" data-month="{{ month.name }}">
+            <h3>{{ month.items.first.date | date: "%B %Y" }}</h3>
             <ul class="post-list">
                 {% for post in month.items %}
                 <li>
@@ -26,12 +39,62 @@ og_description: "Browse past weekend ski forecasts for Washington Cascade Range 
             </ul>
         </div>
         {% else %}
-        <p>No archive posts found.</p>
+        <p>No previous forecasts found.</p>
         {% endfor %}
     </div>
 </section>
 
-<section class="about">
-    <h2>About the Archive</h2>
-    <p>Browse past forecasts to see how conditions evolved throughout the season. This archive helps track snow patterns and verify forecast accuracy over time.</p>
-</section>
+<script>
+(function () {
+    var sections = Array.prototype.slice.call(document.querySelectorAll('#archive-list .archive-section'));
+    var picker = document.getElementById('archive-picker');
+    var yearSel = document.getElementById('archive-year');
+    var monthSel = document.getElementById('archive-month');
+    if (!sections.length || !picker) return;
+
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                  'August', 'September', 'October', 'November', 'December'];
+
+    // data-month is "YYYY-MM"; sections are already newest-first.
+    var byYear = {};
+    sections.forEach(function (sec) {
+        var parts = sec.dataset.month.split('-');
+        (byYear[parts[0]] = byYear[parts[0]] || []).push(parts[1]);
+    });
+    var years = Object.keys(byYear).sort().reverse();
+
+    function fill(select, items, labelFor, selected) {
+        select.innerHTML = '';
+        items.forEach(function (value) {
+            var opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = labelFor(value);
+            opt.selected = value === selected;
+            select.appendChild(opt);
+        });
+    }
+
+    function show(year, month) {
+        var key = year + '-' + month;
+        sections.forEach(function (sec) { sec.hidden = sec.dataset.month !== key; });
+        try { history.replaceState(null, '', '#' + key); } catch (e) { /* non-critical */ }
+    }
+
+    function pickYear(year, preferredMonth) {
+        var months = byYear[year].slice().sort().reverse(); // newest month first
+        var month = months.indexOf(preferredMonth) >= 0 ? preferredMonth : months[0];
+        fill(monthSel, months, function (m) { return MONTHS[parseInt(m, 10) - 1]; }, month);
+        show(year, month);
+    }
+
+    // Start on a month from the URL hash if valid, otherwise the newest month.
+    var start = (location.hash || '').replace('#', '').split('-');
+    var startYear = byYear[start[0]] ? start[0] : years[0];
+    fill(yearSel, years, function (y) { return y; }, startYear);
+    pickYear(startYear, start[1]);
+
+    yearSel.addEventListener('change', function () { pickYear(yearSel.value, monthSel.value); });
+    monthSel.addEventListener('change', function () { show(yearSel.value, monthSel.value); });
+    picker.hidden = false;
+}());
+</script>
