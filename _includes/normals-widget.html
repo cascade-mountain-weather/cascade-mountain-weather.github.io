@@ -1,0 +1,15 @@
+{% comment %}
+  "Season vs normal" bar charts for the homepage. Data: assets/data/normals.json,
+  written daily by scripts/collect_normals.py. Include at most once per page.
+{% endcomment %}
+<link rel="stylesheet" href="{{ '/assets/normals.css' | relative_url }}">
+<section id="season-normals" class="normals" data-src="{{ '/assets/data/normals.json' | relative_url }}">
+    <h2>How Is the Season Stacking Up?</h2>
+    <p class="normals-desc">SNOTEL stations compared with normal for the same day of the water year (Oct 1 start).
+        Precipitation and snow water equivalent (SWE) are percent of the NRCS median; temperature is departure from the 1991&ndash;2020 average.</p>
+    <div class="normals-grid" id="normals-grid">
+        <p class="normals-status" role="status">Loading...</p>
+    </div>
+    <p class="normals-foot" id="normals-foot"></p>
+</section>
+<script defer src="{{ '/assets/normals.js' | relative_url }}"></script>
