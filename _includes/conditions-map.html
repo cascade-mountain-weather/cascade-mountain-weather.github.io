@@ -1,0 +1,32 @@
+{% comment %}
+  Live conditions map. Usage: {% include conditions-map.html %}
+  Optional: tall=true for the standalone page, all=true to also render every
+  area's station table below the map. Include at most once per page.
+  Leaflet is loaded here; the page's layout does not need to know about it.
+{% endcomment %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="{{ '/assets/conditions-map.css' | relative_url }}">
+
+<div id="conditions-map" class="cmap{% if include.tall %} cmap--tall{% endif %}"
+     role="region" aria-label="Map of Washington Cascades forecast areas with live station conditions"
+     data-src="{{ '/assets/data/live_conditions.json' | relative_url }}"
+     data-basins="{{ '/assets/data/basins.geojson' | relative_url }}"
+     data-base="{{ site.baseurl }}"></div>
+<p id="conditions-status" class="cmap-status" role="status">Loading live conditions...</p>
+<p class="cmap-legend">
+    <span><span class="cmap-dot cmap-dot--ok"></span>Station</span>
+    <span><span class="cmap-dot cmap-dot--flag"></span>Questionable or no recent data</span></p>
+
+{% if include.all %}<div id="conditions-all" class="cmap-all"></div>{% endif %}
+
+<details class="cmap-areas">
+    <summary>All areas</summary>
+    <ul>
+        {% for area in site.data.areas.areas %}
+        <li>{% if area.page %}<a href="{{ area.page | relative_url }}">{{ area.name }}</a>{% else %}{{ area.name }}{% endif %}</li>
+        {% endfor %}
+    </ul>
+</details>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script defer src="{{ '/assets/conditions-map.js' | relative_url }}"></script>

@@ -1,0 +1,39 @@
+name: Update Live Conditions
+
+on:
+  schedule:
+    - cron: "10 */2 * * *" # every 2 hours, offset from the satellite loop at :00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-live-conditions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      - name: Collect live station conditions
+        run: python scripts/collect_live_conditions.py
+
+      - name: Commit and push updated conditions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/live_conditions.json
+          git commit -m "Update live conditions [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
