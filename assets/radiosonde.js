@@ -284,24 +284,43 @@ async function findAvailableCycle(stationId, startCycle, direction, maxSteps) {
     return null;
 }
 
-function renderStationButtons() {
-    els.stationButtons.innerHTML = '';
-    STATIONS.forEach(station => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'radiosonde-station-btn';
-        button.dataset.station = station.id;
-        button.setAttribute('aria-pressed', String(station.id === state.station));
-        button.innerHTML = `<strong>${station.id}</strong><span>${station.name}</span>`;
-        button.addEventListener('click', () => selectStation(station.id));
-        els.stationButtons.appendChild(button);
+const stationMarkers = new Map(); // station id -> Leaflet marker
+
+function stationIcon(selected) {
+    return L.divIcon({
+        className: '',
+        html: `<div class="radiosonde-map-pin${selected ? ' is-selected' : ''}"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
     });
 }
 
-function updateStationButtonStates() {
-    els.stationButtons.querySelectorAll('.radiosonde-station-btn').forEach(button => {
-        button.setAttribute('aria-pressed', String(button.dataset.station === state.station));
+function renderStationButtons() {
+    if (typeof L === 'undefined') {
+        els.stationButtons.textContent = 'Map failed to load.';
+        return;
+    }
+    const map = L.map(els.stationButtons, { scrollWheelZoom: false, attributionControl: true });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 10,
+    }).addTo(map);
+
+    STATIONS.forEach(station => {
+        const marker = L.marker([station.lat, station.lon], {
+            icon: stationIcon(station.id === state.station),
+            title: `${station.id} - ${station.name}`,
+            alt: `${station.id} - ${station.name}`,
+        }).addTo(map);
+        marker.bindTooltip(`<strong>${station.id}</strong> ${station.name}`, { direction: 'top', offset: [0, -10] });
+        marker.on('click', () => selectStation(station.id));
+        stationMarkers.set(station.id, marker);
     });
+    map.fitBounds(L.latLngBounds(STATIONS.map(s => [s.lat, s.lon])), { padding: [24, 24] });
+}
+
+function updateStationButtonStates() {
+    stationMarkers.forEach((marker, id) => marker.setIcon(stationIcon(id === state.station)));
 }
 
 async function selectStation(stationId) {
