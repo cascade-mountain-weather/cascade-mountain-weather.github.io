@@ -38,32 +38,27 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     }
 
     #station-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .radiosonde-station-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.1rem;
+        height: 240px;
         border: 1px solid #cbd5e1;
-        background: #f8fbff;
-        color: #1e3c72;
         border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        cursor: pointer;
-        text-align: left;
-        transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+        margin-bottom: 1rem;
+        z-index: 0;
     }
-    .radiosonde-station-btn strong { font-size: 0.95rem; }
-    .radiosonde-station-btn span { font-size: 0.78rem; opacity: 0.85; }
-    .radiosonde-station-btn:hover { background: #e6eefc; }
-    .radiosonde-station-btn[aria-pressed="true"] {
+    .radiosonde-map-pin {
+        width: 18px;
+        height: 18px;
+        margin: 2px;
+        border-radius: 50%;
+        background: #f8fbff;
+        border: 3px solid #1e3c72;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+    .radiosonde-map-pin:hover { transform: scale(1.2); }
+    .radiosonde-map-pin.is-selected {
         background: #1e3c72;
-        color: #fff;
-        transform: translateY(-1px);
+        border-color: #fff;
+        box-shadow: 0 0 0 2px #1e3c72, 0 1px 4px rgba(0, 0, 0, 0.4);
     }
 
     .radiosonde-cycle-nav {
@@ -279,10 +274,12 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         Observed soundings for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with
         <a href="https://unidata.github.io/MetPy/" target="_blank" rel="noopener">MetPy</a> from
         <a href="https://mesonet.agron.iastate.edu/json/raob.py" target="_blank" rel="noopener">IEM's RAOB data feed</a>.
-        Useful for eyeballing the true snow level (not just the freezing level), the dendritic growth
-        zone (DGZ), and convective potential. Nothing here is forecast data -- it's what the last
-        balloon actually measured. Hover the chart to read temperature, dew point, and parcel values
-        at any level, in metric or imperial units.
+        Read more about reading a Skew-T <a href="https://www.weather.gov/source/zhu/ZHU_Training_Page/convective_parameters/skewt/skewtinfo.html" target="_blank" rel="noopener">here</a>.
+        Skew-Ts are useful for eyeballing freezing level and temperature inversions, the dendritic growth
+        zone (DGZ), estimating snow level, wind shear, and convective potential. 
+        Click a site to see the most recent sounding for that location. Quillayte, Port Hardy, and Salem are launched
+        upwind of the Cascades, so they are often representative of what the Cascades will see.
+        Hover the chart to read temperature, dew point, and parcel values at any level, in metric or imperial units.
     </p>
 </section>
 
@@ -409,6 +406,8 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 <script>
     window.RADIOSONDE_HISTORY_URL = "{{ '/assets/data/radiosonde_history.json' | relative_url }}";
 </script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.1/plotly.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script src="{{ '/assets/radiosonde.js' | relative_url }}" defer></script>
