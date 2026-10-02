@@ -1,4 +1,5 @@
-// Homepage "season vs normal" bar charts, drawn with plain DOM/CSS (no chart library).
+// Homepage "season vs normal" bar chart: pick a variable, timeframe and unit.
+// Drawn with plain DOM/CSS (no chart library).
 // Data: assets/data/normals.json, written daily by scripts/collect_normals.py.
 // A missing value renders as an en dash with no bar.
 
@@ -9,74 +10,152 @@
     if (!root) return;
     const grid = document.getElementById('normals-grid');
     const foot = document.getElementById('normals-foot');
+    const varSel = document.getElementById('normals-var');
+    const tfSel = document.getElementById('normals-tf');
+    const unitSel = document.getElementById('normals-unit');
 
     const DASH = '–';
     const esc = s => String(s).replace(/[&<>"']/g, c => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    // pct charts: bar from 0, marker at 100%, axis capped at 200%.
-    // temp charts: bar diverges from 0 F, axis capped at +/-10 F.
-    const CHARTS = [
-        { key: 'precip_pct', title: 'Precipitation, water year to date', sub: '% of median', kind: 'pct',
-          note: 'precip_in', fmt: a => a.precip_in === null ? '' : `${a.precip_in.toFixed(1)} in` },
-        { key: 'swe_pct', title: 'Snow water equivalent', sub: '% of median for today', kind: 'pct',
-          fmt: a => a.swe_in === null ? '' : `${a.swe_in.toFixed(1)} in` },
-        { key: 'temp_anom_7d_f', title: 'Temperature, last 7 days', sub: '°F vs 1991–2020 average', kind: 'temp' },
-        { key: 'temp_anom_wy_f', title: 'Temperature, water year to date', sub: '°F vs 1991–2020 average', kind: 'temp' },
+    const TIMEFRAMES = [
+        { key: '7', label: 'Last 7 days' },
+        { key: '30', label: 'Last 30 days' },
+        { key: 'wy', label: 'Water year to date' },
     ];
 
-    // SNOTEL station name, with the nearest ski area beneath it when there is one.
-    const nameCell = a => `<span class="nbar-name">${esc(a.station)}${a.resort ? `<small>${esc(a.resort)}</small>` : ''}</span>`;
+    // units: first entry is the default for that variable.
+    const VARS = {
+        precip: { label: 'Precipitation', units: [['pct', '% of normal'], ['in', 'Inches']] },
+        swe: { label: 'Snow water equivalent (SWE)', units: [['pct', '% of normal'], ['in', 'Inches']] },
+        temp: { label: 'Temperature', units: [['f', '°F vs normal'], ['c', '°C vs normal']] },
+    };
 
-    function row(chart, a) {
-        const v = a[chart.key];
-        if (v === null || v === undefined) {
-            return `<li class="nbar">${nameCell(a)}
-                <span class="nbar-track"></span><span class="nbar-val">${DASH}</span></li>`;
-        }
-        if (chart.kind === 'pct') {
-            const width = Math.min(v, 200) / 2;           // 0-200% -> 0-100% of track
-            const cls = v >= 100 ? 'nbar-fill--wet' : 'nbar-fill--dry';
-            const detail = chart.fmt ? chart.fmt(a) : '';
-            return `<li class="nbar" title="${detail ? esc(detail) : ''}">
-                ${nameCell(a)}
-                <span class="nbar-track nbar-track--pct"><span class="nbar-fill ${cls}" style="width:${width}%"></span></span>
-                <span class="nbar-val">${v}%</span></li>`;
-        }
-        const half = Math.min(Math.abs(v), 10) / 10 * 50;  // 0-10 F -> 0-50% of track
-        const warm = v >= 0;
-        const style = warm ? `left:50%;width:${half}%` : `left:${50 - half}%;width:${half}%`;
-        return `<li class="nbar">
-            ${nameCell(a)}
-            <span class="nbar-track nbar-track--temp"><span class="nbar-fill ${warm ? 'nbar-fill--warm' : 'nbar-fill--cold'}" style="${style}"></span></span>
-            <span class="nbar-val">${v > 0 ? '+' : ''}${v.toFixed(1)}°</span></li>`;
+    const PCT_CAP = 200;      // percent axis runs 0-200%, with the 100% marker centered
+    const TEMP_CAP_F = 10;    // temperature axis runs +/-10 F
+
+    function nameCell(a) {
+        return `<span class="nbar-name">${esc(a.station)}${a.resort ? `<small>${esc(a.resort)}</small>` : ''}</span>`;
     }
 
-    function chartHtml(chart, areas) {
-        const have = areas.some(a => a[chart.key] !== null && a[chart.key] !== undefined);
-        const body = have
-            ? `<ul class="nbars">${areas.map(a => row(chart, a)).join('')}</ul>`
-            : '<p class="normals-empty">Not enough data yet this season. This fills in as the water year builds.</p>';
-        return `<div class="normals-chart"><h3>${esc(chart.title)}</h3><p class="normals-sub">${esc(chart.sub)}</p>${body}</div>`;
+    function emptyRow(a) {
+        return `<li class="nbar">${nameCell(a)}<span class="nbar-track"></span><span class="nbar-val">${DASH}</span></li>`;
     }
 
-    const select = document.getElementById('normals-select');
+    // One row's data: { value, normal, label, title } or null when missing.
+    function cell(variable, tf, unit, a) {
+        const m = a.metrics[variable][tf];
+        if (m === null || m === undefined) return null;
+        if (variable === 'temp') {
+            const v = unit === 'c' ? m * 5 / 9 : m;
+            return { value: v, f: m, label: `${v > 0 ? '+' : ''}${v.toFixed(1)}°` };
+        }
+        if (unit === 'pct') {
+            if (m.pct === null) return null;
+            return { value: m.pct, label: `${m.pct}%`, title: m.normal === null ? '' : `${m.obs.toFixed(1)} in vs ${m.normal.toFixed(1)} in normal` };
+        }
+        const sign = variable === 'swe' && tf !== 'wy' && m.obs > 0 ? '+' : '';
+        return { value: m.obs, normal: m.normal, label: `${sign}${m.obs.toFixed(1)} in`,
+            title: m.normal === null ? '' : `Normal: ${m.normal.toFixed(1)} in` };
+    }
+
+    function renderRows(variable, tf, unit, areas) {
+        const cells = areas.map(a => [a, cell(variable, tf, unit, a)]);
+        if (!cells.some(c => c[1])) return null;
+
+        if (variable === 'temp') {
+            return cells.map(([a, c]) => {
+                if (!c) return emptyRow(a);
+                const half = Math.min(Math.abs(c.f), TEMP_CAP_F) / TEMP_CAP_F * 50;
+                const warm = c.f >= 0;
+                const style = warm ? `left:50%;width:${half}%` : `left:${50 - half}%;width:${half}%`;
+                return `<li class="nbar">${nameCell(a)}
+                    <span class="nbar-track nbar-track--mid"><span class="nbar-fill ${warm ? 'nbar-fill--warm' : 'nbar-fill--cold'}" style="${style}"></span></span>
+                    <span class="nbar-val">${c.label}</span></li>`;
+            }).join('');
+        }
+
+        if (unit === 'pct') {
+            return cells.map(([a, c]) => {
+                if (!c) return emptyRow(a);
+                const width = Math.min(c.value, PCT_CAP) / PCT_CAP * 100;
+                return `<li class="nbar" title="${esc(c.title)}">${nameCell(a)}
+                    <span class="nbar-track nbar-track--mid"><span class="nbar-fill ${c.value >= 100 ? 'nbar-fill--wet' : 'nbar-fill--dry'}" style="left:0;width:${width}%"></span></span>
+                    <span class="nbar-val">${c.label}</span></li>`;
+            }).join('');
+        }
+
+        // Inches: bar from zero to the observed value, tick at the normal. The axis fits
+        // the data, so it can include negative values (SWE change during melt).
+        const vals = cells.filter(c => c[1]).flatMap(([, c]) => [c.value, c.normal === null || c.normal === undefined ? 0 : c.normal]);
+        const lo = Math.min(0, ...vals);
+        const hi = Math.max(0.5, ...vals);
+        const pos = v => (v - lo) / (hi - lo) * 100;
+        return cells.map(([a, c]) => {
+            if (!c) return emptyRow(a);
+            const x0 = pos(Math.min(0, c.value)), x1 = pos(Math.max(0, c.value));
+            const tick = c.normal === null || c.normal === undefined ? ''
+                : `<span class="nbar-tick" style="left:${pos(c.normal)}%"></span>`;
+            return `<li class="nbar" title="${esc(c.title)}">${nameCell(a)}
+                <span class="nbar-track"><span class="nbar-fill nbar-fill--wet" style="left:${x0}%;width:${x1 - x0}%"></span>${tick}</span>
+                <span class="nbar-val">${c.label}</span></li>`;
+        }).join('');
+    }
+
+    function caption(variable, tf, unit) {
+        if (variable === 'temp') {
+            return 'Average temperature over the window minus the station’s 1991–2020 average for the same days. The center line is normal.';
+        }
+        if (variable === 'precip') {
+            return unit === 'pct'
+                ? 'Precipitation over the window as a percent of the NRCS median for the same days. The line marks 100% (normal).'
+                : 'Precipitation over the window, in inches. The dark tick marks the NRCS median for the same days.';
+        }
+        if (tf === 'wy') {
+            return unit === 'pct'
+                ? 'Snow water equivalent today as a percent of the NRCS median for today. The line marks 100% (normal).'
+                : 'Snow water equivalent today, in inches. The dark tick marks the NRCS median for today.';
+        }
+        return unit === 'pct'
+            ? 'Change in SWE over the window as a percent of the median change. Blank when the normal change is near zero or negative (melt season).'
+            : 'Change in SWE over the window, in inches (negative is melt). The dark tick marks the median change.';
+    }
+
+    function fillUnits() {
+        const prev = unitSel.value;
+        const units = VARS[varSel.value].units;
+        unitSel.innerHTML = units.map(([k, label]) => `<option value="${k}">${esc(label)}</option>`).join('');
+        if (units.some(u => u[0] === prev)) unitSel.value = prev;
+    }
+
+    let data = null;
+    function show() {
+        const variable = varSel.value, tf = tfSel.value, unit = unitSel.value;
+        const tfLabel = TIMEFRAMES.find(t => t.key === tf).label;
+        const rows = renderRows(variable, tf, unit, data.areas);
+        grid.innerHTML = `<h3>${esc(VARS[variable].label)}: ${esc(tfLabel.toLowerCase())}</h3>
+            <p class="normals-sub">${esc(caption(variable, tf, unit))}</p>` +
+            (rows ? `<ul class="nbars">${rows}</ul>`
+                : '<p class="normals-empty">Not enough data for this selection yet. Early in the water year the normals are near zero; try a different timeframe.</p>');
+    }
+
+    varSel.innerHTML = Object.entries(VARS).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');
+    tfSel.innerHTML = TIMEFRAMES.map(t => `<option value="${t.key}">${esc(t.label)}</option>`).join('');
+    fillUnits();
 
     fetch(root.dataset.src, { cache: 'no-cache' })
         .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-        .then(data => {
-            const labels = { precip_pct: 'Precipitation', swe_pct: 'Snow water equivalent (SWE)',
-                temp_anom_7d_f: 'Temperature: last 7 days', temp_anom_wy_f: 'Temperature: water year to date' };
-            select.innerHTML = CHARTS.map(c => `<option value="${c.key}">${esc(labels[c.key])}</option>`).join('');
-            const show = () => {
-                grid.innerHTML = chartHtml(CHARTS.find(c => c.key === select.value), data.areas);
-            };
-            select.addEventListener('change', show);
-            // Open on the first chart that has data (early in the season some are still empty).
-            const first = CHARTS.find(c => data.areas.some(a => a[c.key] !== null && a[c.key] !== undefined));
-            if (first) select.value = first.key;
+        .then(d => {
+            data = d;
+            // Open on a combination that has data (early in the season some are empty).
+            const opens = [['precip', '30'], ['precip', '7'], ['temp', '7']];
+            const first = opens.find(([v, tf]) => d.areas.some(a => cell(v, tf, VARS[v].units[0][0], a)));
+            if (first) { varSel.value = first[0]; tfSel.value = first[1]; fillUnits(); }
+            varSel.addEventListener('change', () => { fillUnits(); show(); });
+            tfSel.addEventListener('change', show);
+            unitSel.addEventListener('change', show);
             show();
-            const through = data.areas.map(a => a.data_through).filter(Boolean).sort().pop();
+            const through = d.areas.map(a => a.data_through).filter(Boolean).sort().pop();
             foot.textContent = (through ? `Data through ${through}. ` : '') +
                 'Updated daily from NRCS SNOTEL stations, labeled with the nearest ski area. Mazama and Alpental have no SNOTEL station, so they are not shown.';
         })

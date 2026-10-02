@@ -6,11 +6,11 @@
 <section id="season-normals" class="normals" data-src="{{ '/assets/data/normals.json' | relative_url }}">
     <h2>How Is the Season Stacking Up?</h2>
     <p class="normals-desc">SNOTEL stations compared with normal for the same day of the water year (Oct 1 start).
-        Precipitation and snow water equivalent (SWE) are percent of the NRCS median; temperature is departure from the 1991&ndash;2020 average.</p>
+        Choose a variable, timeframe and unit. Normals are the NRCS median (precipitation, SWE) or the 1991&ndash;2020 average (temperature).</p>
     <div class="normals-picker">
-        <label>Show
-            <select id="normals-select" aria-label="Choose what to compare with normal"></select>
-        </label>
+        <label>Show <select id="normals-var" aria-label="Variable"></select></label>
+        <label>Timeframe <select id="normals-tf" aria-label="Timeframe"></select></label>
+        <label>Units <select id="normals-unit" aria-label="Units"></select></label>
     </div>
     <div class="normals-grid" id="normals-grid">
         <p class="normals-status" role="status">Loading...</p>

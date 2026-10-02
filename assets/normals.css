@@ -5,12 +5,12 @@
 .normals-grid { max-width: 640px; }
 
 /* Same look as the site's other selectors (.tool-row-selector select) */
-.normals-picker { margin-bottom: 1rem; }
+.normals-picker { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; margin-bottom: 1rem; }
 .normals-picker label { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; color: #1e3c72; }
 .normals-picker select {
     appearance: none;
     -webkit-appearance: none;
-    min-width: 16rem;
+    min-width: 11rem;
     max-width: 100%;
     padding: 0.4rem 2rem 0.4rem 0.6rem;
     border: 1px solid #cbd5e1;
@@ -37,15 +37,13 @@
 
 .nbar-track { position: relative; height: 0.85rem; background: #f1f5f9; border-radius: 3px; }
 .nbar-fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
-.nbar-track--pct .nbar-fill { left: 0; }
 .nbar-fill--wet { background: #2a5298; }
 .nbar-fill--dry { background: #d97706; }
 .nbar-fill--cold { background: #3b82f6; }
 .nbar-fill--warm { background: #dc2626; }
 
-/* "Normal" marker: 100% on the percent charts, 0 degrees on the temperature charts */
-.nbar-track--pct::after,
-.nbar-track--temp::after {
+/* "Normal" marker: centered on the percent and temperature charts; a movable tick on inch charts */
+.nbar-track--mid::after {
     content: '';
     position: absolute;
     top: -2px;
@@ -60,3 +58,6 @@
 @media (max-width: 480px) {
     .nbar { grid-template-columns: 6.5rem 1fr 2.8rem; }
 }
+
+.nbar-tick { position: absolute; top: -2px; bottom: -2px; border-left: 2px solid #0f172a; }
+.normals-grid h3 { margin: 0; font-size: 1.05rem; }
