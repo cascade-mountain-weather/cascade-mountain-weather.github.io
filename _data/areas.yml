@@ -3,6 +3,7 @@
 #
 # network: NWAC   -> fetched from Synoptic by station id (e.g. STB48). Reports snow
 #                    depth but NOT SWE.
+# resort (optional, SNOTEL only): nearest ski area, shown beside the station on the homepage season charts.
 # network: SNOTEL -> fetched from NRCS AWDB by triplet (e.g. "791:WA:SNTL"). Reports
 #                    both snow depth and SWE. (Icicle Creek 1338 is new and only exists
 #                    in AWDB, so all SNOTEL goes through AWDB.)
@@ -27,7 +28,7 @@ areas:
       - {type: windy, id: "1523123339", label: "Hurricane Hill - Mount Olympus"}
     stations:
       - {id: HUR53, network: NWAC, label: Hurricane Ridge, primary: true}
-      - {id: "974:WA:SNTL", network: SNOTEL, label: Waterhole}
+      - {id: "974:WA:SNTL", network: SNOTEL, label: Waterhole, resort: Hurricane Ridge}
 
   - id: mt-baker
     name: Mt. Baker
@@ -38,7 +39,7 @@ areas:
     stations:
       - {id: MTB42, network: NWAC, label: Heather Meadows, primary: true}
       - {id: MTB50, network: NWAC, label: Pan Dome}
-      - {id: "998:WA:SNTL", network: SNOTEL, label: Easy Pass}
+      - {id: "998:WA:SNTL", network: SNOTEL, label: Easy Pass, resort: Mt. Baker}
 
   - id: washington-pass
     name: Washington Pass
@@ -47,7 +48,7 @@ areas:
     stations:
       - {id: WAP67, network: NWAC, label: Washington Pass Upper}
       - {id: WAP55, network: NWAC, label: Washington Pass Base, primary: true}
-      - {id: "711:WA:SNTL", network: SNOTEL, label: Rainy Pass}
+      - {id: "711:WA:SNTL", network: SNOTEL, label: Rainy Pass, resort: Washington Pass}
 
   - id: mazama
     name: Mazama
@@ -75,7 +76,7 @@ areas:
     basin: "17020011"
     page: null
     stations:
-      - {id: "1338:WA:SNTL", network: SNOTEL, label: Icicle Creek, primary: true}
+      - {id: "1338:WA:SNTL", network: SNOTEL, label: Icicle Creek, resort: Leavenworth, primary: true}
 
   - id: blewett-pass
     name: Blewett Pass
@@ -95,14 +96,14 @@ areas:
     webcams:
       - {type: windy, id: "1667840569", label: "Ronald (north-west)"}
     stations:
-      - {id: "734:WA:SNTL", network: SNOTEL, label: Sasse Ridge, primary: true}
+      - {id: "734:WA:SNTL", network: SNOTEL, label: Sasse Ridge, resort: Salmon La Sac, primary: true}
 
   - id: snoqualmie-east
     name: Snoqualmie East
     basin: "17110013"
     page: /tools/snoqualmie-pass.html
     stations:
-      - {id: "788:WA:SNTL", network: SNOTEL, label: Stampede Pass, primary: true}
+      - {id: "788:WA:SNTL", network: SNOTEL, label: Stampede Pass, resort: Snoqualmie East, primary: true}
 
   - id: snoqualmie-west
     name: Snoqualmie West
@@ -112,7 +113,7 @@ areas:
       - {type: youtube, id: "w4Sno8NIjmU", label: "Summit Central (top)"}
       - {type: windy, id: "1346275207", label: "I-90 at Snoqualmie Summit"}
     stations:
-      - {id: "672:WA:SNTL", network: SNOTEL, label: Olallie Meadows, primary: true}
+      - {id: "672:WA:SNTL", network: SNOTEL, label: Olallie Meadows, resort: Snoqualmie West, primary: true}
 
   - id: alpental
     name: Alpental
@@ -134,7 +135,7 @@ areas:
       - {id: GRN62, network: NWAC, label: Green Valley, primary: true}
       - {id: CCB59, network: NWAC, label: Campbell Basin}
       - {id: CMT46, network: NWAC, label: Crystal Base}
-      - {id: "642:WA:SNTL", network: SNOTEL, label: Morse Lake}
+      - {id: "642:WA:SNTL", network: SNOTEL, label: Morse Lake, resort: Crystal Mountain}
 
   - id: paradise
     name: Paradise - Mt. Rainier
@@ -152,7 +153,7 @@ areas:
     basin: "17080002"
     page: /tools/mt-st-helens.html
     stations:
-      - {id: "1012:WA:SNTL", network: SNOTEL, label: Swift Creek, primary: true}
+      - {id: "1012:WA:SNTL", network: SNOTEL, label: Swift Creek, resort: Mt. St. Helens, primary: true}
 
   - id: white-pass
     name: White Pass
@@ -164,7 +165,7 @@ areas:
       - {id: WPS60, network: NWAC, label: Pigtail Peak}
       - {id: WPS58, network: NWAC, label: White Pass Upper}
       - {id: WPS45, network: NWAC, label: White Pass Base}
-      - {id: "863:WA:SNTL", network: SNOTEL, label: White Pass E.S., primary: true}
+      - {id: "863:WA:SNTL", network: SNOTEL, label: White Pass E.S., resort: White Pass, primary: true}
 
   - id: mt-adams
     name: Mt. Adams
@@ -172,4 +173,4 @@ areas:
     page: /tools/mt-adams.html
     note: No stations sit near Mt. Adams. These are approximate conditions from Surprise Lakes SNOTEL, southwest of the mountain.
     stations:
-      - {id: "804:WA:SNTL", network: SNOTEL, label: Surprise Lakes, primary: true}
+      - {id: "804:WA:SNTL", network: SNOTEL, label: Surprise Lakes, resort: Mt. Adams, primary: true}
