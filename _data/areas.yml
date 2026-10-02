@@ -3,6 +3,7 @@
 #
 # network: NWAC   -> fetched from Synoptic by station id (e.g. STB48). Reports snow
 #                    depth but NOT SWE.
+# normals: false (optional, SNOTEL only) leaves the station out of the homepage season charts, e.g. a new station with no record.
 # resort (optional, SNOTEL only): nearest ski area, shown beside the station on the homepage season charts.
 # network: SNOTEL -> fetched from NRCS AWDB by triplet (e.g. "791:WA:SNTL"). Reports
 #                    both snow depth and SWE. (Icicle Creek 1338 is new and only exists
@@ -76,7 +77,7 @@ areas:
     basin: "17020011"
     page: null
     stations:
-      - {id: "1338:WA:SNTL", network: SNOTEL, label: Icicle Creek, resort: Leavenworth, primary: true}
+      - {id: "1338:WA:SNTL", network: SNOTEL, label: Icicle Creek, resort: Leavenworth, normals: false, primary: true}
 
   - id: blewett-pass
     name: Blewett Pass

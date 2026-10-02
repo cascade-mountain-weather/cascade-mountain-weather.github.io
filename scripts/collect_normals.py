@@ -1,10 +1,12 @@
 """Collect "percent of normal" numbers for the homepage bar plots.
 
 For each forecast area's SNOTEL station (see _data/areas.yml), compares this water
-year (starting Oct 1) with normal:
-  - accumulated precipitation vs the NRCS median for the same day of year
-  - snow water equivalent (SWE) vs the NRCS median for the same day of year
-  - temperature anomaly for the last 7 days and for the water year to date
+year (starting Oct 1) with normal over three windows (last 7 days, last 30 days, water
+year to date):
+  - precipitation vs the NRCS median over the same window
+  - snow water equivalent (SWE): level vs median for the water year; change vs median
+    change for 7/30 days
+  - temperature anomaly vs the station's 1991-2020 average
 
 NRCS publishes median/average for PREC and WTEQ through AWDB but not for air
 temperature, so temperature normals are computed here from each station's own
@@ -35,7 +37,8 @@ AWDB_URL = 'https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1'
 CLIMO_YEARS = (1991, 2020)
 MIN_CLIMO_YEARS = 10         # fewer years of record than this -> no temperature anomaly
 SMOOTH_DAYS = 3              # climatology is averaged over +/- this many days
-MIN_NORMAL_PRECIP_IN = 1.0   # percent of a tiny early-season normal is noise
+MIN_NORMAL_PRECIP_IN = 0.5   # percent of a tiny normal is noise
+TIMEFRAMES = {'7': 7, '30': 30, 'wy': None}   # days; None = water year to date
 MIN_NORMAL_SWE_IN = 0.5
 MIN_TEMP_DAYS = 5            # need at least this many daily temps in a window
 
@@ -45,6 +48,7 @@ def load_stations():
     out = []
     for area in yaml.safe_load(AREAS_FILE.read_text(encoding='utf8'))['areas']:
         sntl = [s for s in area['stations'] if s['network'] == 'SNOTEL']
+        sntl = [s for s in sntl if s.get('normals', True)]
         if sntl:
             out.append((area['id'], area['name'], next((s for s in sntl if s.get('primary')), sntl[0])))
     return out
@@ -149,6 +153,53 @@ def mean_anomaly(series, climo_mean, start, end):
     return round(sum(diffs) / len(diffs), 1)
 
 
+def row_on_or_before(rows, d, max_back=3):
+    """Latest row dated d or up to max_back days earlier (SNOTEL has occasional gaps)."""
+    by_date = {r['date']: r for r in rows if r.get('value') is not None}
+    for back in range(max_back + 1):
+        row = by_date.get((d - timedelta(days=back)).isoformat())
+        if row:
+            return row
+    return None
+
+
+def accumulation(rows, end_row, days, wy_start, min_normal, accumulating):
+    """Observed vs normal over a window ending at end_row.
+
+    days=None means the whole water year. Precipitation (accumulating=True) is a running
+    total that restarts at 0 on Oct 1, so a window is end minus the total `days` earlier
+    (0 if that is before Oct 1). SWE is a level, not a total: the water-year figure is the
+    current level against the median level, and a 7/30-day window is the CHANGE in SWE
+    against the median change over the same days.
+    Returns {obs, normal, pct} in inches, or None without data.
+    """
+    if not end_row or end_row.get('value') is None:
+        return None
+    end = date.fromisoformat(end_row['date'])
+    obs, normal = end_row['value'], end_row.get('median')
+    if days is not None:
+        start = end - timedelta(days=days)
+        base = row_on_or_before(rows, start)
+        if base is None:
+            return None
+        carry_obs, carry_norm = 0.0, 0.0
+        if accumulating and start < wy_start:
+            # The running total restarted at Oct 1: add the tail of the previous water year.
+            last_prev = row_on_or_before(rows, wy_start - timedelta(days=1))
+            if last_prev is None:
+                return None
+            carry_obs = last_prev['value'] - base['value']
+            carry_norm = None if last_prev.get('median') is None or base.get('median') is None                 else last_prev['median'] - base['median']
+            base = {'value': 0.0, 'median': 0.0}
+        obs = obs - base['value'] + carry_obs
+        normal = None if normal is None or base.get('median') is None or carry_norm is None             else normal - base['median'] + carry_norm
+    return {
+        'obs': round(obs, 2),
+        'normal': None if normal is None else round(normal, 2),
+        'pct': pct_of(obs, normal, min_normal),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--rebuild-climo', action='store_true')
@@ -166,36 +217,38 @@ def main():
     today = datetime.now(timezone.utc).date()
     wy_start = water_year_start(today)
     triplets = [st['id'] for _, _, st in stations]
-    # Start early enough that the 7-day temperature window is complete in early October.
-    raw = awdb_data(triplets, ['PREC', 'WTEQ', 'TAVG'], min(wy_start, today - timedelta(days=10)), today, central=True)
+    # Start early enough that 7- and 30-day windows are complete in early October.
+    raw = awdb_data(triplets, ['PREC', 'WTEQ', 'TAVG'], min(wy_start, today - timedelta(days=35)), today, central=True)
 
     areas = []
     for area_id, area_name, st in stations:
         el = raw.get(st['id'], {})
-        prec = last_with(el.get('PREC', []))
-        swe = last_with(el.get('WTEQ', []))
-        tavg_rows = el.get('TAVG', [])
+        prec_rows, swe_rows, tavg_rows = el.get('PREC', []), el.get('WTEQ', []), el.get('TAVG', [])
         mean = climo.get(st['id'], {}).get('mean', {})
-        last_temp = last_with(tavg_rows)
-        end = date.fromisoformat(last_temp['date']) if last_temp else today
+        prec_end, swe_end, temp_end = last_with(prec_rows), last_with(swe_rows), last_with(tavg_rows)
+
+        metrics = {'precip': {}, 'swe': {}, 'temp': {}}
+        for tf, days in TIMEFRAMES.items():
+            metrics['precip'][tf] = accumulation(prec_rows, prec_end, days, wy_start, MIN_NORMAL_PRECIP_IN, accumulating=True)
+            metrics['swe'][tf] = accumulation(swe_rows, swe_end, days, wy_start, MIN_NORMAL_SWE_IN, accumulating=False)
+            if temp_end and mean:
+                end = date.fromisoformat(temp_end['date'])
+                start = wy_start if days is None else end - timedelta(days=days - 1)
+                metrics['temp'][tf] = mean_anomaly(tavg_rows, mean, max(start, wy_start) if days is None else start, end)
+            else:
+                metrics['temp'][tf] = None
+
         areas.append({
             'id': area_id,
             'name': area_name,
             'station': st['label'],
             'resort': st.get('resort'),
             'triplet': st['id'],
-            'precip_in': prec['value'] if prec else None,
-            'precip_median_in': prec.get('median') if prec else None,
-            'precip_pct': pct_of(prec['value'], prec.get('median'), MIN_NORMAL_PRECIP_IN) if prec else None,
-            'swe_in': swe['value'] if swe else None,
-            'swe_median_in': swe.get('median') if swe else None,
-            'swe_pct': pct_of(swe['value'], swe.get('median'), MIN_NORMAL_SWE_IN) if swe else None,
-            'temp_anom_7d_f': mean_anomaly(tavg_rows, mean, end - timedelta(days=6), end) if mean else None,
-            'temp_anom_wy_f': mean_anomaly(tavg_rows, mean, wy_start, end) if mean else None,
-            'data_through': (prec or swe or last_temp or {}).get('date'),
+            'metrics': metrics,
+            'data_through': (prec_end or swe_end or temp_end or {}).get('date'),
         })
 
-    if not any(a['precip_in'] is not None or a['swe_in'] is not None for a in areas):
+    if not any(a['metrics']['precip']['wy'] or a['metrics']['swe']['wy'] for a in areas):
         print('No SNOTEL data returned; leaving the existing normals.json untouched.', file=sys.stderr)
         return 1
 
