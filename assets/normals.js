@@ -60,10 +60,22 @@
         return `<div class="normals-chart"><h3>${esc(chart.title)}</h3><p class="normals-sub">${esc(chart.sub)}</p>${body}</div>`;
     }
 
+    const select = document.getElementById('normals-select');
+
     fetch(root.dataset.src, { cache: 'no-cache' })
         .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(data => {
-            grid.innerHTML = CHARTS.map(c => chartHtml(c, data.areas)).join('');
+            const labels = { precip_pct: 'Precipitation', swe_pct: 'Snow water equivalent (SWE)',
+                temp_anom_7d_f: 'Temperature: last 7 days', temp_anom_wy_f: 'Temperature: water year to date' };
+            select.innerHTML = CHARTS.map(c => `<option value="${c.key}">${esc(labels[c.key])}</option>`).join('');
+            const show = () => {
+                grid.innerHTML = chartHtml(CHARTS.find(c => c.key === select.value), data.areas);
+            };
+            select.addEventListener('change', show);
+            // Open on the first chart that has data (early in the season some are still empty).
+            const first = CHARTS.find(c => data.areas.some(a => a[c.key] !== null && a[c.key] !== undefined));
+            if (first) select.value = first.key;
+            show();
             const through = data.areas.map(a => a.data_through).filter(Boolean).sort().pop();
             foot.textContent = (through ? `Data through ${through}. ` : '') +
                 'Updated daily from NRCS SNOTEL stations, labeled with the nearest ski area. Mazama and Alpental have no SNOTEL station, so they are not shown.';
