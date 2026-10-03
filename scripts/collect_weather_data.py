@@ -1,7 +1,10 @@
+import os
 import requests
 import re
 
-API_TOKEN = '013a6e5128d740a7836b18c4eaaced93'
+API_TOKEN = os.environ.get('SYNOPTIC_TOKEN')
+if not API_TOKEN:
+    raise SystemExit('SYNOPTIC_TOKEN is not set. Add it as a repository secret (Actions) or export it locally.')
 STATIONS = ['STS48', 'STS48']
 RESORTS_TO_STATIONS = {
     'stevens_pass': {

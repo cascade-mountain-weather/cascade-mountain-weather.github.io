@@ -1,0 +1,16 @@
+# Opens pull requests when a dependency has a security or version update.
+# Nothing here changes the site by itself: updates arrive as PRs to review and merge.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: bundler
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
