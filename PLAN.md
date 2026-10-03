@@ -157,7 +157,20 @@ Avalanche gating cannot be replayed until NWAC forecasts resume (about late Nove
 2. ~~Tier 1 grooming parse~~ Resolved: link-only for beta. Parsing State Parks, Kongsbergers and similar text products is a later phase.
 3. Open-Meteo: this site is a hobby funded by donations, not a business or a paid service. That is a reasonable reading of "non-commercial", but Open-Meteo's docs do not define it, so a short email would settle it. It only matters for BC if NBM covers Washington.
 4. Does `[skip ci]` on a bot commit suppress the Pages build? Three bots use it and the GFS bot does not. Untested (no API access from here). Check in the repo's Actions tab whether "pages build and deployment" runs follow bot commits, and whether the live hourly weather page updates. If it is suppressed, the new workflows commit without it.
-5. Housekeeping before launch: rotate the Synoptic token (move to an Actions secret, revoke the old one) and store the WSDOT access code as a secret from the start.
+5. Housekeeping before launch: the Synoptic token now comes from the `SYNOPTIC_TOKEN` Actions secret (code changed Oct 2026). **Still to do by hand:** add the secret, rotate the token at Synoptic (the old value is in public git history), and store the WSDOT access code as a secret from the start.
+
+## Forecast evaluation rework: decisions (Oct 2026)
+
+Agreed in the Oct 2026 session. Findings behind them are in `docs/nbm_fields.md`.
+
+- **NBM only for now.** Add HRRR and HRDPS later if Herbie makes it easy.
+- **Snapshot at forecast time.** `scripts/nbm_snapshot.py` saves `data/forecasts/nbm_snapshot_<first-day>.json` (median with 25th/75th percentiles of snowfall and snow level, temperature corrected to a 5000 ft forecast elevation with a moist adiabatic lapse rate). Needs `data/nbm/sites.yml` and `scripts/site_elevations.py` (one-time).
+- **Windows are 12Z to 12Z** (4 am PST, 5 am PDT): a Friday, Saturday and Sunday column plus a cumulative weekend total (Fri 12Z to Mon 12Z). The NBM has no 36 h or 84 h window, so the old "Thursday 4 pm through Monday 4 am" total cannot be reproduced.
+- **Table drafts come from the snapshot** (`scripts/draft_forecast_tables.py`); the author edits them. The NBM gives snow level, not freezing level, so the post section is labeled snow level.
+- **Old method stays archived** on the evaluation page; the new method starts with the 2026-27 season.
+- **Monday evaluation should eventually run itself** as a scheduled Action. The NBM snapshot stays a manual Thursday step until the Herbie extraction is proven in Actions (ecCodes install is still unverified there).
+- **Tabled:** a per-forecast time series plot of temperature, snow level and freezing level. The snapshot already holds the series. The same NBM data will feed the ski-area recommendation tool.
+- **Still to build:** the scoring script (SNOTEL snowfall via AWDB, radiosonde snow level), `assets/data/evaluation.json`, the JSON-driven `evaluation.html`, and a 5-10 day GEFS/ECMWF 500 mb / 850 mb snapshot scored against sondes.
 
 ## Constraints
 
