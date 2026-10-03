@@ -1,0 +1,27 @@
+# Forecast points for scripts/nbm_snapshot.py. One entry per area in the weekend forecast post.
+# Names match the posts and data/forecasts/eval_forecast_*.json so snapshots line up with them.
+#
+# lat/lon are APPROXIMATE (placed near the base area or pass, from memory, not surveyed).
+# The NBM grid is 2.5 km, so a few hundred meters does not change the nearest point, but a
+# mountain site can sit on a very different cell from the road or base. Check and adjust:
+# the snapshot records km_to_grid_point for each site. Stevens Pass was verified against the
+# viewer CSV (data/forecasts/Stevens Pass.csv) in docs/nbm_fields.md.
+#
+# Elevations are computed from a DEM by scripts/site_elevations.py (rerun it after editing this
+# file) and used by scripts/nbm_snapshot.py to correct 2 m temperature to the forecast elevation.
+
+# Forecast elevation: a site below this is forecast at this elevation instead of its own, so
+# every area is comparable at ski-terrain height. A site already above it keeps its own elevation.
+# An `elevation_ft` on a site (optional) replaces its DEM elevation BEFORE the floor is applied.
+forecast_floor_ft: 5000
+
+sites:
+  - {name: Mt. Baker,        lat: 48.857, lon: -121.667}   # Heather Meadows
+  - {name: Washington Pass,  lat: 48.524, lon: -120.646}
+  - {name: Stevens Pass,     lat: 47.745, lon: -121.089}
+  - {name: Hurricane Ridge,  lat: 47.970, lon: -123.498}
+  - {name: Blewett Pass,     lat: 47.350, lon: -120.580}
+  - {name: Snoqualmie Pass,  lat: 47.428, lon: -121.416}
+  - {name: Crystal,          lat: 46.935, lon: -121.475}
+  - {name: Paradise,         lat: 46.786, lon: -121.736}
+  - {name: White Pass,       lat: 46.638, lon: -121.391}

@@ -1,0 +1,114 @@
+{
+ "generated_utc": "2026-10-03T00:17Z",
+ "source": "USGS 3DEP via National Map EPQS",
+ "sites": {
+  "Mt. Baker": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4370 ft)",
+   "site_dem_ft": 4370,
+   "nbm_cell_ft": 4357,
+   "cell_min_ft": 3512,
+   "cell_max_ft": 5282,
+   "cell_samples": 25,
+   "grid_lat": 48.8592,
+   "grid_lon": -121.6773,
+   "site_minus_cell_ft": 643
+  },
+  "Washington Pass": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4968 ft)",
+   "site_dem_ft": 4968,
+   "nbm_cell_ft": 5610,
+   "cell_min_ft": 4475,
+   "cell_max_ft": 7104,
+   "cell_samples": 25,
+   "grid_lat": 48.5263,
+   "grid_lon": -120.6492,
+   "site_minus_cell_ft": -610
+  },
+  "Stevens Pass": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4086 ft)",
+   "site_dem_ft": 4086,
+   "nbm_cell_ft": 4427,
+   "cell_min_ft": 3672,
+   "cell_max_ft": 5428,
+   "cell_samples": 25,
+   "grid_lat": 47.7467,
+   "grid_lon": -121.0922,
+   "site_minus_cell_ft": 573
+  },
+  "Hurricane Ridge": {
+   "site_ft": 5262,
+   "site_source": "DEM at lat/lon",
+   "site_dem_ft": 5262,
+   "nbm_cell_ft": 4777,
+   "cell_min_ft": 4093,
+   "cell_max_ft": 5408,
+   "cell_samples": 25,
+   "grid_lat": 47.9742,
+   "grid_lon": -123.4837,
+   "site_minus_cell_ft": 485
+  },
+  "Blewett Pass": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4174 ft)",
+   "site_dem_ft": 4174,
+   "nbm_cell_ft": 4092,
+   "cell_min_ft": 3552,
+   "cell_max_ft": 4902,
+   "cell_samples": 25,
+   "grid_lat": 47.3454,
+   "grid_lon": -120.5663,
+   "site_minus_cell_ft": 908
+  },
+  "Snoqualmie Pass": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 2966 ft)",
+   "site_dem_ft": 2966,
+   "nbm_cell_ft": 3407,
+   "cell_min_ft": 2939,
+   "cell_max_ft": 4672,
+   "cell_samples": 25,
+   "grid_lat": 47.4269,
+   "grid_lon": -121.4109,
+   "site_minus_cell_ft": 1593
+  },
+  "Crystal": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4411 ft)",
+   "site_dem_ft": 4411,
+   "nbm_cell_ft": 5530,
+   "cell_min_ft": 4563,
+   "cell_max_ft": 6327,
+   "cell_samples": 25,
+   "grid_lat": 46.9238,
+   "grid_lon": -121.4855,
+   "site_minus_cell_ft": -530
+  },
+  "Paradise": {
+   "site_ft": 5419,
+   "site_source": "DEM at lat/lon",
+   "site_dem_ft": 5419,
+   "nbm_cell_ft": 5316,
+   "cell_min_ft": 4616,
+   "cell_max_ft": 5731,
+   "cell_samples": 25,
+   "grid_lat": 46.7835,
+   "grid_lon": -121.7275,
+   "site_minus_cell_ft": 103
+  },
+  "White Pass": {
+   "site_ft": 5000,
+   "site_source": "raised to 5000 ft floor (own elevation 4474 ft)",
+   "site_dem_ft": 4474,
+   "nbm_cell_ft": 4781,
+   "cell_min_ft": 4127,
+   "cell_max_ft": 5900,
+   "cell_samples": 25,
+   "grid_lat": 46.6341,
+   "grid_lon": -121.4019,
+   "site_minus_cell_ft": 219
+  }
+ }
+}
