@@ -20,8 +20,10 @@ REPO = Path(__file__).resolve().parent.parent
 AREAS_FILE = REPO / '_data' / 'areas.yml'
 OUT_FILE = REPO / 'assets' / 'data' / 'live_conditions.json'
 
-# Same public token already used by collect_weather_data.py; override via env.
-SYNOPTIC_TOKEN = os.environ.get('SYNOPTIC_TOKEN', '013a6e5128d740a7836b18c4eaaced93')
+# Never commit the token: it comes from the SYNOPTIC_TOKEN secret (Actions) or the environment.
+SYNOPTIC_TOKEN = os.environ.get('SYNOPTIC_TOKEN')
+if not SYNOPTIC_TOKEN:
+    raise SystemExit('SYNOPTIC_TOKEN is not set. Add it as a repository secret (Actions) or export it locally.')
 SYNOPTIC_URL = 'https://api.synopticdata.com/v2/stations/timeseries'
 AWDB_URL = 'https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1'
 

@@ -24,6 +24,8 @@ jobs:
         run: pip install requests pyyaml
 
       - name: Collect live station conditions
+        env:
+          SYNOPTIC_TOKEN: ${{ secrets.SYNOPTIC_TOKEN }}
         run: python scripts/collect_live_conditions.py
 
       - name: Commit and push updated conditions
