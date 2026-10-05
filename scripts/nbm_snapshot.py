@@ -196,7 +196,9 @@ def main():
     p_start = pd.Timestamp(first.isoformat() + " 12:00")
     p_end = p_start + pd.Timedelta(days=args.days)
 
-    sites = yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))["sites"]
+    cfg = yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))
+    # Sounding sites ride along as extra points; they only get snow level (see "verification_points").
+    sites = cfg["sites"] + [dict(v, verification=True) for v in cfg.get("verification_points", [])]
     n = len(sites)
     cycle = pick_cycle(args.cycle, p_end)
     print(f"cycle {cycle:%Y-%m-%d %H}Z, period {p_start:%Y-%m-%d %H}Z to {p_end:%Y-%m-%d %H}Z")
@@ -257,8 +259,15 @@ def main():
         "windows": windows,
         "series_times_utc": times,
         "sites": {},
+        "verification_points": {},
     }
     for k, s in enumerate(sites):
+        if s.get("verification"):
+            out["verification_points"][s["name"]] = {
+                "station": s["station"], "lat": s["lat"], "lon": s["lon"], "km_to_grid_point": grid.km[k],
+                "snow_level_ft": {"p25": [r(v[k], 0) for v in series["p25"]], "p50": [r(v[k], 0) for v in series["p50"]],
+                                  "p75": [r(v[k], 0) for v in series["p75"]], "deterministic": [r(v[k], 0) for v in series["det"]]}}
+            continue
         entry = {"lat": s["lat"], "lon": s["lon"], "km_to_grid_point": grid.km[k], "snowfall_in": {}}
         for wid, d in snow.items():
             entry["snowfall_in"][wid] = {

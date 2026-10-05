@@ -15,13 +15,30 @@
 # An `elevation_ft` on a site (optional) replaces its DEM elevation BEFORE the floor is applied.
 forecast_floor_ft: 5000
 
+# obs: SNOTEL stations used to score the forecast (scripts/snotel_obs.py), averaged when there are
+# two. These are the stations the old evaluation used (scripts/build_fx_evaluation.py). Their
+# elevations differ from the 5000 ft forecast elevation, and the scoring output records both:
+#   Wells Creek 4040 ft, Easy Pass 5280, Harts Pass 6490, Waterhole 5010, Stevens Pass 3940,
+#   Blewett Pass 4240, Olallie Meadows 4010, Corral Pass 5810, Paradise 5150, Pigtail Peak 5800.
+# Change a station here and the scores follow; old scores are not recomputed.
+
 sites:
-  - {name: Mt. Baker,        lat: 48.857, lon: -121.667}   # Heather Meadows
-  - {name: Washington Pass,  lat: 48.524, lon: -120.646}
-  - {name: Stevens Pass,     lat: 47.745, lon: -121.089}
-  - {name: Hurricane Ridge,  lat: 47.970, lon: -123.498}
-  - {name: Blewett Pass,     lat: 47.350, lon: -120.580}
-  - {name: Snoqualmie Pass,  lat: 47.428, lon: -121.416}
-  - {name: Crystal,          lat: 46.935, lon: -121.475}
-  - {name: Paradise,         lat: 46.786, lon: -121.736}
-  - {name: White Pass,       lat: 46.638, lon: -121.391}
+  - {name: Mt. Baker,        lat: 48.857, lon: -121.667, obs: ["909:WA:SNTL", "998:WA:SNTL"]}   # Heather Meadows; Wells Creek + Easy Pass
+  - {name: Washington Pass,  lat: 48.524, lon: -120.646, obs: ["515:WA:SNTL"]}                  # Harts Pass
+  - {name: Stevens Pass,     lat: 47.745, lon: -121.089, obs: ["791:WA:SNTL"]}
+  - {name: Hurricane Ridge,  lat: 47.970, lon: -123.498, obs: ["974:WA:SNTL"]}                  # Waterhole
+  - {name: Blewett Pass,     lat: 47.350, lon: -120.580, obs: ["352:WA:SNTL"]}
+  - {name: Snoqualmie Pass,  lat: 47.428, lon: -121.416, obs: ["672:WA:SNTL"]}                  # Olallie Meadows
+  - {name: Crystal,          lat: 46.935, lon: -121.475, obs: ["418:WA:SNTL"]}                  # Corral Pass
+  - {name: Paradise,         lat: 46.786, lon: -121.736, obs: ["679:WA:SNTL"]}
+  - {name: White Pass,       lat: 46.638, lon: -121.391, obs: ["692:WA:SNTL"]}                  # Pigtail Peak
+
+# Verification points: radiosonde launch sites. The snapshot also saves NBM snow level at these points so
+# scripts/score_forecast.py can compare it with the snow level computed from the actual sounding at the
+# same place and time (apples to apples; a sounding says nothing about a ski area 100 km away).
+# Quillayute is the upstream Pacific station, Spokane the east side, Salem the south. Coordinates are
+# approximate (the NBM grid is 2.5 km).
+verification_points:
+  - {name: Quillayute, station: UIL, lat: 47.934, lon: -124.555}
+  - {name: Spokane,    station: OTX, lat: 47.680, lon: -117.627}
+  - {name: Salem,      station: SLE, lat: 44.920, lon: -123.020}
