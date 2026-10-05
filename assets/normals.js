@@ -36,7 +36,8 @@
     };
 
     const PCT_CAP = 200;      // percent axis runs 0-200%, with the 100% marker centered
-    const TEMP_CAP_F = 10;    // temperature axis runs +/-10 F
+    // Temperature bars and colors saturate at +/-4 F or +/-2 C (whichever unit is selected)
+    const TEMP_CAP = { f: 4, c: 2 };
 
     // One red-blue scale shared by the bars and the map dots. s runs -1 (red) to +1 (blue) with a
     // grey midpoint at normal. Dry and warm are red; wet and cold are blue.
@@ -68,7 +69,7 @@
         if (m === null || m === undefined) return null;
         if (variable === 'temp') {
             const v = unit === 'c' ? m * 5 / 9 : m;
-            return { value: v, f: m, s: -m / TEMP_CAP_F, label: `${v > 0 ? '+' : ''}${v.toFixed(1)}°` };
+            return { value: v, s: -v / TEMP_CAP[unit === 'c' ? 'c' : 'f'], label: `${v > 0 ? '+' : ''}${v.toFixed(1)}°` };
         }
         const s = m.pct === null ? null : (Math.min(m.pct, PCT_CAP) - 100) / 100;
         if (unit === 'pct') {
@@ -89,8 +90,9 @@
         if (variable === 'temp') {
             return cells.map(([a, c]) => {
                 if (!c) return emptyRow(a);
-                const half = Math.min(Math.abs(c.f), TEMP_CAP_F) / TEMP_CAP_F * 50;
-                const warm = c.f >= 0;
+                const cap = TEMP_CAP[unit === 'c' ? 'c' : 'f'];
+                const half = Math.min(Math.abs(c.value), cap) / cap * 50;
+                const warm = c.value >= 0;
                 const pos = warm ? `left:50%;width:${half}%` : `left:${50 - half}%;width:${half}%`;
                 return `${rowOpen(a)}${nameCell(a)}
                     <span class="nbar-track nbar-track--mid"><span class="nbar-fill" style="${pos};${fillStyle(c)}"></span></span>
@@ -127,7 +129,7 @@
 
     function caption(variable, tf, unit) {
         if (variable === 'temp') {
-            return 'Average temperature over the window minus the station’s 1991–2020 average for the same days. The center line is normal.';
+            return `Average temperature over the window minus the station’s 1991–2020 average for the same days. The center line is normal; bars and colors top out at ±${unit === 'c' ? '2°C' : '4°F'}.`;
         }
         if (variable === 'precip') {
             return unit === 'pct'
@@ -183,10 +185,11 @@
         map.fitBounds(L.latLngBounds(pts.map(a => [a.lat, a.lon])).pad(0.12));
     }
 
-    function legend(variable) {
+    function legend(variable, unit) {
         const stops = variable === 'temp' ? SCALE.slice().reverse() : SCALE;  // blue on the left for temperature
+        const t = unit === 'c' ? '2°C' : '4°F';
         const [l, mid, r] = variable === 'temp'
-            ? ['Colder (−10°F)', 'Normal', 'Warmer (+10°F)']
+            ? [`Colder (−${t})`, 'Normal', `Warmer (+${t})`]
             : ['Dry (0%)', 'Normal', 'Wet (200%)'];
         legendEl.innerHTML = `<div class="normals-legend-bar" style="background:linear-gradient(to right,${stops.join(',')})"></div>
             <div class="normals-legend-labels"><span>${l}</span><span>${mid}</span><span>${r}</span></div>`;
@@ -194,7 +197,7 @@
 
     function updateMap(variable, tf, unit, areas) {
         if (!map) return;
-        legend(variable);
+        legend(variable, unit);
         areas.forEach(a => {
             const m = markers[a.id];
             if (!m) return;
@@ -256,6 +259,9 @@
         .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(d => {
             data = d;
+            // North to south, so the list reads in the same order as the map. Stations without
+            // coordinates go last.
+            d.areas.sort((a, b) => (typeof b.lat === 'number' ? b.lat : -90) - (typeof a.lat === 'number' ? a.lat : -90));
             // Open on a combination that has data (early in the season some are empty).
             const opens = [['precip', '30'], ['precip', '7'], ['temp', '7']];
             const first = opens.find(([v, tf]) => d.areas.some(a => cell(v, tf, VARS[v].units[0][0], a)));
