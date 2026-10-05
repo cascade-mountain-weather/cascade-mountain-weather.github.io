@@ -72,6 +72,18 @@ def awdb_data(triplets, elements, begin, end, central=False):
     return result
 
 
+def awdb_meta(triplets):
+    """Station name, latitude, longitude and elevation (ft). Best effort: the map on the homepage
+    needs it, but the charts do not, so a failure here must not stop the daily update."""
+    try:
+        resp = requests.get(f'{AWDB_URL}/stations', params={'stationTriplets': ','.join(triplets)}, timeout=60)
+        resp.raise_for_status()
+        return {r['stationTriplet']: r for r in resp.json()}
+    except Exception as exc:
+        print(f'Station metadata unavailable ({exc}); coordinates left out.', file=sys.stderr)
+        return {}
+
+
 def md_key(d):
     return f'{d.month:02d}-{d.day:02d}'
 
@@ -220,9 +232,11 @@ def main():
     # Start early enough that 7- and 30-day windows are complete in early October.
     raw = awdb_data(triplets, ['PREC', 'WTEQ', 'TAVG'], min(wy_start, today - timedelta(days=35)), today, central=True)
 
+    meta = awdb_meta(triplets)
     areas = []
     for area_id, area_name, st in stations:
         el = raw.get(st['id'], {})
+        m = meta.get(st['id'], {})
         prec_rows, swe_rows, tavg_rows = el.get('PREC', []), el.get('WTEQ', []), el.get('TAVG', [])
         mean = climo.get(st['id'], {}).get('mean', {})
         prec_end, swe_end, temp_end = last_with(prec_rows), last_with(swe_rows), last_with(tavg_rows)
@@ -244,6 +258,9 @@ def main():
             'station': st['label'],
             'resort': st.get('resort'),
             'triplet': st['id'],
+            'lat': m.get('latitude'),
+            'lon': m.get('longitude'),
+            'elev_ft': None if m.get('elevation') is None else round(m['elevation']),
             'metrics': metrics,
             'data_through': (prec_end or swe_end or temp_end or {}).get('date'),
         })

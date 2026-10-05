@@ -1,6 +1,7 @@
 {% comment %}
-  "Season vs normal" bar charts for the homepage. Data: assets/data/normals.json,
+  "Season vs normal" bar charts and map for the homepage. Data: assets/data/normals.json,
   written daily by scripts/collect_normals.py. Include at most once per page.
+  The map uses Leaflet, which the conditions-map include loads; without Leaflet the bars still work.
 {% endcomment %}
 <link rel="stylesheet" href="{{ '/assets/normals.css' | relative_url }}">
 <section id="season-normals" class="normals" data-src="{{ '/assets/data/normals.json' | relative_url }}">
@@ -12,8 +13,14 @@
         <label>Timeframe <select id="normals-tf" aria-label="Timeframe"></select></label>
         <label>Units <select id="normals-unit" aria-label="Units"></select></label>
     </div>
-    <div class="normals-grid" id="normals-grid">
-        <p class="normals-status" role="status">Loading...</p>
+    <div class="normals-body">
+        <div class="normals-grid" id="normals-grid">
+            <p class="normals-status" role="status">Loading...</p>
+        </div>
+        <div class="normals-mapwrap" id="normals-mapwrap" hidden>
+            <div id="normals-map" role="img" aria-label="Map of the SNOTEL stations, colored by the selected comparison"></div>
+            <div class="normals-legend" id="normals-legend"></div>
+        </div>
     </div>
     <p class="normals-foot" id="normals-foot"></p>
 </section>

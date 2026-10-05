@@ -2,7 +2,14 @@
 
 .normals-desc { color: #475569; margin: -0.75rem 0 1.25rem; font-size: 0.95rem; }
 
-.normals-grid { max-width: 640px; }
+/* Bars on the left, map on the right; stacked (map first) on narrow screens */
+.normals-body { display: grid; grid-template-columns: minmax(0, 640px) minmax(300px, 1fr); gap: 1.5rem 2rem; align-items: start; }
+.normals-grid { min-width: 0; }
+.normals-mapwrap { position: sticky; top: 1rem; }
+.normals-mapwrap[hidden] { display: none; }
+#normals-map { height: 440px; border-radius: 8px; border: 1px solid #cbd5e1; background: #e2e8f0; }
+.normals-legend-bar { height: 0.6rem; border-radius: 3px; margin-top: 0.6rem; border: 1px solid #cbd5e1; }
+.normals-legend-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #475569; margin-top: 0.2rem; }
 
 /* Same look as the site's other selectors (.tool-row-selector select) */
 .normals-picker { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; margin-bottom: 1rem; }
@@ -37,10 +44,8 @@
 
 .nbar-track { position: relative; height: 0.85rem; background: #f1f5f9; border-radius: 3px; }
 .nbar-fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
-.nbar-fill--wet { background: #2a5298; }
-.nbar-fill--dry { background: #d97706; }
-.nbar-fill--cold { background: #3b82f6; }
-.nbar-fill--warm { background: #dc2626; }
+/* Fill colors are set inline from the shared red-blue scale in normals.js */
+.nbar-fill { background: #2a5298; }
 
 /* "Normal" marker: centered on the percent and temperature charts; a movable tick on inch charts */
 .nbar-track--mid::after {
@@ -55,9 +60,19 @@
 .normals-empty, .normals-status { color: #64748b; font-size: 0.85rem; font-style: italic; }
 .normals-foot { color: #64748b; font-size: 0.75rem; margin: 1rem 0 0; }
 
+@media (max-width: 900px) {
+    .normals-body { grid-template-columns: 1fr; }
+    .normals-mapwrap { position: static; order: -1; }
+    #normals-map { height: 300px; }
+}
+
 @media (max-width: 480px) {
     .nbar { grid-template-columns: 6.5rem 1fr 2.8rem; }
 }
+
+/* Linked hover between a bar and its map dot */
+.nbar { padding: 0.15rem 0.25rem; border-radius: 4px; outline: none; }
+.nbar.is-hot, .nbar:focus-visible { background: #e8eefb; box-shadow: 0 0 0 1px #2a5298; }
 
 .nbar-tick { position: absolute; top: -2px; bottom: -2px; border-left: 2px solid #0f172a; }
 .normals-grid h3 { margin: 0; font-size: 1.05rem; }
