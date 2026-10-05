@@ -41,6 +41,7 @@ MIN_NORMAL_PRECIP_IN = 0.5   # percent of a tiny normal is noise
 TIMEFRAMES = {'7': 7, '30': 30, 'wy': None}   # days; None = water year to date
 MIN_NORMAL_SWE_IN = 0.5
 MIN_TEMP_DAYS = 5            # need at least this many daily temps in a window
+SERIES_MIN_DAYS = 35         # daily series for the mini charts covers at least this many days
 
 
 def load_stations():
@@ -165,6 +166,50 @@ def mean_anomaly(series, climo_mean, start, end):
     return round(sum(diffs) / len(diffs), 1)
 
 
+def daily_series(prec_rows, swe_rows, tavg_rows, mean, start, end):
+    """Parallel daily arrays from start to end for the mini charts on the homepage.
+
+    precip_obs / precip_med: the day's precipitation (inches), the change in the water-year running
+        total. On Oct 1 the total restarts, so that day's value is the total itself. Small negative
+        changes (sensor corrections, or dips in the smoothed median) are clamped to 0. The chart
+        adds these up over its window.
+    swe_obs / swe_med: snow water equivalent level (inches), observed and NRCS median.
+    temp_anom_f: daily mean temperature minus the station's 1991-2020 average, in F.
+    A missing day is None (it counts as 0 when precipitation is added up).
+    """
+    def by_date(rows):
+        return {r['date']: r for r in rows if r.get('value') is not None}
+    prec, swe, tavg = by_date(prec_rows), by_date(swe_rows), by_date(tavg_rows)
+
+    def increment(table, d, key):
+        row = table.get(d.isoformat())
+        if row is None or row.get(key) is None:
+            return None
+        if d.month == 10 and d.day == 1:
+            return max(0.0, row[key])
+        prev = table.get((d - timedelta(days=1)).isoformat())
+        if prev is None or prev.get(key) is None:
+            return None
+        return max(0.0, row[key] - prev[key])
+
+    def rnd(x, nd=2):
+        return None if x is None else round(x, nd)
+
+    out = {k: [] for k in ('precip_obs', 'precip_med', 'swe_obs', 'swe_med', 'temp_anom_f')}
+    d = start
+    while d <= end:
+        key = d.isoformat()
+        out['precip_obs'].append(rnd(increment(prec, d, 'value')))
+        out['precip_med'].append(rnd(increment(prec, d, 'median')))
+        s = swe.get(key)
+        out['swe_obs'].append(rnd(s['value']) if s else None)
+        out['swe_med'].append(rnd(s.get('median')) if s else None)
+        t, normal = tavg.get(key), mean.get(md_key(d))
+        out['temp_anom_f'].append(rnd(t['value'] - normal, 1) if t and normal is not None else None)
+        d += timedelta(days=1)
+    return {'start': start.isoformat(), **out}
+
+
 def row_on_or_before(rows, d, max_back=3):
     """Latest row dated d or up to max_back days earlier (SNOTEL has occasional gaps)."""
     by_date = {r['date']: r for r in rows if r.get('value') is not None}
@@ -230,7 +275,8 @@ def main():
     wy_start = water_year_start(today)
     triplets = [st['id'] for _, _, st in stations]
     # Start early enough that 7- and 30-day windows are complete in early October.
-    raw = awdb_data(triplets, ['PREC', 'WTEQ', 'TAVG'], min(wy_start, today - timedelta(days=35)), today, central=True)
+    fetch_start = min(wy_start, today - timedelta(days=SERIES_MIN_DAYS))
+    raw = awdb_data(triplets, ['PREC', 'WTEQ', 'TAVG'], fetch_start, today, central=True)
 
     meta = awdb_meta(triplets)
     areas = []
@@ -262,6 +308,7 @@ def main():
             'lon': m.get('longitude'),
             'elev_ft': None if m.get('elevation') is None else round(m['elevation']),
             'metrics': metrics,
+            'series': daily_series(prec_rows, swe_rows, tavg_rows, mean, fetch_start, date.fromisoformat((prec_end or swe_end or temp_end)['date'])) if (prec_end or swe_end or temp_end) else None,
             'data_through': (prec_end or swe_end or temp_end or {}).get('date'),
         })
 
