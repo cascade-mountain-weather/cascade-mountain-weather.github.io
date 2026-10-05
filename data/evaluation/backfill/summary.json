@@ -1,0 +1,201 @@
+{
+ "weekends_scored": 23,
+ "areas": {
+  "Mt. Baker": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -4.9,
+    "mae_in": 6.6,
+    "hit_rate": 0.13
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -7.7,
+    "mae_in": 8.3,
+    "hit_rate": 0.26
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 7.1,
+    "ours_mae_in": 8.3
+   }
+  },
+  "Washington Pass": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -0.6,
+    "mae_in": 3.5,
+    "hit_rate": 0.39
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -0.9,
+    "mae_in": 4.8,
+    "hit_rate": 0.42
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 4.1,
+    "ours_mae_in": 4.8
+   }
+  },
+  "Stevens Pass": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -0.7,
+    "mae_in": 3.0,
+    "hit_rate": 0.57
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -0.6,
+    "mae_in": 3.7,
+    "hit_rate": 0.53
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 3.3,
+    "ours_mae_in": 3.7
+   }
+  },
+  "Hurricane Ridge": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -3.7,
+    "mae_in": 3.8,
+    "hit_rate": 0.3
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -2.3,
+    "mae_in": 3.8,
+    "hit_rate": 0.42
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 4.2,
+    "ours_mae_in": 3.8
+   }
+  },
+  "Blewett Pass": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -1.8,
+    "mae_in": 1.9,
+    "hit_rate": 0.52
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -1.5,
+    "mae_in": 2.5,
+    "hit_rate": 0.47
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 2.2,
+    "ours_mae_in": 2.5
+   }
+  },
+  "Crystal": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -0.7,
+    "mae_in": 2.3,
+    "hit_rate": 0.57
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -1.4,
+    "mae_in": 3.8,
+    "hit_rate": 0.58
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 2.6,
+    "ours_mae_in": 3.8
+   }
+  },
+  "Paradise": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -0.7,
+    "mae_in": 3.6,
+    "hit_rate": 0.43
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -2.8,
+    "mae_in": 4.8,
+    "hit_rate": 0.42
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 4.0,
+    "ours_mae_in": 4.8
+   }
+  },
+  "White Pass": {
+   "weekends": 23,
+   "nbm": {
+    "n": 23,
+    "bias_in": -2.8,
+    "mae_in": 3.4,
+    "hit_rate": 0.39
+   },
+   "ours": {
+    "n": 14,
+    "bias_in": -0.9,
+    "mae_in": 2.9,
+    "hit_rate": 0.5
+   },
+   "on_same_weekends": {
+    "n": 14,
+    "nbm_mae_in": 3.9,
+    "ours_mae_in": 2.9
+   }
+  },
+  "Snoqualmie Pass": {
+   "weekends": 22,
+   "nbm": {
+    "n": 22,
+    "bias_in": -1.4,
+    "mae_in": 2.6,
+    "hit_rate": 0.32
+   },
+   "ours": {
+    "n": 19,
+    "bias_in": -2.3,
+    "mae_in": 2.7,
+    "hit_rate": 0.37
+   },
+   "on_same_weekends": {
+    "n": 19,
+    "nbm_mae_in": 2.9,
+    "ours_mae_in": 2.7
+   }
+  }
+ },
+ "snow_level": {
+  "Quillayute": {
+   "launches": 150,
+   "scored": 92,
+   "bias_ft": 1645,
+   "mae_ft": 1645,
+   "iqr_hit_rate": 0.13
+  },
+  "Salem": {
+   "launches": 156,
+   "scored": 72,
+   "bias_ft": 1713,
+   "mae_ft": 1726,
+   "iqr_hit_rate": 0.19
+  }
+ }
+}
