@@ -172,8 +172,10 @@
     const markers = {};          // area id -> Leaflet circle marker
     let hotId = null;
 
-    const BASE = { radius: 9, weight: 1.5, color: '#334155', fillOpacity: 0.95 };
-    const HOT = { radius: 13, weight: 3, color: '#0f172a' };
+    // Bigger dots for a finger than for a mouse pointer
+    const COARSE = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    const BASE = { radius: COARSE ? 11 : 9, weight: 1.5, color: '#334155', fillOpacity: 0.95 };
+    const HOT = { radius: COARSE ? 15 : 13, weight: 3, color: '#0f172a' };
 
     function initMap(areas) {
         const pts = areas.filter(a => typeof a.lat === 'number' && typeof a.lon === 'number');
@@ -192,13 +194,11 @@
             const m = L.circleMarker([a.lat, a.lon], Object.assign({ fillColor: '#e2e8f0' }, BASE)).addTo(map);
             m.on('mouseover', () => hot(a.id));
             m.on('mouseout', unhot);
-            m.on('click', () => hot(a.id)); // touch: a tap highlights the bar
-            m.bindPopup(() => detailHtml(byId[a.id]), { maxWidth: 340, minWidth: 300, autoPanPadding: [12, 12], className: 'normals-popup' });
-            m.on('popupopen', () => { popupId = a.id; m.closeTooltip(); });
-            m.on('popupclose', () => { if (popupId === a.id) popupId = null; });
+            m.on('click', () => { hot(a.id); openDetail(a.id); });  // a tap also highlights the bar
             markers[a.id] = m;
         });
         map.fitBounds(L.latLngBounds(pts.map(a => [a.lat, a.lon])).pad(0.12));
+        map.on('popupclose', e => { if (e.popup === popup) { popup = null; popupId = null; } });
     }
 
     function legend(variable, unit) {
@@ -254,8 +254,7 @@
     grid.addEventListener('click', e => {
         const li = e.target.closest('.nbar');
         if (!li || !markers[li.dataset.id]) return;
-        markers[li.dataset.id].openPopup();
-        if (window.matchMedia('(max-width: 900px)').matches) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        openDetail(li.dataset.id);
     });
 
     // ---- mini charts (in the popup that opens when a dot or bar is clicked) ------------------
@@ -375,6 +374,44 @@
             '<div class="np-key"><span class="np-k np-k--obs"></span>Observed <span class="np-k np-k--med"></span>Median</div></div>';
     }
 
+    // Wide screens: a popup on the map. Phones (stacked layout): a panel under the map, because three charts do
+    // not fit in a popup on a short map. Both show the same content.
+    const detailEl = document.getElementById('normals-detail');
+    const CLOSE_BTN = '<button type="button" class="np-close" aria-label="Close details">&times;</button>';
+    let detailId = null, popup = null;
+    const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
+
+    function closeDetail() {
+        if (popup && map) map.closePopup(popup);
+        popup = null; popupId = null; detailId = null;
+        if (detailEl) { detailEl.hidden = true; detailEl.innerHTML = ''; }
+    }
+
+    function openDetail(id) {
+        const a = byId[id], m = markers[id];
+        if (!a || !m || !map) return;
+        m.closeTooltip();
+        if (isNarrow() && detailEl) {
+            if (popup) { map.closePopup(popup); popup = null; popupId = null; }
+            detailId = id;
+            detailEl.innerHTML = CLOSE_BTN + detailHtml(a);
+            detailEl.hidden = false;
+            detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            if (detailEl) { detailEl.hidden = true; detailEl.innerHTML = ''; detailId = null; }
+            popupId = id;
+            popup = L.popup({ maxWidth: 340, minWidth: 300, autoPanPadding: [12, 12], className: 'normals-popup' })
+                .setLatLng(m.getLatLng()).setContent(detailHtml(a)).openOn(map);
+        }
+    }
+
+    function refreshDetail() {
+        if (detailId && detailEl && !detailEl.hidden) detailEl.innerHTML = CLOSE_BTN + detailHtml(byId[detailId]);
+        if (popup && popupId) popup.setContent(detailHtml(byId[popupId]));
+    }
+
+    if (detailEl) detailEl.addEventListener('click', e => { if (e.target.closest('.np-close')) closeDetail(); });
+
     // ---- page ------------------------------------------------------------------------------
 
     let data = null;
@@ -388,7 +425,7 @@
             (rows ? `<ul class="nbars">${rows}</ul>`
                 : '<p class="normals-empty">Not enough data for this selection yet. Early in the water year the normals are near zero; try a different timeframe.</p>');
         updateMap(variable, tf, unit, data.areas);
-        if (popupId && markers[popupId]) markers[popupId].getPopup().setContent(detailHtml(byId[popupId]));
+        refreshDetail();
     }
 
     varSel.innerHTML = Object.entries(VARS).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');

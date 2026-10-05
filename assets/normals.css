@@ -63,12 +63,26 @@
 @media (max-width: 900px) {
     .normals-body { grid-template-columns: 1fr; }
     .normals-mapwrap { position: static; order: -1; }
-    #normals-map { height: 300px; }
+    #normals-map { height: 280px; }
+
+    /* Phone-friendly pickers: one per row, full width */
+    .normals-picker { display: grid; grid-template-columns: 1fr; gap: 0.6rem; }
+    .normals-picker label { display: grid; grid-template-columns: 6.5rem 1fr; align-items: center; }
+    .normals-picker select { width: 100%; min-width: 0; padding: 0.55rem 2rem 0.55rem 0.7rem; font-size: 1rem; }
+
+    /* Bigger rows to tap */
+    .nbar { min-height: 2.6rem; font-size: 0.85rem; }
 }
 
 @media (max-width: 480px) {
     .nbar { grid-template-columns: 6.5rem 1fr 3.4rem; }
 }
+
+/* Details panel under the map on phones (the same content as the popup) */
+.normals-detail { position: relative; margin-top: 0.75rem; padding: 0.7rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; }
+.normals-detail[hidden] { display: none; }
+.normals-detail .normals-pop { width: 100%; }
+.np-close { position: absolute; top: 0.2rem; right: 0.4rem; width: 2.4rem; height: 2.4rem; border: 0; background: transparent; font-size: 1.7rem; line-height: 1; color: #475569; cursor: pointer; }
 
 /* Mini charts in the map popup */
 .normals-popup .leaflet-popup-content { margin: 0.7rem 0.8rem; }
