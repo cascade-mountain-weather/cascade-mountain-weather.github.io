@@ -70,6 +70,25 @@
     .nbar { grid-template-columns: 6.5rem 1fr 2.8rem; }
 }
 
+/* Mini charts in the map popup */
+.normals-popup .leaflet-popup-content { margin: 0.7rem 0.8rem; }
+.normals-pop { width: 300px; max-width: 100%; font-size: 0.8rem; }
+.normals-pop h4 { margin: 0; font-size: 1rem; color: #1e3c72; }
+.np-sub { color: #64748b; font-size: 0.72rem; margin-bottom: 0.4rem; }
+.np-chart { margin-top: 0.45rem; }
+.np-title { font-weight: 600; font-size: 0.74rem; color: #0f172a; }
+.np-chart svg { display: block; width: 100%; height: auto; }
+.np-grid { stroke: #e2e8f0; stroke-width: 1; }
+.np-zero { stroke: #0f172a; stroke-width: 1.2; }
+.np-axis { font-size: 8.5px; fill: #64748b; }
+.np-cap { color: #475569; font-size: 0.68rem; }
+.np-empty { color: #64748b; font-size: 0.72rem; font-style: italic; margin: 0.3rem 0 0.1rem; }
+.np-key { margin-top: 0.5rem; color: #475569; font-size: 0.68rem; display: flex; align-items: center; gap: 0.3rem; }
+.np-k { display: inline-block; width: 1.1rem; height: 0; border-top: 2px solid #2a5298; margin-left: 0.4rem; }
+.np-k:first-child { margin-left: 0; }
+.np-k--med { border-top: 2px dashed #64748b; }
+.normals--map .nbar { cursor: pointer; }
+
 /* Linked hover between a bar and its map dot */
 .nbar { padding: 0.15rem 0.25rem; border-radius: 4px; outline: none; }
 .nbar.is-hot, .nbar:focus-visible { background: #e8eefb; box-shadow: 0 0 0 1px #2a5298; }

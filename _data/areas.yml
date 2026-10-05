@@ -90,6 +90,16 @@ areas:
       - {id: BLT41, network: NWAC, label: Blewett Pass, primary: true}
       - {id: "352:WA:SNTL", network: SNOTEL, label: Blewett Pass}
 
+  - id: mission-ridge
+    name: Mission Ridge
+    basin: "17020011"
+    basins: ["17020011", "17030001"]   # drains toward Wenatchee and Upper Yakima; shade both like Blewett
+    page: null
+    stations:
+      # Grouse Camp (5390 ft) sits near the ski area. Upper Wheeler (4330 ft) is lower, so less representative.
+      - {id: "507:WA:SNTL", network: SNOTEL, label: Grouse Camp, resort: Mission Ridge, primary: true}
+      - {id: "841:WA:SNTL", network: SNOTEL, label: Upper Wheeler}
+
   - id: salmon-la-sac
     name: Salmon La Sac
     basin: "17030001"

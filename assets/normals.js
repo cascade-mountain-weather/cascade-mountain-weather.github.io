@@ -1,7 +1,7 @@
 // Homepage "season vs normal": bar chart plus a map. Pick a variable, timeframe and unit.
 // Bars are drawn with plain DOM/CSS. The map uses Leaflet (loaded by the conditions-map include);
 // without Leaflet only the bars show. Hovering (or focusing) a bar highlights its dot, and
-// hovering a dot highlights its bar.
+// hovering a dot highlights its bar. Clicking either opens a popup with mini charts.
 // Data: assets/data/normals.json, written daily by scripts/collect_normals.py.
 // A missing value renders as an en dash with no bar, and a hollow grey dot.
 
@@ -180,6 +180,9 @@
             m.on('mouseover', () => hot(a.id));
             m.on('mouseout', unhot);
             m.on('click', () => hot(a.id)); // touch: a tap highlights the bar
+            m.bindPopup(() => detailHtml(byId[a.id]), { maxWidth: 340, minWidth: 300, autoPanPadding: [12, 12], className: 'normals-popup' });
+            m.on('popupopen', () => { popupId = a.id; m.closeTooltip(); });
+            m.on('popupclose', () => { if (popupId === a.id) popupId = null; });
             markers[a.id] = m;
         });
         map.fitBounds(L.latLngBounds(pts.map(a => [a.lat, a.lon])).pad(0.12));
@@ -235,6 +238,109 @@
     grid.addEventListener('mouseleave', unhot);
     grid.addEventListener('focusin', e => { const li = e.target.closest('.nbar'); if (li) hot(li.dataset.id); });
     grid.addEventListener('focusout', unhot);
+    grid.addEventListener('click', e => {
+        const li = e.target.closest('.nbar');
+        if (!li || !markers[li.dataset.id]) return;
+        markers[li.dataset.id].openPopup();
+        if (window.matchMedia('(max-width: 900px)').matches) mapWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    // ---- mini charts (in the popup that opens when a dot or bar is clicked) ------------------
+    // Drawn as plain SVG. They follow the Timeframe selector: precipitation accumulated over the
+    // window, the SWE level, and the daily temperature anomaly with a zero line.
+
+    const DAY = 86400000;
+    const parseDay = s => Date.parse(s + 'T00:00:00Z');
+    const fmtDay = ms => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const byId = {};
+    let popupId = null;
+
+    // Indexes into the station's daily series for the selected timeframe, plus the day (ms) of each.
+    function windowOf(a, tf) {
+        const s = a.series;
+        if (!s || !s.precip_obs.length) return null;
+        const n = s.precip_obs.length, t0 = parseDay(s.start), endMs = t0 + (n - 1) * DAY;
+        const startMs = tf === 'wy' ? parseDay(data.water_year_start) : endMs - (Number(tf) - 1) * DAY;
+        const idx = [];
+        for (let i = Math.max(0, Math.round((startMs - t0) / DAY)); i < n; i++) idx.push(i);
+        return idx.length ? { idx, days: idx.map(i => t0 + i * DAY) } : null;
+    }
+
+    const CW = 300, CH = 92, PL = 32, PR = 6, PT = 8, PB = 16;
+
+    // lines: [{vals, color, dash}], bars: {vals, colors}. A null value is a gap.
+    function chartSvg({ days, lines, bars, yMin, yMax, fmt, zeroLine, label }) {
+        const n = days.length, pw = CW - PL - PR, ph = CH - PT - PB;
+        const y = v => PT + (yMax - v) / (yMax - yMin) * ph;
+        const x = i => PL + (bars ? (i + 0.5) / n : (n === 1 ? 0.5 : i / (n - 1))) * pw;
+        const ticks = zeroLine ? [yMin, 0, yMax] : [yMin, (yMin + yMax) / 2, yMax];
+        let g = ticks.map(t => `<line x1="${PL}" x2="${CW - PR}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="np-grid"/>` +
+            `<text x="${PL - 4}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end" class="np-axis">${esc(fmt(t))}</text>`).join('');
+        if (bars) {
+            const bw = Math.max(1, pw / n - (n > 40 ? 0 : 1));
+            g += bars.vals.map((v, i) => v === null ? '' :
+                `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${Math.min(y(v), y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5, Math.abs(y(v) - y(0))).toFixed(1)}" fill="${bars.colors[i]}"/>`).join('');
+        }
+        (lines || []).forEach(l => {
+            let d = '', pen = false, pts = 0;
+            l.vals.forEach((v, i) => {
+                if (v === null) { pen = false; return; }
+                d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`; pen = true; pts++;
+            });
+            if (pts > 1) g += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.dash ? 1.4 : 2}"${l.dash ? ' stroke-dasharray="4 3"' : ''} stroke-linejoin="round"/>`;
+            else if (pts === 1) { const i = l.vals.findIndex(v => v !== null); g += `<circle cx="${x(i).toFixed(1)}" cy="${y(l.vals[i]).toFixed(1)}" r="2.5" fill="${l.color}"/>`; }
+        });
+        if (zeroLine) g += `<line x1="${PL}" x2="${CW - PR}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" class="np-zero"/>`;
+        g += `<text x="${PL}" y="${CH - 3}" class="np-axis">${esc(fmtDay(days[0]))}</text>` +
+            (n > 1 ? `<text x="${CW - PR}" y="${CH - 3}" text-anchor="end" class="np-axis">${esc(fmtDay(days[n - 1]))}</text>` : '');
+        return `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(label)}">${g}</svg>`;
+    }
+
+    const OBS = '#2a5298', MED = '#64748b';
+    const num = (v, nd) => v === null || v === undefined ? DASH : v.toFixed(nd === undefined ? 1 : nd);
+    const lastOf = arr => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] !== null && arr[i] !== undefined) return arr[i]; return null; };
+    const panel = (title, svg, cap) => `<div class="np-chart"><div class="np-title">${esc(title)}</div>${svg}<div class="np-cap">${cap}</div></div>`;
+
+    function detailHtml(a) {
+        const tf = tfSel.value, tfLabel = TIMEFRAMES.find(t => t.key === tf).label.toLowerCase();
+        const head = `<div class="normals-pop"><h4>${esc(a.station)}</h4><div class="np-sub">${a.resort ? esc(a.resort) + ' · ' : ''}${a.elev_ft ? a.elev_ft.toLocaleString() + ' ft · ' : ''}${esc(tfLabel)}</div>`;
+        const w = windowOf(a, tf);
+        if (!w) return head + '<p class="np-cap">No daily data yet.</p></div>';
+        const s = a.series, pick = k => w.idx.map(i => s[k][i]);
+        const cum = vals => { let t = 0; return vals.map(v => (t += (v === null ? 0 : v))); };
+
+        // precipitation: accumulated over the window
+        const pObs = cum(pick('precip_obs')), pMed = cum(pick('precip_med'));
+        const pMax = Math.max(0.5, ...pObs, ...pMed) * 1.1;
+        const precip = panel('Precipitation, accumulated (in)',
+            chartSvg({ days: w.days, lines: [{ vals: pMed, color: MED, dash: true }, { vals: pObs, color: OBS }], yMin: 0, yMax: pMax, fmt: v => v.toFixed(1), label: 'Accumulated precipitation, observed and median' }),
+            `Observed ${num(pObs[pObs.length - 1])} in · median ${num(pMed[pMed.length - 1])} in`);
+
+        // SWE: the level (not accumulated)
+        const sObs = pick('swe_obs'), sMed = pick('swe_med');
+        const sPresent = sObs.concat(sMed).filter(v => v !== null);
+        const sMax = Math.max(0.5, ...sPresent) * 1.1;
+        const noSnow = Math.max(0, ...sPresent) < 0.05;
+        const swe = panel('Snow water equivalent (in)',
+            noSnow ? '<p class="np-empty">No snow on the ground yet, observed or normal.</p>'
+                : chartSvg({ days: w.days, lines: [{ vals: sMed, color: MED, dash: true }, { vals: sObs, color: OBS }], yMin: 0, yMax: sMax, fmt: v => v.toFixed(1), label: 'Snow water equivalent, observed and median' }),
+            `Latest ${num(lastOf(sObs))} in · median ${num(lastOf(sMed))} in`);
+
+        // temperature: daily anomaly, in the unit chosen when Temperature is showing
+        const c = varSel.value === 'temp' && unitSel.value === 'c', u = c ? 'C' : 'F', cap = TEMP_CAP[c ? 'c' : 'f'];
+        const tAnom = pick('temp_anom_f').map(v => v === null ? null : (c ? v * 5 / 9 : v));
+        const present = tAnom.filter(v => v !== null);
+        const tMax = Math.max(cap, Math.ceil(Math.max(0, ...present.map(Math.abs))));
+        const mean = present.length ? present.reduce((p, q) => p + q, 0) / present.length : null;
+        const temp = panel(`Temperature vs normal (°${u}, daily)`,
+            present.length ? chartSvg({ days: w.days, bars: { vals: tAnom, colors: tAnom.map(v => v === null ? '' : colorAt(-v / cap)) }, yMin: -tMax, yMax: tMax,
+                fmt: v => (v > 0 ? '+' : '') + Math.round(v), zeroLine: true, label: 'Daily temperature anomaly' })
+                : '<p class="np-empty">No temperature data.</p>',
+            mean === null ? '' : `Window average ${mean > 0 ? '+' : ''}${mean.toFixed(1)}°${u}`);
+
+        return head + precip + swe + temp +
+            '<div class="np-key"><span class="np-k np-k--obs"></span>Observed <span class="np-k np-k--med"></span>Median</div></div>';
+    }
 
     // ---- page ------------------------------------------------------------------------------
 
@@ -249,6 +355,7 @@
             (rows ? `<ul class="nbars">${rows}</ul>`
                 : '<p class="normals-empty">Not enough data for this selection yet. Early in the water year the normals are near zero; try a different timeframe.</p>');
         updateMap(variable, tf, unit, data.areas);
+        if (popupId && markers[popupId]) markers[popupId].getPopup().setContent(detailHtml(byId[popupId]));
     }
 
     varSel.innerHTML = Object.entries(VARS).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('');
@@ -262,6 +369,7 @@
             // North to south, so the list reads in the same order as the map. Stations without
             // coordinates go last.
             d.areas.sort((a, b) => (typeof b.lat === 'number' ? b.lat : -90) - (typeof a.lat === 'number' ? a.lat : -90));
+            d.areas.forEach(a => { byId[a.id] = a; });
             // Open on a combination that has data (early in the season some are empty).
             const opens = [['precip', '30'], ['precip', '7'], ['temp', '7']];
             const first = opens.find(([v, tf]) => d.areas.some(a => cell(v, tf, VARS[v].units[0][0], a)));
@@ -269,13 +377,13 @@
             varSel.addEventListener('change', () => { fillUnits(); show(); });
             tfSel.addEventListener('change', show);
             unitSel.addEventListener('change', show);
-            try { initMap(d.areas); } catch (err) { console.error('Season map failed:', err); mapWrap.hidden = true; map = null; }
+            try { initMap(d.areas); if (map) root.classList.add('normals--map'); } catch (err) { console.error('Season map failed:', err); mapWrap.hidden = true; map = null; }
             show();
             if (map) map.invalidateSize();
             const through = d.areas.map(a => a.data_through).filter(Boolean).sort().pop();
             foot.textContent = (through ? `Data through ${through}. ` : '') +
                 'Updated daily from NRCS SNOTEL stations, labeled with the nearest ski area. ' +
-                (map ? 'Hover a bar or a dot to see where the station is. ' : '') +
+                (map ? 'Hover a bar or a dot to see where the station is; click for its season so far. ' : '') +
                 'Mazama and Alpental have no SNOTEL station, so they are not shown.';
         })
         .catch(err => {
