@@ -37,7 +37,7 @@
 .normals-sub { color: #64748b; font-size: 0.8rem; margin: 0 0 0.5rem; }
 
 .nbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
-.nbar { display: grid; grid-template-columns: 9.5rem 1fr 3.2rem; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+.nbar { display: grid; grid-template-columns: 9.5rem 1fr 3.9rem; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
 .nbar-name { color: #0f172a; font-weight: 600; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nbar-name small { display: block; font-weight: 400; font-size: 0.68rem; color: #64748b; overflow: hidden; text-overflow: ellipsis; }
 .nbar-val { text-align: right; font-variant-numeric: tabular-nums; color: #334155; }
@@ -67,7 +67,7 @@
 }
 
 @media (max-width: 480px) {
-    .nbar { grid-template-columns: 6.5rem 1fr 2.8rem; }
+    .nbar { grid-template-columns: 6.5rem 1fr 3.4rem; }
 }
 
 /* Mini charts in the map popup */

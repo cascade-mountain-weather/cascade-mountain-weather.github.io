@@ -30,14 +30,17 @@
 
     // units: first entry is the default for that variable.
     const VARS = {
-        precip: { label: 'Precipitation', units: [['pct', '% of normal'], ['in', 'Inches']] },
-        swe: { label: 'Snow water equivalent (SWE)', units: [['pct', '% of normal'], ['in', 'Inches']] },
+        precip: { label: 'Precipitation', units: [['pct', '% of normal'], ['in', 'Inches'], ['cm', 'Centimeters']] },
+        swe: { label: 'Snow water equivalent (SWE)', units: [['pct', '% of normal'], ['in', 'Inches'], ['cm', 'Centimeters']] },
         temp: { label: 'Temperature', units: [['f', '°F vs normal'], ['c', '°C vs normal']] },
     };
 
     const PCT_CAP = 200;      // percent axis runs 0-200%, with the 100% marker centered
     // Temperature bars and colors saturate at +/-4 F or +/-2 C (whichever unit is selected)
     const TEMP_CAP = { f: 4, c: 2 };
+    const IN_TO_CM = 2.54;
+    // Choosing centimeters or °C makes metric stick: it is applied when switching variables and in the popup charts.
+    let metric = false;
 
     // One red-blue scale shared by the bars and the map dots. s runs -1 (red) to +1 (blue) with a
     // grey midpoint at normal. Dry and warm are red; wet and cold are blue.
@@ -74,11 +77,13 @@
         const s = m.pct === null ? null : (Math.min(m.pct, PCT_CAP) - 100) / 100;
         if (unit === 'pct') {
             if (m.pct === null) return null;
-            return { value: m.pct, s, label: `${m.pct}%`, title: m.normal === null ? '' : `${m.obs.toFixed(1)} in vs ${m.normal.toFixed(1)} in normal` };
+            const k = metric ? IN_TO_CM : 1, lu = metric ? 'cm' : 'in';
+            return { value: m.pct, s, label: `${m.pct}%`, title: m.normal === null ? '' : `${(m.obs * k).toFixed(1)} ${lu} vs ${(m.normal * k).toFixed(1)} ${lu} normal` };
         }
         const sign = variable === 'swe' && tf !== 'wy' && m.obs > 0 ? '+' : '';
-        return { value: m.obs, normal: m.normal, s, label: `${sign}${m.obs.toFixed(1)} in`,
-            title: m.normal === null ? '' : `Normal: ${m.normal.toFixed(1)} in` };
+        const k = unit === 'cm' ? IN_TO_CM : 1, lu = unit === 'cm' ? 'cm' : 'in';
+        return { value: m.obs * k, normal: m.normal === null ? null : m.normal * k, s, label: `${sign}${(m.obs * k).toFixed(1)} ${lu}`,
+            title: m.normal === null ? '' : `Normal: ${(m.normal * k).toFixed(1)} ${lu}` };
     }
 
     const fillStyle = c => (c.s === null ? '' : `background:${colorAt(c.s)};`);
@@ -134,16 +139,16 @@
         if (variable === 'precip') {
             return unit === 'pct'
                 ? 'Precipitation over the window as a percent of the NRCS median for the same days. The line marks 100% (normal).'
-                : 'Precipitation over the window, in inches. The dark tick marks the NRCS median for the same days.';
+                : `Precipitation over the window, in ${unit === 'cm' ? 'centimeters' : 'inches'}. The dark tick marks the NRCS median for the same days.`;
         }
         if (tf === 'wy') {
             return unit === 'pct'
                 ? 'Snow water equivalent today as a percent of the NRCS median for today. The line marks 100% (normal).'
-                : 'Snow water equivalent today, in inches. The dark tick marks the NRCS median for today.';
+                : `Snow water equivalent today, in ${unit === 'cm' ? 'centimeters' : 'inches'}. The dark tick marks the NRCS median for today.`;
         }
         return unit === 'pct'
             ? 'Change in SWE over the window as a percent of the median change. Blank when the normal change is near zero or negative (melt season).'
-            : 'Change in SWE over the window, in inches (negative is melt). The dark tick marks the median change.';
+            : `Change in SWE over the window, in ${unit === 'cm' ? 'centimeters' : 'inches'} (negative is melt). The dark tick marks the median change.`;
     }
 
     function fillUnits() {
@@ -151,6 +156,14 @@
         const units = VARS[varSel.value].units;
         unitSel.innerHTML = units.map(([k, label]) => `<option value="${k}">${esc(label)}</option>`).join('');
         if (units.some(u => u[0] === prev)) unitSel.value = prev;
+        else if (metric) { const m = units.find(u => u[0] === 'cm' || u[0] === 'c'); if (m) unitSel.value = m[0]; }
+    }
+
+    // Percent is not a unit of length, so it leaves the preference alone.
+    function noteMetric() {
+        const u = unitSel.value;
+        if (u === 'cm' || u === 'c') metric = true;
+        else if (u === 'in' || u === 'f') metric = false;
     }
 
     // ---- map -------------------------------------------------------------------------------
@@ -318,26 +331,29 @@
         const s = a.series, pick = k => w.idx.map(i => s[k][i]);
         const cum = vals => { let t = 0; return vals.map(v => (t += (v === null ? 0 : v))); };
 
+        const k = metric ? IN_TO_CM : 1, lu = metric ? 'cm' : 'in';
+        const scale = arr => arr.map(v => (v === null ? null : v * k));
+
         // precipitation: accumulated over the window
-        const pObs = cum(pick('precip_obs')), pMed = cum(pick('precip_med'));
-        const pMax = Math.max(0.5, ...pObs, ...pMed) * 1.1;
-        const precip = panel('Precipitation, accumulated (in)',
+        const pObs = scale(cum(pick('precip_obs'))), pMed = scale(cum(pick('precip_med')));
+        const pMax = Math.max(0.5 * k, ...pObs, ...pMed) * 1.1;
+        const precip = panel(`Precipitation, accumulated (${lu})`,
             chartSvg({ days: w.days, lines: [{ vals: pMed, color: MED, dash: true }, { vals: pObs, color: OBS }], yMin: 0, yMax: pMax, fmt: v => v.toFixed(1), label: 'Accumulated precipitation, observed and median' }),
-            `Observed ${num(pObs[pObs.length - 1])} in · median ${num(pMed[pMed.length - 1])} in`);
+            `Observed ${num(pObs[pObs.length - 1])} ${lu} · median ${num(pMed[pMed.length - 1])} ${lu}`);
 
         // SWE: the level (not accumulated)
-        const sObs = pick('swe_obs'), sMed = pick('swe_med');
-        const sPresent = sObs.concat(sMed).filter(v => v !== null);
-        const sMax = Math.max(0.5, ...sPresent) * 1.1;
-        const noSnow = Math.max(0, ...sPresent) < 0.05;
-        const swe = panel('Snow water equivalent (in)',
+        const sRawObs = pick('swe_obs'), sRawMed = pick('swe_med');
+        const noSnow = Math.max(0, ...sRawObs.concat(sRawMed).filter(v => v !== null)) < 0.05;   // in inches
+        const sObs = scale(sRawObs), sMed = scale(sRawMed);
+        const sMax = Math.max(0.5 * k, ...sObs.concat(sMed).filter(v => v !== null)) * 1.1;
+        const swe = panel(`Snow water equivalent (${lu})`,
             noSnow ? '<p class="np-empty">No snow on the ground yet, observed or normal.</p>'
                 : chartSvg({ days: w.days, lines: [{ vals: sMed, color: MED, dash: true }, { vals: sObs, color: OBS }], yMin: 0, yMax: sMax, fmt: v => v.toFixed(1), label: 'Snow water equivalent, observed and median' }),
-            `Latest ${num(lastOf(sObs))} in · median ${num(lastOf(sMed))} in`);
+            `Latest ${num(lastOf(sObs))} ${lu} · median ${num(lastOf(sMed))} ${lu}`);
 
         // temperature: the actual daily mean against the 1991-2020 distribution for each day
         // (shaded = middle half of days, dashed = median)
-        const c = varSel.value === 'temp' && unitSel.value === 'c', u = c ? 'C' : 'F';
+        const c = metric, u = c ? 'C' : 'F';
         const conv = v => (v === null || v === undefined ? null : (c ? (v - 32) * 5 / 9 : v));
         const tAct = (s.temp_f ? pick('temp_f') : []).map(conv), tMed = (s.temp_p50 ? pick('temp_p50') : []).map(conv);
         const tLo = (s.temp_p25 ? pick('temp_p25') : []).map(conv), tHi = (s.temp_p75 ? pick('temp_p75') : []).map(conv);
@@ -393,7 +409,7 @@
             if (first) { varSel.value = first[0]; tfSel.value = first[1]; fillUnits(); }
             varSel.addEventListener('change', () => { fillUnits(); show(); });
             tfSel.addEventListener('change', show);
-            unitSel.addEventListener('change', show);
+            unitSel.addEventListener('change', () => { noteMetric(); show(); });
             try { initMap(d.areas); if (map) root.classList.add('normals--map'); } catch (err) { console.error('Season map failed:', err); mapWrap.hidden = true; map = null; }
             show();
             if (map) map.invalidateSize();
