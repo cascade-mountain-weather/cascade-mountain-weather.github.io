@@ -181,7 +181,7 @@
         mapWrap.hidden = false;
         map = L.map('normals-map', {
             scrollWheelZoom: false,
-            dragging: !L.Browser.mobile, // keep one-finger scrolling usable on phones
+            dragging: true,   // one finger moves the map on phones too (the map is short, so the page still scrolls around it)
             maxZoom: 12,
         }).setView([47.5, -121.6], 7);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {

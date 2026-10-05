@@ -76,8 +76,9 @@
 
     const areaById = new Map();
 
-    function tile(label, value) {
-        return `<div class="cmap-tile"><span>${label}</span><strong>${value}</strong></div>`;
+    function tile(label, value, opts) {
+        const o = opts || {};
+        return `<div class="cmap-tile${o.cls ? ' ' + o.cls : ''}"${o.title ? ` title="${esc(o.title)}"` : ''}><span>${label}</span><strong>${value}</strong></div>`;
     }
 
     function headlineHtml(area, h) {
@@ -87,8 +88,13 @@
         if (!h) return `${pills}<p class="cmap-from">No station in this area has reported recently.</p>`;
         const wind = (h.wind_mph === null || h.wind_mph === undefined) ? DASH : `${Math.round(h.wind_mph)} mph`;
         const obs = h.obs_time ? `last report ${pacific.format(new Date(h.obs_time))}` : 'no recent report';
+        // Dew point with relative humidity in parentheses. Air within 3 F of its dew point (or at 95% RH or more)
+        // is near saturation, a rough cue for fog or low cloud, so the tile is tinted.
+        const hasDew = h.dewpoint_f !== null && h.dewpoint_f !== undefined, hasRh = h.rh !== null && h.rh !== undefined;
+        const dewText = hasDew || hasRh ? `${hasDew ? num(h.dewpoint_f, 0, '°F') : DASH} (${hasRh ? num(h.rh, 0, '%') : DASH})` : DASH;
+        const humid = (hasDew && h.temp_f !== null && h.temp_f !== undefined && h.temp_f - h.dewpoint_f <= 3) || (hasRh && h.rh >= 95);
         return `${pills}
-            <div class="cmap-tiles${h.trust.ok ? '' : ' cmap-tiles--flag'}">${tile('Temp', num(h.temp_f, 0, '°F'))}${tile('Wind', wind)}
+            <div class="cmap-tiles${h.trust.ok ? '' : ' cmap-tiles--flag'}">${tile('Temp', num(h.temp_f, 0, '°F'))}${tile('Dew pt (RH)', dewText, humid ? { cls: 'cmap-tile--humid', title: 'Near saturation: the temperature is within 3°F of the dew point, or RH is 95% or more. Fog or low cloud is possible.' } : {})}${tile('Wind', wind)}
                 ${tile('Snow depth', num(h.snow_depth_in, 0, ' in'))}${tile('SWE', num(h.swe_in, 1, ' in'))}
                 ${tile('Precip 24h', num(h.precip_24h_in, 2, ' in'))}</div>
             <p class="cmap-from">${esc(h.label)}${h.elev_ft ? ` &middot; ${h.elev_ft.toLocaleString()}'` : ''} &middot; ${esc(h.network)} &middot; ${esc(obs)}</p>
@@ -210,7 +216,7 @@
     function build(data, basins) {
         const map = L.map(mapEl, {
             scrollWheelZoom: false,
-            dragging: !L.Browser.mobile, // keep one-finger scrolling usable on phones
+            dragging: true,   // one finger moves the map on phones too; the map is capped in height so there is page above and below it to scroll with
             maxZoom: 12,
         }).setView([47.4, -121.6], 7); // Leaflet needs a view before vector layers are added; refit below
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {

@@ -150,8 +150,9 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 }
 
 @media (max-width: 600px) {
-    .cmap { height: 380px; }
-    .cmap--tall { height: 440px; }
+    /* One finger drags the map, so leave room to scroll the page above and below it */
+    .cmap { height: min(62vh, 380px); }
+    .cmap--tall { height: min(68vh, 440px); }
     .cmap-all { grid-template-columns: 1fr; }
 }
 
@@ -218,10 +219,12 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 .cmap-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 /* Decluttered card: headline tiles, quiet chips, details for the rest */
-.cmap-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; margin: 0.4rem 0 0; }
+.cmap-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; margin: 0.4rem 0 0; }
 .cmap-tile { background: #f1f5f9; border-radius: 6px; padding: 0.35rem 0.2rem; text-align: center; min-width: 0; }
 .cmap-tile span { display: block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.02em; color: #64748b; }
 .cmap-tile strong { display: block; font-size: 0.9rem; color: #0f172a; white-space: nowrap; }
+.cmap-tile--humid { background: #dbeafe; }
+.cmap-tile--humid span { color: #1e40af; }
 .cmap-from { font-size: 0.72rem; color: #64748b; margin: 0.25rem 0 0; }
 
 .cmap-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.6rem 0 0; padding: 0; }
