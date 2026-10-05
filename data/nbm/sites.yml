@@ -36,9 +36,8 @@ sites:
 # Verification points: radiosonde launch sites. The snapshot also saves NBM snow level at these points so
 # scripts/score_forecast.py can compare it with the snow level computed from the actual sounding at the
 # same place and time (apples to apples; a sounding says nothing about a ski area 100 km away).
-# Quillayute is the upstream Pacific station, Spokane the east side, Salem the south. Coordinates are
-# approximate (the NBM grid is 2.5 km).
+# Quillayute is the upstream Pacific station, Salem the south. Spokane (OTX) was dropped: its soundings are
+# missing from IEM's feed. Coordinates are approximate (the NBM grid is 2.5 km).
 verification_points:
   - {name: Quillayute, station: UIL, lat: 47.934, lon: -124.555}
-  - {name: Spokane,    station: OTX, lat: 47.680, lon: -117.627}
   - {name: Salem,      station: SLE, lat: 44.920, lon: -123.020}

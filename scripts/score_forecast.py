@@ -1,45 +1,55 @@
-"""Score a saved forecast snapshot against what SNOTEL observed.
+"""Score a saved forecast snapshot against what was observed.
 
     python scripts/score_forecast.py                                      # newest snapshot
     python scripts/score_forecast.py data/forecasts/nbm_snapshot_2026-10-03.json
 
-Reads the NBM snapshot written at forecast time (scripts/nbm_snapshot.py), gets the observed
-snowfall for each window from SNOTEL (scripts/snotel_obs.py, stations from data/nbm/sites.yml), and
-writes data/evaluation/score_<first-day>.json. Runs after the last window has ended.
+Reads the NBM snapshot written at forecast time (scripts/nbm_snapshot.py), gets observed snowfall for
+each window from SNOTEL (scripts/snotel_obs.py; stations from data/nbm/sites.yml), and writes
+data/evaluation/score_<first-day>.json. Run it after the last window has ended. Other scripts call
+score_snapshot() directly (scripts/backfill_evaluation.py).
 
-If a post carries a `forecast:` block in its front matter with `snapshot: <first-day>`, the author's
-own ranges are scored too:
+Your own forecast
+-----------------
+If a post carries a `forecast:` block in its front matter with `snapshot: <first-day>`, the author's own
+ranges are scored too:
 
     forecast:
       snapshot: 2026-10-03
       areas:
-        Mt. Baker: {day1: [0, 2], day2: [1, 4], total: [1, 6]}     # inches, low and high
+        Mt. Baker: {total: [1, 6]}        # inches, low and high; day1, day2, day3 are allowed too
 
-What is scored, per area and window:
+Your weekend total is scored against what fell over YOUR forecast period, 4 pm Thursday to 4 am Monday
+(local time), not the NBM window (Friday 12Z to Monday 12Z), so Thursday-evening snow counts for you.
+
+What is scored, per area and window
+-----------------------------------
   nbm_error_in   NBM median minus the observed estimate (positive = NBM too high)
   nbm_iqr_hit    observed estimate inside the NBM 25th-75th range (plus 0.5 in of slack)
-  ours_error_in  middle of the author's range minus the observed estimate
-  ours_hit       observed estimate inside the author's range (plus 0.5 in of slack)
-  obs_overlaps_* the observed range (which is wide, because new-snow density is unknown) overlaps the
-                 forecast range. A weaker test than the hit, reported next to it.
+  ours_error_in  middle of your range minus the observed estimate
+  ours_hit       observed estimate inside your range (plus 0.5 in of slack)
+  obs_overlaps_* the observed range (wide, because new-snow density is unknown) overlaps the forecast
+                 range. A weaker test than the hit, reported next to it.
 
-Snow level is scored separately, at the radiosonde sites (Quillayute, Spokane, Salem): for each 00Z and
-12Z launch in the period, the snow level computed from the actual sounding is compared with the NBM
-snow level at the same place and time (median, with the 25th-75th range). The snapshot saves the NBM
-side under `verification_points`. Soundings come from IEM's archive via collect_radiosonde_history.py,
-so any past weekend can be scored. A hit allows 500 ft of slack.
+Snow level
+----------
+Scored at the radiosonde sites in the snapshot (Quillayute, Salem): for each 00Z and 12Z launch, the snow
+level computed from the actual sounding (collect_radiosonde_history.py, via IEM's archive) against the NBM
+snow level at the same place and time (median, with the 25th-75th range). Only launches where the column
+is near saturation are scored: with dry air the melting-layer calculation gives a snow level that says
+nothing about a precipitation forecast. A hit allows 500 ft of slack.
 """
 import json
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from snotel_obs import utc, windows_obs  # noqa: E402
 from collect_radiosonde_history import compute_melting_layer, fetch_profile  # noqa: E402
+from draft_forecast_tables import is_pdt  # noqa: E402
+from snotel_obs import utc, windows_obs  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SITES_FILE = ROOT / "data" / "nbm" / "sites.yml"
@@ -47,8 +57,11 @@ POSTS = ROOT / "_posts"
 OUT_DIR = ROOT / "data" / "evaluation"
 SLACK_IN = 0.5
 SLACK_FT = 500.0
+SATURATED_WITHIN_M = 300.0   # actual and fully saturated snow levels this close = column is near saturation
 M_TO_FT = 3.28084
 
+
+# ---------------------------------------------------------------- your forecast
 
 def load_our_forecast(first_day):
     """The `forecast:` block of the post written against this snapshot, or None."""
@@ -66,6 +79,19 @@ def load_our_forecast(first_day):
     return None
 
 
+def local_to_utc(d, hour):
+    """Pacific local time on date d at `hour` o'clock, as a UTC datetime."""
+    return datetime(d.year, d.month, d.day, hour, tzinfo=timezone.utc) + timedelta(hours=7 if is_pdt(d) else 8)
+
+
+def our_period(first_day):
+    """Your forecast period: 4 pm Thursday (the day before the first day) to 4 am the Monday after."""
+    first = date.fromisoformat(first_day)
+    return local_to_utc(first - timedelta(days=1), 16), local_to_utc(first + timedelta(days=3), 4)
+
+
+# ---------------------------------------------------------------- scoring helpers
+
 def within(value, lo, hi):
     return lo - SLACK_IN <= value <= hi + SLACK_IN
 
@@ -74,21 +100,21 @@ def overlaps(a_lo, a_hi, b_lo, b_hi):
     return a_lo <= b_hi + SLACK_IN and b_lo <= a_hi + SLACK_IN
 
 
-def score_window(nbm, obs, ours):
-    out = {}
-    if not obs:
-        return {"note": "no observation available"}
-    mid = obs["mid"]
-    if nbm and nbm.get("p50") is not None:
-        out["nbm_error_in"] = round(nbm["p50"] - mid, 1)
-        out["nbm_iqr_hit"] = within(mid, nbm["p25"], nbm["p75"])
-        out["obs_overlaps_nbm_iqr"] = overlaps(obs["low"], obs["high"], nbm["p25"], nbm["p75"])
-    if ours:
-        lo, hi = ours
-        out["ours_error_in"] = round((lo + hi) / 2 - mid, 1)
-        out["ours_hit"] = within(mid, lo, hi)
-        out["obs_overlaps_ours"] = overlaps(obs["low"], obs["high"], lo, hi)
-    return out
+def score_nbm(nbm, obs):
+    if not obs or not nbm or nbm.get("p50") is None:
+        return {}
+    return {"nbm_error_in": round(nbm["p50"] - obs["mid"], 1),
+            "nbm_iqr_hit": within(obs["mid"], nbm["p25"], nbm["p75"]),
+            "obs_overlaps_nbm_iqr": overlaps(obs["low"], obs["high"], nbm["p25"], nbm["p75"])}
+
+
+def score_ours(ours, obs):
+    if not obs or not ours:
+        return {}
+    lo, hi = ours
+    return {"ours_error_in": round((lo + hi) / 2 - obs["mid"], 1),
+            "ours_hit": within(obs["mid"], lo, hi),
+            "obs_overlaps_ours": overlaps(obs["low"], obs["high"], lo, hi)}
 
 
 def launches(start, end):
@@ -103,13 +129,14 @@ def launches(start, end):
     return out
 
 
-def snow_level_scores(snap, start, end):
+def snow_level_scores(snap, start, end, verbose=True):
     """Sounding-derived snow level against the NBM at each sounding site."""
     times = snap["series_times_utc"]
     result = {}
     for name, vp in (snap.get("verification_points") or {}).items():
         rows = []
-        print(f"  {name} ({vp['station']}): soundings")
+        if verbose:
+            print(f"  {name} ({vp['station']}): soundings")
         for t in launches(start, end):
             stamp = f"{t:%Y-%m-%dT%H:%MZ}"
             if stamp not in times:
@@ -117,29 +144,117 @@ def snow_level_scores(snap, start, end):
             profile = fetch_profile(vp["station"], t)
             if profile is None:
                 continue
-            d = compute_melting_layer(*profile)
-            if d.get("snow_level_m") is None:
+            heights, temps, dews = profile
+            actual = compute_melting_layer(heights, temps, dews)
+            saturated = compute_melting_layer(heights, temps, temps)   # same column, fully saturated
+            if actual.get("snow_level_m") is None:
                 continue
             i = times.index(stamp)
             sl = vp["snow_level_ft"]
-            obs_ft = round(d["snow_level_m"] * M_TO_FT)
+            obs_ft = round(actual["snow_level_m"] * M_TO_FT)
             nbm = {k: sl[k][i] for k in ("p25", "p50", "p75", "deterministic")}
+            is_sat = (saturated.get("snow_level_m") is not None
+                      and abs(actual["snow_level_m"] - saturated["snow_level_m"]) <= SATURATED_WITHIN_M)
             row = {"valid_utc": stamp, "sounding_snow_level_ft": obs_ft,
-                   "sounding_freezing_level_ft": None if d.get("freezing_level_m") is None else round(d["freezing_level_m"] * M_TO_FT),
-                   "nbm": nbm}
-            if nbm["p50"] is not None:
+                   "sounding_snow_level_saturated_ft": None if saturated.get("snow_level_m") is None else round(saturated["snow_level_m"] * M_TO_FT),
+                   "sounding_freezing_level_ft": None if actual.get("freezing_level_m") is None else round(actual["freezing_level_m"] * M_TO_FT),
+                   "column_saturated": is_sat, "scored": bool(is_sat and nbm["p50"] is not None), "nbm": nbm}
+            if row["scored"]:
                 row["nbm_error_ft"] = round(nbm["p50"] - obs_ft)
                 row["nbm_iqr_hit"] = nbm["p25"] - SLACK_FT <= obs_ft <= nbm["p75"] + SLACK_FT
             rows.append(row)
-        errs = [r["nbm_error_ft"] for r in rows if "nbm_error_ft" in r]
+        scored = [r for r in rows if r["scored"]]
+        errs = [r["nbm_error_ft"] for r in scored]
         result[name] = {
             "station": vp["station"], "km_to_grid_point": vp["km_to_grid_point"], "launches": rows,
-            "n": len(errs),
+            "n_launches": len(rows), "n_scored": len(scored),
             "bias_ft": round(sum(errs) / len(errs)) if errs else None,
             "mae_ft": round(sum(abs(e) for e in errs) / len(errs)) if errs else None,
-            "iqr_hit_rate": round(sum(r["nbm_iqr_hit"] for r in rows if "nbm_iqr_hit" in r) / len(errs), 2) if errs else None,
+            "iqr_hit_rate": round(sum(r["nbm_iqr_hit"] for r in scored) / len(scored), 2) if scored else None,
         }
     return result
+
+
+# ---------------------------------------------------------------- the scoring itself
+
+def score_snapshot(snap, snap_name, ours_all=None, verbose=True):
+    """Score one snapshot (a loaded dict) and return the result dict. `ours_all` is {area: {window: [lo, hi]}}."""
+    first_day = snap["source"]["first_day_local"]
+    windows = {wid: (utc(w["start_utc"].rstrip("Z")), utc(w["end_utc"].rstrip("Z"))) for wid, w in snap["windows"].items()}
+    last_end = max(e for _, e in windows.values())
+    if last_end > datetime.now(timezone.utc):
+        raise RuntimeError(f"The last window ends {last_end:%Y-%m-%d %H:%MZ}, which has not happened yet.")
+
+    obs_windows = dict(windows)
+    ours_start, ours_end = our_period(first_day)
+    if ours_all:
+        obs_windows["ours_period"] = (ours_start, ours_end)
+
+    sites = {s["name"]: s for s in yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))["sites"]}
+    result = {
+        "snapshot": snap_name, "first_day_local": first_day, "nbm_cycle_utc": snap["source"]["cycle_utc"],
+        "scored_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
+        "our_forecast_found": bool(ours_all),
+        "our_period_utc": [f"{ours_start:%Y-%m-%dT%H:%MZ}", f"{ours_end:%Y-%m-%dT%H:%MZ}"] if ours_all else None,
+        "notes": [
+            "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
+            "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
+            f"A hit allows {SLACK_IN} in of slack on each side.",
+            "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window.",
+        ],
+        "windows": {wid: {"start_utc": snap["windows"][wid]["start_utc"], "end_utc": snap["windows"][wid]["end_utc"]} for wid in windows},
+        "areas": {},
+    }
+    for name, site_snap in snap["sites"].items():
+        trips = sites.get(name, {}).get("obs")
+        if not trips:
+            continue
+        if verbose:
+            print(f"  {name}: fetching {', '.join(trips)}")
+        obs = windows_obs(trips, obs_windows)
+        area = {"obs_stations": {t: {"name": s["name"], "elev_ft": s["elev_ft"]} for t, s in next(iter(obs.values()))["stations"].items()},
+                "forecast_elev_ft": (site_snap.get("elevation_ft") or {}).get("site"), "windows": {}}
+        for wid in windows:
+            nbm = site_snap["snowfall_in"].get(wid)
+            ours = ((ours_all or {}).get(name) or {}).get(wid)
+            o_nbm = obs[wid]["snowfall_in"]
+            use_ours_period = wid == "total" and "ours_period" in obs
+            o_ours = obs["ours_period"]["snowfall_in"] if use_ours_period else o_nbm
+            scores = score_nbm(nbm, o_nbm)
+            scores.update(score_ours(ours, o_ours))
+            entry = {
+                "nbm": {k: nbm.get(k) for k in ("p25", "p50", "p75", "deterministic", "method")} if nbm else None,
+                "ours": ours, "observed": o_nbm,
+                "observed_inputs": {t: {k: s[k] for k in ("swe_gain_in", "depth_gain_in", "precip_in", "temp_mean_f", "gate", "coverage")}
+                                    for t, s in obs[wid]["stations"].items()},
+                "scores": scores,
+            }
+            if use_ours_period and ours:
+                entry["observed_for_ours"] = o_ours
+            area["windows"][wid] = entry
+        result["areas"][name] = area
+
+    result["snow_level"] = snow_level_scores(snap, min(s for s, _ in windows.values()), last_end, verbose)
+    return result
+
+
+def print_result(result):
+    print(f"\nNBM cycle {result['nbm_cycle_utc']}; windows {', '.join(result['windows'])}")
+    print(f"{'area':16s} {'window':6s} {'NBM p25/p50/p75':17s} {'obs low/mid/high':20s} {'NBM err':>8s}  IQR hit")
+    for name, a in result["areas"].items():
+        for wid, w in a["windows"].items():
+            n, o, sc = w["nbm"], w["observed"], w["scores"]
+            nb = f"{n['p25']}/{n['p50']}/{n['p75']}" if n else "-"
+            ob = f"{o['low']}/{o['mid']}/{o['high']}" if o else "-"
+            print(f"{name:16s} {wid:6s} {nb:17s} {ob:20s} {str(sc.get('nbm_error_in', '-')):>8s}  {sc.get('nbm_iqr_hit', '-')}")
+    print("\nSnow level at the sounding sites (only near-saturated launches are scored)")
+    for name, sl in result["snow_level"].items():
+        print(f"  {name} ({sl['station']}): {sl['n_scored']} of {sl['n_launches']} launches scored, bias {sl['bias_ft']} ft, "
+              f"MAE {sl['mae_ft']} ft, within NBM 25-75 range {sl['iqr_hit_rate']}")
+        for row in sl["launches"]:
+            n = row["nbm"]
+            tag = "" if row["scored"] else "  (dry column, not scored)"
+            print(f"    {row['valid_utc']}  sounding {row['sounding_snow_level_ft']:>6}  NBM {n['p25']}/{n['p50']}/{n['p75']}  err {row.get('nbm_error_ft', '-')}{tag}")
 
 
 def main():
@@ -151,68 +266,15 @@ def main():
             sys.exit("no nbm_snapshot_*.json in data/forecasts")
         path = found[-1]
     snap = json.loads(path.read_text(encoding="utf-8"))
-    first_day = snap["source"]["first_day_local"]
-    windows = {wid: (utc(w["start_utc"].rstrip("Z")), utc(w["end_utc"].rstrip("Z"))) for wid, w in snap["windows"].items()}
-    last_end = max(e for _, e in windows.values())
-    if last_end > datetime.now(timezone.utc):
-        sys.exit(f"The last window ends {last_end:%Y-%m-%d %H:%MZ}, which has not happened yet.")
-
-    sites = {s["name"]: s for s in yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))["sites"]}
-    ours_all = load_our_forecast(first_day)
-    result = {
-        "snapshot": path.name, "first_day_local": first_day, "nbm_cycle_utc": snap["source"]["cycle_utc"],
-        "scored_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
-        "our_forecast_found": ours_all is not None,
-        "notes": [
-            "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
-            "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
-            f"A hit allows {SLACK_IN} in of slack on each side.",
-        ],
-        "windows": {wid: {"start_utc": snap["windows"][wid]["start_utc"], "end_utc": snap["windows"][wid]["end_utc"]} for wid in windows},
-        "areas": {},
-    }
-    for name, site_snap in snap["sites"].items():
-        trips = sites.get(name, {}).get("obs")
-        if not trips:
-            print(f"  {name}: no obs stations in sites.yml, skipped")
-            continue
-        print(f"  {name}: fetching {', '.join(trips)}")
-        obs = windows_obs(trips, windows)
-        area = {"obs_stations": {t: {"name": s["name"], "elev_ft": s["elev_ft"]} for t, s in next(iter(obs.values()))["stations"].items()},
-                "forecast_elev_ft": (site_snap.get("elevation_ft") or {}).get("site"), "windows": {}}
-        for wid in windows:
-            nbm = site_snap["snowfall_in"].get(wid)
-            ours = ((ours_all or {}).get(name) or {}).get(wid)
-            o = obs[wid]["snowfall_in"]
-            area["windows"][wid] = {
-                "nbm": {k: nbm.get(k) for k in ("p25", "p50", "p75", "deterministic", "method")} if nbm else None,
-                "ours": ours, "observed": o,
-                "observed_inputs": {t: {k: s[k] for k in ("swe_gain_in", "depth_gain_in", "precip_in", "temp_mean_f", "coverage")}
-                                    for t, s in obs[wid]["stations"].items()},
-                "scores": score_window(nbm, o, ours),
-            }
-        result["areas"][name] = area
-
-    result["snow_level"] = snow_level_scores(snap, min(s for s, _ in windows.values()), last_end)
-
+    ours = load_our_forecast(snap["source"]["first_day_local"])
+    try:
+        result = score_snapshot(snap, path.name, ours)
+    except RuntimeError as exc:
+        sys.exit(str(exc))
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out = OUT_DIR / f"score_{first_day}.json"
+    out = OUT_DIR / f"score_{result['first_day_local']}.json"
     out.write_text(json.dumps(result, indent=1), encoding="utf-8")
-
-    print(f"\nNBM cycle {result['nbm_cycle_utc']}; windows {', '.join(windows)}")
-    print(f"{'area':16s} {'window':6s} {'NBM p25/p50/p75':17s} {'obs low/mid/high':20s} {'NBM err':>8s}  IQR hit")
-    for name, a in result["areas"].items():
-        for wid, w in a["windows"].items():
-            n, o, sc = w["nbm"], w["observed"], w["scores"]
-            nb = f"{n['p25']}/{n['p50']}/{n['p75']}" if n else "-"
-            ob = f"{o['low']}/{o['mid']}/{o['high']}" if o else "-"
-            print(f"{name:16s} {wid:6s} {nb:17s} {ob:20s} {str(sc.get('nbm_error_in', '-')):>8s}  {sc.get('nbm_iqr_hit', '-')}")
-    print("\nSnow level at the sounding sites (sounding-derived vs NBM median, ft)")
-    for name, sl in result["snow_level"].items():
-        print(f"  {name} ({sl['station']}): {sl['n']} launches, bias {sl['bias_ft']} ft, MAE {sl['mae_ft']} ft, within NBM 25-75 range {sl['iqr_hit_rate']}")
-        for row in sl["launches"]:
-            n = row["nbm"]
-            print(f"    {row['valid_utc']}  sounding {row['sounding_snow_level_ft']:>6}  NBM {n['p25']}/{n['p50']}/{n['p75']}  err {row.get('nbm_error_ft', '-')}")
+    print_result(result)
     print(f"\nwrote {out.relative_to(ROOT)}")
 
 
