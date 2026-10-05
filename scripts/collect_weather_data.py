@@ -2,7 +2,6 @@ import os
 import requests
 import re
 
-
 API_TOKEN = (os.environ.get('SYNOPTIC_TOKEN') or '').strip()  # a pasted secret often carries a trailing newline
 if not API_TOKEN:
     raise SystemExit('SYNOPTIC_TOKEN is not set. Add it as a repository secret (Actions) or export it locally.')
