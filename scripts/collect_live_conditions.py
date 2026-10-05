@@ -21,7 +21,7 @@ AREAS_FILE = REPO / '_data' / 'areas.yml'
 OUT_FILE = REPO / 'assets' / 'data' / 'live_conditions.json'
 
 # Never commit the token: it comes from the SYNOPTIC_TOKEN secret (Actions) or the environment.
-SYNOPTIC_TOKEN = os.environ.get('SYNOPTIC_TOKEN')
+SYNOPTIC_TOKEN = (os.environ.get('SYNOPTIC_TOKEN') or '').strip()  # a pasted secret often carries a trailing newline
 if not SYNOPTIC_TOKEN:
     raise SystemExit('SYNOPTIC_TOKEN is not set. Add it as a repository secret (Actions) or export it locally.')
 SYNOPTIC_URL = 'https://api.synopticdata.com/v2/stations/timeseries'
