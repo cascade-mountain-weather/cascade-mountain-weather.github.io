@@ -247,7 +247,7 @@
 
     // ---- mini charts (in the popup that opens when a dot or bar is clicked) ------------------
     // Drawn as plain SVG. They follow the Timeframe selector: precipitation accumulated over the
-    // window, the SWE level, and the daily temperature anomaly with a zero line.
+    // window, the SWE level, and the daily temperature against its normal range.
 
     const DAY = 86400000;
     const parseDay = s => Date.parse(s + 'T00:00:00Z');
@@ -268,29 +268,38 @@
 
     const CW = 300, CH = 92, PL = 32, PR = 6, PT = 8, PB = 16;
 
-    // lines: [{vals, color, dash}], bars: {vals, colors}. A null value is a gap.
-    function chartSvg({ days, lines, bars, yMin, yMax, fmt, zeroLine, label }) {
+    // lines: [{vals, color, dash}]; band: {lo, hi} shaded between two series; ref: {v} a faint
+    // reference line (freezing). A null value is a gap.
+    function chartSvg({ days, lines, band, ref, yMin, yMax, fmt, label }) {
         const n = days.length, pw = CW - PL - PR, ph = CH - PT - PB;
         const y = v => PT + (yMax - v) / (yMax - yMin) * ph;
-        const x = i => PL + (bars ? (i + 0.5) / n : (n === 1 ? 0.5 : i / (n - 1))) * pw;
-        const ticks = zeroLine ? [yMin, 0, yMax] : [yMin, (yMin + yMax) / 2, yMax];
-        let g = ticks.map(t => `<line x1="${PL}" x2="${CW - PR}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="np-grid"/>` +
+        const x = i => PL + (n === 1 ? 0.5 : i / (n - 1)) * pw;
+        const pt = (i, v) => `${x(i).toFixed(1)} ${y(v).toFixed(1)}`;
+        let g = [yMin, (yMin + yMax) / 2, yMax].map(t => `<line x1="${PL}" x2="${CW - PR}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="np-grid"/>` +
             `<text x="${PL - 4}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end" class="np-axis">${esc(fmt(t))}</text>`).join('');
-        if (bars) {
-            const bw = Math.max(1, pw / n - (n > 40 ? 0 : 1));
-            g += bars.vals.map((v, i) => v === null ? '' :
-                `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${Math.min(y(v), y(0)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0.5, Math.abs(y(v) - y(0))).toFixed(1)}" fill="${bars.colors[i]}"/>`).join('');
+        if (band) {
+            let top = [], bottom = [];
+            const flush = () => {
+                if (top.length > 1) g += `<path d="M${top.join('L')}L${bottom.reverse().join('L')}Z" class="np-band"/>`;
+                top = []; bottom = [];
+            };
+            band.hi.forEach((hi, i) => {
+                const lo = band.lo[i];
+                if (hi === null || lo === null) { flush(); return; }
+                top.push(pt(i, hi)); bottom.push(pt(i, lo));
+            });
+            flush();
         }
+        if (ref && ref.v > yMin && ref.v < yMax) g += `<line x1="${PL}" x2="${CW - PR}" y1="${y(ref.v).toFixed(1)}" y2="${y(ref.v).toFixed(1)}" class="np-freeze"/>`;
         (lines || []).forEach(l => {
             let d = '', pen = false, pts = 0;
             l.vals.forEach((v, i) => {
                 if (v === null) { pen = false; return; }
-                d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`; pen = true; pts++;
+                d += `${pen ? 'L' : 'M'}${pt(i, v)}`; pen = true; pts++;
             });
             if (pts > 1) g += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.dash ? 1.4 : 2}"${l.dash ? ' stroke-dasharray="4 3"' : ''} stroke-linejoin="round"/>`;
             else if (pts === 1) { const i = l.vals.findIndex(v => v !== null); g += `<circle cx="${x(i).toFixed(1)}" cy="${y(l.vals[i]).toFixed(1)}" r="2.5" fill="${l.color}"/>`; }
         });
-        if (zeroLine) g += `<line x1="${PL}" x2="${CW - PR}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" class="np-zero"/>`;
         g += `<text x="${PL}" y="${CH - 3}" class="np-axis">${esc(fmtDay(days[0]))}</text>` +
             (n > 1 ? `<text x="${CW - PR}" y="${CH - 3}" text-anchor="end" class="np-axis">${esc(fmtDay(days[n - 1]))}</text>` : '');
         return `<svg viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(label)}">${g}</svg>`;
@@ -326,17 +335,25 @@
                 : chartSvg({ days: w.days, lines: [{ vals: sMed, color: MED, dash: true }, { vals: sObs, color: OBS }], yMin: 0, yMax: sMax, fmt: v => v.toFixed(1), label: 'Snow water equivalent, observed and median' }),
             `Latest ${num(lastOf(sObs))} in · median ${num(lastOf(sMed))} in`);
 
-        // temperature: daily anomaly, in the unit chosen when Temperature is showing
-        const c = varSel.value === 'temp' && unitSel.value === 'c', u = c ? 'C' : 'F', cap = TEMP_CAP[c ? 'c' : 'f'];
-        const tAnom = pick('temp_anom_f').map(v => v === null ? null : (c ? v * 5 / 9 : v));
-        const present = tAnom.filter(v => v !== null);
-        const tMax = Math.max(cap, Math.ceil(Math.max(0, ...present.map(Math.abs))));
-        const mean = present.length ? present.reduce((p, q) => p + q, 0) / present.length : null;
-        const temp = panel(`Temperature vs normal (°${u}, daily)`,
-            present.length ? chartSvg({ days: w.days, bars: { vals: tAnom, colors: tAnom.map(v => v === null ? '' : colorAt(-v / cap)) }, yMin: -tMax, yMax: tMax,
-                fmt: v => (v > 0 ? '+' : '') + Math.round(v), zeroLine: true, label: 'Daily temperature anomaly' })
-                : '<p class="np-empty">No temperature data.</p>',
-            mean === null ? '' : `Window average ${mean > 0 ? '+' : ''}${mean.toFixed(1)}°${u}`);
+        // temperature: the actual daily mean against the 1991-2020 distribution for each day
+        // (shaded = middle half of days, dashed = median)
+        const c = varSel.value === 'temp' && unitSel.value === 'c', u = c ? 'C' : 'F';
+        const conv = v => (v === null || v === undefined ? null : (c ? (v - 32) * 5 / 9 : v));
+        const tAct = (s.temp_f ? pick('temp_f') : []).map(conv), tMed = (s.temp_p50 ? pick('temp_p50') : []).map(conv);
+        const tLo = (s.temp_p25 ? pick('temp_p25') : []).map(conv), tHi = (s.temp_p75 ? pick('temp_p75') : []).map(conv);
+        const tVals = tAct.concat(tLo, tHi).filter(v => v !== null);
+        let temp;
+        if (!tVals.length) {
+            temp = panel(`Temperature (°${u}, daily mean)`, '<p class="np-empty">No temperature data.</p>', '');
+        } else {
+            const avg = arr => { const p = arr.filter(v => v !== null); return p.length ? p.reduce((q, r) => q + r, 0) / p.length : null; };
+            const aAvg = avg(tAct), mAvg = avg(tMed);
+            temp = panel(`Temperature (°${u}, daily mean)`,
+                chartSvg({ days: w.days, band: { lo: tLo, hi: tHi }, lines: [{ vals: tMed, color: MED, dash: true }, { vals: tAct, color: OBS }],
+                    ref: { v: c ? 0 : 32 }, yMin: Math.floor(Math.min(...tVals) - 1), yMax: Math.ceil(Math.max(...tVals) + 1),
+                    fmt: v => Math.round(v) + '°', label: 'Daily temperature with the normal range' }),
+                `${aAvg === null ? '' : `Average ${aAvg.toFixed(1)}°${u}`}${mAvg === null ? '' : ` · normal ${mAvg.toFixed(1)}°${u}`}. Shaded: middle half of 1991–2020 days.`);
+        }
 
         return head + precip + swe + temp +
             '<div class="np-key"><span class="np-k np-k--obs"></span>Observed <span class="np-k np-k--med"></span>Median</div></div>';

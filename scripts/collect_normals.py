@@ -89,8 +89,21 @@ def md_key(d):
     return f'{d.month:02d}-{d.day:02d}'
 
 
+def quantile(sorted_vals, q):
+    """Linear-interpolated quantile of an already sorted list."""
+    pos = q * (len(sorted_vals) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(sorted_vals) - 1)
+    return sorted_vals[lo] + (sorted_vals[hi] - sorted_vals[lo]) * (pos - lo)
+
+
+MIN_POOL = 20   # need at least this many daily values (years x window days) for a percentile
+
+
 def rebuild_climo(stations):
-    """Per-station mean TAVG for each month-day over CLIMO_YEARS, lightly smoothed."""
+    """Per-station mean TAVG for each month-day over CLIMO_YEARS, lightly smoothed, plus the median and
+    25th/75th percentiles. The percentiles pool every daily value within +/-SMOOTH_DAYS of the date
+    across all years, so each is computed from about 7 x (number of years) values."""
     climo = {}
     for _, _, st in stations:
         triplet = st['id']
@@ -100,7 +113,7 @@ def rebuild_climo(stations):
         except requests.RequestException as e:
             print(f'  {triplet}: fetch failed ({e})', file=sys.stderr)
             continue
-        sums, counts, years = {}, {}, set()
+        sums, counts, years, vals = {}, {}, set(), {}
         for row in series:
             if row.get('value') is None:
                 continue
@@ -108,24 +121,29 @@ def rebuild_climo(stations):
             k = md_key(d)
             sums[k] = sums.get(k, 0.0) + row['value']
             counts[k] = counts.get(k, 0) + 1
+            vals.setdefault(k, []).append(row['value'])
             years.add(d.year)
         if len(years) < MIN_CLIMO_YEARS:
             print(f'  {triplet} ({st["label"]}): only {len(years)} years of TAVG, no temperature normal')
-            climo[triplet] = {'years': len(years), 'mean': {}}
+            climo[triplet] = {'years': len(years), 'mean': {}, 'p25': {}, 'p50': {}, 'p75': {}}
             continue
         raw = {k: sums[k] / counts[k] for k in sums}
-        mean = {}
+        mean, p25, p50, p75 = {}, {}, {}, {}
         for k in raw:
             if k == '02-29':   # leap day: no normal, those observations are skipped
                 continue
             m, dd = int(k[:2]), int(k[3:])
-            neighbours = []
+            neighbours, pool = [], []
             for off in range(-SMOOTH_DAYS, SMOOTH_DAYS + 1):
                 nk = md_key(date(2001, m, dd) + timedelta(days=off))   # non-leap year
                 if nk in raw:
                     neighbours.append(raw[nk])
+                    pool.extend(vals[nk])
             mean[k] = round(sum(neighbours) / len(neighbours), 2)
-        climo[triplet] = {'years': len(years), 'mean': mean}
+            if len(pool) >= MIN_POOL:
+                pool.sort()
+                p25[k], p50[k], p75[k] = (round(quantile(pool, q), 1) for q in (0.25, 0.5, 0.75))
+        climo[triplet] = {'years': len(years), 'mean': mean, 'p25': p25, 'p50': p50, 'p75': p75}
         print(f'  {triplet} ({st["label"]}): {len(years)} years')
     CLIMO_FILE.parent.mkdir(parents=True, exist_ok=True)
     CLIMO_FILE.write_text(json.dumps({'period': list(CLIMO_YEARS), 'stations': climo},
@@ -166,7 +184,7 @@ def mean_anomaly(series, climo_mean, start, end):
     return round(sum(diffs) / len(diffs), 1)
 
 
-def daily_series(prec_rows, swe_rows, tavg_rows, mean, start, end):
+def daily_series(prec_rows, swe_rows, tavg_rows, climo_st, start, end):
     """Parallel daily arrays from start to end for the mini charts on the homepage.
 
     precip_obs / precip_med: the day's precipitation (inches), the change in the water-year running
@@ -174,7 +192,8 @@ def daily_series(prec_rows, swe_rows, tavg_rows, mean, start, end):
         changes (sensor corrections, or dips in the smoothed median) are clamped to 0. The chart
         adds these up over its window.
     swe_obs / swe_med: snow water equivalent level (inches), observed and NRCS median.
-    temp_anom_f: daily mean temperature minus the station's 1991-2020 average, in F.
+    temp_f: daily mean temperature (F). temp_p25 / temp_p50 / temp_p75: the 25th, 50th and 75th
+        percentiles of that day's 1991-2020 temperatures (F), the "normal range" drawn behind it.
     A missing day is None (it counts as 0 when precipitation is added up).
     """
     def by_date(rows):
@@ -195,7 +214,7 @@ def daily_series(prec_rows, swe_rows, tavg_rows, mean, start, end):
     def rnd(x, nd=2):
         return None if x is None else round(x, nd)
 
-    out = {k: [] for k in ('precip_obs', 'precip_med', 'swe_obs', 'swe_med', 'temp_anom_f')}
+    out = {k: [] for k in ('precip_obs', 'precip_med', 'swe_obs', 'swe_med', 'temp_f', 'temp_p25', 'temp_p50', 'temp_p75')}
     d = start
     while d <= end:
         key = d.isoformat()
@@ -204,8 +223,10 @@ def daily_series(prec_rows, swe_rows, tavg_rows, mean, start, end):
         s = swe.get(key)
         out['swe_obs'].append(rnd(s['value']) if s else None)
         out['swe_med'].append(rnd(s.get('median')) if s else None)
-        t, normal = tavg.get(key), mean.get(md_key(d))
-        out['temp_anom_f'].append(rnd(t['value'] - normal, 1) if t and normal is not None else None)
+        t, mk = tavg.get(key), md_key(d)
+        out['temp_f'].append(rnd(t['value'], 1) if t else None)
+        for name in ('p25', 'p50', 'p75'):
+            out['temp_' + name].append(climo_st.get(name, {}).get(mk))
         d += timedelta(days=1)
     return {'start': start.isoformat(), **out}
 
@@ -308,7 +329,7 @@ def main():
             'lon': m.get('longitude'),
             'elev_ft': None if m.get('elevation') is None else round(m['elevation']),
             'metrics': metrics,
-            'series': daily_series(prec_rows, swe_rows, tavg_rows, mean, fetch_start, date.fromisoformat((prec_end or swe_end or temp_end)['date'])) if (prec_end or swe_end or temp_end) else None,
+            'series': daily_series(prec_rows, swe_rows, tavg_rows, climo.get(st['id'], {}), fetch_start, date.fromisoformat((prec_end or swe_end or temp_end)['date'])) if (prec_end or swe_end or temp_end) else None,
             'data_through': (prec_end or swe_end or temp_end or {}).get('date'),
         })
 
