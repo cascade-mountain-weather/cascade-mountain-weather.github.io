@@ -186,6 +186,7 @@ def main():
     ap.add_argument("--cycle", help='UTC cycle, e.g. "2026-10-02 19:00" (default: newest long cycle)')
     ap.add_argument("--first-day", help="first local date of the period, YYYY-MM-DD (default: next Friday)")
     ap.add_argument("--days", type=int, default=3, help="number of days (default 3: Fri, Sat, Sun)")
+    ap.add_argument("--out-dir", help="where to write the snapshot (default data/forecasts)")
     args = ap.parse_args()
 
     if args.first_day:
@@ -294,10 +295,11 @@ def main():
         entry["gust_mph"] = [r(v[k], 0) for v in series["gust"]]
         out["sites"][s["name"]] = entry
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    path = OUT_DIR / f"nbm_snapshot_{first.isoformat()}.json"
+    out_dir = Path(args.out_dir) if args.out_dir else OUT_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"nbm_snapshot_{first.isoformat()}.json"
     path.write_text(json.dumps(out, indent=1), encoding="utf-8")
-    print(f"wrote {path.relative_to(ROOT)} in {time.time() - t0:.0f}s")
+    print(f"wrote {path} in {time.time() - t0:.0f}s")
 
 
 if __name__ == "__main__":
