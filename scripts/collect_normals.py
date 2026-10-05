@@ -265,6 +265,8 @@ def main():
             'data_through': (prec_end or swe_end or temp_end or {}).get('date'),
         })
 
+    areas.sort(key=lambda a: -(a['lat'] if a['lat'] is not None else -90))  # north to south
+
     if not any(a['metrics']['precip']['wy'] or a['metrics']['swe']['wy'] for a in areas):
         print('No SNOTEL data returned; leaving the existing normals.json untouched.', file=sys.stderr)
         return 1
