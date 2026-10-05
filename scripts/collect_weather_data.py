@@ -104,8 +104,10 @@ def synoptic_api_pull(station_id):
     if not data.get('STATION'):
         # Say what Synoptic said (it never echoes the token), so a bad token or station is obvious in the log.
         summary = data.get('SUMMARY', {})
+        body = response.text.replace(API_TOKEN, '***')[:300]  # redacted and truncated
         raise SystemExit(f"Synoptic returned no data for station {station_id}: HTTP {response.status_code}, "
-                         f"code {summary.get('RESPONSE_CODE')}, message: {summary.get('RESPONSE_MESSAGE')}")
+                         f"code {summary.get('RESPONSE_CODE')}, message: {summary.get('RESPONSE_MESSAGE')}, "
+                         f"server: {response.headers.get('Server')}, body: {body}")
 
     observations = data['STATION'][0]['OBSERVATIONS']
     air_temp = observations.get('air_temp_value_1', dict()).get('value', None)
