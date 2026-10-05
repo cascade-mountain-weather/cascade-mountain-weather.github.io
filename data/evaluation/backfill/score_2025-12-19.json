@@ -1,0 +1,1885 @@
+{
+ "snapshot": "nbm_snapshot_2025-12-19.json",
+ "first_day_local": "2025-12-19",
+ "nbm_cycle_utc": "2025-12-18T19:00Z",
+ "scored_utc": "2026-10-05T22:04Z",
+ "our_forecast_found": true,
+ "our_period_utc": [
+  "2025-12-19T00:00Z",
+  "2025-12-22T12:00Z"
+ ],
+ "notes": [
+  "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
+  "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
+  "A hit allows 0.5 in of slack on each side.",
+  "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window."
+ ],
+ "windows": {
+  "day1": {
+   "start_utc": "2025-12-19T12:00Z",
+   "end_utc": "2025-12-20T12:00Z"
+  },
+  "day2": {
+   "start_utc": "2025-12-20T12:00Z",
+   "end_utc": "2025-12-21T12:00Z"
+  },
+  "day3": {
+   "start_utc": "2025-12-21T12:00Z",
+   "end_utc": "2025-12-22T12:00Z"
+  },
+  "total": {
+   "start_utc": "2025-12-19T12:00Z",
+   "end_utc": "2025-12-22T12:00Z"
+  }
+ },
+ "areas": {
+  "Mt. Baker": {
+   "obs_stations": {
+    "909:WA:SNTL": {
+     "name": "Wells Creek",
+     "elev_ft": 4040
+    },
+    "998:WA:SNTL": {
+     "name": "Easy Pass",
+     "elev_ft": 5280
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 13.1,
+      "p50": 15.8,
+      "p75": 20.4,
+      "deterministic": 14.4,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 9.8,
+      "mid": 19.6,
+      "high": 27.9,
+      "stations_used": 2,
+      "stations_requested": 2
+     },
+     "observed_inputs": {
+      "909:WA:SNTL": {
+       "swe_gain_in": 0.7,
+       "depth_gain_in": 10.0,
+       "precip_in": 0.8,
+       "temp_mean_f": 25.4,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.8,
+        "temp": 1.0
+       }
+      },
+      "998:WA:SNTL": {
+       "swe_gain_in": 3.2,
+       "depth_gain_in": null,
+       "precip_in": null,
+       "temp_mean_f": 23.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.4,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -3.8,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 14.8,
+      "p50": 18.1,
+      "p75": 20.4,
+      "deterministic": 17.4,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 9.0,
+      "mid": 15.6,
+      "high": 25.7,
+      "stations_used": 2,
+      "stations_requested": 2
+     },
+     "observed_inputs": {
+      "909:WA:SNTL": {
+       "swe_gain_in": 0.5,
+       "depth_gain_in": 3.0,
+       "precip_in": 0.6,
+       "temp_mean_f": 27.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      },
+      "998:WA:SNTL": {
+       "swe_gain_in": 3.1,
+       "depth_gain_in": null,
+       "precip_in": null,
+       "temp_mean_f": 26.4,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.2,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 2.5,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 13.1,
+      "p50": 16.2,
+      "p75": 20.8,
+      "deterministic": 17.8,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 4.2,
+      "mid": 8.7,
+      "high": 13.6,
+      "stations_used": 2,
+      "stations_requested": 2
+     },
+     "observed_inputs": {
+      "909:WA:SNTL": {
+       "swe_gain_in": 0.6,
+       "depth_gain_in": 2.0,
+       "precip_in": 0.7,
+       "temp_mean_f": 28.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      },
+      "998:WA:SNTL": {
+       "swe_gain_in": 1.3,
+       "depth_gain_in": null,
+       "precip_in": null,
+       "temp_mean_f": 27.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.4,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 7.5,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 43.6,
+      "p50": 49.6,
+      "p75": 58.2,
+      "deterministic": 52.4,
+      "method": "percentile"
+     },
+     "ours": [
+      24.0,
+      36.0
+     ],
+     "observed": {
+      "low": 23.5,
+      "mid": 42.0,
+      "high": 67.1,
+      "stations_used": 2,
+      "stations_requested": 2
+     },
+     "observed_inputs": {
+      "909:WA:SNTL": {
+       "swe_gain_in": 1.8,
+       "depth_gain_in": 15.0,
+       "precip_in": 2.1,
+       "temp_mean_f": 27.2,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.31,
+        "temp": 1.0
+       }
+      },
+      "998:WA:SNTL": {
+       "swe_gain_in": 7.6,
+       "depth_gain_in": null,
+       "precip_in": null,
+       "temp_mean_f": 25.9,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.31,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 7.6,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": -18.0,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 27.5,
+      "mid": 48.0,
+      "high": 78.5,
+      "stations_used": 2,
+      "stations_requested": 2
+     }
+    }
+   }
+  },
+  "Washington Pass": {
+   "obs_stations": {
+    "515:WA:SNTL": {
+     "name": "Harts Pass",
+     "elev_ft": 6490
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 4.7,
+      "p50": 6.3,
+      "p75": 8.7,
+      "deterministic": 11.9,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 1.0,
+      "mid": 4.5,
+      "high": 7.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "515:WA:SNTL": {
+       "swe_gain_in": 0.49,
+       "depth_gain_in": 1.0,
+       "precip_in": 0.3,
+       "temp_mean_f": 15.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 1.8,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 8.0,
+      "p50": 10.9,
+      "p75": 13.8,
+      "deterministic": 10.3,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.5,
+      "mid": 6.0,
+      "high": 10.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "515:WA:SNTL": {
+       "swe_gain_in": 0.7,
+       "depth_gain_in": 6.0,
+       "precip_in": 0.9,
+       "temp_mean_f": 18.2,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 4.9,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 6.3,
+      "p50": 8.3,
+      "p75": 9.9,
+      "deterministic": 8.2,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.0,
+      "mid": 2.0,
+      "high": 5.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "515:WA:SNTL": {
+       "swe_gain_in": 0.4,
+       "depth_gain_in": 2.0,
+       "precip_in": 0.4,
+       "temp_mean_f": 17.4,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 6.3,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 20.5,
+      "p50": 26.6,
+      "p75": 30.1,
+      "deterministic": 25.2,
+      "method": "percentile"
+     },
+     "ours": [
+      22.0,
+      30.0
+     ],
+     "observed": {
+      "low": 9.0,
+      "mid": 9.0,
+      "high": 25.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "515:WA:SNTL": {
+       "swe_gain_in": 1.8,
+       "depth_gain_in": 9.0,
+       "precip_in": 1.6,
+       "temp_mean_f": 17.0,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 17.6,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 11.0,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 14.0,
+      "mid": 15.0,
+      "high": 40.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Stevens Pass": {
+   "obs_stations": {
+    "791:WA:SNTL": {
+     "name": "Stevens Pass",
+     "elev_ft": 3940
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 10.0,
+      "p50": 11.7,
+      "p75": 13.3,
+      "deterministic": 13.7,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.0,
+      "mid": 7.0,
+      "high": 8.6,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "791:WA:SNTL": {
+       "swe_gain_in": 0.6,
+       "depth_gain_in": 7.0,
+       "precip_in": 0.5,
+       "temp_mean_f": 26.7,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 4.7,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 12.9,
+      "p50": 17.7,
+      "p75": 21.2,
+      "deterministic": 15.7,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 5.0,
+      "mid": 11.0,
+      "high": 14.3,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "791:WA:SNTL": {
+       "swe_gain_in": 1.0,
+       "depth_gain_in": 11.0,
+       "precip_in": 1.4,
+       "temp_mean_f": 28.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 6.7,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 7.4,
+      "p50": 10.6,
+      "p75": 13.9,
+      "deterministic": 11.2,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 1.0,
+      "mid": 2.0,
+      "high": 2.9,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "791:WA:SNTL": {
+       "swe_gain_in": 0.2,
+       "depth_gain_in": 2.0,
+       "precip_in": 0.5,
+       "temp_mean_f": 28.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 8.6,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 34.0,
+      "p50": 39.7,
+      "p75": 46.8,
+      "deterministic": 40.9,
+      "method": "percentile"
+     },
+     "ours": [
+      30.0,
+      40.0
+     ],
+     "observed": {
+      "low": 9.0,
+      "mid": 20.0,
+      "high": 25.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "791:WA:SNTL": {
+       "swe_gain_in": 1.8,
+       "depth_gain_in": 20.0,
+       "precip_in": 2.4,
+       "temp_mean_f": 28.1,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 19.7,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false,
+      "ours_error_in": 14.0,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 11.0,
+      "mid": 21.0,
+      "high": 31.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Hurricane Ridge": {
+   "obs_stations": {
+    "974:WA:SNTL": {
+     "name": "Waterhole",
+     "elev_ft": 5010
+    }
+   },
+   "forecast_elev_ft": 5262,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 0.7,
+      "p50": 2.4,
+      "p75": 4.4,
+      "deterministic": 4.1,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 4.0,
+      "mid": 9.0,
+      "high": 11.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "974:WA:SNTL": {
+       "swe_gain_in": 0.8,
+       "depth_gain_in": 9.0,
+       "precip_in": 0.8,
+       "temp_mean_f": 24.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.8,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -6.6,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 4.8,
+      "p50": 7.8,
+      "p75": 12.2,
+      "deterministic": 8.1,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 5.5,
+      "mid": 8.0,
+      "high": 15.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "974:WA:SNTL": {
+       "swe_gain_in": 1.1,
+       "depth_gain_in": 8.0,
+       "precip_in": 0.9,
+       "temp_mean_f": 27.7,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -0.2,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 3.7,
+      "p50": 6.2,
+      "p75": 10.6,
+      "deterministic": 7.1,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.0,
+      "mid": 3.0,
+      "high": 8.6,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "974:WA:SNTL": {
+       "swe_gain_in": 0.6,
+       "depth_gain_in": 3.0,
+       "precip_in": 0.8,
+       "temp_mean_f": 27.6,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 3.2,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 10.2,
+      "p50": 17.6,
+      "p75": 27.3,
+      "deterministic": 19.1,
+      "method": "percentile"
+     },
+     "ours": [
+      16.0,
+      24.0
+     ],
+     "observed": {
+      "low": 12.5,
+      "mid": 20.0,
+      "high": 35.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "974:WA:SNTL": {
+       "swe_gain_in": 2.5,
+       "depth_gain_in": 20.0,
+       "precip_in": 2.5,
+       "temp_mean_f": 26.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.92,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -2.4,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": -1.0,
+      "ours_hit": true,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 14.5,
+      "mid": 21.0,
+      "high": 41.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Blewett Pass": {
+   "obs_stations": {
+    "352:WA:SNTL": {
+     "name": "Blewett Pass",
+     "elev_ft": 4240
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 0.3,
+      "p50": 0.7,
+      "p75": 1.3,
+      "deterministic": 2.6,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.0,
+      "mid": 4.0,
+      "high": 5.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "352:WA:SNTL": {
+       "swe_gain_in": 0.4,
+       "depth_gain_in": 4.0,
+       "precip_in": 0.3,
+       "temp_mean_f": 25.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -3.3,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 0.2,
+      "p50": 1.1,
+      "p75": 3.1,
+      "deterministic": 2.0,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 0.0,
+      "mid": 1.8,
+      "high": 2.9,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "352:WA:SNTL": {
+       "swe_gain_in": 0.2,
+       "depth_gain_in": 0.0,
+       "precip_in": 0.4,
+       "temp_mean_f": 27.9,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.8,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -0.7,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 0.4,
+      "p50": 1.0,
+      "p75": 1.5,
+      "deterministic": 1.3,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 0.5,
+      "mid": 0.9,
+      "high": 1.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "352:WA:SNTL": {
+       "swe_gain_in": 0.1,
+       "depth_gain_in": null,
+       "precip_in": 0.4,
+       "temp_mean_f": 27.6,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.4,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 0.1,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 1.9,
+      "p50": 2.9,
+      "p75": 5.2,
+      "deterministic": 3.8,
+      "method": "percentile"
+     },
+     "ours": [
+      10.0,
+      16.0
+     ],
+     "observed": {
+      "low": 3.5,
+      "mid": 5.0,
+      "high": 10.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "352:WA:SNTL": {
+       "swe_gain_in": 0.7,
+       "depth_gain_in": 5.0,
+       "precip_in": 1.1,
+       "temp_mean_f": 27.0,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.77,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -2.1,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 8.0,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 5.0,
+      "mid": 5.0,
+      "high": 14.3,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Snoqualmie Pass": {
+   "obs_stations": {
+    "672:WA:SNTL": {
+     "name": "Olallie Meadows",
+     "elev_ft": 4010
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 10.3,
+      "p50": 11.3,
+      "p75": 13.0,
+      "deterministic": 12.2,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.8,
+      "mid": 9.0,
+      "high": 10.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "672:WA:SNTL": {
+       "swe_gain_in": 0.75,
+       "depth_gain_in": 9.0,
+       "precip_in": 0.5,
+       "temp_mean_f": 26.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 2.3,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 8.7,
+      "p50": 12.9,
+      "p75": 16.5,
+      "deterministic": 12.3,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 6.5,
+      "mid": 8.0,
+      "high": 18.6,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "672:WA:SNTL": {
+       "swe_gain_in": 1.3,
+       "depth_gain_in": 8.0,
+       "precip_in": 1.7,
+       "temp_mean_f": 29.2,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 4.9,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 1.7,
+      "p50": 6.2,
+      "p75": 14.8,
+      "deterministic": 8.9,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.0,
+      "mid": 3.0,
+      "high": 8.6,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "672:WA:SNTL": {
+       "swe_gain_in": 0.6,
+       "depth_gain_in": 3.0,
+       "precip_in": 0.6,
+       "temp_mean_f": 28.7,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 3.2,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 26.1,
+      "p50": 31.7,
+      "p75": 38.9,
+      "deterministic": 34.1,
+      "method": "percentile"
+     },
+     "ours": [
+      18.0,
+      26.0
+     ],
+     "observed": {
+      "low": 16.5,
+      "mid": 20.0,
+      "high": 47.1,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "672:WA:SNTL": {
+       "swe_gain_in": 3.3,
+       "depth_gain_in": 20.0,
+       "precip_in": 2.8,
+       "temp_mean_f": 28.2,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 11.7,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 1.0,
+      "ours_hit": true,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 18.0,
+      "mid": 21.0,
+      "high": 51.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Crystal": {
+   "obs_stations": {
+    "418:WA:SNTL": {
+     "name": "Corral Pass",
+     "elev_ft": 5810
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 4.1,
+      "p50": 5.9,
+      "p75": 8.0,
+      "deterministic": 3.5,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 3.5,
+      "mid": 6.4,
+      "high": 10.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "418:WA:SNTL": {
+       "swe_gain_in": 0.7,
+       "depth_gain_in": null,
+       "precip_in": 0.5,
+       "temp_mean_f": 23.1,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.2,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -0.5,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 4.2,
+      "p50": 8.4,
+      "p75": 11.7,
+      "deterministic": 8.5,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.4,
+      "mid": 4.5,
+      "high": 7.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "418:WA:SNTL": {
+       "swe_gain_in": 0.49,
+       "depth_gain_in": null,
+       "precip_in": 0.3,
+       "temp_mean_f": 25.6,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 3.9,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 6.6,
+      "p50": 8.7,
+      "p75": 11.1,
+      "deterministic": 9.4,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.0,
+      "mid": 3.6,
+      "high": 5.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "418:WA:SNTL": {
+       "swe_gain_in": 0.4,
+       "depth_gain_in": null,
+       "precip_in": 0.5,
+       "temp_mean_f": 26.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 5.1,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 17.7,
+      "p50": 23.1,
+      "p75": 30.5,
+      "deterministic": 23.7,
+      "method": "percentile"
+     },
+     "ours": [
+      18.0,
+      26.0
+     ],
+     "observed": {
+      "low": 8.0,
+      "mid": 14.5,
+      "high": 22.9,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "418:WA:SNTL": {
+       "swe_gain_in": 1.6,
+       "depth_gain_in": null,
+       "precip_in": 1.3,
+       "temp_mean_f": 25.2,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.08,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 8.6,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 4.7,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 9.5,
+      "mid": 17.3,
+      "high": 27.1,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "Paradise": {
+   "obs_stations": {
+    "679:WA:SNTL": {
+     "name": "Paradise",
+     "elev_ft": 5150
+    }
+   },
+   "forecast_elev_ft": 5419,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 9.4,
+      "p50": 12.4,
+      "p75": 16.9,
+      "deterministic": 25.4,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 5.0,
+      "mid": 9.1,
+      "high": 14.3,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "679:WA:SNTL": {
+       "swe_gain_in": 1.0,
+       "depth_gain_in": null,
+       "precip_in": 0.7,
+       "temp_mean_f": 22.8,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.4,
+        "precip": 0.8,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 3.3,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 6.2,
+      "p50": 12.2,
+      "p75": 17.7,
+      "deterministic": 13.0,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 4.0,
+      "mid": 7.3,
+      "high": 11.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "679:WA:SNTL": {
+       "swe_gain_in": 0.8,
+       "depth_gain_in": null,
+       "precip_in": 0.9,
+       "temp_mean_f": 26.0,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.2,
+        "precip": 0.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 4.9,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 8.9,
+      "p50": 12.4,
+      "p75": 18.0,
+      "deterministic": 13.8,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 0.0,
+      "mid": 3.6,
+      "high": 5.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "679:WA:SNTL": {
+       "swe_gain_in": 0.4,
+       "depth_gain_in": 0.0,
+       "precip_in": 1.1,
+       "temp_mean_f": 27.1,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.6,
+        "precip": 0.6,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 8.8,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": false
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 26.9,
+      "p50": 35.9,
+      "p75": 44.9,
+      "deterministic": 38.4,
+      "method": "percentile"
+     },
+     "ours": [
+      24.0,
+      32.0
+     ],
+     "observed": {
+      "low": 11.0,
+      "mid": 20.0,
+      "high": 31.4,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "679:WA:SNTL": {
+       "swe_gain_in": 2.2,
+       "depth_gain_in": null,
+       "precip_in": 2.7,
+       "temp_mean_f": 25.3,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 0.38,
+        "precip": 0.54,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 15.9,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 6.2,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 12.0,
+      "mid": 21.8,
+      "high": 34.3,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  },
+  "White Pass": {
+   "obs_stations": {
+    "692:WA:SNTL": {
+     "name": "Pigtail Peak",
+     "elev_ft": 5800
+    }
+   },
+   "forecast_elev_ft": 5000,
+   "windows": {
+    "day1": {
+     "nbm": {
+      "p25": 5.5,
+      "p50": 6.8,
+      "p75": 8.4,
+      "deterministic": 12.3,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 5.0,
+      "mid": 7.0,
+      "high": 14.3,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "692:WA:SNTL": {
+       "swe_gain_in": 1.0,
+       "depth_gain_in": 7.0,
+       "precip_in": 1.0,
+       "temp_mean_f": 20.3,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": -0.2,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day2": {
+     "nbm": {
+      "p25": 3.0,
+      "p50": 7.4,
+      "p75": 9.5,
+      "deterministic": 7.2,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.0,
+      "mid": 3.0,
+      "high": 5.7,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "692:WA:SNTL": {
+       "swe_gain_in": 0.4,
+       "depth_gain_in": 3.0,
+       "precip_in": 0.3,
+       "temp_mean_f": 23.5,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 4.4,
+      "nbm_iqr_hit": true,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "day3": {
+     "nbm": {
+      "p25": 4.2,
+      "p50": 6.2,
+      "p75": 8.6,
+      "deterministic": 6.6,
+      "method": "percentile"
+     },
+     "ours": null,
+     "observed": {
+      "low": 2.5,
+      "mid": 3.0,
+      "high": 7.1,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "692:WA:SNTL": {
+       "swe_gain_in": 0.5,
+       "depth_gain_in": 3.0,
+       "precip_in": 0.7,
+       "temp_mean_f": 24.7,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 3.2,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true
+     }
+    },
+    "total": {
+     "nbm": {
+      "p25": 14.2,
+      "p50": 18.8,
+      "p75": 24.0,
+      "deterministic": 19.9,
+      "method": "percentile"
+     },
+     "ours": [
+      20.0,
+      28.0
+     ],
+     "observed": {
+      "low": 9.5,
+      "mid": 13.0,
+      "high": 27.1,
+      "stations_used": 1,
+      "stations_requested": 1
+     },
+     "observed_inputs": {
+      "692:WA:SNTL": {
+       "swe_gain_in": 1.9,
+       "depth_gain_in": 13.0,
+       "precip_in": 2.0,
+       "temp_mean_f": 22.9,
+       "gate": null,
+       "coverage": {
+        "swe": 1.0,
+        "depth": 1.0,
+        "precip": 1.0,
+        "temp": 1.0
+       }
+      }
+     },
+     "scores": {
+      "nbm_error_in": 5.8,
+      "nbm_iqr_hit": false,
+      "obs_overlaps_nbm_iqr": true,
+      "ours_error_in": 8.0,
+      "ours_hit": false,
+      "obs_overlaps_ours": true
+     },
+     "observed_for_ours": {
+      "low": 14.0,
+      "mid": 16.0,
+      "high": 40.0,
+      "stations_used": 1,
+      "stations_requested": 1
+     }
+    }
+   }
+  }
+ },
+ "snow_level": {
+  "Quillayute": {
+   "station": "UIL",
+   "km_to_grid_point": 1.0,
+   "launches": [
+    {
+     "valid_utc": "2025-12-19T12:00Z",
+     "sounding_snow_level_ft": 148,
+     "sounding_snow_level_saturated_ft": 1017,
+     "sounding_freezing_level_ft": 2592,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 1732.0,
+      "p50": 1837.0,
+      "p75": 1916.0,
+      "deterministic": 1785.0
+     },
+     "nbm_error_ft": 1689,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-20T00:00Z",
+     "sounding_snow_level_ft": 213,
+     "sounding_snow_level_saturated_ft": 1230,
+     "sounding_freezing_level_ft": 2772,
+     "column_saturated": false,
+     "scored": false,
+     "nbm": {
+      "p25": 1969.0,
+      "p50": 2100.0,
+      "p75": 2205.0,
+      "deterministic": 1942.0
+     }
+    },
+    {
+     "valid_utc": "2025-12-20T12:00Z",
+     "sounding_snow_level_ft": 246,
+     "sounding_snow_level_saturated_ft": 1132,
+     "sounding_freezing_level_ft": 2740,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2126.0,
+      "p50": 2310.0,
+      "p75": 2467.0,
+      "deterministic": 2152.0
+     },
+     "nbm_error_ft": 2064,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-21T00:00Z",
+     "sounding_snow_level_ft": 919,
+     "sounding_snow_level_saturated_ft": 1476,
+     "sounding_freezing_level_ft": 3248,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2625.0,
+      "p50": 2730.0,
+      "p75": 2913.0,
+      "deterministic": 2625.0
+     },
+     "nbm_error_ft": 1811,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-21T12:00Z",
+     "sounding_snow_level_ft": 1657,
+     "sounding_snow_level_saturated_ft": 1739,
+     "sounding_freezing_level_ft": 3806,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2756.0,
+      "p50": 3045.0,
+      "p75": 3386.0,
+      "deterministic": 2913.0
+     },
+     "nbm_error_ft": 1388,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-22T00:00Z",
+     "sounding_snow_level_ft": 1296,
+     "sounding_snow_level_saturated_ft": 1394,
+     "sounding_freezing_level_ft": 3084,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2021.0,
+      "p50": 2520.0,
+      "p75": 2913.0,
+      "deterministic": 2388.0
+     },
+     "nbm_error_ft": 1224,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-22T12:00Z",
+     "sounding_snow_level_ft": 49,
+     "sounding_snow_level_saturated_ft": 951,
+     "sounding_freezing_level_ft": 2969,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 1890.0,
+      "p50": 2126.0,
+      "p75": 2336.0,
+      "deterministic": 2100.0
+     },
+     "nbm_error_ft": 2077,
+     "nbm_iqr_hit": false
+    }
+   ],
+   "n_launches": 7,
+   "n_scored": 6,
+   "bias_ft": 1709,
+   "mae_ft": 1709,
+   "iqr_hit_rate": 0.0
+  },
+  "Salem": {
+   "station": "SLE",
+   "km_to_grid_point": 1.1,
+   "launches": [
+    {
+     "valid_utc": "2025-12-19T12:00Z",
+     "sounding_snow_level_ft": 1411,
+     "sounding_snow_level_saturated_ft": 1788,
+     "sounding_freezing_level_ft": 3527,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2651.0,
+      "p50": 2887.0,
+      "p75": 3202.0,
+      "deterministic": 2861.0
+     },
+     "nbm_error_ft": 1476,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-20T00:00Z",
+     "sounding_snow_level_ft": 984,
+     "sounding_snow_level_saturated_ft": 1706,
+     "sounding_freezing_level_ft": 3346,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2493.0,
+      "p50": 2677.0,
+      "p75": 2808.0,
+      "deterministic": 2546.0
+     },
+     "nbm_error_ft": 1693,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-20T12:00Z",
+     "sounding_snow_level_ft": 853,
+     "sounding_snow_level_saturated_ft": 1608,
+     "sounding_freezing_level_ft": 3494,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2651.0,
+      "p50": 2835.0,
+      "p75": 2992.0,
+      "deterministic": 2730.0
+     },
+     "nbm_error_ft": 1982,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-21T00:00Z",
+     "sounding_snow_level_ft": 1099,
+     "sounding_snow_level_saturated_ft": 1969,
+     "sounding_freezing_level_ft": 3724,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2913.0,
+      "p50": 3307.0,
+      "p75": 3543.0,
+      "deterministic": 3123.0
+     },
+     "nbm_error_ft": 2208,
+     "nbm_iqr_hit": false
+    },
+    {
+     "valid_utc": "2025-12-21T12:00Z",
+     "sounding_snow_level_ft": 689,
+     "sounding_snow_level_saturated_ft": 2198,
+     "sounding_freezing_level_ft": 3855,
+     "column_saturated": false,
+     "scored": false,
+     "nbm": {
+      "p25": 3018.0,
+      "p50": 3412.0,
+      "p75": 3727.0,
+      "deterministic": 3412.0
+     }
+    },
+    {
+     "valid_utc": "2025-12-22T00:00Z",
+     "sounding_snow_level_ft": 3199,
+     "sounding_snow_level_saturated_ft": 3215,
+     "sounding_freezing_level_ft": 5463,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 3543.0,
+      "p50": 4094.0,
+      "p75": 4829.0,
+      "deterministic": 4173.0
+     },
+     "nbm_error_ft": 895,
+     "nbm_iqr_hit": true
+    },
+    {
+     "valid_utc": "2025-12-22T12:00Z",
+     "sounding_snow_level_ft": 1673,
+     "sounding_snow_level_saturated_ft": 2034,
+     "sounding_freezing_level_ft": 3642,
+     "column_saturated": true,
+     "scored": true,
+     "nbm": {
+      "p25": 2913.0,
+      "p50": 3281.0,
+      "p75": 3753.0,
+      "deterministic": 3281.0
+     },
+     "nbm_error_ft": 1608,
+     "nbm_iqr_hit": false
+    }
+   ],
+   "n_launches": 7,
+   "n_scored": 6,
+   "bias_ft": 1644,
+   "mae_ft": 1644,
+   "iqr_hit_rate": 0.17
+  }
+ }
+}
