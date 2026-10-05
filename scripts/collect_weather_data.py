@@ -2,7 +2,8 @@ import os
 import requests
 import re
 
-API_TOKEN = os.environ.get('SYNOPTIC_TOKEN')
+
+API_TOKEN = (os.environ.get('SYNOPTIC_TOKEN') or '').strip()  # a pasted secret often carries a trailing newline
 if not API_TOKEN:
     raise SystemExit('SYNOPTIC_TOKEN is not set. Add it as a repository secret (Actions) or export it locally.')
 STATIONS = ['STS48', 'STS48']
@@ -98,8 +99,14 @@ def synoptic_api_pull(station_id):
         'token': API_TOKEN
     }
 
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=60)
     data = response.json()
+
+    if not data.get('STATION'):
+        # Say what Synoptic said (it never echoes the token), so a bad token or station is obvious in the log.
+        summary = data.get('SUMMARY', {})
+        raise SystemExit(f"Synoptic returned no data for station {station_id}: HTTP {response.status_code}, "
+                         f"code {summary.get('RESPONSE_CODE')}, message: {summary.get('RESPONSE_MESSAGE')}")
 
     observations = data['STATION'][0]['OBSERVATIONS']
     air_temp = observations.get('air_temp_value_1', dict()).get('value', None)
