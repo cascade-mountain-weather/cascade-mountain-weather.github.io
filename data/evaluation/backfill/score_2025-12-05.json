@@ -2,7 +2,7 @@
  "snapshot": "nbm_snapshot_2025-12-05.json",
  "first_day_local": "2025-12-05",
  "nbm_cycle_utc": "2025-12-04T19:00Z",
- "scored_utc": "2026-10-05T21:54Z",
+ "scored_utc": "2026-10-06T00:42Z",
  "our_forecast_found": true,
  "our_period_utc": [
   "2025-12-05T00:00Z",
@@ -56,15 +56,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 2.5,
-      "mid": 11.3,
-      "high": 17.9,
+      "low": 5.5,
+      "mid": 10.0,
+      "high": 15.7,
       "stations_used": 2,
       "stations_requested": 2
      },
      "observed_inputs": {
       "909:WA:SNTL": {
-       "swe_gain_in": 0.9,
+       "swe_gain_in": 0.8,
        "depth_gain_in": 1.0,
        "precip_in": 1.7,
        "temp_mean_f": 33.5,
@@ -72,26 +72,24 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       },
       "998:WA:SNTL": {
-       "swe_gain_in": 1.6,
-       "depth_gain_in": 4.0,
+       "swe_gain_in": 1.3999999999999986,
+       "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 33.1,
        "gate": null,
        "coverage": {
         "swe": 1.0,
         "depth": 0.6,
-        "precip": 0.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -6.0,
+      "nbm_error_in": -4.7,
       "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true
      }
@@ -122,7 +120,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       },
@@ -135,7 +132,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.0,
-        "precip": 0.0,
         "temp": 1.0
        }
       }
@@ -172,12 +168,11 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       },
       "998:WA:SNTL": {
-       "swe_gain_in": 1.6,
+       "swe_gain_in": 1.5999999999999979,
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 32.6,
@@ -185,7 +180,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.0,
-        "precip": 0.0,
         "temp": 1.0
        }
       }
@@ -205,19 +199,19 @@
       "method": "percentile"
      },
      "ours": [
-      0.0,
-      1.0
+      25.0,
+      40.0
      ],
      "observed": {
-      "low": 16.8,
-      "mid": 34.1,
-      "high": 53.6,
+      "low": 18.0,
+      "mid": 32.8,
+      "high": 51.4,
       "stations_used": 2,
       "stations_requested": 2
      },
      "observed_inputs": {
       "909:WA:SNTL": {
-       "swe_gain_in": 1.8,
+       "swe_gain_in": 1.7,
        "depth_gain_in": 5.0,
        "precip_in": 3.5,
        "temp_mean_f": 33.3,
@@ -225,12 +219,11 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       },
       "998:WA:SNTL": {
-       "swe_gain_in": 5.7,
+       "swe_gain_in": 5.4999999999999964,
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 32.5,
@@ -238,23 +231,22 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.23,
-        "precip": 0.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -17.2,
+      "nbm_error_in": -15.9,
       "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -34.0,
-      "ours_hit": false,
-      "obs_overlaps_ours": false
+      "ours_error_in": -0.7,
+      "ours_hit": true,
+      "obs_overlaps_ours": true
      },
      "observed_for_ours": {
-      "low": 17.0,
-      "mid": 34.5,
-      "high": 54.3,
+      "low": 18.2,
+      "mid": 33.2,
+      "high": 52.1,
       "stations_used": 2,
       "stations_requested": 2
      }
@@ -280,15 +272,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 5.0,
+      "low": 4.5,
       "mid": 9.0,
-      "high": 14.4,
+      "high": 13.0,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "515:WA:SNTL": {
-       "swe_gain_in": 1.01,
+       "swe_gain_in": 0.91,
        "depth_gain_in": 9.0,
        "precip_in": 0.7,
        "temp_mean_f": 26.8,
@@ -296,7 +288,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -317,15 +308,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 3.8,
+      "low": 3.2,
       "mid": 5.0,
-      "high": 10.7,
+      "high": 9.3,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "515:WA:SNTL": {
-       "swe_gain_in": 0.75,
+       "swe_gain_in": 0.65,
        "depth_gain_in": 5.0,
        "precip_in": 0.5,
        "temp_mean_f": 25.2,
@@ -333,7 +324,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -354,15 +344,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 5.0,
+      "low": 4.5,
       "mid": 5.0,
-      "high": 14.4,
+      "high": 13.0,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "515:WA:SNTL": {
-       "swe_gain_in": 1.01,
+       "swe_gain_in": 0.91,
        "depth_gain_in": 5.0,
        "precip_in": 0.7,
        "temp_mean_f": 26.0,
@@ -370,7 +360,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -389,20 +378,17 @@
       "deterministic": 24.5,
       "method": "percentile"
      },
-     "ours": [
-      0.0,
-      2.0
-     ],
+     "ours": null,
      "observed": {
-      "low": 12.8,
+      "low": 12.3,
       "mid": 19.0,
-      "high": 36.7,
+      "high": 35.3,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "515:WA:SNTL": {
-       "swe_gain_in": 2.57,
+       "swe_gain_in": 2.47,
        "depth_gain_in": 19.0,
        "precip_in": 1.9,
        "temp_mean_f": 26.1,
@@ -410,7 +396,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -418,17 +403,7 @@
      "scores": {
       "nbm_error_in": 5.9,
       "nbm_iqr_hit": false,
-      "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -19.0,
-      "ours_hit": false,
-      "obs_overlaps_ours": false
-     },
-     "observed_for_ours": {
-      "low": 12.8,
-      "mid": 20.0,
-      "high": 36.7,
-      "stations_used": 1,
-      "stations_requested": 1
+      "obs_overlaps_nbm_iqr": true
      }
     }
    }
@@ -452,7 +427,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 0.0,
+      "low": 0.5,
       "mid": 0.9,
       "high": 1.4,
       "stations_used": 1,
@@ -468,7 +443,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -489,7 +463,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 1.0,
+      "low": 2.0,
       "mid": 3.6,
       "high": 5.7,
       "stations_used": 1,
@@ -505,7 +479,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -542,7 +515,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -562,11 +534,11 @@
       "method": "percentile"
      },
      "ours": [
-      0.0,
-      1.0
+      16.0,
+      30.0
      ],
      "observed": {
-      "low": 4.0,
+      "low": 5.5,
       "mid": 10.0,
       "high": 15.7,
       "stations_used": 1,
@@ -582,7 +554,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -591,9 +562,9 @@
       "nbm_error_in": -2.9,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -5.5,
+      "ours_error_in": 17.0,
       "ours_hit": false,
-      "obs_overlaps_ours": false
+      "obs_overlaps_ours": true
      },
      "observed_for_ours": {
       "low": 6.0,
@@ -625,29 +596,28 @@
      "ours": null,
      "observed": {
       "low": 0.0,
-      "mid": 0.9,
+      "mid": 0.0,
       "high": 1.4,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "974:WA:SNTL": {
-       "swe_gain_in": 0.1,
+       "swe_gain_in": 0.0,
        "depth_gain_in": 0.0,
        "precip_in": 0.1,
        "temp_mean_f": 35.7,
-       "gate": null,
+       "gate": "trace precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": 0.6,
-      "nbm_iqr_hit": true,
+      "nbm_error_in": 1.5,
+      "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true
      }
     },
@@ -661,15 +631,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 1.0,
-      "mid": 2.7,
-      "high": 4.3,
+      "low": 1.3,
+      "mid": 2.4,
+      "high": 3.7,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "974:WA:SNTL": {
-       "swe_gain_in": 0.3,
+       "swe_gain_in": 0.26,
        "depth_gain_in": 1.0,
        "precip_in": 0.2,
        "temp_mean_f": 32.8,
@@ -677,14 +647,13 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -1.7,
-      "nbm_iqr_hit": false,
+      "nbm_error_in": -1.4,
+      "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
      }
     },
@@ -714,7 +683,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -733,10 +701,7 @@
       "deterministic": 3.6,
       "method": "percentile"
      },
-     "ours": [
-      0.0,
-      0.0
-     ],
+     "ours": null,
      "observed": {
       "low": 2.0,
       "mid": 2.0,
@@ -754,7 +719,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -762,17 +726,7 @@
      "scores": {
       "nbm_error_in": 1.4,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -2.0,
-      "ours_hit": false,
-      "obs_overlaps_ours": false
-     },
-     "observed_for_ours": {
-      "low": 2.0,
-      "mid": 2.0,
-      "high": 5.7,
-      "stations_used": 1,
-      "stations_requested": 1
+      "obs_overlaps_nbm_iqr": true
      }
     }
    }
@@ -797,7 +751,7 @@
      "ours": null,
      "observed": {
       "low": 0.5,
-      "mid": 1.0,
+      "mid": 0.9,
       "high": 1.4,
       "stations_used": 1,
       "stations_requested": 1
@@ -805,20 +759,19 @@
      "observed_inputs": {
       "352:WA:SNTL": {
        "swe_gain_in": 0.1,
-       "depth_gain_in": 1.0,
+       "depth_gain_in": 0.0,
        "precip_in": 0.8,
        "temp_mean_f": 35.0,
        "gate": null,
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -1.0,
+      "nbm_error_in": -0.9,
       "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true
      }
@@ -849,7 +802,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -886,7 +838,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -905,13 +856,10 @@
       "deterministic": 0.2,
       "method": "percentile"
      },
-     "ours": [
-      0.0,
-      0.0
-     ],
+     "ours": null,
      "observed": {
       "low": 1.5,
-      "mid": 2.0,
+      "mid": 2.7,
       "high": 4.3,
       "stations_used": 1,
       "stations_requested": 1
@@ -919,32 +867,21 @@
      "observed_inputs": {
       "352:WA:SNTL": {
        "swe_gain_in": 0.3,
-       "depth_gain_in": 2.0,
+       "depth_gain_in": 1.0,
        "precip_in": 1.6,
        "temp_mean_f": 34.4,
        "gate": null,
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -2.0,
+      "nbm_error_in": -2.7,
       "nbm_iqr_hit": false,
-      "obs_overlaps_nbm_iqr": false,
-      "ours_error_in": -2.0,
-      "ours_hit": false,
-      "obs_overlaps_ours": false
-     },
-     "observed_for_ours": {
-      "low": 1.5,
-      "mid": 2.0,
-      "high": 4.3,
-      "stations_used": 1,
-      "stations_requested": 1
+      "obs_overlaps_nbm_iqr": false
      }
     }
    }
@@ -984,7 +921,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1005,7 +941,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 0.0,
+      "low": 0.5,
       "mid": 0.9,
       "high": 1.4,
       "stations_used": 1,
@@ -1021,7 +957,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1042,15 +977,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 0.0,
-      "mid": 1.8,
-      "high": 2.9,
+      "low": 0.5,
+      "mid": 0.9,
+      "high": 1.4,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "672:WA:SNTL": {
-       "swe_gain_in": 0.2,
+       "swe_gain_in": 0.1,
        "depth_gain_in": 0.0,
        "precip_in": 1.7,
        "temp_mean_f": 35.4,
@@ -1058,13 +993,12 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -1.8,
+      "nbm_error_in": -0.9,
       "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true
      }
@@ -1079,18 +1013,18 @@
      },
      "ours": [
       0.0,
-      0.0
+      4.0
      ],
      "observed": {
-      "low": 0.0,
-      "mid": 2.7,
-      "high": 4.3,
+      "low": 1.0,
+      "mid": 1.8,
+      "high": 2.9,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "672:WA:SNTL": {
-       "swe_gain_in": 0.3,
+       "swe_gain_in": 0.2,
        "depth_gain_in": 0.0,
        "precip_in": 3.9,
        "temp_mean_f": 35.5,
@@ -1098,23 +1032,22 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -2.7,
+      "nbm_error_in": -1.8,
       "nbm_iqr_hit": false,
-      "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -2.7,
-      "ours_hit": false,
+      "obs_overlaps_nbm_iqr": false,
+      "ours_error_in": 0.2,
+      "ours_hit": true,
       "obs_overlaps_ours": true
      },
      "observed_for_ours": {
-      "low": 0.0,
-      "mid": 2.7,
-      "high": 4.3,
+      "low": 1.0,
+      "mid": 1.8,
+      "high": 2.9,
       "stations_used": 1,
       "stations_requested": 1
      }
@@ -1140,15 +1073,15 @@
      },
      "ours": null,
      "observed": {
-      "low": 2.5,
-      "mid": 4.5,
-      "high": 7.1,
+      "low": 2.0,
+      "mid": 3.6,
+      "high": 5.7,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "418:WA:SNTL": {
-       "swe_gain_in": 0.5,
+       "swe_gain_in": 0.4,
        "depth_gain_in": null,
        "precip_in": 0.5,
        "temp_mean_f": 34.6,
@@ -1156,13 +1089,12 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.4,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -0.8,
+      "nbm_error_in": 0.1,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
      }
@@ -1193,7 +1125,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1230,7 +1161,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.4,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1250,19 +1180,19 @@
       "method": "percentile"
      },
      "ours": [
-      0.0,
-      0.0
+      6.0,
+      14.0
      ],
      "observed": {
-      "low": 7.5,
-      "mid": 13.6,
-      "high": 21.4,
+      "low": 7.0,
+      "mid": 12.7,
+      "high": 20.0,
       "stations_used": 1,
       "stations_requested": 1
      },
      "observed_inputs": {
       "418:WA:SNTL": {
-       "swe_gain_in": 1.5,
+       "swe_gain_in": 1.4,
        "depth_gain_in": null,
        "precip_in": 1.3,
        "temp_mean_f": 33.5,
@@ -1270,23 +1200,22 @@
        "coverage": {
         "swe": 1.0,
         "depth": 0.31,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
      },
      "scores": {
-      "nbm_error_in": -2.7,
+      "nbm_error_in": -1.8,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -18.2,
+      "ours_error_in": -7.3,
       "ours_hit": false,
-      "obs_overlaps_ours": false
+      "obs_overlaps_ours": true
      },
      "observed_for_ours": {
-      "low": 10.0,
-      "mid": 18.2,
-      "high": 28.6,
+      "low": 9.5,
+      "mid": 17.3,
+      "high": 27.1,
       "stations_used": 1,
       "stations_requested": 1
      }
@@ -1312,7 +1241,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 2.0,
+      "low": 3.5,
       "mid": 6.4,
       "high": 10.0,
       "stations_used": 1,
@@ -1328,7 +1257,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1349,7 +1277,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 2.0,
+      "low": 4.5,
       "mid": 8.2,
       "high": 12.9,
       "stations_used": 1,
@@ -1365,7 +1293,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1402,7 +1329,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1422,8 +1348,8 @@
       "method": "percentile"
      },
      "ours": [
-      0.0,
-      0.0
+      18.0,
+      26.0
      ],
      "observed": {
       "low": 12.0,
@@ -1442,7 +1368,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1451,9 +1376,9 @@
       "nbm_error_in": 4.4,
       "nbm_iqr_hit": false,
       "obs_overlaps_nbm_iqr": true,
-      "ours_error_in": -13.0,
+      "ours_error_in": 9.0,
       "ours_hit": false,
-      "obs_overlaps_ours": false
+      "obs_overlaps_ours": true
      },
      "observed_for_ours": {
       "low": 12.5,
@@ -1500,7 +1425,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1521,7 +1445,7 @@
      },
      "ours": null,
      "observed": {
-      "low": 4.0,
+      "low": 6.0,
       "mid": 10.9,
       "high": 17.1,
       "stations_used": 1,
@@ -1537,7 +1461,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1545,7 +1468,7 @@
      "scores": {
       "nbm_error_in": -7.6,
       "nbm_iqr_hit": false,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": false
      }
     },
     "day3": {
@@ -1574,7 +1497,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }
@@ -1611,7 +1533,6 @@
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
-        "precip": 1.0,
         "temp": 1.0
        }
       }

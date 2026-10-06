@@ -2,18 +2,21 @@
 
     python scripts/backfill_evaluation.py              # all weekends (resumes; skips finished ones)
     python scripts/backfill_evaluation.py --summary    # only rebuild the summary from existing scores
+    python scripts/backfill_evaluation.py --rescore    # rescore every existing snapshot (new observation method or
+                                                       # new forecast ranges); reuses snapshots and snow levels
 
 For every Thursday post of the 2025-26 season it:
   1. builds an NBM snapshot from the AWS archive with scripts/nbm_snapshot.py, using the 19Z cycle on the
      Thursday (about 11 am Pacific, the cycle available when the forecast was being written),
   2. scores it against SNOTEL snowfall and sounding-derived snow level (scripts/score_forecast.py),
-  3. adds your own weekend-total range from data/forecasts/eval_forecast_<date>.json where it was saved.
+  3. adds your own weekend-total range, read from the posts by scripts/ours_from_posts.py. (The older
+     data/forecasts/eval_forecast_*.json files turned out to hold wrong ranges for several weekends.)
 
 What the archive does and does not give us:
   - The NBM side is rebuilt, not the exact numbers the old Selenium viewer saved. The viewer used whatever
     cycle was newest when it was run, which was not recorded. The 19Z cycle is a consistent stand-in.
-  - Only the weekend total of your forecast was saved for each area, so your forecast is scored on that.
-  - Four posts (2025-11-20, 11-27, 04-09, 04-23) have no saved ranges; they are scored for the NBM only.
+  - Only the weekend total of your forecast is scored. The two posts that wrote their forecast as prose
+    (2025-11-20, 2025-11-27) have no ranges and are scored for the NBM only.
   - Observations are recomputed with the new method, so these numbers are not comparable with the old
     reports (data/evaluation_reports/), which used a different snowfall estimate.
 
@@ -44,16 +47,10 @@ THURSDAYS = [
 
 
 def saved_ours(thursday):
-    """{area: {'total': [lo, hi]}} from the old evaluation file, or None."""
-    path = FORECASTS / f"eval_forecast_{thursday}.json"
-    if not path.exists():
-        return None
-    out = {}
-    for name, area in json.loads(path.read_text(encoding="utf-8")).get("areas", {}).items():
-        rng = ((area.get("accumulated_snowfall") or {}).get("our_forecast") or {}).get("range") if isinstance(area, dict) else None
-        if rng and rng[0] is not None and rng[1] is not None:
-            out[name] = {"total": [float(rng[0]), float(rng[1])]}
-    return out or None
+    """{area: {'total': [lo, hi]}} for the post of this Thursday, from data/forecasts/ours_from_posts.json, or None."""
+    path = FORECASTS / "ours_from_posts.json"
+    areas = (json.loads(path.read_text(encoding="utf-8")).get("forecast_date") or {}).get(thursday) if path.exists() else None
+    return {name: {"total": rng} for name, rng in areas.items()} if areas else None
 
 
 def make_snapshot(thursday, first_day):
@@ -136,20 +133,24 @@ def print_summary(sm):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    rescore = "--rescore" in sys.argv
     if "--summary" not in sys.argv:
         for thursday in THURSDAYS:
             first_day = (date.fromisoformat(thursday) + timedelta(days=1)).isoformat()
             score_path = OUT / f"score_{first_day}.json"
-            if score_path.exists():
+            previous_snow_level = None
+            if score_path.exists() and not rescore:
                 print(f"{thursday}: already scored")
                 continue
+            if score_path.exists():
+                previous_snow_level = json.loads(score_path.read_text(encoding="utf-8")).get("snow_level")
             print(f"{thursday}: building snapshot for the weekend starting {first_day}")
             snap_path = make_snapshot(thursday, first_day)
             if snap_path is None:
                 continue
             snap = json.loads(snap_path.read_text(encoding="utf-8"))
             try:
-                result = score_snapshot(snap, snap_path.name, saved_ours(thursday), verbose=False)
+                result = score_snapshot(snap, snap_path.name, saved_ours(thursday), verbose=False, snow_level=previous_snow_level)
             except Exception as exc:  # noqa: BLE001 -- one bad weekend should not stop the season
                 print(f"  scoring FAILED for {thursday}: {exc}")
                 continue
