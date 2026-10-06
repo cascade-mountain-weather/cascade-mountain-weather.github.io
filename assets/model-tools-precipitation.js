@@ -112,6 +112,38 @@
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     }
 
+    function cloudChart(areaId) {
+        const site = nbmData && nbmData.sites[NBM_SITE[areaId]];
+        if (!site || !site.cloud_pct || !nbmData.cloud_time_utc) return null;
+        const ts = nbmData.cloud_time_utc.map(t => Date.parse(t)), v = site.cloud_pct;
+        const W_ = 820, H_ = 300, pad = { l: 52, r: 16, t: 48, b: 58 };
+        const t0 = ts[0], t1 = ts[ts.length - 1];
+        const X = t => pad.l + (t - t0) / (t1 - t0) * (W_ - pad.l - pad.r);
+        const Y = p => pad.t + (100 - p) / 100 * (H_ - pad.t - pad.b);
+        const out = [`<rect width="${W_}" height="${H_}" fill="#fff"/>`,
+            `<text x="${pad.l}" y="18" font-size="14" font-weight="700" fill="#1e3c72">NBM cloud cover</text>`,
+            `<text x="${pad.l}" y="34" font-size="11" fill="#64748b">Percent of sky covered, every 3 hours. Under 25% is mostly sunny; over 75% is mostly cloudy.</text>`];
+        out.push(`<rect x="${pad.l}" y="${Y(100)}" width="${W_ - pad.l - pad.r}" height="${Y(75) - Y(100)}" fill="#e2e8f0" opacity="0.5"/>`);
+        out.push(`<rect x="${pad.l}" y="${Y(25)}" width="${W_ - pad.l - pad.r}" height="${Y(0) - Y(25)}" fill="#fef3c7" opacity="0.6"/>`);
+        for (const g of [0, 25, 50, 75, 100]) out.push(`<line x1="${pad.l}" x2="${W_ - pad.r}" y1="${Y(g)}" y2="${Y(g)}" stroke="#e2e8f0"/><text x="${pad.l - 6}" y="${Y(g) + 4}" text-anchor="end" font-size="11" fill="#64748b">${g}</text>`);
+        for (let t = Math.ceil(t0 / 3600e3) * 3600e3; t <= t1; t += 3600e3) {
+            if (+PAC_H.format(t) !== 0) continue;
+            out.push(`<line x1="${X(t)}" x2="${X(t)}" y1="${pad.t}" y2="${H_ - pad.b}" stroke="#94a3b8" stroke-dasharray="3 3"/>`);
+            if (X(t) < W_ - pad.r - 50) out.push(`<text x="${X(t) + 4}" y="${H_ - pad.b + 16}" font-size="11" fill="#334155">${PAC_D.format(t + 6 * 3600e3).replace(',', '')}</text>`);
+        }
+        out.push(`<text x="${pad.l}" y="${H_ - pad.b + 34}" font-size="10.5" fill="#64748b">Dashed lines mark midnight Pacific time; labels are the Pacific day that follows.</text>`);
+        const pts = ts.map((t, i) => v[i] == null ? null : [X(t), Y(v[i])]);
+        // draw in runs so a missing value breaks the line
+        let seg = [];
+        const flush = () => { if (seg.length > 1) out.push(`<polyline points="${seg.map(p => p.join(',')).join(' ')}" fill="none" stroke="#1e3c72" stroke-width="2.4"/>`); seg = []; };
+        pts.forEach(p => { if (p) seg.push(p); else flush(); });
+        flush();
+        pts.forEach(p => { if (p) out.push(`<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#1e3c72"/>`); });
+        out.push(`<text x="14" y="${(pad.t + H_ - pad.b) / 2}" transform="rotate(-90 14 ${(pad.t + H_ - pad.b) / 2})" text-anchor="middle" font-size="12" fill="#334155">cloud cover (%)</text>`);
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W_}" height="${H_}" viewBox="0 0 ${W_} ${H_}" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif">${out.join('')}</svg>`;
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
     const ENSEMBLE_HOW = 'Look at the range of the ensemble members (the ensemble spread) to judge uncertainty in the forecast. A larger spread means lower confidence.';
     const UTAH = 'https://weather.utah.edu/';
     const PRODUCTS = {
@@ -207,6 +239,20 @@
                 source: 'NOAA National Blend of Models, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
             },
         },
+        nbm_cloud: {
+            label: 'NBM clouds',
+            title: a => `${a.label}: NBM cloud cover`,
+            build: (a, st) => ({
+                hours: [null], runs: nbmData ? [new Date(Date.parse(nbmData.cycle_utc))] : null, runExact: true,
+                urlFor: () => cloudChart(st.area) || '',
+                fallbackUrl: 'https://www.weather.gov/mdl/nbm_home',
+            }),
+            info: {
+                what: 'Total cloud cover from the National Blend of Models (NBM) for the grid cell nearest this area, every 3 hours, as a percent of the sky covered. It is the NBM deterministic value, with no spread shown.',
+                how: 'Use it for sun versus cloud timing on touring and powder days: under about 25% is mostly sunny, over about 75% is mostly cloudy. Cloud cover is hard to forecast, so treat the exact hours as approximate and compare with the UW WRF cloud layers on the synoptic page.',
+                source: 'NOAA National Blend of Models, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
+            },
+        },
         frz: {
             label: 'Freezing level',
             models: { ecmwf: 'ECMWF (European)', gefs: 'GEFS (American)' },
@@ -230,7 +276,7 @@
         CMWViewer.mount(document.getElementById('viewer'), {
             selectors: [
                 { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).map(k => ({ value: k, label: AREAS[k].label })) },
-                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (k !== 'nbm' || (nbmData && NBM_SITE[st.area]))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
+                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
                 { key: 'model', label: 'Model', options: st => st.product === 'frz' ? Object.keys(PRODUCTS.frz.models).map(m => ({ value: m, label: PRODUCTS.frz.models[m] })) : [{ value: '-', label: '-' }] },
             ],

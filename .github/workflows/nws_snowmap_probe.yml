@@ -1,0 +1,41 @@
+name: Probe NWS Snow Map
+
+# Discovery only: finds out where the NWS snowfall observation map gets its data so we can use it
+# to check forecasts. Saves the page, its scripts and a report of candidate data URLs to data/nws_snowmap/.
+on:
+  schedule:
+    - cron: "15 14 * * *" # daily, to see how the page behaves day to day (remove once the source is known)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Probe the snow map
+        run: python scripts/probe_nws_snowmap.py
+
+      - name: Commit and push the probe output
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add data/nws_snowmap
+          git commit -m "Update NWS snow map probe [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

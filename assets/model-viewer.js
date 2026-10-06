@@ -151,11 +151,11 @@
             if (run && h != null) {
                 const v = validTime(idx);
                 lines.push(`<div class="mv-valid"><strong>${esc(pacific(v))}</strong><span class="mv-z">${esc(zulu(v))}</span></div>`);
-                lines.push(`<div class="mv-run">Forecast hour F${pad(h, 3)} &middot; model run ${esc(zulu(run))} (${esc(pacific(run))})${view.runExact ? '' : ' &mdash; estimated, the image file does not say which run it is'}</div>`);
+                lines.push(`<div class="mv-run">Forecast hour F${pad(h, 3)} &middot; ${esc((view.runLabel || 'model run').toLowerCase())} ${esc(zulu(run))} (${esc(pacific(run))})${view.runExact ? '' : ' &mdash; estimated, the image file does not say which run it is'}</div>`);
             } else if (h != null) {
                 lines.push(`<div class="mv-run">Forecast hour F${pad(h, 3)}</div>`);
             } else if (run) {
-                lines.push(`<div class="mv-run">Model run ${esc(zulu(run))} (${esc(pacific(run))}). Dates on the figure are Z (UTC); subtract the offset in &ldquo;Reading the times&rdquo; below.</div>`);
+                lines.push(`<div class="mv-run">${esc(view.runLabel || 'Model run')} ${esc(zulu(run))} (${esc(pacific(run))}). Dates on the figure may be Z (UTC); see &ldquo;Reading the times&rdquo; below.</div>`);
             } else {
                 const note = view.latestNote || 'Always the most recent run available. The image itself carries the run and valid times.';
                 lines.push(`<div class="mv-run">${esc(note)}</div>`);
