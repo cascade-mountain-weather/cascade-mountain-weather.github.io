@@ -20,9 +20,9 @@ header {
     background:
         linear-gradient(to bottom, rgba(16,32,64,0) 55%, rgba(30,60,114,0.55) 100%),
         linear-gradient(to right, rgba(16,32,64,0.62) 0%, rgba(16,32,64,0.3) 55%, rgba(16,32,64,0.12) 100%),
-        url('assets/images/snoq_pass_view.JPG');
+        url('assets/images/cascade_pano.jpeg');
     background-size: cover;
-    background-position: center center;
+    background-position: center 12%;   /* a band of sky with Mt Adams, then the Tatoosh ridge below */
     color: white;
     padding: 1.1rem 1rem 1.2rem;
     text-align: center;
