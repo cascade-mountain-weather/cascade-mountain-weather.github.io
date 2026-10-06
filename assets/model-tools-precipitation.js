@@ -28,6 +28,8 @@
         'mt-baker': { label: 'Mt. Baker (Heather Meadows)', wwrf: 'WA543', utah: 'MTB42', basins: [{ id: '17110005', label: 'Upper Skagit' }] },
         'stevens': { label: 'Stevens Pass', wwrf: 'US2', utah: 'TSTEV', basins: [{ id: '17110009', label: 'Skykomish (west side)' }, { id: '17020011', label: 'Wenatchee (east side)' }] },
         'snoqualmie': { label: 'Snoqualmie Pass', wwrf: 'I90', utah: 'SNO30', basins: [{ id: '17110010', label: 'Snoqualmie (west side)' }, { id: '17030001', label: 'Upper Yakima (east side)' }] },
+        'hurricane': { label: 'Hurricane Ridge', utah: 'HUR53', basins: [{ id: '17110020', label: 'Dungeness-Elwha' }] },
+        'winthrop': { label: 'Winthrop / Mazama (Methow Valley)', wwrf: 'S52', basins: [{ id: '17020008', label: 'Methow' }] },
         'blewett': { label: 'Blewett Pass', wwrf: 'US97', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }] },
         'crystal': { label: 'Crystal Mountain', wwrf: 'MRNP', utah: 'CMT', basins: [{ id: '17110014', label: 'Puyallup' }] },
         'paradise': { label: 'Paradise (Mt. Rainier)', wwrf: 'MRNP', utah: 'PVC54', basins: [{ id: '17110015', label: 'Nisqually' }] },
@@ -38,7 +40,8 @@
 
     // ---- NBM snowfall plume, drawn as an SVG image so it behaves like the other figures ----
     const NBM_SITE = { 'mt-baker': 'Mt. Baker', stevens: 'Stevens Pass', snoqualmie: 'Snoqualmie Pass', blewett: 'Blewett Pass',
-        crystal: 'Crystal', paradise: 'Paradise', white: 'White Pass', washington: 'Washington Pass' };
+        crystal: 'Crystal', paradise: 'Paradise', white: 'White Pass', washington: 'Washington Pass',
+        hurricane: 'Hurricane Ridge', winthrop: 'Winthrop' };
     const PAC_H = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' });
     const PAC_D = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'numeric', day: 'numeric' });
     const num = (v, d) => (v == null ? '\u2013' : (+v).toFixed(d == null ? 1 : d));
@@ -189,6 +192,7 @@
 
     const PRODUCTS = {
         wwrf_snow: {
+            needs: 'wwrf',
             label: 'Snow (West-WRF)',
             title: a => `${a.label}: West-WRF ensemble accumulated snow`,
             build: a => ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
@@ -199,6 +203,7 @@
             },
         },
         wwrf_qpf: {
+            needs: 'wwrf',
             label: 'Precip (West-WRF)',
             title: a => `${a.label}: West-WRF ensemble accumulated precipitation`,
             build: a => ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
@@ -209,6 +214,7 @@
             },
         },
         utah_ens: {
+            needs: 'utah',
             label: 'Utah 10-day ensemble',
             title: a => `${a.label}: Utah snow ensemble, 10 days`,
             build: a => ({
@@ -223,6 +229,7 @@
             },
         },
         rrfs: {
+            needs: 'utah',
             label: 'RRFS 2.5-day ensemble',
             title: a => `${a.label}: RRFS snow ensemble, 2.5 days`,
             build: a => ({
@@ -328,6 +335,7 @@
             },
         },
         frz: {
+            needs: 'basins',
             label: 'Freezing level',
             models: { ecmwf: 'ECMWF (European)', gefs: 'GEFS (American)' },
             title: (a, st) => `${(a.basins.find(b => b.id === st.basin) || a.basins[0]).label} freezing level: ${st.model === 'gefs' ? 'GEFS' : 'ECMWF'} ensemble`,
@@ -350,7 +358,7 @@
         CMWViewer.mount(document.getElementById('viewer'), {
             selectors: [
                 { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).map(k => ({ value: k, label: AREAS[k].label })) },
-                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
+                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!PRODUCTS[k].needs || AREAS[st.area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
                 { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
             ],

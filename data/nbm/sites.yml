@@ -41,3 +41,9 @@ sites:
 verification_points:
   - {name: Quillayute, station: UIL, lat: 47.934, lon: -124.555}
   - {name: Salem,      station: SLE, lat: 44.920, lon: -123.020}
+
+# Points the NBM plume page (scripts/nbm_plume.py) draws but the weekend forecast and its scoring do not use.
+# Winthrop: coordinates from CW3E's West-WRF station list (station S52). It is a valley town, so the NBM point
+# is valley level, not ski terrain.
+plume_only_sites:
+  - {name: Winthrop, lat: 48.4249, lon: -120.1459}

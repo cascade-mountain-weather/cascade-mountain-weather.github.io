@@ -9,6 +9,7 @@
 
 <main{% if page.main_class %} class="{{ page.main_class }}"{% endif %}>
 {{ content }}
+{% if page.disclaimer %}{% include data-disclaimer.html %}{% endif %}
 </main>
 
 {% include footer.html %}

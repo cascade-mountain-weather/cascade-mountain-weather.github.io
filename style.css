@@ -1327,3 +1327,22 @@ nav a,
         margin-bottom: 0.5rem;
     }
 }
+
+/* Terms of use and data disclaimer, at the bottom of pages that show model data, observations or forecasts */
+.data-disclaimer {
+    max-width: 1100px;
+    margin: 2rem auto 0;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #cbd5e1;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: #475569;
+}
+.data-disclaimer h2 {
+    font-size: 0.85rem;
+    margin: 0 0 0.4rem;
+    color: #334155;
+}
+.data-disclaimer p {
+    margin: 0 0 0.5rem;
+}

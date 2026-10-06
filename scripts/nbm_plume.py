@@ -90,7 +90,7 @@ def main():
     args = ap.parse_args()
 
     cfg = yaml.safe_load(nbm.SITES_FILE.read_text(encoding="utf-8"))
-    sites = cfg["sites"]
+    sites = cfg["sites"] + cfg.get("plume_only_sites", [])
     cycle = pd.Timestamp(args.cycle) if args.cycle else newest_long_cycle(args.hours)
     print(f"cycle {cycle:%Y-%m-%d %H}Z, {args.hours} h")
 
