@@ -9,7 +9,7 @@
 <meta name="description" content="{{ page.description | default: site.description }}">
 <meta name="keywords" content="{{ page.keywords | default: site.keywords }}">
 <meta name="author" content="Cascade Mountain Weather">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="{% if page.noindex %}noindex, nofollow{% else %}index, follow{% endif %}">
 <link rel="canonical" href="{{ page.url | absolute_url }}">
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
 

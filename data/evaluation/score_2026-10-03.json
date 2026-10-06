@@ -2,12 +2,14 @@
  "snapshot": "nbm_snapshot_2026-10-03.json",
  "first_day_local": "2026-10-03",
  "nbm_cycle_utc": "2026-10-02T19:00Z",
- "scored_utc": "2026-10-05T18:38Z",
+ "scored_utc": "2026-10-06T00:03Z",
  "our_forecast_found": false,
+ "our_period_utc": null,
  "notes": [
   "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
   "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
-  "A hit allows 0.5 in of slack on each side."
+  "A hit allows 0.5 in of slack on each side.",
+  "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window."
  ],
  "windows": {
   "day1": {
@@ -59,6 +61,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 51.7,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -71,6 +74,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 54.3,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.2,
         "depth": 0.8,
@@ -107,6 +111,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 53.6,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -119,6 +124,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 54.7,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -155,6 +161,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 52.7,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -167,6 +174,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 54.6,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.11,
         "depth": 0.89,
@@ -214,6 +222,7 @@
        "depth_gain_in": null,
        "precip_in": 0.0,
        "temp_mean_f": 48.0,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 0.0,
@@ -250,6 +259,7 @@
        "depth_gain_in": null,
        "precip_in": 0.0,
        "temp_mean_f": 50.4,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 0.0,
@@ -286,6 +296,7 @@
        "depth_gain_in": null,
        "precip_in": 0.0,
        "temp_mean_f": 49.6,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 0.0,
@@ -333,6 +344,7 @@
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 51.8,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 0.0,
@@ -369,6 +381,7 @@
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 52.3,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 0.2,
@@ -405,6 +418,7 @@
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 52.5,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 0.11,
@@ -452,6 +466,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 48.6,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -488,6 +503,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 50.0,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -524,6 +540,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 49.7,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -571,6 +588,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 54.0,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.8,
         "depth": 1.0,
@@ -607,6 +625,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 57.2,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.8,
         "depth": 1.0,
@@ -643,6 +662,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 56.3,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.78,
         "depth": 1.0,
@@ -690,6 +710,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 56.4,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -726,6 +747,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 56.5,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -762,6 +784,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 56.5,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -809,6 +832,7 @@
        "depth_gain_in": 1.0,
        "precip_in": 0.0,
        "temp_mean_f": 55.8,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -845,6 +869,7 @@
        "depth_gain_in": 1.0,
        "precip_in": 0.0,
        "temp_mean_f": 55.9,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -881,6 +906,7 @@
        "depth_gain_in": 2.0,
        "precip_in": 0.0,
        "temp_mean_f": 55.9,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 1.0,
         "depth": 1.0,
@@ -928,6 +954,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 56.4,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -964,6 +991,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 55.3,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -1000,6 +1028,7 @@
        "depth_gain_in": 0.0,
        "precip_in": 0.0,
        "temp_mean_f": 56.0,
+       "gate": "no precipitation",
        "coverage": {
         "swe": 0.0,
         "depth": 1.0,
@@ -1047,6 +1076,7 @@
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 48.7,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 1.0,
         "depth": 0.4,
@@ -1083,6 +1113,7 @@
        "depth_gain_in": 0.0,
        "precip_in": null,
        "temp_mean_f": 52.9,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 1.0,
         "depth": 0.8,
@@ -1119,6 +1150,7 @@
        "depth_gain_in": null,
        "precip_in": null,
        "temp_mean_f": 51.3,
+       "gate": "too warm for snow",
        "coverage": {
         "swe": 1.0,
         "depth": 0.56,
@@ -1144,79 +1176,86 @@
     {
      "valid_utc": "2026-10-03T12:00Z",
      "sounding_snow_level_ft": 6972,
+     "sounding_snow_level_saturated_ft": 11680,
      "sounding_freezing_level_ft": 13763,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 8369.0,
       "p50": 8510.0,
       "p75": 9432.0,
       "deterministic": 8990.0
-     },
-     "nbm_error_ft": 1538,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-04T00:00Z",
      "sounding_snow_level_ft": 6463,
+     "sounding_snow_level_saturated_ft": 12697,
      "sounding_freezing_level_ft": 14403,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 8757.0,
       "p50": 9216.0,
       "p75": 9662.0,
       "deterministic": 9199.0
-     },
-     "nbm_error_ft": 2753,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-04T12:00Z",
      "sounding_snow_level_ft": 8219,
+     "sounding_snow_level_saturated_ft": 12369,
      "sounding_freezing_level_ft": 14140,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 8451.0,
       "p50": 8556.0,
       "p75": 8783.0,
       "deterministic": 8891.0
-     },
-     "nbm_error_ft": 337,
-     "nbm_iqr_hit": true
+     }
     },
     {
      "valid_utc": "2026-10-05T00:00Z",
      "sounding_snow_level_ft": 7251,
+     "sounding_snow_level_saturated_ft": 11860,
      "sounding_freezing_level_ft": 13698,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 8583.0,
       "p50": 8661.0,
       "p75": 8698.0,
       "deterministic": 8652.0
-     },
-     "nbm_error_ft": 1410,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-05T12:00Z",
      "sounding_snow_level_ft": 6660,
+     "sounding_snow_level_saturated_ft": 11040,
      "sounding_freezing_level_ft": 13205,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 7743.0,
       "p50": 8241.0,
       "p75": 8976.0,
       "deterministic": 8478.0
-     },
-     "nbm_error_ft": 1581,
-     "nbm_iqr_hit": false
+     }
     }
    ],
-   "n": 5,
-   "bias_ft": 1524,
-   "mae_ft": 1524,
-   "iqr_hit_rate": 0.2
+   "n_launches": 5,
+   "n_scored": 0,
+   "bias_ft": null,
+   "mae_ft": null,
+   "iqr_hit_rate": null
   },
   "Spokane": {
    "station": "OTX",
    "km_to_grid_point": 0.1,
    "launches": [],
-   "n": 0,
+   "n_launches": 0,
+   "n_scored": 0,
    "bias_ft": null,
    "mae_ft": null,
    "iqr_hit_rate": null
@@ -1228,73 +1267,79 @@
     {
      "valid_utc": "2026-10-03T12:00Z",
      "sounding_snow_level_ft": 7858,
+     "sounding_snow_level_saturated_ft": 13419,
      "sounding_freezing_level_ft": 15059,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 9157.0,
       "p50": 9245.0,
       "p75": 9564.0,
       "deterministic": 9304.0
-     },
-     "nbm_error_ft": 1387,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-04T00:00Z",
      "sounding_snow_level_ft": 8563,
+     "sounding_snow_level_saturated_ft": 13812,
      "sounding_freezing_level_ft": 15617,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 9518.0,
       "p50": 9741.0,
       "p75": 9951.0,
       "deterministic": 9803.0
-     },
-     "nbm_error_ft": 1178,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-04T12:00Z",
      "sounding_snow_level_ft": 9121,
+     "sounding_snow_level_saturated_ft": 13205,
      "sounding_freezing_level_ft": 15108,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 9501.0,
       "p50": 9580.0,
       "p75": 9623.0,
       "deterministic": 9705.0
-     },
-     "nbm_error_ft": 459,
-     "nbm_iqr_hit": true
+     }
     },
     {
      "valid_utc": "2026-10-05T00:00Z",
      "sounding_snow_level_ft": 8809,
+     "sounding_snow_level_saturated_ft": 13304,
      "sounding_freezing_level_ft": 15059,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 9895.0,
       "p50": 10184.0,
       "p75": 10509.0,
       "deterministic": 10174.0
-     },
-     "nbm_error_ft": 1375,
-     "nbm_iqr_hit": false
+     }
     },
     {
      "valid_utc": "2026-10-05T12:00Z",
      "sounding_snow_level_ft": 8186,
+     "sounding_snow_level_saturated_ft": 12828,
      "sounding_freezing_level_ft": 14698,
+     "column_saturated": false,
+     "scored": false,
      "nbm": {
       "p25": 9370.0,
       "p50": 9528.0,
       "p75": 9738.0,
       "deterministic": 9606.0
-     },
-     "nbm_error_ft": 1342,
-     "nbm_iqr_hit": false
+     }
     }
    ],
-   "n": 5,
-   "bias_ft": 1148,
-   "mae_ft": 1148,
-   "iqr_hit_rate": 0.2
+   "n_launches": 5,
+   "n_scored": 0,
+   "bias_ft": null,
+   "mae_ft": null,
+   "iqr_hit_rate": null
   }
  }
 }
