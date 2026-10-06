@@ -5,7 +5,7 @@ const ASSETS_TO_CACHE = [
   '/style.css',
   '/posts/post-style.css',
   '/assets/header.js',
-  '/assets/images/favicon.svg',
+  '/assets/images/favicon-48.png',
   '/about.html',
   '/model-tools.html'
 ];
