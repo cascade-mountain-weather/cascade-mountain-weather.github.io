@@ -1,0 +1,46 @@
+name: Update HRRR and HRDPS Plumes
+
+on:
+  schedule:
+    - cron: "30 5,11,17,23 * * *" # ~5.5 h after the 00, 06, 12 and 18Z cycles (HRDPS finishes its 48 hours about 4-5 h in)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-hires-plumes:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python with ecCodes (Herbie reads HRRR and HRDPS GRIB2)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.11"
+          channels: conda-forge
+          channel-priority: strict
+          miniforge-version: latest
+          activate-environment: hires
+
+      - name: Install dependencies
+        run: mamba install -y -n hires herbie-data cfgrib eccodes xarray pandas numpy pyyaml
+
+      - name: Build HRRR and HRDPS plume data
+        run: python scripts/hires_plume.py
+
+      - name: Commit and push updated data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/hires_plumes.json
+          git commit -m "Update HRRR and HRDPS plumes [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
