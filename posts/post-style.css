@@ -15,19 +15,35 @@
 /* Header block, top to bottom: blog name (largest), "In this week's edition: title", subtitle, then
    posted / forecast period / forecaster. Colors are the site's palette on the blue gradient. */
 .post-blog {
-    font-size: clamp(1.7rem, 1.2rem + 2vw, 2.5rem);
+    font-size: clamp(2.1rem, 1.5rem + 2.8vw, 3.25rem);
     font-weight: 800;
-    line-height: 1.15;
+    line-height: 1.1;
     color: #ffffff;
-    margin: 0 0 0.9rem 0;
+    margin: 0 0 1rem 0;
 }
 
-.post-blog .post-blog-link {
-    font-size: 0.95rem;
+/* Light blue on the dark blue gradient (about 6:1 contrast). Every state is set so a visited link
+   never falls back to the browser's purple, which is unreadable here. */
+.post-blog .post-blog-link,
+.post-blog .post-blog-link:visited {
+    font-size: 1rem;
     font-weight: 600;
     color: #dbeafe;
     text-decoration: underline;
+    text-underline-offset: 3px;
     white-space: nowrap;
+}
+
+.post-blog .post-blog-link:hover,
+.post-blog .post-blog-link:focus-visible {
+    color: #ffffff;
+    text-decoration-thickness: 2px;
+}
+
+.post-blog .post-blog-link:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+    border-radius: 2px;
 }
 
 .post-header h1.post-title {
@@ -55,6 +71,8 @@
     gap: 0.4rem 1.75rem;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     font-size: 0.95rem;
     color: #ffffff;
     margin: 0;
@@ -357,7 +375,7 @@ p {
 
     .post-meta {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
         gap: 0.35rem;
     }
     
