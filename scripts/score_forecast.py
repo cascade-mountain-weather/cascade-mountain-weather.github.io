@@ -177,8 +177,9 @@ def snow_level_scores(snap, start, end, verbose=True):
 
 # ---------------------------------------------------------------- the scoring itself
 
-def score_snapshot(snap, snap_name, ours_all=None, verbose=True):
-    """Score one snapshot (a loaded dict) and return the result dict. `ours_all` is {area: {window: [lo, hi]}}."""
+def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None):
+    """Score one snapshot (a loaded dict) and return the result dict. `ours_all` is {area: {window: [lo, hi]}}.
+    `snow_level`, if given, is reused instead of fetching soundings again (a rescore of the snowfall only)."""
     first_day = snap["source"]["first_day_local"]
     windows = {wid: (utc(w["start_utc"].rstrip("Z")), utc(w["end_utc"].rstrip("Z"))) for wid, w in snap["windows"].items()}
     last_end = max(e for _, e in windows.values())
@@ -234,7 +235,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True):
             area["windows"][wid] = entry
         result["areas"][name] = area
 
-    result["snow_level"] = snow_level_scores(snap, min(s for s, _ in windows.values()), last_end, verbose)
+    result["snow_level"] = snow_level if snow_level is not None else snow_level_scores(snap, min(s for s, _ in windows.values()), last_end, verbose)
     return result
 
 
