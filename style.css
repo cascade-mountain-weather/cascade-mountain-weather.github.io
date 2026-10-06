@@ -377,40 +377,11 @@ h3 {
     background-color: #cbd5e1;
 }
 
-.post-welcome {
-    text-align: center;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.post-welcome h2 {
-    border-bottom: none;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0;
-}
-
-.post-welcome .post-edition {
-    margin: 0;
-}
-
 /* The shared .tool-card rule nudges cards down 10% (for the synoptic page);
    on the DGZ page that pushes the plots over the content below. */
 #dgz-education .tool-card {
     top: auto !important;
     right: auto !important;
-}
-
-.post-welcome h2 a {
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.post-edition {
-    color: #475569;
 }
 
 /* Previous Forecasts month/year selector */
