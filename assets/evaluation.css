@@ -5,6 +5,8 @@
 .eval h3 { margin: 2rem 0 0.5rem; color: #1e3c72; }
 .eval-banner { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.9rem; margin: 1rem 0; }
 .eval-lede { color: #475569; max-width: 60rem; }
+.eval-banner[hidden], .eval-empty[hidden], #eval-main[hidden] { display: none; }
+.eval-empty { background: #f1f5f9; border-radius: 8px; padding: 1rem 1.2rem; color: #334155; }
 .eval-sub { color: #64748b; font-size: 0.8rem; margin: 0.2rem 0 0.4rem; }
 .eval-status { color: #64748b; font-style: italic; }
 

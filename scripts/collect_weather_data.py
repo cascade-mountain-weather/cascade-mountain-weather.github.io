@@ -1,3 +1,5 @@
+# RETIRED: no longer run. The hourly workflow and the current-weather page it fed were removed (replaced by the
+# live conditions map). Kept only for RESORTS_TO_STATIONS, the resort-to-station mapping the ski tool plan reuses.
 import os
 import requests
 import re

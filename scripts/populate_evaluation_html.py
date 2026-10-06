@@ -1,3 +1,5 @@
+# RETIRED: the original (2025-26) evaluation method. It now edits the archived page evaluation-2025-26-original.html.
+# The current evaluation is scripts/score_forecast.py + scripts/build_evaluation_json.py (see CLAUDE.md).
 #!/usr/bin/env python3
 """
 Populate evaluation.html with data from evaluation reports.
@@ -725,7 +727,7 @@ def main():
     script_dir = Path(__file__).parent
     repo_root = script_dir.parent
     reports_dir = repo_root / 'data' / 'evaluation_reports'
-    html_path = repo_root / 'evaluation.html'
+    html_path = repo_root / 'evaluation-2025-26-original.html'
     
     print("Populating evaluation.html with forecast evaluation data...")
     print()

@@ -8,6 +8,10 @@ one tidy file the page reads in the browser. All statistics are computed in the 
 a new product (HRRR, HRDPS) is just another field on each record; nothing here needs to change for it except
 adding the field.
 
+Seasons run September to August and are named by their two years (2025-26). Each weekend is tagged with its
+season so the page can filter. `SEASONS` lists every season the page offers, including the current one before it
+has any weekends. Test weekends from before a season's first real forecast go in PRESEASON and are left out.
+
 Record fields (inches), per weekend and area:
   obs       [low, mid, high]   observed snowfall estimate over the NBM window (Friday 12Z to Monday 12Z)
   obs_ours  [low, mid, high]   the same over the author's own period (4 pm Thursday to 4 am Monday); only
@@ -27,6 +31,18 @@ SCORE_DIRS = [ROOT / "data" / "evaluation" / "backfill", ROOT / "data" / "evalua
 SITES = ROOT / "data" / "nbm" / "sites.yml"
 OUT = ROOT / "assets" / "data" / "evaluation.json"
 
+SEASONS = [
+    {"id": "2026-27", "label": "2026–27", "note": ""},
+    {"id": "2025-26", "label": "2025–26", "note": "Rebuilt with the new method from the model archive. These are not the numbers the original evaluation showed."},
+]
+PRESEASON = {"2026-10-03"}   # first-day dates of test weekends before the 2026-27 forecasts began
+
+
+def season_of(first_day):
+    d = date.fromisoformat(first_day)
+    start = d.year if d.month >= 9 else d.year - 1
+    return f"{start}-{str(start + 1)[2:]}"
+
 
 def triple(d, keys):
     if not d or any(d.get(k) is None for k in keys):
@@ -43,10 +59,12 @@ def main():
             files[p.stem.replace("score_", "")] = p
     weekends, areas, records, snow = [], {}, [], []
     for first_day, path in sorted(files.items()):
+        if first_day in PRESEASON:
+            continue
         s = json.loads(path.read_text(encoding="utf-8"))
         first = date.fromisoformat(first_day)
         wi = len(weekends)
-        weekends.append({"id": first_day, "label": f"{first:%b} {first.day}–{(first + timedelta(days=2)).day}",
+        weekends.append({"id": first_day, "season": season_of(first_day), "label": f"{first:%b} {first.day}–{(first + timedelta(days=2)).day}",
                          "thursday": (first - timedelta(days=1)).isoformat(), "nbm_cycle": s["nbm_cycle_utc"],
                          "has_ours": bool(s.get("our_forecast_found"))})
         for name, a in s["areas"].items():
@@ -74,7 +92,7 @@ def main():
                              "nbm": triple(r["nbm"], ("p25", "p50", "p75"))})
     out = {
         "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
-        "season": "2025-26 (rebuilt from the NBM archive)",
+        "seasons": SEASONS,
         "products": [
             {"id": "nbm", "label": "NBM", "long": "NBM median, with the 25th–75th percentile range", "kind": "range", "available": True},
             {"id": "ours", "label": "Our forecast", "long": "Our forecast range (weekend total)", "kind": "range", "available": True},

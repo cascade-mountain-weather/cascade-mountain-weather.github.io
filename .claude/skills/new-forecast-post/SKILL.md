@@ -18,4 +18,4 @@ Ask the user for anything not already provided: the post date (default: the comi
 7. **Verify**: run the `/site-check` steps for the new post (image files exist, no leftover `[UPDATE`).
 8. **Do not commit or push** unless asked. When asked, note that bots push to `main` often, so `git pull --rebase` first. Commit style: short, e.g. `posting this week's forecast`.
 
-Evaluation is a separate step after the forecast period; see `/run-evaluation`. The forecast JSON `data/forecasts/eval_forecast_YYYY-MM-DD.json` for the post date should exist for that step (see `eval_forecast_template.json`). Ask the user for the numbers rather than filling them in.
+Evaluation is a separate step after the forecast period; see `/run-evaluation`. Save the NBM snapshot (`scripts/nbm_snapshot.py`) when you write the forecast.

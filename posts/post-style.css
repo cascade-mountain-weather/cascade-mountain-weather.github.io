@@ -5,26 +5,36 @@
 }
 
 .post-header {
-    padding: 2.75rem 2rem 2rem 2rem;
+    padding: 1.75rem 2rem 1.5rem 2rem;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
+    color: #ffffff;
     border-radius: 8px 8px 0 0;
     margin: -2rem -2rem 2rem -2rem;
 }
 
+/* Same scale as the page headings (h2 is 2rem); a long title no longer dominates the card */
 .post-header h1 {
-    font-size: 2.2rem;
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    line-height: 1.3;
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.25;
 }
 
 .post-meta {
     display: flex;
-    gap: 2rem;
+    gap: 0.4rem 1.75rem;
     flex-wrap: wrap;
-    opacity: 0.95;
-    font-size: 1rem;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+/* The shared .post-date rule (gray, with its own margins) is meant for the post list, and was winning here */
+.post-meta span {
+    color: #ffffff;
+    margin: 0;
+    font-size: inherit;
 }
 
 .post-content {
@@ -309,17 +319,14 @@ p {
 /* Responsive */
 @media (max-width: 768px) {
     .post-header {
-        padding: 1.5rem;
+        padding: 1.25rem 1.5rem;
         margin: -1.5rem -1.5rem 1.5rem -1.5rem;
     }
-    
-    .post-header h1 {
-        font-size: 1.6rem;
-    }
-    
+
     .post-meta {
         flex-direction: column;
-        gap: 0.5rem;
+        align-items: flex-start;
+        gap: 0.35rem;
     }
     
     .forecast-section h2 {
