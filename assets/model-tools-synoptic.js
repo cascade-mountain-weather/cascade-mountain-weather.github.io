@@ -206,7 +206,7 @@
     // ---- Lowland snow: UW SnowWatch (University of Washington Atmospheric Sciences) ----
     const SW = 'https://a.atmos.washington.edu/SNOWWATCH';
     const SW_SRC = { source: 'UW SnowWatch', sourceUrl: SW + '/' };
-    const SW_STATION = 'swd2'; // observing station for the temperature plots; change here if you want another
+    // Obs plot files are named sw{domain}_...: d2 is the smaller, closer-in domain and d1 the larger one
     const hourlyObs = (path, label) => ({
         hours: [null], runs: runs(1, 12), runExact: true, runLabel: label,
         urlFor: r => `${SW}/${path(r)}`,
@@ -264,12 +264,15 @@
             }, SW_SRC),
         },
         sw_obs: {
-            label: 'Observed temperature', models: ['temp', 'trend'],
-            modelLabels: { temp: 'Temperature', trend: '3-hour trend' },
-            title: m => `UW SnowWatch ${m === 'temp' ? 'temperature' : '3-hour temperature trend'}, station ${SW_STATION.toUpperCase()}`,
-            build: m => hourlyObs(r => m === 'temp' ? `plots_obs/${SW_STATION}_t_${ymdh(r)}.png` : `plots_obs/${SW_STATION}_trend3hr_${ymdh(r)}.png`, 'Observation time'),
+            label: 'Observed temperature', models: ['temp_d2', 'trend_d2', 'temp_d1', 'trend_d1'],
+            modelLabels: { temp_d2: 'Temperature, close-in (d2)', trend_d2: '3-hour trend, close-in (d2)', temp_d1: 'Temperature, larger area (d1)', trend_d1: '3-hour trend, larger area (d1)' },
+            title: m => `UW SnowWatch ${m.startsWith('temp') ? 'temperature' : '3-hour temperature trend'}, ${m.endsWith('d2') ? 'close-in (d2)' : 'larger (d1)'} domain`,
+            build: m => {
+                const dom = m.slice(-2), kind = m.startsWith('temp') ? 't' : 'trend3hr';
+                return hourlyObs(r => `plots_obs/sw${dom}_${kind}_${ymdh(r)}.png`, 'Observation time');
+            },
             info: Object.assign({
-                what: 'Recent observed temperature, or how much it has changed over the last 3 hours, at a lowland station from the UW SnowWatch page, updated hourly.',
+                what: 'Recent observed temperature, or how much it has changed over the last 3 hours, from the UW SnowWatch page, updated hourly. The d2 plots cover the smaller, closer-in domain and d1 the larger one.',
                 how: 'Use it to check whether the cold air a forecast needs is actually in place: a falling temperature trend while precipitation arrives is what turns rain to snow at low elevation.',
             }, SW_SRC),
         },
