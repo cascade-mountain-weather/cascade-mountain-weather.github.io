@@ -277,10 +277,14 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 
 /* Popup stays a fraction of the map: scrolls inside, big close target */
 .cmap-popup .leaflet-popup-content-wrapper { overflow: hidden; }
-.cmap-popup .leaflet-popup-content { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cmap-popup .leaflet-popup-content { overflow: auto; max-width: calc(100vw - 60px); overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .cmap-popup .leaflet-popup-close-button {
     width: 36px; height: 36px; top: 0; right: 0; font-size: 26px; line-height: 36px;
     text-align: center; padding: 0; z-index: 2; color: #475569;
 }
 .cmap-popup .cmap-title { padding-right: 28px; }
 .cmap-popup .leaflet-popup-scrolled { border-bottom: 0; }
+
+/* Side-to-side scroll inside the popup when the table is wider than the popup */
+.cmap-popup .cmap-popup-body { min-width: min-content; }
+.cmap-popup .cmap-scroll { overflow-x: visible; }
