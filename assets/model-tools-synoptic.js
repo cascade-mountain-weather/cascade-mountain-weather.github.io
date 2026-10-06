@@ -123,13 +123,95 @@
         },
     };
 
+
+    // ---- UW WRF (University of Washington Atmospheric Sciences) ----
+    // Deterministic: /wrfrt/data/{YYYYMMDDHH}/images_d4/wa_{var}.{FF}.0000.gif
+    // Ensemble mean: /mm5rt/ensembles/{YYYYMMDDHH}/images_d3/{var}.{FF}.mean.gif
+    const UW = 'https://a.atmos.washington.edu';
+    const UW_SRC = { source: 'UW Atmospheric Sciences', sourceUrl: UW + '/wrfrt/' };
+    const uwDet = (v, hours, probeHour) => ({
+        hours, probeHour, runs: runs(12, 6), runExact: true,
+        urlFor: (r, h) => `${UW}/wrfrt/data/${ymdh(r)}/images_d4/wa_${v}.${pad(h, 2)}.0000.gif`,
+        fallbackUrl: UW + '/wrfrt/',
+    });
+    const uwEns = (v, hours, probeHour) => ({
+        hours, probeHour, runs: runs(12, 6), runExact: true,
+        urlFor: (r, h) => `${UW}/mm5rt/ensembles/${ymdh(r)}/images_d3/${v}.${pad(h, 2)}.mean.gif`,
+        fallbackUrl: UW + '/mm5rt/ensembles/',
+    });
+    const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
+    const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
+
+    const UW_PRODUCTS = {
+        uw_snow: {
+            label: 'Snow', models: ['acc', 'p3', 'ens'],
+            modelLabels: { acc: 'Accumulated (WRF)', p3: '3-hour (WRF)', ens: '24-hour (ensemble mean)' },
+            title: m => ({ acc: 'UW WRF accumulated snowfall', p3: 'UW WRF 3-hour snowfall', ens: 'UW WRF ensemble mean 24-hour snowfall' })[m],
+            build: m => ({ acc: uwDet('snowacc', HOURLY48, 3), p3: uwDet('snow3', range(3, 48, 3), 3), ens: uwEns('msnow24', HOURLY_ENS, 24) })[m],
+            info: Object.assign({
+                what: 'Snowfall from the University of Washington WRF model over Washington. The deterministic WRF (the 1.33 km domain) shows either the snow total accumulated through each forecast hour or the snow that falls in each 3-hour period. The ensemble option is the mean of the UW WRF ensemble&rsquo;s 24-hour snowfall.',
+                how: 'Use the accumulated map for totals and the 3-hour map to see when the heaviest bursts hit. Compare the WRF with the ensemble mean: if a single run shows much more snow than the mean, treat it as the high end. ' + ENS_NOTE,
+            }, UW_SRC),
+        },
+        uw_precip: {
+            label: 'Total precip', models: ['det'], modelLabels: { det: 'WRF 1.33 km' },
+            title: () => 'UW WRF total accumulated precipitation',
+            build: () => uwDet('pcpt', HOURLY48, 3),
+            info: Object.assign({
+                what: 'Total accumulated precipitation (rain plus the water in snow) through each forecast hour from the UW WRF model over Washington.',
+                how: 'Compare it with the snow map: where precipitation is high but snow is low, the model has rain or a high snow level. Totals are heavily shaped by terrain, so look at the Cascade crest and windward slopes.',
+            }, UW_SRC),
+        },
+        uw_radar: {
+            label: 'Radar', models: ['det'], modelLabels: { det: 'WRF 1.33 km' },
+            title: () => 'UW WRF simulated radar reflectivity',
+            build: () => uwDet('dbz', HOURLY48, 3),
+            info: Object.assign({
+                what: 'Simulated radar reflectivity from the UW WRF model: what the radar would show if the model were right.',
+                how: 'Step through to see timing of bands and fronts. It is good for the shape and timing of precipitation, but individual bands will not verify exactly, so use it for the pattern.',
+            }, UW_SRC),
+        },
+        uw_wind: {
+            label: 'Wind', models: ['wssfc', 'wsmax', 'jet'],
+            modelLabels: { wssfc: 'Surface wind', wsmax: 'Max wind (gusts)', jet: 'Jet level, 250 mb (ens. mean)' },
+            title: m => ({ wssfc: 'UW WRF surface wind speed and direction', wsmax: 'UW WRF maximum wind', jet: 'UW WRF ensemble mean maximum wind at 250 mb' })[m],
+            build: m => ({ wssfc: uwDet('wssfc', range(0, 48, 1), 0), wsmax: uwDet('wsmax', HOURLY48, 1), jet: uwEns('maxwind250', range(0, 84, 3), 0) })[m],
+            info: Object.assign({
+                what: 'Wind from the UW WRF model: surface wind speed and direction, the maximum (gust-type) wind, or the ensemble mean of the strongest wind at the 250 mb jet level.',
+                how: 'Surface and gust maps show where the wind will be strong at ridgetop and pass level; strong ridgetop wind moves snow and affects lifts. The jet-level map shows the position of the jet stream steering the storms.',
+            }, UW_SRC),
+        },
+        uw_t850: {
+            label: '850 mb temp', models: ['det'], modelLabels: { det: 'WRF 1.33 km' },
+            title: () => 'UW WRF 850 hPa temperature',
+            build: () => uwDet('850t', range(0, 48, 1), 0),
+            info: Object.assign({
+                what: 'Temperature at 850 hPa (about 5,000 feet, near pass level in the Cascades) from the UW WRF model.',
+                how: 'A 0&deg;C line near or below the Cascade crest suggests snow at pass level; warmer than about +3&deg;C usually means rain. Compare it with the CW3E 850 mb maps for the larger pattern.',
+            }, UW_SRC),
+        },
+        uw_cloud: {
+            label: 'Clouds', models: ['low', 'mid', 'high'],
+            modelLabels: { low: '0-3,000 ft', mid: '3,000-10,000 ft', high: '10,000-20,000 ft' },
+            title: m => ({ low: 'UW WRF ensemble mean cloud water, 0-3,000 ft', mid: 'UW WRF ensemble mean cloud water, 3,000-10,000 ft', high: 'UW WRF ensemble mean cloud water, 10,000-20,000 ft' })[m],
+            build: m => ({ low: uwEns('qclst', HOURLY_ENS.concat([0]).sort((a, b) => a - b), 0), mid: uwEns('qcll', HOURLY_ENS.concat([0]).sort((a, b) => a - b), 0), high: uwEns('qclm', HOURLY_ENS.concat([0]).sort((a, b) => a - b), 0) })[m],
+            info: Object.assign({
+                what: 'Ensemble mean cloud water in three layers: the lowest 3,000 ft (valley fog and low stratus), 3,000 to 10,000 ft (the layer covering ski terrain), and 10,000 to 20,000 ft (higher cloud).',
+                how: 'Use the middle layer to see whether the terrain will be in cloud, the low layer to judge valley fog and inversions, and the high layer to judge sunshine and sky color. ' + ENS_NOTE,
+            }, UW_SRC),
+        },
+    };
+
+    const GROUPS = { syn: PRODUCTS, uw: UW_PRODUCTS };
+    const labelOf = (p, m) => (p.modelLabels || MODELS)[m];
     CMWViewer.mount(document.getElementById('viewer'), {
         selectors: [
-            { key: 'product', label: 'Product', options: Object.keys(PRODUCTS).map(k => ({ value: k, label: PRODUCTS[k].label })) },
-            { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models.map(m => ({ value: m, label: MODELS[m] })) },
+            { key: 'src', label: 'Source', options: [{ value: 'syn', label: 'Large-scale models' }, { value: 'uw', label: 'UW WRF (Washington)' }] },
+            { key: 'product', label: 'Product', options: st => Object.keys(GROUPS[st.src]).map(k => ({ value: k, label: GROUPS[st.src][k].label })) },
+            { key: 'model', label: 'Model', options: st => GROUPS[st.src][st.product].models.map(m => ({ value: m, label: labelOf(GROUPS[st.src][st.product], m) })) },
         ],
         resolve(st) {
-            const p = PRODUCTS[st.product];
+            const p = GROUPS[st.src][st.product];
             const m = p.models.includes(st.model) ? st.model : p.models[0];
             return Object.assign({ title: p.title(m), info: p.info }, p.build(m));
         },
