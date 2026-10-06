@@ -249,6 +249,20 @@
                 how: 'Where the temperature profile crosses freezing tells you the freezing level and how deep any cold or warm layer is. A shallow warm layer above a cold surface is the classic setup for freezing rain or sleet.',
             }, SW_SRC),
         },
+        sw_trend: {
+            label: 'Snow level trend (Seattle)', models: ['ksea'], modelLabels: { ksea: 'Sea-Tac (KSEA)' },
+            title: () => 'UW SnowWatch Seattle freezing level and snow level trend',
+            build: () => ({
+                hours: [null], runs: null, runExact: false,
+                latestNote: 'Always the latest. The update time is printed on the figure, in Pacific time.',
+                urlFor: () => `${SW}/plots_fzlev_trend/KSEA_fzlev_trend.png?_=${Math.floor(Date.now() / 600e3)}`,
+                fallbackUrl: SW + '/',
+            }),
+            info: Object.assign({
+                what: 'The last day or so of freezing level and snow level over Seattle, from the UW SnowWatch page. The top panel shows the freezing level estimated from aircraft observations against Capitol Hill, Downtown and sea level; the bottom shows the air and road surface temperature range, with the 32&deg;F line.',
+                how: 'A freezing level (red dots) that is falling toward the hills and downtown during precipitation is the signal for lowland snow. Grey marks mean there is too little aircraft data for an estimate, and a freezing level at the top of the chart (3,000 ft or higher) means rain at any low elevation.',
+            }, SW_SRC),
+        },
         sw_obs: {
             label: 'Observed temperature', models: ['temp', 'trend'],
             modelLabels: { temp: 'Temperature', trend: '3-hour trend' },
