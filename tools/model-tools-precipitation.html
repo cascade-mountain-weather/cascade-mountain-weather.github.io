@@ -1,43 +1,15 @@
 ---
 layout: page
 title: "Precipitation Models | Cascade Mountain Weather"
-description: "Precipitation and snow forecast models for Washington Cascade ski areas. View snow accumulation forecasts for Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more."
-keywords: "Cascade Mountain Weather precipitation, snow forecast models, Washington ski snow forecast, precipitation forecast, mountain snowfall prediction, PNW ski forecast"
-og_description: "Snow and precipitation forecast models for Washington Cascade ski areas."
+description: "Precipitation, snowfall and freezing level forecast models for Washington Cascade ski areas. Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more."
+keywords: "Cascade Mountain Weather precipitation, snow forecast models, Washington ski snow forecast, freezing level forecast, West-WRF, ensemble snowfall, PNW ski forecast"
+og_description: "Snow, precipitation and freezing level forecast models for Washington Cascade ski areas."
 ---
-<section id="ski-areas" class="ski-areas">
-            <h2>Our Forecast Regions</h2>
-            <div class="area-grid">
-                <a href="mt-baker.html" class="area-card">
-                    <h3>Mt. Baker Backcountry Heather Meadows</h3>
-                </a>
-                <a href="stevens-pass.html" class="area-card">
-                    <h3>Stevens Pass</h3>
-                    <p>Central Cascades - I-90 Corridor</p>
-                </a>
-                <a href="snoqualmie-pass.html" class="area-card">
-                    <h3>Snoqualmie Pass</h3>
-                    <p>Summit Central, West, East, Alpental</p>
-                </a>
-                <a href="blewett-pass.html" class="area-card">
-                    <h3>Blewett Pass</h3>
-                    <p>East of Cascades - Backcountry</p>
-                </a>
-                <a href="crystal-mountain.html" class="area-card">
-                    <h3>Crystal Mountain</h3>
-                    <p>Mt. Rainier Area - Largest in WA</p>
-                </a>
-                <a href="paradise.html" class="area-card">
-                    <h3>Paradise - Mt. Rainier</h3>
-                    <p>Muir and Tatoosh Access</p>
-                </a>
-                <a href="white-pass.html" class="area-card">
-                    <h3>White Pass</h3>
-                    <p>South Cascades - US 12 Corridor</p>
-                </a>
-                <a href="washington-pass.html" class="area-card">
-                    <h3>Washington Pass</h3>
-                    <p>North Cascades - WA 20</p>
-                </a>
-            </div>
-        </section>
+<link rel="stylesheet" href="{{ '/assets/model-viewer.css' | relative_url }}">
+<section class="hero">
+    <h1 class="PlotTitle">Precipitation &amp; Freezing Level Tools</h1>
+    <p>Choose an area and a product. Ensemble plots show many model runs at once, so the <em>spread</em> between lines is your confidence: tight means the models agree, wide means they do not.</p>
+    <div id="viewer"></div>
+</section>
+<script src="{{ '/assets/model-viewer.js' | relative_url }}"></script>
+<script src="{{ '/assets/model-tools-precipitation.js' | relative_url }}"></script>
