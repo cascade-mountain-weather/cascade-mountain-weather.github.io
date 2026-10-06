@@ -2,7 +2,7 @@ name: Update Satellite Looper
 
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "0 */3 * * *" # every 3 hours; the loop covers 24 hours, and each run adds about 1.5 MB to the repository history
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           python scripts/build_cod_satellite_loop.py \
             --url "https://weather.cod.edu/satrad/?parms=subregional-Pac_NW-truecolor-24-1-100-4&checked=radar-ushw-usint-map&colorbar=undefined" \
             --output-dir assets/images/satellite \
-            --gif-name cod_nw_truecolor_radar.gif \
+            --no-gif \
             --manifest-name satellite_manifest.json \
             --frames-subdir frames \
             --max-frames 12 \
@@ -47,7 +47,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git add assets/images/satellite/cod_nw_truecolor_radar.gif
           git add assets/images/satellite/latest_frame.webp
           git add assets/images/satellite/frames
           git add assets/images/satellite/satellite_manifest.json

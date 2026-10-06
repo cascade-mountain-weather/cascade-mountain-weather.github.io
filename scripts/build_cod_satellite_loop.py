@@ -90,6 +90,7 @@ def main() -> None:
     )
     parser.add_argument("--output-dir", default="assets/images/satellite", help="Output directory for gif/frames/manifest")
     parser.add_argument("--gif-name", default="cod_nw_truecolor_radar.gif", help="Output GIF filename")
+    parser.add_argument("--no-gif", action="store_true", help="Skip the GIF (the page animates from the WebP frames; a 4 MB GIF committed every run was filling the repository)")
     parser.add_argument("--manifest-name", default="satellite_manifest.json", help="Output manifest filename")
     parser.add_argument("--frames-subdir", default="frames", help="Subdirectory for extracted frame PNGs")
     parser.add_argument("--max-frames", type=int, default=24, help="Maximum number of newest frames to keep")
@@ -211,7 +212,8 @@ def main() -> None:
         else:
             base.save(frame_path, format="PNG", optimize=True)
 
-        gif_images.append(base.convert("P", palette=Image.ADAPTIVE))
+        if not args.no_gif:
+            gif_images.append(base.convert("P", palette=Image.ADAPTIVE))
         manifest_frames.append(
             {
                 "index": idx,
@@ -229,23 +231,24 @@ def main() -> None:
         latest_img = Image.open(latest_src)
         latest_img.save(latest_frame_path, format="WEBP", quality=min(90, max(60, args.frame_quality + 5)), method=6)
 
-    if not gif_images:
+    if not manifest_frames:
         raise RuntimeError("No frames could be built")
 
-    gif_images[0].save(
-        gif_path,
-        save_all=True,
-        append_images=gif_images[1:],
-        duration=args.delay_ms,
-        loop=0,
-        optimize=False,
-        disposal=2,
-    )
+    if not args.no_gif:
+        gif_images[0].save(
+            gif_path,
+            save_all=True,
+            append_images=gif_images[1:],
+            duration=args.delay_ms,
+            loop=0,
+            optimize=False,
+            disposal=2,
+        )
 
     manifest = {
         "updated_utc": datetime.now(timezone.utc).isoformat(),
         "source_url": args.url,
-        "gif_file": args.gif_name,
+        "gif_file": None if args.no_gif else args.gif_name,
         "latest_frame_file": args.latest_frame_name,
         "frame_count": len(manifest_frames),
         "frames": manifest_frames,
@@ -253,7 +256,8 @@ def main() -> None:
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     print(f"Built loop with {len(manifest_frames)} frames")
-    print(f"GIF: {gif_path}")
+    if not args.no_gif:
+        print(f"GIF: {gif_path}")
     print(f"Manifest: {manifest_path}")
 
 

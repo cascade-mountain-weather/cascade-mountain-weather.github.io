@@ -25,8 +25,6 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
     <p id="satellite-status" class="satellite-status">Loading latest satellite loop…</p>
     <p id="satellite-timing" class="satellite-timing">Time range and frame interval will appear after load.</p>
     <p class="satellite-links">
-        <a id="satellite-gif-link" href="{{ '/assets/images/satellite/cod_nw_truecolor_radar.gif' | relative_url }}" target="_blank" rel="noopener noreferrer">Open full GIF</a>
-        <span class="dot-sep">|</span>
         <a href="https://weather.cod.edu/satrad/?parms=regional-w_northwest-truecolor-24-1-100-4&checked=radar-map&colorbar=undefined" target="_blank" rel="noopener noreferrer">Source: College of DuPage SatRad</a>
     </p>
 </section>
@@ -41,7 +39,6 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
         const nextEl = document.getElementById('satellite-next');
         const playEl = document.getElementById('satellite-play');
         const pauseEl = document.getElementById('satellite-pause');
-        const gifLinkEl = document.getElementById('satellite-gif-link');
 
         if (!frameEl || !statusEl || !scrubberEl || !prevEl || !nextEl || !playEl || !pauseEl || !timingEl) {
             return;
@@ -191,10 +188,6 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
                     }
                 }
 
-                const gifFile = manifest.gif_file || 'cod_nw_truecolor_radar.gif';
-                if (gifLinkEl) {
-                    gifLinkEl.href = `{{ '/assets/images/satellite/' | relative_url }}${gifFile}`;
-                }
             } catch (err) {
                 frames = [{ src: fallbackStaticPath, durationMs: 1000 }];
                 scrubberEl.max = '0';
