@@ -9,7 +9,7 @@
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: #ffffff;
     border-radius: 8px 8px 0 0;
-    margin: -2rem -2rem 2rem -2rem;
+    margin: -2rem -2rem 0.75rem -2rem;
 }
 
 /* Header block, top to bottom: blog name (largest), "In this week's edition: title", subtitle, then
@@ -89,6 +89,23 @@
 
 .post-content {
     line-height: 1.8;
+    /* A readable column: about 75 characters a line, with space either side on wide screens */
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+/* Keep the gap under the blue header small: the first block (often a nested card with its own padding and a
+   highlight box) should not add another 50px of air */
+.post-content > :first-child {
+    margin-top: 0;
+}
+
+.post-content > section:first-child {
+    padding-top: 0.5rem;
+}
+
+.post-content > section:first-child > .highlight-box:first-child {
+    margin-top: 0.5rem;
 }
 
 .forecast-section {
@@ -370,13 +387,19 @@ p {
 @media (max-width: 768px) {
     .post-header {
         padding: 1.25rem 1.5rem;
-        margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+        margin: -1.5rem -1.5rem 0.75rem -1.5rem;
     }
 
     .post-meta {
         flex-direction: column;
         align-items: center;
         gap: 0.35rem;
+    }
+
+    /* The nested discussion card does not need a second layer of side padding on a phone */
+    .post-content > section {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     
     .forecast-section h2 {
