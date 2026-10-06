@@ -44,9 +44,12 @@ def newest_long_cycle(hours):
         if cycle.hour not in nbm.LONG_CYCLES:
             continue
         try:
-            if len(nbm.herbie_for(cycle, check).inventory()) > 10:
+            n = len(nbm.herbie_for(cycle, check).inventory())
+            print(f"  cycle {cycle:%Y-%m-%d %H}Z F{check:03d}: {n} messages", file=sys.stderr)
+            if n > 10:
                 return cycle
-        except Exception:
+        except Exception as exc:  # say why, so a failed scheduled run explains itself
+            print(f"  cycle {cycle:%Y-%m-%d %H}Z F{check:03d}: {str(exc)[:100]!r}", file=sys.stderr)
             continue
     sys.exit("no long NBM cycle with the needed forecast hour found")
 
