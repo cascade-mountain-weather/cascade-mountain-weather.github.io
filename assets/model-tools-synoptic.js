@@ -202,11 +202,70 @@
         },
     };
 
-    const GROUPS = { syn: PRODUCTS, uw: UW_PRODUCTS };
+
+    // ---- Lowland snow: UW SnowWatch (University of Washington Atmospheric Sciences) ----
+    const SW = 'https://a.atmos.washington.edu/SNOWWATCH';
+    const SW_SRC = { source: 'UW SnowWatch', sourceUrl: SW + '/' };
+    const SW_STATION = 'swd2'; // observing station for the temperature plots; change here if you want another
+    const hourlyObs = (path, label) => ({
+        hours: [null], runs: runs(1, 12), runExact: true, runLabel: label,
+        urlFor: r => `${SW}/${path(r)}`,
+        fallbackUrl: SW + '/',
+    });
+    const LOW_PRODUCTS = {
+        sw_ens: {
+            label: 'Ensemble', models: ['latest'], modelLabels: { latest: 'Latest' },
+            title: () => 'UW SnowWatch real-time ensemble',
+            build: () => ({
+                hours: [null], runs: null, runExact: false,
+                latestNote: 'Always the latest. The time is printed on the figure.',
+                urlFor: () => `${SW}/plots_rtens/latest.png?t=${Math.floor(Date.now() / 600e3)}`,
+                fallbackUrl: SW + '/',
+            }),
+            info: Object.assign({
+                what: 'The UW SnowWatch real-time ensemble for lowland snow around Puget Sound, from the University of Washington. It is aimed at the forecast questions that matter on a marginal day: will it snow at sea level, and how much?',
+                how: 'Look at how many ensemble members bring snow and how much they disagree. Most members snowing means lowland snow is likely; a split means a marginal setup that can go either way.',
+            }, SW_SRC),
+        },
+        sw_wrf: {
+            label: 'WRF snow forecast', models: ['d4'], modelLabels: { d4: 'WRF 1.33 km' },
+            title: () => 'UW WRF lowland snow forecast',
+            build: () => ({
+                hours: range(3, 48, 3), probeHour: 24, runs: runs(12, 6), runExact: true,
+                urlFor: (r, h) => `${SW}/plots_forecasts/WRF_${ymdh(r)}_d4_f${pad(h, 3)}_Z3_SNOW3.png`,
+                fallbackUrl: SW + '/',
+            }),
+            info: Object.assign({
+                what: 'Forecast snowfall from the UW WRF model, zoomed on the lowlands of western Washington, from the SnowWatch page.',
+                how: 'Step through the hours to see when and where the snow is forecast to fall at low elevation. A single model run is a single scenario: check it against the ensemble before trusting it.',
+            }, SW_SRC),
+        },
+        sw_frz: {
+            label: 'Temp and height (KSEA)', models: ['ksea'], modelLabels: { ksea: 'Sea-Tac (KSEA)' },
+            title: () => 'UW SnowWatch temperature and height, Sea-Tac',
+            build: () => hourlyObs(r => `plots_temp_ht/KSEA_${ymdh(r)}.png`, 'Observation time'),
+            info: Object.assign({
+                what: 'Temperature versus height over Sea-Tac (KSEA) from the UW SnowWatch page, updated every hour.',
+                how: 'Where the temperature profile crosses freezing tells you the freezing level and how deep any cold or warm layer is. A shallow warm layer above a cold surface is the classic setup for freezing rain or sleet.',
+            }, SW_SRC),
+        },
+        sw_obs: {
+            label: 'Observed temperature', models: ['temp', 'trend'],
+            modelLabels: { temp: 'Temperature', trend: '3-hour trend' },
+            title: m => `UW SnowWatch ${m === 'temp' ? 'temperature' : '3-hour temperature trend'}, station ${SW_STATION.toUpperCase()}`,
+            build: m => hourlyObs(r => m === 'temp' ? `plots_obs/${SW_STATION}_t_${ymdh(r)}.png` : `plots_obs/${SW_STATION}_trend3hr_${ymdh(r)}.png`, 'Observation time'),
+            info: Object.assign({
+                what: 'Recent observed temperature, or how much it has changed over the last 3 hours, at a lowland station from the UW SnowWatch page, updated hourly.',
+                how: 'Use it to check whether the cold air a forecast needs is actually in place: a falling temperature trend while precipitation arrives is what turns rain to snow at low elevation.',
+            }, SW_SRC),
+        },
+    };
+
+    const GROUPS = { syn: PRODUCTS, uw: UW_PRODUCTS, low: LOW_PRODUCTS };
     const labelOf = (p, m) => (p.modelLabels || MODELS)[m];
     CMWViewer.mount(document.getElementById('viewer'), {
         selectors: [
-            { key: 'src', label: 'Source', options: [{ value: 'syn', label: 'Large-scale models' }, { value: 'uw', label: 'UW WRF (Washington)' }] },
+            { key: 'src', label: 'Source', options: [{ value: 'syn', label: 'Large-scale models' }, { value: 'uw', label: 'UW WRF (Washington)' }, { value: 'low', label: 'Lowland snow' }] },
             { key: 'product', label: 'Product', options: st => Object.keys(GROUPS[st.src]).map(k => ({ value: k, label: GROUPS[st.src][k].label })) },
             { key: 'model', label: 'Model', options: st => GROUPS[st.src][st.product].models.map(m => ({ value: m, label: labelOf(GROUPS[st.src][st.product], m) })) },
         ],

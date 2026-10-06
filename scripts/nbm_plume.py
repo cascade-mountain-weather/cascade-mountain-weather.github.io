@@ -4,6 +4,8 @@
     python scripts/nbm_plume.py                 # newest long NBM cycle, 5 days
     python scripts/nbm_plume.py --hours 96 --cycle "2026-10-06 13:00"
 
+It also records NBM total cloud cover (percent, deterministic) every 3 hours for the same sites.
+
 Output: assets/data/nbm_plumes.json (under assets/ so the site can serve it; bot-generated, do not hand-edit).
 
 This reuses the Herbie helpers in scripts/nbm_snapshot.py (see docs/nbm_fields.md for what each NBM file
@@ -56,6 +58,11 @@ def window_ends(cycle, hours):
     return ends
 
 
+def cloud_hours(hours):
+    """Forecast hours that have a real NBM file: hourly to F48, then every 3rd hour starting at F50."""
+    return list(range(3, 49, 3)) + list(range(50, hours + 1, 3))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cycle", help='UTC cycle, e.g. "2026-10-06 13:00" (default: newest long cycle)')
@@ -86,19 +93,30 @@ def main():
             for key, src in (("p25", "p25"), ("p50", "p50"), ("p75", "p75"), ("det", "deterministic")):
                 d[key].append(nbm.r(w[src][k]) if w.get(src) is not None else None)
 
+    # total cloud cover (percent) every 3 hours
+    cloud_times, cloud = [], {s["name"]: [] for s in sites}
+    for f in cloud_hours(args.hours):
+        H = nbm.herbie_for(cycle, f)
+        vals = nbm.fetch(H, grid, rf":TCDC:surface:{f} hour fcst:$")
+        cloud_times.append(f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}")
+        for k, site in enumerate(sites):
+            cloud[site["name"]].append(nbm.r(vals[k], 0))
+    print(f"  cloud cover: {len(cloud_times)} times ({time.time() - t0:.0f}s)")
+
     out = {
         "schema": 1,
         "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
         "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}",
         "window_hours": WINDOW_H,
         "window_end_utc": [f"{e:%Y-%m-%dT%H:%MZ}" for e in ends],
-        "units": "inches of snow per window",
+        "units": "inches of snow per window; cloud cover in percent",
+        "cloud_time_utc": cloud_times,
         "notes": [
             "NBM core CONUS (2.5 km), nearest grid point to each site; not corrected for elevation.",
             "p25/p50/p75 are percentiles of the NBM blend for each 6-hour window ending at the listed time.",
             "Percentiles of consecutive windows do not add; cumulative curves built from them are approximate.",
         ],
-        "sites": {name: {"km_to_grid_point": grid.km[i], **per_site[name]} for i, name in enumerate(per_site)},
+        "sites": {name: {"km_to_grid_point": grid.km[i], **per_site[name], "cloud_pct": cloud[name]} for i, name in enumerate(per_site)},
     }
     path = Path(args.out) if args.out else OUT
     path.parent.mkdir(parents=True, exist_ok=True)
