@@ -1346,3 +1346,119 @@ nav a,
 .data-disclaimer p {
     margin: 0 0 0.5rem;
 }
+
+/* "Under development" flag on pages that are still being built */
+.dev-banner {
+    max-width: 1100px;
+    margin: 1rem auto 0;
+    padding: 0.7rem 1rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-left-width: 5px;
+    border-radius: 6px;
+    color: #78350f;
+    font-size: 0.95rem;
+}
+.dev-tag {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0 0.4rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 999px;
+    color: #78350f;
+    font-size: 0.7rem;
+    font-weight: 700;
+    vertical-align: 1px;
+    white-space: nowrap;
+}
+
+/* Long-term outlook and in-house model pages */
+.lt-page {
+    max-width: 1100px;
+    margin: 1rem auto;
+}
+.lt-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+}
+.lt-card h2 {
+    color: #1e3c72;
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem;
+}
+.lt-card h3 {
+    color: #1e3c72;
+    font-size: 1.05rem;
+    margin: 1rem 0 0.4rem;
+}
+.lt-card p, .lt-card li {
+    line-height: 1.6;
+}
+.lt-card ul {
+    margin: 0.4rem 0 0.4rem 1.25rem;
+}
+.lt-figs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin: 0.75rem 0;
+}
+.lt-figs figure {
+    margin: 0;
+}
+.lt-figs img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+}
+.lt-figs figcaption {
+    font-size: 0.85rem;
+    color: #475569;
+    margin-top: 0.3rem;
+}
+.lt-planned {
+    border-left: 4px solid #94a3b8;
+    background: #f8fafc;
+    padding: 0.6rem 1rem;
+    margin: 0.75rem 0;
+    border-radius: 0 6px 6px 0;
+}
+.lt-planned h3 {
+    margin-top: 0;
+}
+.lt-hub {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.lt-hub a {
+    display: block;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    padding: 1rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    border-top: 4px solid #2a5298;
+}
+.lt-hub a:hover {
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.18);
+}
+.lt-hub strong {
+    display: block;
+    color: #1e3c72;
+    font-size: 1.05rem;
+    margin-bottom: 0.25rem;
+}
+.lt-hub span {
+    font-size: 0.9rem;
+    color: #475569;
+}

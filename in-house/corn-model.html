@@ -1,0 +1,27 @@
+---
+layout: page
+title: "Corn Snow Model | Cascade Mountain Weather"
+description: "A model for when and where spring snow refreezes and softens into corn, for Washington Cascades ski areas."
+disclaimer: true
+under_development: true
+---
+<div class="lt-page">
+<section class="hero">
+    <h1 class="PlotTitle">{{ site.corn_model_name }}: Corn Snow Model</h1>
+    <p>Good corn needs a hard overnight refreeze and a daytime thaw that softens the surface to the right depth, without turning it to mush. This model will estimate that window.</p>
+</section>
+
+<div class="lt-card">
+    <h2>What it will do</h2>
+    <ul>
+        <li>Estimate how well the snow surface refreezes overnight at each area, from forecast low temperatures, cloud cover and wind.</li>
+        <li>Estimate when it softens the next day, from forecast temperature, sun and the freezing level.</li>
+        <li>Give a rough &ldquo;corn window&rdquo; for each area, with the uncertainty shown.</li>
+    </ul>
+</div>
+
+<div class="lt-card">
+    <h2>What it needs</h2>
+    <p>The NBM forecast we already pull for each area, soundings for the freezing level, and observations from the SNOTEL and NWAC stations to check how the model did after the fact. Aspect and elevation matter a lot for corn, so the first version may only cover broad ranges of both.</p>
+</div>
+</div>

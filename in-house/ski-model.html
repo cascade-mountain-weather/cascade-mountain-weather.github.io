@@ -1,0 +1,27 @@
+---
+layout: page
+title: "Ski Recommendation Model | Cascade Mountain Weather"
+description: "A model that recommends where and when to ski in the Washington Cascades from the forecast."
+disclaimer: true
+under_development: true
+---
+<div class="lt-page">
+<section class="hero">
+    <h1 class="PlotTitle">{{ site.ski_model_name }}: Ski Recommendation Model</h1>
+    <p>Our forecast for the weekend, boiled down to a recommendation: where to go, and when, for the kind of day you want. The name is a working title.</p>
+</section>
+
+<div class="lt-card">
+    <h2>What it will do</h2>
+    <ul>
+        <li>Score each area and day from the forecast: new snow, snow level, temperature, wind, cloud cover and visibility.</li>
+        <li>Rank the areas for the weekend, and say why.</li>
+        <li>Check itself: we will score its past picks against what was observed, the same way the <a href="{{ '/evaluation.html' | relative_url }}">forecast evaluation</a> scores our snowfall ranges.</li>
+    </ul>
+</div>
+
+<div class="lt-card">
+    <h2>Still to decide</h2>
+    <p>What counts as a good day for different kinds of skiers (powder, corn, a touring day, a resort day), how to weigh each factor, and which data it uses.</p>
+</div>
+</div>
