@@ -15,7 +15,12 @@ body {
 /* Header */
 header {
     /* Use scenic photo with a subtle dark overlay so white text remains readable */
-    background: linear-gradient(rgba(16,32,64,0.45), rgba(16,32,64,0.25)), url('assets/images/snoq_pass_view.JPG');
+    /* The photo shows through: a navy wash that is strongest behind the logo and text, easing off to the right
+       and fading into the page's blue at the bottom edge */
+    background:
+        linear-gradient(to bottom, rgba(16,32,64,0) 55%, rgba(30,60,114,0.55) 100%),
+        linear-gradient(to right, rgba(16,32,64,0.62) 0%, rgba(16,32,64,0.3) 55%, rgba(16,32,64,0.12) 100%),
+        url('assets/images/snoq_pass_view.JPG');
     background-size: cover;
     background-position: center center;
     color: white;
@@ -31,6 +36,21 @@ header h1 {
     margin-bottom: 0.5rem;
 }
 
+/* The site header only (not the post header): logo and tagline side by side */
+.header-full,
+.header-compact {
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+}
+
+.header-full h1,
+.header-compact h1 {
+    margin-bottom: 0;
+}
+
 .header-home-link {
     display: block;
     color: inherit;
@@ -44,7 +64,6 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 0.35rem;
 }
 
 .cmw-header-main-logo {
@@ -64,9 +83,38 @@ header h1 {
     text-shadow: 0 1px 3px rgba(0,0,0,0.45);   /* keeps the text readable over the photo */
 }
 
-/* Stacked, one phrase per line */
+/* Full header (home page): logo on the left, the tagline stacked beside it, one phrase per line */
+.header-full .tagline {
+    text-align: left;
+}
+
 .tagline span {
     display: block;
+}
+
+/* Inner pages: a slim bar, small logo with the tagline on one line */
+.header-compact {
+    padding: 0.4rem 1rem;
+    gap: 0.9rem;
+}
+
+.header-compact .cmw-header-main-logo {
+    width: 54px;
+}
+
+.header-compact .tagline {
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.header-compact .tagline span {
+    display: inline;
+}
+
+@media (max-width: 700px) {
+    .header-compact .tagline {
+        display: none;
+    }
 }
 
 /* Buy Me a Coffee Button */
@@ -96,6 +144,10 @@ header h1 {
         width: clamp(80px, 24vw, 105px);
     }
 
+    .header-compact .cmw-header-main-logo {
+        width: 46px;
+    }
+
     .tagline {
         font-size: 1rem;
     }
@@ -113,6 +165,16 @@ header h1 {
 @media (max-width: 480px) {
     .cmw-header-main-logo {
         width: clamp(78px, 28vw, 110px);
+    }
+
+    /* Narrow phones: logo above the text again */
+    .header-full {
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .header-full .tagline {
+        text-align: center;
     }
 }
 
