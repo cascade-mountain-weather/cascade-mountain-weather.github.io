@@ -1,0 +1,108 @@
+/* Forecast evaluation page (see assets/evaluation.js) */
+
+.eval { max-width: 1100px; margin: 0 auto; padding: 0 1rem 2rem; color: #0f172a; }
+.eval h2 { margin-bottom: 0.25rem; }
+.eval h3 { margin: 2rem 0 0.5rem; color: #1e3c72; }
+.eval-banner { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.9rem; margin: 1rem 0; }
+.eval-lede { color: #475569; max-width: 60rem; }
+.eval-sub { color: #64748b; font-size: 0.8rem; margin: 0.2rem 0 0.4rem; }
+.eval-status { color: #64748b; font-style: italic; }
+
+/* Controls: same look as the site's other selectors */
+.eval-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.25rem; margin: 0.6rem 0; }
+.eval-controls label { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; color: #1e3c72; }
+.eval select {
+    appearance: none; -webkit-appearance: none;
+    min-width: 11rem; max-width: 100%; padding: 0.4rem 2rem 0.4rem 0.6rem;
+    border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #0f172a; font-size: 0.95rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%231e3c72" viewBox="0 0 16 16"><path d="M4.646 6.646a.5.5 0 0 1 .708 0L8 9.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 16px 16px;
+}
+.eval select:focus { outline: none; border-color: #1e3c72; box-shadow: 0 0 0 3px rgba(30,60,114,0.15); }
+.eval-toggles { display: inline-flex; gap: 0.9rem; font-size: 0.9rem; }
+.eval-toggles label { font-weight: 500; color: #334155; gap: 0.3rem; }
+
+/* Trackers */
+.eval-trackers { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; margin: 0.4rem 0 0; }
+.eval-card { border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.8rem 0.9rem; background: #fff; }
+.eval-card--off { background: #f8fafc; color: #94a3b8; border-style: dashed; }
+.eval-card h4 { margin: 0; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: baseline; }
+.eval-card .eval-rank { font-size: 0.72rem; font-weight: 600; color: #64748b; }
+.eval-big { font-size: 1.9rem; font-weight: 700; color: #1e3c72; line-height: 1.15; }
+.eval-big small { font-size: 0.8rem; font-weight: 500; color: #64748b; }
+.eval-lines { font-size: 0.8rem; color: #334155; margin: 0.35rem 0 0; padding: 0; list-style: none; }
+.eval-lines li { margin: 0.1rem 0; }
+.eval-lines .eval-ci { color: #64748b; }
+.eval-note { font-size: 0.75rem; color: #64748b; margin-top: 0.35rem; }
+
+/* Heatmap + map */
+.eval-region { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr); gap: 1.25rem; align-items: start; }
+.eval-heat table { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 0.85rem; }
+.eval-heat th { text-align: left; font-weight: 600; padding: 0.3rem 0.4rem; color: #334155; }
+.eval-heat thead th { text-align: center; font-size: 0.78rem; }
+.eval-heat td { text-align: center; padding: 0.45rem 0.3rem; border-radius: 4px; font-variant-numeric: tabular-nums; cursor: pointer; }
+.eval-heat td small { display: block; font-size: 0.65rem; opacity: 0.75; }
+.eval-heat tr.is-selected th, .eval-heat tr.is-selected td { outline: 2px solid #1e3c72; outline-offset: -1px; }
+.eval-heat tr.is-all th { border-top: 1px solid #cbd5e1; }
+.eval-heat tbody th { cursor: pointer; white-space: nowrap; }
+.eval-mapwrap { position: sticky; top: 1rem; }
+#eval-map { height: 380px; border: 1px solid #cbd5e1; border-radius: 8px; background: #e2e8f0; }
+.eval-legend { margin-top: 0.4rem; }
+.eval-legend-bar { height: 0.55rem; border-radius: 3px; border: 1px solid #cbd5e1; }
+.eval-legend-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: #475569; margin-top: 0.15rem; }
+
+/* Weekend plot */
+.eval-scroll { overflow-x: auto; }
+#eval-plot svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.ep-grid { stroke: #e2e8f0; stroke-width: 1; }
+.ep-zero { stroke: #0f172a; stroke-width: 1.2; }
+.ep-axis { font-size: 10px; fill: #64748b; }
+.ep-col { fill: transparent; cursor: pointer; }
+.ep-col:hover, .ep-col.is-sel { fill: rgba(30, 60, 114, 0.09); }
+.ep-obs { fill: #94a3b8; fill-opacity: 0.45; }
+.ep-obsmid { stroke: #475569; stroke-width: 2; }
+.eval-key { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.78rem; color: #475569; margin: 0.3rem 0 0; }
+.eval-key i { display: inline-block; width: 0.9rem; height: 0.6rem; margin-right: 0.3rem; vertical-align: middle; border-radius: 2px; }
+.eval-detail { margin-top: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.8rem 1rem; background: #fff; }
+.eval-detail[hidden] { display: none; }
+.eval-detail h4 { margin: 0 0 0.2rem; color: #1e3c72; }
+.eval-detail svg { display: block; max-width: 520px; width: 100%; height: auto; }
+.ed-close { float: right; border: 0; background: transparent; font-size: 1.5rem; line-height: 1; color: #475569; cursor: pointer; }
+
+/* Stats table */
+.eval-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.eval-table th, .eval-table td { padding: 0.45rem 0.6rem; text-align: right; border-bottom: 1px solid #e2e8f0; }
+.eval-table th:first-child, .eval-table td:first-child { text-align: left; }
+.eval-table thead th { color: #475569; font-size: 0.78rem; border-bottom: 2px solid #cbd5e1; }
+.eval-table .eval-ci { color: #64748b; font-size: 0.75rem; }
+
+/* Events */
+.eval-events { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.eval-conf { border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.7rem 0.9rem; background: #fff; }
+.eval-conf h4 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+.eval-conf table { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: 0.8rem; text-align: center; }
+.eval-conf th { font-weight: 600; color: #475569; font-size: 0.72rem; padding: 0.15rem; }
+.eval-conf td { border-radius: 5px; padding: 0.5rem 0.2rem; font-size: 1.15rem; font-weight: 700; }
+.eval-conf td small { display: block; font-size: 0.65rem; font-weight: 500; }
+.ec-hit { background: #bfdbfe; } .ec-miss { background: #fecaca; } .ec-fa { background: #fed7aa; } .ec-cn { background: #e2e8f0; }
+.eval-conf p { margin: 0.4rem 0 0; font-size: 0.75rem; color: #475569; }
+
+/* Snow level */
+.eval-snow { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.eval-snow svg { display: block; width: 100%; height: auto; }
+.eval-snow .eval-card h4 { margin-bottom: 0.2rem; }
+.sp-pt { fill-opacity: 0.55; }
+
+.eval-method { color: #334155; font-size: 0.9rem; max-width: 60rem; }
+.eval-method li { margin: 0.35rem 0; }
+
+@media (max-width: 900px) {
+    .eval-region { grid-template-columns: 1fr; }
+    .eval-mapwrap { position: static; }
+    #eval-map { height: 300px; }
+    .eval-controls { display: grid; grid-template-columns: 1fr; }
+    .eval-controls label { display: grid; grid-template-columns: 6rem 1fr; }
+    .eval select { width: 100%; min-width: 0; padding: 0.55rem 2rem 0.55rem 0.7rem; font-size: 1rem; }
+    .eval-toggles { flex-wrap: wrap; }
+}
