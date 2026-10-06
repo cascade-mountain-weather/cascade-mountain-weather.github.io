@@ -72,6 +72,7 @@
                 <button type="button" class="mv-btn mv-speed" aria-label="Playback speed">1\u00d7</button>
             </div>
             <div class="mv-time" aria-live="polite"></div>
+            <figure class="mv-extra" hidden><img class="mv-extra-img" alt="" /><figcaption></figcaption></figure>
             <details class="mv-info" open>
                 <summary>What this shows</summary>
                 <div class="mv-info-body"></div>
@@ -89,6 +90,7 @@
         const infoBody = $('.mv-info-body'), guideBody = $('.mv-timeguide-body');
 
         let view = null, run = null, idx = 0, timer = null, token = 0;
+        const missing = new Set();
         const speeds = [1000, 500, 250];
         let speedI = 0;
 
@@ -186,13 +188,17 @@
         window.addEventListener('resize', () => { if (view && run) renderDays(); });
 
         function show(i, opts) {
+            opts = opts || {};
+            const dir = opts.dir || 1, n = view.hours.length;
             const t = ++token;
-            idx = (i + view.hours.length) % view.hours.length;
+            idx = (i % n + n) % n;
+            // step past frames already known to be missing
+            for (let k = 0; k < n && missing.has(idx); k++) idx = (idx + dir + n) % n;
             slider.value = idx;
             const url = view.urlFor(run, view.hours[idx]);
             failEl.hidden = true;
             img.classList.add('is-loading');
-            if (!opts || !opts.quiet) loadingEl.hidden = false;
+            if (!opts.quiet) loadingEl.hidden = false;
             const pre = new Image();
             pre.onload = () => {
                 if (t !== token) return;
@@ -201,10 +207,15 @@
                 img.classList.remove('is-loading');
                 loadingEl.hidden = true;
                 renderTimes();
-                if (opts && opts.then) opts.then();
+                if (opts.then) opts.then();
             };
             pre.onerror = () => {
                 if (t !== token) return;
+                // a frame the source does not have: remember it and move on to the next one
+                if (n > 1 && missing.size < n - 1) {
+                    missing.add(idx);
+                    return show(idx + dir, Object.assign({}, opts));
+                }
                 stop();
                 img.classList.remove('is-loading');
                 loadingEl.hidden = true;
@@ -256,8 +267,16 @@
         async function load() {
             stop();
             view = cfg.resolve(state);
+            missing.clear();
             titleEl.textContent = view.title;
             renderInfo();
+            const extra = $('.mv-extra');
+            if (view.extraImg) {
+                $('.mv-extra-img').src = view.extraImg.url;
+                $('.mv-extra-img').alt = view.extraImg.caption;
+                extra.querySelector('figcaption').textContent = view.extraImg.caption;
+                extra.hidden = false;
+            } else extra.hidden = true;
             const multi = view.hours.length > 1;
             controls.hidden = !multi;
             slider.max = view.hours.length - 1;
@@ -271,7 +290,7 @@
                 const t = ++token;
                 loadingEl.hidden = false;
                 for (const r of view.runs) {
-                    if (await probe(view.urlFor(r, view.hours[0]))) { run = r; break; }
+                    if (await probe(view.urlFor(r, view.probeHour != null ? view.probeHour : view.hours[0]))) { run = r; break; }
                     if (t !== token) return;
                 }
                 if (!run) { loadingEl.hidden = true; fail(); renderTimes(); renderDays(); return; }
@@ -290,7 +309,7 @@
         }
 
         // controls
-        $('.mv-prev').addEventListener('click', () => { stop(); show(idx - 1); });
+        $('.mv-prev').addEventListener('click', () => { stop(); show(idx - 1, { dir: -1 }); });
         $('.mv-next').addEventListener('click', () => { stop(); show(idx + 1); });
         playBtn.addEventListener('click', play);
         speedBtn.addEventListener('click', () => {
@@ -307,13 +326,13 @@
             if (sx == null || view.hours.length < 2) return;
             const dx = e.changedTouches[0].clientX - sx;
             sx = null;
-            if (Math.abs(dx) > 50) { stop(); show(idx + (dx < 0 ? 1 : -1)); }
+            if (Math.abs(dx) > 50) { stop(); const d = dx < 0 ? 1 : -1; show(idx + d, { dir: d }); }
         }, { passive: true });
 
         // keyboard: arrows step, space plays, when focus is inside the viewer
         root.addEventListener('keydown', e => {
             if (view.hours.length < 2 || /^(SELECT|INPUT)$/.test(e.target.tagName) && e.key === ' ') return;
-            if (e.key === 'ArrowLeft') { e.preventDefault(); stop(); show(idx - 1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); stop(); show(idx - 1, { dir: -1 }); }
             else if (e.key === 'ArrowRight') { e.preventDefault(); stop(); show(idx + 1); }
         });
 

@@ -1,14 +1,15 @@
 /* Shared model viewer (see assets/model-viewer.js) */
-.mv { max-width: 1000px; margin: 0 auto; padding: 0 0.25rem 2rem; color: #0f172a; }
+.mv { width: 100%; max-width: 1000px; min-width: 0; box-sizing: border-box; margin: 0 auto; padding: 0 0 2rem; color: #0f172a; overflow-x: clip; }
+.mv *, .mv *::before, .mv *::after { box-sizing: border-box; }
+.mv > * { min-width: 0; max-width: 100%; }
 .mv-selectors { display: flex; flex-direction: column; gap: 0.7rem; margin: 0 0 1rem; }
-.mv-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.mv-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; max-width: 100%; }
 .mv-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
-.mv-chips { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.mv-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; min-width: 0; }
 .mv-chip {
-    flex: 0 0 auto; min-height: 40px; padding: 0 1rem; border-radius: 999px;
+    flex: 0 1 auto; min-height: 40px; padding: 0 0.9rem; border-radius: 999px;
     border: 1px solid #cbd5e1; background: #fff; color: #1e3c72;
-    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; white-space: nowrap;
-}
+    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .mv-chip:hover { background: #eef4fb; }
 .mv-chip[aria-checked="true"] { background: #1e3c72; border-color: #1e3c72; color: #fff; }
 .mv-select {
@@ -21,7 +22,7 @@
     position: relative; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
     min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.mv-img { display: block; width: 100%; height: auto; margin: 0 !important; transition: opacity 0.12s; }
+.mv-img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 !important; transition: opacity 0.12s; }
 .mv-img:not([src]) { display: none; }
 .mv-img.is-loading { opacity: 0.55; }
 .mv-loading, .mv-fail {
@@ -72,3 +73,12 @@
     .mv-btn { width: 42px; height: 42px; }
     .mv-play { width: 50px; height: 50px; }
 }
+
+/* the page's hero card sets the width; never let the viewer push past it */
+.hero:has(.mv) { min-width: 0; max-width: 100%; overflow-x: clip; }
+.hero:has(.mv) h1 { line-height: 1.2; }
+
+.mv-extra { margin: 0 0 0.9rem; text-align: left; }
+.mv-extra[hidden] { display: none; }
+.mv-extra img { display: block; width: 100%; max-width: 360px; height: auto; border: 1px solid #e2e8f0; border-radius: 10px; margin: 0 0 0.25rem; }
+.mv-extra figcaption { font-size: 0.8rem; color: #64748b; }
