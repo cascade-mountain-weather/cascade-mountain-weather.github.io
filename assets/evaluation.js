@@ -7,6 +7,9 @@
 // middle of our range, or a single model value) and, for the range products, a low-high range. The "truth" is
 // an estimate from SNOTEL stations and is itself a range (new-snow density is unknown), so it is drawn as a
 // band and only its midpoint is used for errors and hits.
+//
+// Two ways to compare: the weekend total (NBM and our forecast), or Friday only, which adds HRRR and HRDPS. Those
+// two models run 48 hours, so they cannot give a weekend total; Friday (day 1) is the window they all cover.
 
 (function () {
     'use strict';
@@ -38,7 +41,8 @@
 
     let RAW = null;     // everything in the file
     let D = null;       // the selected season's weekends, records and soundings (weekend indexes renumbered)
-    const S = { season: null, area: 'ALL', metric: 'mae', mapProduct: 'nbm', axis: 'sqrt', view: 'values', show: { nbm: true, ours: true },
+    const POINT = ['hrrr', 'hrdps'];   // single-valued model products
+    const S = { season: null, win: 'total', area: 'ALL', metric: 'mae', mapProduct: 'nbm', axis: 'sqrt', view: 'values', show: { nbm: true, ours: true, hrrr: true, hrdps: true },
         weekend: null, threshold: 6, snowSite: 'ALL' };
 
     // ---- seasons ------------------------------------------------------------------------------
@@ -48,7 +52,15 @@
         RAW.weekends.forEach((w, i) => { if (w.season === id) { idx[i] = wk.length; wk.push(w); } });
         const keep = r => idx[r.w] !== undefined;
         const renum = r => Object.assign({}, r, { w: idx[r.w] });
-        return Object.assign({}, RAW, { weekends: wk, records: RAW.records.filter(keep).map(renum), snow_level: RAW.snow_level.filter(keep).map(renum) });
+        // Friday view: each record becomes its day-1 values (observed, NBM, HRRR, HRDPS). Our forecast was a weekend total only.
+        const friday = r => {
+            const d = r.days && r.days.day1;
+            if (!d || !d.obs) return null;
+            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days };
+        };
+        let recs = RAW.records.filter(keep).map(renum);
+        if (S.win === 'day1') recs = recs.map(friday).filter(Boolean);
+        return Object.assign({}, RAW, { weekends: wk, records: recs, snow_level: RAW.snow_level.filter(keep).map(renum) });
     }
 
     // ---- statistics ---------------------------------------------------------------------------
@@ -95,7 +107,9 @@
 
         $('eval-trackers').innerHTML = D.products.map(p => {
             if (!live.some(l => l.id === p.id)) {
-                return `<div class="eval-card eval-card--off"><h4>${esc(p.label)}</h4><div class="eval-note">Coming soon</div></div>`;
+                const why = POINT.includes(p.id) ? (S.win !== 'day1' ? 'Choose the Friday view to compare' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
+                    : p.id === 'ours' && S.win === 'day1' ? 'Weekend total only' : 'Coming soon';
+                return `<div class="eval-card eval-card--off"><h4>${esc(p.label)}</h4><div class="eval-note">${why}</div></div>`;
             }
             const m = metrics(items(p.id, S.area)), rank = ranked.findIndex(r => r.id === p.id);
             return `<div class="eval-card">
@@ -189,7 +203,9 @@
             const nbm = avg3(recs.filter(r => r.nbm).map(r => r.nbm));
             const withOurs = recs.filter(r => r.ours);
             const ours = withOurs.length ? avg3(withOurs.map(r => [r.ours[0], (r.ours[0] + r.ours[1]) / 2, r.ours[1]])) : null;
-            return { i, wk, obs, obsOurs, nbm, ours };
+            const point = {};
+            POINT.forEach(pid => { const vs = recs.map(r => r[pid]).filter(v => typeof v === 'number'); if (vs.length) point[pid] = [mean(vs), mean(vs), mean(vs)]; });
+            return Object.assign({ i, wk, obs, obsOurs, nbm, ours }, point);
         });
     }
 
@@ -211,12 +227,12 @@
         let top = 1;
         rows.forEach(r => {
             if (r.none) return;
-            [r.obs && r.obs[2], r.nbm && r.nbm[2], r.ours && r.ours[2]].forEach(v => { if (v) top = Math.max(top, v); });
+            [r.obs && r.obs[2], r.nbm && r.nbm[2], r.ours && r.ours[2], r.hrrr && r.hrrr[2], r.hrdps && r.hrdps[2]].forEach(v => { if (v) top = Math.max(top, v); });
         });
         let eAbs = 1;
         if (err) rows.forEach(r => {
             if (r.none || !r.obs) return;
-            [['nbm', r.obs], ['ours', r.obsOurs]].forEach(([pid, o]) => {
+            [['nbm', r.obs], ['ours', r.obsOurs], ['hrrr', r.obs], ['hrdps', r.obs]].forEach(([pid, o]) => {
                 const f = r[pid]; if (!f || !o) return;
                 [f[0] - o[1], f[2] - o[1], o[0] - o[1], o[2] - o[1]].forEach(v => { eAbs = Math.max(eAbs, Math.abs(v)); });
             });
@@ -235,7 +251,7 @@
             const label = r.wk.id.slice(5).replace('-', '/').replace(/^0/, '').replace('/0', '/');
             g += `<text x="${cx.toFixed(1)}" y="${H - PB + 15}" text-anchor="middle" class="ep-axis">${label}</text>`;
             const tip = r.none ? `${r.wk.label}: no data` : `${r.wk.label}\nObserved ${fmt(r.obs && r.obs[1])} in (${fmt(r.obs && r.obs[0])}–${fmt(r.obs && r.obs[2])})` +
-                `${r.nbm ? `\nNBM ${fmt(r.nbm[1])} in (${fmt(r.nbm[0])}–${fmt(r.nbm[2])})` : ''}${r.ours ? `\nOurs ${fmt(r.ours[1])} in (${fmt(r.ours[0])}–${fmt(r.ours[2])})` : ''}`;
+                `${r.nbm ? `\nNBM ${fmt(r.nbm[1])} in (${fmt(r.nbm[0])}–${fmt(r.nbm[2])})` : ''}${r.ours ? `\nOurs ${fmt(r.ours[1])} in (${fmt(r.ours[0])}–${fmt(r.ours[2])})` : ''}${r.hrrr ? `\nHRRR ${fmt(r.hrrr[1])} in` : ''}${r.hrdps ? `\nHRDPS ${fmt(r.hrdps[1])} in` : ''}`;
             g += `<rect class="ep-col${S.weekend === r.i ? ' is-sel' : ''}" data-i="${r.i}" x="${(cx - cw / 2).toFixed(1)}" y="${PT}" width="${cw.toFixed(1)}" height="${ph}"><title>${esc(tip)}</title></rect>`;
             if (r.none || !r.obs) return;
 
@@ -244,10 +260,10 @@
             else g += `<rect class="ep-obs" x="${(cx - bw / 2).toFixed(1)}" y="${y(o[2]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, y(o[0]) - y(o[2])).toFixed(1)}"/>` +
                 `<line class="ep-obsmid" x1="${(cx - bw / 2).toFixed(1)}" x2="${(cx + bw / 2).toFixed(1)}" y1="${y(o[1]).toFixed(1)}" y2="${y(o[1]).toFixed(1)}"/>`;
 
-            const shown = ['nbm', 'ours'].filter(pid => S.show[pid] && r[pid]);   // forecasts, side by side
+            const shown = ['nbm', 'ours', 'hrrr', 'hrdps'].filter(pid => S.show[pid] && r[pid]);   // forecasts, side by side
             shown.forEach((pid, k) => {
                 const f = r[pid], ob = pid === 'ours' ? r.obsOurs : r.obs;
-                const x = cx + (k - (shown.length - 1) / 2) * cw * 0.26;
+                const x = cx + (k - (shown.length - 1) / 2) * cw * (shown.length > 2 ? 0.2 : 0.26);
                 const lo = err ? f[0] - ob[1] : f[0], mid = err ? f[1] - ob[1] : f[1], hi = err ? f[2] - ob[1] : f[2];
                 g += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${y(lo).toFixed(1)}" y2="${y(hi).toFixed(1)}" stroke="${COLORS[pid]}" stroke-width="3.5" stroke-linecap="round"/>` +
                     `<circle cx="${x.toFixed(1)}" cy="${y(mid).toFixed(1)}" r="3.6" fill="#fff" stroke="${COLORS[pid]}" stroke-width="2"/>`;
@@ -255,13 +271,13 @@
         });
         $('eval-plot').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecasts and observed snowfall for each weekend">${g}</svg>`;
 
-        $('eval-plotcaption').textContent = `${S.area === 'ALL' ? 'Average of the 9 areas' : S.area}. Click a weekend for the day-by-day view.`;
+        $('eval-plotcaption').textContent = `${S.area === 'ALL' ? 'Average of the 9 areas' : S.area}. ${S.win === 'day1' ? 'Friday only (Friday 4 am to Saturday 4 am Pacific).' : 'Weekend total.'} Click a weekend for the day-by-day view.`;
         $('eval-key').innerHTML = `<span><i style="background:#94a3b8;opacity:.6"></i>Observed range</span>` +
-            D.products.filter(p => p.available && ['nbm', 'ours'].includes(p.id)).map(p => `<span><i style="background:${COLORS[p.id]}"></i>${esc(p.label)} (bar = range, circle = middle)</span>`).join('');
+            available().map(p => `<span><i style="background:${COLORS[p.id]}"></i>${esc(p.label)} ${POINT.includes(p.id) ? '(circle = model value)' : '(bar = range, circle = middle)'}</span>`).join('');
     }
 
     function renderToggles() {
-        $('eval-toggles').innerHTML = ['nbm', 'ours'].map(pid => {
+        $('eval-toggles').innerHTML = available().map(p => p.id).map(pid => {
             const p = RAW.products.find(x => x.id === pid);
             return `<label><input type="checkbox" data-prod="${pid}"${S.show[pid] ? ' checked' : ''}> <span style="color:${COLORS[pid]}">&#9632;</span> ${esc(p.label)}</label>`;
         }).join('');
@@ -300,7 +316,7 @@
         box.hidden = false;
         box.innerHTML = `<button type="button" class="ed-close" aria-label="Close">&times;</button>
             <h4>${esc(wk.label)} &middot; ${S.area === 'ALL' ? 'average of the 9 areas' : esc(S.area)}</h4>
-            <ul class="eval-lines">${line('Observed, weekend total', tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}</ul>
+            <ul class="eval-lines">${line(S.win === 'day1' ? 'Observed, Friday' : 'Observed, weekend total', tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${tot.hrrr ? `<li>HRRR: <strong>${fmt(tot.hrrr[1])} in</strong></li>` : ''}${tot.hrdps ? `<li>HRDPS: <strong>${fmt(tot.hrdps[1])} in</strong></li>` : ''}</ul>
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Day by day, observed and NBM">${g}</svg>
             <p class="eval-note">Grey = observed. Blue = NBM. Our forecast was only a weekend total.</p>`;
     }
@@ -322,7 +338,7 @@
 
     function renderEvents() {
         const thr = S.threshold;
-        const out = ['nbm', 'ours'].map(pid => {
+        const out = available().map(a => a.id).map(pid => {
             const p = RAW.products.find(x => x.id === pid);
             const c = { hit: 0, miss: 0, fa: 0, cn: 0, unHit: 0, unNo: 0 };
             D.records.forEach(r => {
@@ -343,6 +359,25 @@
         });
         $('eval-events').innerHTML = out.join('') +
             `<p class="eval-sub" style="grid-column:1/-1">"Unclear" means the storm size falls inside the observed range, so we can't say which side it was on.</p>`;
+    }
+
+    // ---- CoCoRaHS cross-check -----------------------------------------------------------------
+
+    function renderCoco() {
+        const rows = D.records.filter(r => r.coco && r.obs && inArea(r, S.area)).sort((a, b) => a.w - b.w || a.a.localeCompare(b.a));
+        const win = S.win === 'day1' ? 'Friday' : 'weekend total';
+        if (!rows.length) {
+            $('eval-coco').innerHTML = `<p class="eval-sub">No CoCoRaHS volunteer reports near ${S.area === 'ALL' ? 'any area' : esc(S.area)} for this season and window. Few volunteers live near ski terrain, so most areas have none.</p>`;
+            return;
+        }
+        const body = rows.map(r => {
+            const wk = D.weekends[r.w], o = r.obs, c = r.coco, nbm = r.nbm;
+            return `<tr><td>${esc(wk.label)}</td>${S.area === 'ALL' ? `<td>${esc(r.a)}</td>` : ''}<td>${fmt(o[1])}</td><td>${nbm ? fmt(nbm[1]) : DASH}</td>
+                <td><strong>${fmt(c.med)}</strong> <small>(${fmt(c.max === c.med ? null : c.max)}${c.max === c.med ? '' : ' max'})</small></td>
+                <td>${c.n}${c.full ? '' : '*'}</td><td>${c.top && c.top[0] ? `${esc(c.top[0])}, ${c.top[1] ? Number(c.top[1]).toLocaleString() + ' ft' : '?'}: ${fmt(c.top[2])} in` : DASH}</td></tr>`;
+        }).join('');
+        $('eval-coco').innerHTML = `<div class="eval-scroll"><table class="eval-table"><thead><tr><th>Weekend</th>${S.area === 'ALL' ? '<th>Area</th>' : ''}<th>SNOTEL estimate</th><th>NBM median</th><th>CoCoRaHS median</th><th>Stations</th><th>Highest station</th></tr></thead><tbody>${body}</tbody></table></div>
+            <p class="eval-sub">${esc(win)}, inches. Volunteer stations within 25 km. They are mostly in valleys and towns, well below the forecast elevation, so they check the storm, not the amount. A star means a station missed some days, so its total is a floor. This is a cross-check and is not part of any score.</p>`;
     }
 
     // ---- snow level ---------------------------------------------------------------------------
@@ -373,6 +408,8 @@
             <li><strong>Forecasts.</strong> The NBM (National Blend of Models) median and 25&ndash;75% range for the weekend total, and our range from each post. For 2025&ndash;26 the NBM was rebuilt from the model archive using the Thursday 19Z run, not the exact numbers seen at the time.</li>
             <li><strong>Observed snowfall</strong> is an estimate from nearby SNOTEL stations (snow water equivalent and depth). Trace precipitation counts as none, and gains while the station was above 35&deg;F are treated as rain. The estimate is a range because new-snow density is unknown; only its midpoint is used for errors.</li>
             <li><strong>Stations</strong> sit at their own elevation, not the 5,000 ft the forecasts target.</li>
+            <li><strong>HRRR and HRDPS</strong> are single-value models that run 48 hours, so they are compared on Friday only (the first day the Thursday forecast covers). HRRR snowfall is the model&rsquo;s own; HRDPS snowfall is its water equivalent of snow times 10, an assumed ratio. HRDPS is not archived, so it appears only for weekends scored from the 2026&ndash;27 season on; HRRR was rebuilt from the archive for 2025&ndash;26.</li>
+            <li><strong>CoCoRaHS</strong> volunteer reports within 25 km are shown as a cross-check and are not scored.</li>
             <li><strong>Inside range</strong> means the observed midpoint fell in the forecast range (half an inch of slack). <strong>Typical error</strong> is the average distance from the forecast middle; <strong>bias</strong> is forecast minus observed.</li>
             <li>The <a href="/evaluation-2025-26-original.html">original 2025&ndash;26 evaluation</a> used a different method, so its numbers are not comparable.</li></ul>`;
     }
@@ -382,7 +419,14 @@
     function setArea(a) { S.area = a; $('eval-area').value = a; renderAll(); }
 
     function renderAll() {
-        renderTrackers(); renderHeat(); renderPlot(); renderDetail(); renderStats(); renderEvents(); renderSnow();
+        renderTrackers(); renderHeat(); renderPlot(); renderDetail(); renderStats(); renderEvents(); renderCoco(); renderSnow();
+    }
+
+    function refreshProducts() {
+        const ids = available().map(p => p.id);
+        if (!ids.includes(S.mapProduct)) S.mapProduct = ids[0] || 'nbm';
+        $('eval-mapprod').innerHTML = available().map(p => `<option value="${p.id}"${p.id === S.mapProduct ? ' selected' : ''}>${esc(p.label)}</option>`).join('');
+        renderToggles();
     }
 
     function setSeason(id) {
@@ -396,6 +440,7 @@
         $('eval-empty').hidden = !empty;
         $('eval-main').hidden = empty;
         if (empty) return;
+        refreshProducts();
         renderAll();
         if (map) map.invalidateSize();
     }
@@ -408,11 +453,11 @@
         $('eval-area').innerHTML = '<option value="ALL">All areas</option>' + areasNS().map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
         $('eval-snowsite').innerHTML = '<option value="ALL">Both</option>' + [...new Set(RAW.snow_level.map(r => r.site))].map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
         D = buildView(first);
-        $('eval-mapprod').innerHTML = available().map(p => `<option value="${p.id}">${esc(p.label)}</option>`).join('');
-        renderToggles(); renderMethod();
+        refreshProducts(); renderMethod();
         try { initMap(); } catch (e) { console.error('Evaluation map failed:', e); map = null; $('eval-map').parentNode.hidden = true; }
 
         $('eval-season').addEventListener('change', e => setSeason(e.target.value));
+        $('eval-window').addEventListener('change', e => { S.win = e.target.value; setSeason(S.season); });
         $('eval-area').addEventListener('change', e => setArea(e.target.value));
         $('eval-metric').addEventListener('change', e => { S.metric = e.target.value; renderHeat(); });
         $('eval-mapprod').addEventListener('change', e => { S.mapProduct = e.target.value; renderHeat(); });

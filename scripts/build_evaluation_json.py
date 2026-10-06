@@ -18,7 +18,11 @@ Record fields (inches), per weekend and area:
                                present when it differs, i.e. when the author's forecast was saved
   nbm       [p25, p50, p75]
   ours      [low, high] or null
-  days      {day1|day2|day3: {obs: [...], nbm: [...]}}  for the per-day view
+  days      {day1|day2|day3: {obs: [...], nbm: [...], hrrr: x, hrdps: x, coco: {...}}}  for the per-day view and the
+            Friday comparison (HRRR and HRDPS run 48 hours, so they have a value for day1 only; HRDPS only for weekends
+            scored live, since it is not archived)
+  coco      CoCoRaHS cross-check (volunteer stations within 25 km): {n, nr, full, med, max, top: [name, elev_ft, in]}
+            for the weekend total, and the same under days. Not part of any score.
 """
 import json
 from datetime import date, datetime, timedelta, timezone
@@ -42,6 +46,16 @@ def season_of(first_day):
     d = date.fromisoformat(first_day)
     start = d.year if d.month >= 9 else d.year - 1
     return f"{start}-{str(start + 1)[2:]}"
+
+
+def coco(w):
+    """Compact CoCoRaHS summary of a scored window, or None."""
+    c = (w or {}).get("cocorahs")
+    if not c:
+        return None
+    h = c.get("highest") or {}
+    return {"n": c["n"], "nr": c["n_reporting"], "full": bool(c["complete"]), "med": c["median_in"], "max": c["max_in"],
+            "top": [h.get("name"), h.get("elev_ft"), h.get("snow_in")]}
 
 
 def triple(d, keys):
@@ -83,7 +97,17 @@ def main():
             for wid, w in a["windows"].items():
                 if wid.startswith("day"):
                     days[wid] = {"obs": triple(w.get("observed"), ("low", "mid", "high")), "nbm": triple(w.get("nbm"), ("p25", "p50", "p75"))}
+            for wid, w in a["windows"].items():
+                if wid.startswith("day"):
+                    for model in ("hrrr", "hrdps"):
+                        if w.get(model) and w[model].get("snowfall_in") is not None:
+                            days[wid][model] = w[model]["snowfall_in"]
+                    c = coco(w)
+                    if c:
+                        days[wid]["coco"] = c
             rec["days"] = days
+            if coco(tot):
+                rec["coco"] = coco(tot)
             records.append(rec)
         for site, sl in (s.get("snow_level") or {}).items():
             for r in sl["launches"]:
@@ -96,8 +120,8 @@ def main():
         "products": [
             {"id": "nbm", "label": "NBM", "long": "NBM median, with the 25th–75th percentile range", "kind": "range", "available": True},
             {"id": "ours", "label": "Our forecast", "long": "Our forecast range (weekend total)", "kind": "range", "available": True},
-            {"id": "hrrr", "label": "HRRR", "long": "HRRR (single value)", "kind": "point", "available": False},
-            {"id": "hrdps", "label": "HRDPS", "long": "HRDPS (single value)", "kind": "point", "available": False},
+            {"id": "hrrr", "label": "HRRR", "long": "HRRR (single value, first 48 hours: Friday)", "kind": "point", "available": True},
+            {"id": "hrdps", "label": "HRDPS", "long": "HRDPS (single value, first 48 hours: Friday; assumes 10:1 snow ratio)", "kind": "point", "available": True},
         ],
         "areas": list(areas.values()),
         "weekends": weekends,

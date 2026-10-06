@@ -27,6 +27,8 @@ What is scored, per area and window
   nbm_iqr_hit    observed estimate inside the NBM 25th-75th range (plus 0.5 in of slack)
   ours_error_in  middle of your range minus the observed estimate
   ours_hit       observed estimate inside your range (plus 0.5 in of slack)
+  hrrr_error_in  HRRR minus the observed estimate, and the same for hrdps (only for windows the models reach,
+                 normally Friday; see scripts/hires_models.py). Both are single values, not ranges.
   obs_overlaps_* the observed range (wide, because new-snow density is unknown) overlaps the forecast
                  range. A weaker test than the hit, reported next to it.
 
@@ -48,6 +50,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from collect_radiosonde_history import compute_melting_layer, fetch_profile  # noqa: E402
+import cocorahs_obs  # noqa: E402
 from draft_forecast_tables import is_pdt  # noqa: E402
 from snotel_obs import utc, windows_obs  # noqa: E402
 
@@ -191,7 +194,15 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
     if ours_all:
         obs_windows["ours_period"] = (ours_start, ours_end)
 
-    sites = {s["name"]: s for s in yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))["sites"]}
+    site_list = yaml.safe_load(SITES_FILE.read_text(encoding="utf-8"))["sites"]
+    sites = {s["name"]: s for s in site_list}
+    # CoCoRaHS volunteer reports within 25 km of each site: a cross-check next to the SNOTEL estimate, not part of the score
+    try:
+        coco = cocorahs_obs.window_obs(cocorahs_obs.stations_near(site_list), windows)
+    except Exception as exc:  # noqa: BLE001 -- the cross-check must not stop the scoring
+        print(f"  CoCoRaHS skipped: {str(exc)[:100]}")
+        coco = {}
+    hires = snap.get("hires") or {}
     result = {
         "snapshot": snap_name, "first_day_local": first_day, "nbm_cycle_utc": snap["source"]["cycle_utc"],
         "scored_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
@@ -202,6 +213,8 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
             "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
             f"A hit allows {SLACK_IN} in of slack on each side.",
             "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window.",
+            "HRRR and HRDPS cover 48 hours, so they are scored on the windows inside that (normally Friday). HRDPS snowfall assumes a 10:1 ratio.",
+            "CoCoRaHS reports are a cross-check from volunteer stations within 25 km, mostly lowland; they are not part of the score.",
         ],
         "windows": {wid: {"start_utc": snap["windows"][wid]["start_utc"], "end_utc": snap["windows"][wid]["end_utc"]} for wid in windows},
         "areas": {},
@@ -215,6 +228,8 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
         obs = windows_obs(trips, obs_windows)
         area = {"obs_stations": {t: {"name": s["name"], "elev_ft": s["elev_ft"]} for t, s in next(iter(obs.values()))["stations"].items()},
                 "forecast_elev_ft": (site_snap.get("elevation_ft") or {}).get("site"), "windows": {}}
+        if coco.get(name):
+            area["cocorahs_stations"] = coco[name]["stations"]
         for wid in windows:
             nbm = site_snap["snowfall_in"].get(wid)
             ours = ((ours_all or {}).get(name) or {}).get(wid)
@@ -223,6 +238,14 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
             o_ours = obs["ours_period"]["snowfall_in"] if use_ours_period else o_nbm
             scores = score_nbm(nbm, o_nbm)
             scores.update(score_ours(ours, o_ours))
+            models = {}
+            for model, md in hires.items():
+                sf = ((md["sites"].get(name) or {}).get("snowfall_in") or {}).get(wid)
+                if sf is None:
+                    continue
+                models[model] = {"snowfall_in": sf, "liquid_in": ((md["sites"][name].get("liquid_in") or {}).get(wid)), "cycle_utc": md["cycle_utc"]}
+                if o_nbm:
+                    scores[f"{model}_error_in"] = round(sf - o_nbm["mid"], 1)
             entry = {
                 "nbm": {k: nbm.get(k) for k in ("p25", "p50", "p75", "deterministic", "method")} if nbm else None,
                 "ours": ours, "observed": o_nbm,
@@ -230,6 +253,9 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
                                     for t, s in obs[wid]["stations"].items()},
                 "scores": scores,
             }
+            entry.update(models)
+            if (coco.get(name) or {}).get("windows", {}).get(wid):
+                entry["cocorahs"] = coco[name]["windows"][wid]
             if use_ours_period and ours:
                 entry["observed_for_ours"] = o_ours
             area["windows"][wid] = entry

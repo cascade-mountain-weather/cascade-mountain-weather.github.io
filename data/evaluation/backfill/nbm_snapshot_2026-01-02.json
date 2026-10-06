@@ -2408,5 +2408,92 @@
     ]
    }
   }
+ },
+ "hires": {
+  "hrrr": {
+   "cycle_utc": "2026-01-01T18:00Z",
+   "windows": {
+    "day1": {
+     "fxx": [
+      18,
+      42
+     ]
+    }
+   },
+   "sites": {
+    "Mt. Baker": {
+     "snowfall_in": {
+      "day1": 3.3
+     },
+     "liquid_in": {
+      "day1": 1.08
+     }
+    },
+    "Washington Pass": {
+     "snowfall_in": {
+      "day1": 2.8
+     },
+     "liquid_in": {
+      "day1": 0.47
+     }
+    },
+    "Stevens Pass": {
+     "snowfall_in": {
+      "day1": 0.5
+     },
+     "liquid_in": {
+      "day1": 1.0
+     }
+    },
+    "Hurricane Ridge": {
+     "snowfall_in": {
+      "day1": 0.0
+     },
+     "liquid_in": {
+      "day1": 0.16
+     }
+    },
+    "Blewett Pass": {
+     "snowfall_in": {
+      "day1": 0.0
+     },
+     "liquid_in": {
+      "day1": 0.18
+     }
+    },
+    "Snoqualmie Pass": {
+     "snowfall_in": {
+      "day1": 0.1
+     },
+     "liquid_in": {
+      "day1": 0.91
+     }
+    },
+    "Crystal": {
+     "snowfall_in": {
+      "day1": 0.7
+     },
+     "liquid_in": {
+      "day1": 0.2
+     }
+    },
+    "Paradise": {
+     "snowfall_in": {
+      "day1": 1.3
+     },
+     "liquid_in": {
+      "day1": 1.05
+     }
+    },
+    "White Pass": {
+     "snowfall_in": {
+      "day1": 0.1
+     },
+     "liquid_in": {
+      "day1": 0.72
+     }
+    }
+   }
+  }
  }
 }

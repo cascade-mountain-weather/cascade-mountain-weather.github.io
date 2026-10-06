@@ -17,6 +17,7 @@ og_description: "How accurate are our weekend snowfall forecasts for Washington 
     <div class="eval-controls">
         <label>Season <select id="eval-season" aria-label="Season"></select></label>
         <label>Area <select id="eval-area" aria-label="Area"></select></label>
+        <label>Compare <select id="eval-window" aria-label="Window compared"><option value="total">Weekend total</option><option value="day1">Friday only (adds HRRR and HRDPS)</option></select></label>
     </div>
     <p class="eval-banner" id="eval-seasonnote" hidden></p>
     <p class="eval-empty" id="eval-empty" hidden>No weekends have been scored this season yet. Each weekend appears here after its forecast is scored the following Monday.</p>
@@ -60,6 +61,9 @@ og_description: "How accurate are our weekend snowfall forecasts for Washington 
         <label>Storm size <select id="eval-threshold" aria-label="Storm size"><option value="6">6 inches or more</option><option value="12">12 inches or more</option></select></label>
     </div>
     <div id="eval-events" class="eval-events"></div>
+
+    <h3>CoCoRaHS cross-check</h3>
+    <div id="eval-coco" class="eval-coco"></div>
 
     <h3>Snow level</h3>
     <div class="eval-controls">

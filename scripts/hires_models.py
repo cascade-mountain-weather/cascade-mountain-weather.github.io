@@ -112,3 +112,43 @@ def windows(model, cycle, ends, grid, verbose=True):
         if verbose:
             print(f"  {model} {e:%a %d %H}Z (F{fs:02d}-F{fe:02d}) done")
     return out
+
+
+def for_snapshot(nbm_cycle, spans, sites, models=("hrrr", "hrdps"), verbose=True):
+    """HRRR and HRDPS snowfall and liquid precipitation for the snapshot's windows, for scoring.
+
+    nbm_cycle  the NBM cycle the snapshot used; each model's newest 48-hour cycle at or before it is used
+               (the forecast was made with what existed then)
+    spans      {window id: (start, end)} as naive UTC Timestamps; only windows that end within 48 hours of the
+               model's cycle can be filled (normally Friday only), and the weekend "total" is skipped
+    sites      forecast sites (dicts with name, lat, lon)
+    Returns {model: {"cycle_utc", "windows": {wid: {"fxx": [a, b]}}, "sites": {name: {"snowfall_in": {wid: x}, "liquid_in": {wid: x}}}}}
+    A model with no cycle available (HRDPS for an old weekend, which is not archived) is left out.
+    """
+    out = {}
+    latest = pd.Timestamp(nbm_cycle).floor("6h")
+    for model in models:
+        cycle = newest_cycle(model, latest=latest)
+        if cycle is None:
+            if verbose:
+                print(f"  {model}: no cycle available at or before {latest:%Y-%m-%d %H}Z, skipped")
+            continue
+        grid = nbm.Grid(sites)
+        res, fxx = {}, {}
+        for wid, (s, e) in spans.items():
+            if wid == "total":
+                continue
+            fs, fe = int((s - cycle).total_seconds() // 3600), int((e - cycle).total_seconds() // 3600)
+            if fs < 0 or fe > MAX_HOURS:
+                continue
+            s1, l1 = cumulative(model, cycle, fe, grid)
+            s0, l0 = cumulative(model, cycle, fs, grid)
+            res[wid], fxx[wid] = (np.maximum(s1 - s0, 0), np.maximum(l1 - l0, 0)), [fs, fe]
+            if verbose:
+                print(f"  {model} {wid}: F{fs:02d}-F{fe:02d} from the {cycle:%Y-%m-%d %H}Z run")
+        if not res:
+            continue
+        out[model] = {"cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "windows": {w: {"fxx": f} for w, f in fxx.items()},
+                      "sites": {s["name"]: {"snowfall_in": {w: nbm.r(res[w][0][k]) for w in res},
+                                            "liquid_in": {w: nbm.r(res[w][1][k], 2) for w in res}} for k, s in enumerate(sites)}}
+    return out

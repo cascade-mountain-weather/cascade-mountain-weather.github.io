@@ -295,6 +295,15 @@ def main():
         entry["gust_mph"] = [r(v[k], 0) for v in series["gust"]]
         out["sites"][s["name"]] = entry
 
+    # HRRR and HRDPS for the windows they reach (their 48 hours), saved with the snapshot for scoring
+    try:
+        import hires_models
+        spans = {wid: (pd.Timestamp(w["start_utc"].rstrip("Z")), pd.Timestamp(w["end_utc"].rstrip("Z"))) for wid, w in windows.items()}
+        out["hires"] = hires_models.for_snapshot(cycle, spans, cfg["sites"])
+    except Exception as exc:   # the NBM snapshot is the main product; do not lose it over a high-resolution model
+        print(f"warning: HRRR/HRDPS skipped: {str(exc)[:120]}", file=sys.stderr)
+        out["hires"] = {}
+
     out_dir = Path(args.out_dir) if args.out_dir else OUT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"nbm_snapshot_{first.isoformat()}.json"

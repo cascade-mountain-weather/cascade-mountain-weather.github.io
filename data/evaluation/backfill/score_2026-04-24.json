@@ -2,7 +2,7 @@
  "snapshot": "nbm_snapshot_2026-04-24.json",
  "first_day_local": "2026-04-24",
  "nbm_cycle_utc": "2026-04-23T19:00Z",
- "scored_utc": "2026-10-06T00:46Z",
+ "scored_utc": "2026-10-06T22:18Z",
  "our_forecast_found": true,
  "our_period_utc": [
   "2026-04-23T23:00Z",
@@ -12,7 +12,9 @@
   "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
   "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
   "A hit allows 0.5 in of slack on each side.",
-  "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window."
+  "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window.",
+  "HRRR and HRDPS cover 48 hours, so they are scored on the windows inside that (normally Friday). HRDPS snowfall assumes a 10:1 ratio.",
+  "CoCoRaHS reports are a cross-check from volunteer stations within 25 km, mostly lowland; they are not part of the score."
  ],
  "windows": {
   "day1": {
@@ -91,7 +93,27 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Glacier 0.1 SW",
+       "elev_ft": 908,
+       "km": 20.8,
+       "snow_in": 0.0
+      }
      }
     },
     "day2": {
@@ -140,6 +162,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Glacier 0.1 SW",
+       "elev_ft": 908,
+       "km": 20.8,
+       "snow_in": 0.0
+      }
      }
     },
     "day3": {
@@ -188,6 +224,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Glacier 0.1 SW",
+       "elev_ft": 908,
+       "km": 20.8,
+       "snow_in": 0.0
+      }
      }
     },
     "total": {
@@ -243,6 +293,20 @@
       "ours_hit": true,
       "obs_overlaps_ours": true
      },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Glacier 0.1 SW",
+       "elev_ft": 908,
+       "km": 20.8,
+       "snow_in": 0.0
+      }
+     },
      "observed_for_ours": {
       "low": 0.8,
       "mid": 1.4,
@@ -251,7 +315,45 @@
       "stations_requested": 2
      }
     }
-   }
+   },
+   "cocorahs_stations": [
+    {
+     "id": "WA-WC-70",
+     "name": "Glacier 0.1 SW",
+     "elev_ft": 908,
+     "km": 20.8,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true,
+       "swe_in": 0.0
+      }
+     }
+    }
+   ]
   },
   "Washington Pass": {
    "obs_stations": {
@@ -295,7 +397,27 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Winthrop 9.2 NW",
+       "elev_ft": 2595,
+       "km": 23.6,
+       "snow_in": 0.0
+      }
      }
     },
     "day2": {
@@ -332,6 +454,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Winthrop 9.2 NW",
+       "elev_ft": 2595,
+       "km": 23.6,
+       "snow_in": 0.0
+      }
      }
     },
     "day3": {
@@ -368,6 +504,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Winthrop 9.2 NW",
+       "elev_ft": 2595,
+       "km": 23.6,
+       "snow_in": 0.0
+      }
      }
     },
     "total": {
@@ -411,6 +561,20 @@
       "ours_hit": false,
       "obs_overlaps_ours": false
      },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Winthrop 9.2 NW",
+       "elev_ft": 2595,
+       "km": 23.6,
+       "snow_in": 0.0
+      }
+     },
      "observed_for_ours": {
       "low": 0.0,
       "mid": 0.0,
@@ -419,7 +583,41 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": [
+    {
+     "id": "WA-OK-39",
+     "name": "Winthrop 9.2 NW",
+     "elev_ft": 2595,
+     "km": 23.6,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    }
+   ]
   },
   "Stevens Pass": {
    "obs_stations": {
@@ -463,7 +661,13 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
      }
     },
     "day2": {
@@ -587,7 +791,8 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": []
   },
   "Hurricane Ridge": {
    "obs_stations": {
@@ -631,7 +836,27 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
+     },
+     "cocorahs": {
+      "n": 7,
+      "n_reporting": 7,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Port Angeles 7.9 S",
+       "elev_ft": 977,
+       "km": 12.5,
+       "snow_in": 0.0
+      }
      }
     },
     "day2": {
@@ -668,6 +893,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 8,
+      "n_reporting": 8,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Port Angeles 8.1 SSW",
+       "elev_ft": 985,
+       "km": 13.7,
+       "snow_in": 0.0
+      }
      }
     },
     "day3": {
@@ -704,6 +943,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 8,
+      "n_reporting": 8,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Port Angeles 8.1 SSW",
+       "elev_ft": 985,
+       "km": 13.7,
+       "snow_in": 0.0
+      }
      }
     },
     "total": {
@@ -747,6 +1000,20 @@
       "ours_hit": true,
       "obs_overlaps_ours": true
      },
+     "cocorahs": {
+      "n": 7,
+      "n_reporting": 8,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Port Angeles 7.9 S",
+       "elev_ft": 977,
+       "km": 12.5,
+       "snow_in": 0.0
+      }
+     },
      "observed_for_ours": {
       "low": 0.0,
       "mid": 0.0,
@@ -755,7 +1022,259 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": [
+    {
+     "id": "WA-CM-51",
+     "name": "Port Angeles 7.9 S",
+     "elev_ft": 977,
+     "km": 12.5,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-13",
+     "name": "Port Angeles 8.1 SSW",
+     "elev_ft": 985,
+     "km": 13.7,
+     "windows": {
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 2,
+       "expected_days": 3,
+       "complete": false
+      }
+     }
+    },
+    {
+     "id": "WA-CM-26",
+     "name": "Port Angeles 6.7 SSE",
+     "elev_ft": 384,
+     "km": 15.4,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-19",
+     "name": "Port Angeles 6.1 SSE",
+     "elev_ft": 215,
+     "km": 15.8,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-71",
+     "name": "Port Angeles 9.0 SW",
+     "elev_ft": 671,
+     "km": 17.2,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-38",
+     "name": "Port Angeles 8.2 SE",
+     "elev_ft": 315,
+     "km": 18.1,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-36",
+     "name": "Port Angeles 10.5 SE",
+     "elev_ft": 635,
+     "km": 18.2,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CM-32",
+     "name": "Port Angeles 10.1 SE",
+     "elev_ft": 588,
+     "km": 18.3,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    }
+   ]
   },
   "Blewett Pass": {
    "obs_stations": {
@@ -799,7 +1318,27 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
+     },
+     "cocorahs": {
+      "n": 7,
+      "n_reporting": 7,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Cle Elum 8.9 E",
+       "elev_ft": 2245,
+       "km": 22.7,
+       "snow_in": 0.0
+      }
      }
     },
     "day2": {
@@ -836,6 +1375,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 7,
+      "n_reporting": 7,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Cle Elum 8.9 E",
+       "elev_ft": 2245,
+       "km": 22.7,
+       "snow_in": 0.0
+      }
      }
     },
     "day3": {
@@ -872,6 +1425,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 6,
+      "n_reporting": 6,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Cle Elum 8.9 E",
+       "elev_ft": 2245,
+       "km": 22.7,
+       "snow_in": 0.0
+      }
      }
     },
     "total": {
@@ -915,6 +1482,20 @@
       "ours_hit": true,
       "obs_overlaps_ours": true
      },
+     "cocorahs": {
+      "n": 6,
+      "n_reporting": 7,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "Cle Elum 8.9 E",
+       "elev_ft": 2245,
+       "km": 22.7,
+       "snow_in": 0.0
+      }
+     },
      "observed_for_ours": {
       "low": 0.0,
       "mid": 0.0,
@@ -923,7 +1504,230 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": [
+    {
+     "id": "WA-CH-51",
+     "name": "Wenatchee 1.5 WSW",
+     "elev_ft": 1050,
+     "km": 18.5,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 2,
+       "expected_days": 3,
+       "complete": false,
+       "swe_in": 0.0
+      }
+     }
+    },
+    {
+     "id": "WA-CH-13",
+     "name": "Wenatchee 1.0 WSW",
+     "elev_ft": 900,
+     "km": 19.3,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-CH-11",
+     "name": "Wenatchee 0.6 N",
+     "elev_ft": 705,
+     "km": 21.2,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-KT-7",
+     "name": "Cle Elum 8.9 E",
+     "elev_ft": 2245,
+     "km": 22.7,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-DG-20",
+     "name": "East Wenatchee 1.5 SSE",
+     "elev_ft": 785,
+     "km": 23.2,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-DG-3",
+     "name": "East Wenatchee 1.2 N",
+     "elev_ft": 851,
+     "km": 23.9,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    },
+    {
+     "id": "WA-DG-23",
+     "name": "East Wenatchee 1.3 SE",
+     "elev_ft": 925,
+     "km": 24.3,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true
+      }
+     }
+    }
+   ]
   },
   "Snoqualmie Pass": {
    "obs_stations": {
@@ -967,7 +1771,27 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "North Bend 5.4 ESE",
+       "elev_ft": 808,
+       "km": 20.4,
+       "snow_in": 0.0
+      }
      }
     },
     "day2": {
@@ -1004,6 +1828,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "North Bend 5.4 ESE",
+       "elev_ft": 808,
+       "km": 20.4,
+       "snow_in": 0.0
+      }
      }
     },
     "day3": {
@@ -1040,6 +1878,20 @@
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
       "obs_overlaps_nbm_iqr": true
+     },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "North Bend 5.4 ESE",
+       "elev_ft": 808,
+       "km": 20.4,
+       "snow_in": 0.0
+      }
      }
     },
     "total": {
@@ -1083,6 +1935,20 @@
       "ours_hit": true,
       "obs_overlaps_ours": true
      },
+     "cocorahs": {
+      "n": 1,
+      "n_reporting": 1,
+      "complete": true,
+      "min_in": 0.0,
+      "median_in": 0.0,
+      "max_in": 0.0,
+      "highest": {
+       "name": "North Bend 5.4 ESE",
+       "elev_ft": 808,
+       "km": 20.4,
+       "snow_in": 0.0
+      }
+     },
      "observed_for_ours": {
       "low": 0.0,
       "mid": 0.0,
@@ -1091,7 +1957,45 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": [
+    {
+     "id": "WA-KG-143",
+     "name": "North Bend 5.4 ESE",
+     "elev_ft": 808,
+     "km": 20.4,
+     "windows": {
+      "day1": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "day2": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "day3": {
+       "snow_in": 0.0,
+       "days": 1,
+       "expected_days": 1,
+       "complete": true,
+       "swe_in": 0.0
+      },
+      "total": {
+       "snow_in": 0.0,
+       "days": 3,
+       "expected_days": 3,
+       "complete": true,
+       "swe_in": 0.0
+      }
+     }
+    }
+   ]
   },
   "Crystal": {
    "obs_stations": {
@@ -1135,7 +2039,13 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
      }
     },
     "day2": {
@@ -1259,7 +2169,8 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": []
   },
   "Paradise": {
    "obs_stations": {
@@ -1303,7 +2214,13 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
      }
     },
     "day2": {
@@ -1427,7 +2344,8 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": []
   },
   "White Pass": {
    "obs_stations": {
@@ -1471,7 +2389,13 @@
      "scores": {
       "nbm_error_in": 0.0,
       "nbm_iqr_hit": true,
-      "obs_overlaps_nbm_iqr": true
+      "obs_overlaps_nbm_iqr": true,
+      "hrrr_error_in": 0.0
+     },
+     "hrrr": {
+      "snowfall_in": 0.0,
+      "liquid_in": 0.0,
+      "cycle_utc": "2026-04-23T18:00Z"
      }
     },
     "day2": {
@@ -1595,7 +2519,8 @@
       "stations_requested": 1
      }
     }
-   }
+   },
+   "cocorahs_stations": []
   }
  },
  "snow_level": {
