@@ -154,7 +154,8 @@ header h1 {
 
     .buy-coffee-btn {
         top: 0.5rem;
-        right: 0.5rem;
+        right: auto;
+        left: 0.5rem;   /* the menu button takes the top-right corner */
     }
     
     .buy-coffee-btn img {
@@ -256,9 +257,9 @@ nav a.active {
 .nav-toggle {
     display: none;
     position: fixed;
-    left: 50%;
-    top: 13rem;
-    transform: translateX(-50%);
+    /* Top-right corner, level with the header bar; stays put while scrolling */
+    right: 0.75rem;
+    top: 0.6rem;
     width: 40px;
     height: 40px;
     border-radius: 6px;
@@ -267,12 +268,6 @@ nav a.active {
     cursor: pointer;
     z-index: 150;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.nav-toggle.scrolled {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
 }
 
 .nav-toggle:focus {
@@ -684,7 +679,11 @@ footer p {
 
     nav.open ul {
         display: flex;
-        margin-top: 0.5rem; /* small gap between the X toggle and first item */
+        margin-top: 0;
+        padding-top: 3.4rem; /* clear of the menu button in the top-right corner */
+        max-height: 100vh;
+        overflow-y: auto;
+        background: white;
     }
 
     /* Ensure all items (including bare anchors) align and stretch uniformly */
