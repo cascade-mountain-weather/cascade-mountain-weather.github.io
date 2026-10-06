@@ -108,3 +108,7 @@
     .eval select { width: 100%; min-width: 0; padding: 0.55rem 2rem 0.55rem 0.7rem; font-size: 1rem; }
     .eval-toggles { flex-wrap: wrap; }
 }
+
+.eval-check { display: inline-flex; align-items: center; gap: 0.35rem; }
+.eval-more { border: 1px solid #1e3c72; background: #fff; color: #1e3c72; border-radius: 999px; padding: 0.35rem 0.9rem; font: inherit; font-weight: 600; cursor: pointer; }
+.eval-more:hover { background: #eef4fb; }

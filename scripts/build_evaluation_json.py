@@ -48,14 +48,22 @@ def season_of(first_day):
     return f"{start}-{str(start + 1)[2:]}"
 
 
-def coco(w):
-    """Compact CoCoRaHS summary of a scored window, or None."""
+def coco(w, a=None, wid=None):
+    """Compact CoCoRaHS summary of a scored window, with each station's value so the page can filter, or None."""
     c = (w or {}).get("cocorahs")
     if not c:
         return None
     h = c.get("highest") or {}
-    return {"n": c["n"], "nr": c["n_reporting"], "full": bool(c["complete"]), "med": c["median_in"], "max": c["max_in"],
-            "top": [h.get("name"), h.get("elev_ft"), h.get("snow_in")]}
+    out = {"n": c["n"], "nr": c["n_reporting"], "full": bool(c["complete"]), "med": c["median_in"], "max": c["max_in"],
+           "top": [h.get("name"), h.get("elev_ft"), h.get("snow_in")]}
+    stations = []
+    for st in (a or {}).get("cocorahs_stations") or []:
+        v = (st.get("windows") or {}).get(wid)
+        if v and v.get("snow_in") is not None:
+            stations.append([st["name"], st["elev_ft"], st["km"], v["snow_in"], bool(v["complete"])])
+    if stations:
+        out["st"] = stations    # [name, elevation ft, km from the site, snow in, reported every day]
+    return out
 
 
 def triple(d, keys):
@@ -102,12 +110,14 @@ def main():
                     for model in ("hrrr", "hrdps"):
                         if w.get(model) and w[model].get("snowfall_in") is not None:
                             days[wid][model] = w[model]["snowfall_in"]
-                    c = coco(w)
+                    c = coco(w, a, wid)
                     if c:
                         days[wid]["coco"] = c
+                    if isinstance(w.get("ours"), list):          # a day-level forecast of ours, when one was saved
+                        days[wid]["ours"] = w["ours"]
             rec["days"] = days
-            if coco(tot):
-                rec["coco"] = coco(tot)
+            if coco(tot, a, "total"):
+                rec["coco"] = coco(tot, a, "total")
             records.append(rec)
         for site, sl in (s.get("snow_level") or {}).items():
             for r in sl["launches"]:

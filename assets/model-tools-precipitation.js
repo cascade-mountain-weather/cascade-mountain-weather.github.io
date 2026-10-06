@@ -394,6 +394,7 @@
 
     const mount = () => {
         CMWViewer.mount(document.getElementById('viewer'), {
+            singleMaxWidth: 760,
             selectors: [
                 { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).map(k => ({ value: k, label: AREAS[k].label })) },
                 { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!PRODUCTS[k].needs || AREAS[st.area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },

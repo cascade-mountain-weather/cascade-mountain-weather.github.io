@@ -52,11 +52,11 @@
         RAW.weekends.forEach((w, i) => { if (w.season === id) { idx[i] = wk.length; wk.push(w); } });
         const keep = r => idx[r.w] !== undefined;
         const renum = r => Object.assign({}, r, { w: idx[r.w] });
-        // Friday view: each record becomes its day-1 values (observed, NBM, HRRR, HRDPS). Our forecast was a weekend total only.
+        // Friday view: each record becomes its day-1 values (observed, NBM, HRRR, HRDPS, and ours when a day-level forecast was saved).
         const friday = r => {
             const d = r.days && r.days.day1;
             if (!d || !d.obs) return null;
-            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days };
+            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days };
         };
         let recs = RAW.records.filter(keep).map(renum);
         if (S.win === 'day1') recs = recs.map(friday).filter(Boolean);
@@ -108,7 +108,7 @@
         $('eval-trackers').innerHTML = D.products.map(p => {
             if (!live.some(l => l.id === p.id)) {
                 const why = POINT.includes(p.id) ? (S.win !== 'day1' ? 'Choose the Friday view to compare' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
-                    : p.id === 'ours' && S.win === 'day1' ? 'Weekend total only' : 'Coming soon';
+                    : p.id === 'ours' && S.win === 'day1' ? 'No day-level forecast saved yet' : 'Coming soon';
                 return `<div class="eval-card eval-card--off"><h4>${esc(p.label)}</h4><div class="eval-note">${why}</div></div>`;
             }
             const m = metrics(items(p.id, S.area)), rank = ranked.findIndex(r => r.id === p.id);
@@ -296,12 +296,13 @@
         const keys = [...new Set(recs.flatMap(r => Object.keys(r.days || {})))].sort();
         const dayVals = keys.map(k => {
             const list = recs.map(r => r.days && r.days[k]).filter(Boolean);
-            return { k, obs: avg3(list.filter(x => x.obs).map(x => x.obs)), nbm: avg3(list.filter(x => x.nbm).map(x => x.nbm)) };
+            return { k, obs: avg3(list.filter(x => x.obs).map(x => x.obs)), nbm: avg3(list.filter(x => x.nbm).map(x => x.nbm)),
+                ours: list.some(x => x.ours) ? avg3(list.filter(x => x.ours).map(x => [x.ours[0], (x.ours[0] + x.ours[1]) / 2, x.ours[1]])) : null };
         });
         const tot = plotRows(S.area)[S.weekend];
         const W = 520, H = 200, PL = 40, PR = 8, PT = 12, PB = 34, pw = W - PL - PR, ph = H - PT - PB, cw = pw / Math.max(1, keys.length);
         const T = S.axis === 'sqrt' ? sq : (v => v);
-        const top = Math.max(1, ...dayVals.flatMap(d => [d.obs && d.obs[2], d.nbm && d.nbm[2]].filter(Boolean))) * 1.05;
+        const top = Math.max(1, ...dayVals.flatMap(d => [d.obs && d.obs[2], d.nbm && d.nbm[2], d.ours && d.ours[2]].filter(Boolean))) * 1.05;
         const y = v => PT + (T(top) - T(v)) / T(top) * ph;
         let g = niceTicks(top, S.axis).map(t => `<line x1="${PL}" x2="${W - PR}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="ep-grid"/><text x="${PL - 5}" y="${(y(t) + 3.5).toFixed(1)}" text-anchor="end" class="ep-axis">${t}</text>`).join('');
         dayVals.forEach((d, k) => {
@@ -311,6 +312,8 @@
                 `<line class="ep-obsmid" x1="${(cx - bw / 2).toFixed(1)}" x2="${(cx + bw / 2).toFixed(1)}" y1="${y(d.obs[1]).toFixed(1)}" y2="${y(d.obs[1]).toFixed(1)}"/>`;
             if (d.nbm) g += `<line x1="${(cx + bw / 2 + 8).toFixed(1)}" x2="${(cx + bw / 2 + 8).toFixed(1)}" y1="${y(d.nbm[0]).toFixed(1)}" y2="${y(d.nbm[2]).toFixed(1)}" stroke="${COLORS.nbm}" stroke-width="3.5" stroke-linecap="round"/>` +
                 `<circle cx="${(cx + bw / 2 + 8).toFixed(1)}" cy="${y(d.nbm[1]).toFixed(1)}" r="3.6" fill="#fff" stroke="${COLORS.nbm}" stroke-width="2"/>`;
+            if (d.ours) g += `<line x1="${(cx + bw / 2 + 20).toFixed(1)}" x2="${(cx + bw / 2 + 20).toFixed(1)}" y1="${y(d.ours[0]).toFixed(1)}" y2="${y(d.ours[2]).toFixed(1)}" stroke="${COLORS.ours}" stroke-width="3.5" stroke-linecap="round"/>` +
+                `<circle cx="${(cx + bw / 2 + 20).toFixed(1)}" cy="${y(d.ours[1]).toFixed(1)}" r="3.6" fill="#fff" stroke="${COLORS.ours}" stroke-width="2"/>`;
         });
         const line = (label, tri) => (tri ? `<li>${label}: <strong>${fmt(tri[1])} in</strong> (${fmt(tri[0])}&ndash;${fmt(tri[2])})</li>` : '');
         box.hidden = false;
@@ -318,7 +321,7 @@
             <h4>${esc(wk.label)} &middot; ${S.area === 'ALL' ? 'average of the 9 areas' : esc(S.area)}</h4>
             <ul class="eval-lines">${line(S.win === 'day1' ? 'Observed, Friday' : 'Observed, weekend total', tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${tot.hrrr ? `<li>HRRR: <strong>${fmt(tot.hrrr[1])} in</strong></li>` : ''}${tot.hrdps ? `<li>HRDPS: <strong>${fmt(tot.hrdps[1])} in</strong></li>` : ''}</ul>
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Day by day, observed and NBM">${g}</svg>
-            <p class="eval-note">Grey = observed. Blue = NBM. Our forecast was only a weekend total.</p>`;
+            <p class="eval-note">Grey = observed. Blue = NBM.${dayVals.some(d => d.ours) ? ' Orange = our forecast.' : ' Our forecast was only a weekend total.'}</p>`;
     }
 
     // ---- statistics table ---------------------------------------------------------------------
@@ -363,21 +366,63 @@
 
     // ---- CoCoRaHS cross-check -----------------------------------------------------------------
 
+    const COCO = { weekend: 'all', minElev: 0, snowOnly: false, fullOnly: false, all: false };
+    const COCO_ROWS = 12;
+
+    function renderCocoControls() {
+        const opts = ['<option value="all">All weekends</option>'].concat(D.weekends.map((w, i) => `<option value="${i}">${esc(w.label)}</option>`));
+        $('eval-cococontrols').innerHTML = `
+            <label>Weekend <select id="coco-weekend">${opts.join('')}</select></label>
+            <label>Station elevation <select id="coco-elev"><option value="0">Any</option><option value="1000">1,000 ft or higher</option><option value="2000">2,000 ft or higher</option><option value="3000">3,000 ft or higher</option></select></label>
+            <label class="eval-check"><input type="checkbox" id="coco-snow"> Only where snow fell (any measure)</label>
+            <label class="eval-check"><input type="checkbox" id="coco-full"> Only stations that reported every day</label>`;
+        COCO.weekend = 'all'; COCO.minElev = 0; COCO.snowOnly = false; COCO.fullOnly = false; COCO.all = false;
+        const on = (id, fn) => $(id).addEventListener('change', e => { fn(e.target); COCO.all = false; renderCoco(); });
+        on('coco-weekend', t => { COCO.weekend = t.value; });
+        on('coco-elev', t => { COCO.minElev = Number(t.value); });
+        on('coco-snow', t => { COCO.snowOnly = t.checked; });
+        on('coco-full', t => { COCO.fullOnly = t.checked; });
+    }
+
+    // One row per area and weekend, rebuilt from the stations that pass the filters.
+    function cocoRows() {
+        const out = [];
+        D.records.forEach(r => {
+            if (!r.coco || !r.obs || !inArea(r, S.area)) return;
+            if (COCO.weekend !== 'all' && r.w !== Number(COCO.weekend)) return;
+            let sts = r.coco.st;
+            if (!sts) sts = [[r.coco.top && r.coco.top[0], r.coco.top && r.coco.top[1], null, r.coco.med, r.coco.full]];   // data without station detail
+            sts = sts.filter(x => (!COCO.minElev || (x[1] && x[1] >= COCO.minElev)) && (!COCO.fullOnly || x[4]));
+            if (!sts.length) return;
+            const full = sts.filter(x => x[4]), use = full.length ? full : sts;
+            const vals = use.map(x => x[3]).sort((p, q) => p - q), m = vals.length;
+            const med = m % 2 ? vals[(m - 1) / 2] : (vals[m / 2 - 1] + vals[m / 2]) / 2;
+            const top = use.reduce((p, q) => ((q[1] || 0) > (p[1] || 0) ? q : p));
+            if (COCO.snowOnly && !(vals[m - 1] > 0 || r.obs[1] >= 0.5)) return;
+            out.push({ r, n: use.length, full: full.length > 0, med, max: vals[m - 1], top });
+        });
+        return out.sort((p, q) => p.r.w - q.r.w || p.r.a.localeCompare(q.r.a));
+    }
+
     function renderCoco() {
-        const rows = D.records.filter(r => r.coco && r.obs && inArea(r, S.area)).sort((a, b) => a.w - b.w || a.a.localeCompare(b.a));
-        const win = S.win === 'day1' ? 'Friday' : 'weekend total';
+        const rows = cocoRows(), win = S.win === 'day1' ? 'Friday' : 'weekend total';
+        const area = S.area === 'ALL';
         if (!rows.length) {
-            $('eval-coco').innerHTML = `<p class="eval-sub">No CoCoRaHS volunteer reports near ${S.area === 'ALL' ? 'any area' : esc(S.area)} for this season and window. Few volunteers live near ski terrain, so most areas have none.</p>`;
+            $('eval-coco').innerHTML = `<p class="eval-sub">No CoCoRaHS reports match these filters near ${area ? 'any area' : esc(S.area)} for this season and window. Few volunteers live near ski terrain, so most areas have none.</p>`;
             return;
         }
-        const body = rows.map(r => {
-            const wk = D.weekends[r.w], o = r.obs, c = r.coco, nbm = r.nbm;
-            return `<tr><td>${esc(wk.label)}</td>${S.area === 'ALL' ? `<td>${esc(r.a)}</td>` : ''}<td>${fmt(o[1])}</td><td>${nbm ? fmt(nbm[1]) : DASH}</td>
-                <td><strong>${fmt(c.med)}</strong> <small>(${fmt(c.max === c.med ? null : c.max)}${c.max === c.med ? '' : ' max'})</small></td>
-                <td>${c.n}${c.full ? '' : '*'}</td><td>${c.top && c.top[0] ? `${esc(c.top[0])}, ${c.top[1] ? Number(c.top[1]).toLocaleString() + ' ft' : '?'}: ${fmt(c.top[2])} in` : DASH}</td></tr>`;
+        const shown = COCO.all ? rows : rows.slice(0, COCO_ROWS);
+        const body = shown.map(x => {
+            const wk = D.weekends[x.r.w], nbm = x.r.nbm;
+            return `<tr><td>${esc(wk.label)}</td>${area ? `<td>${esc(x.r.a)}</td>` : ''}<td>${fmt(x.r.obs[1])}</td><td>${nbm ? fmt(nbm[1]) : DASH}</td>
+                <td><strong>${fmt(x.med)}</strong>${x.max === x.med ? '' : ` <small>(${fmt(x.max)} max)</small>`}</td>
+                <td>${x.n}${x.full ? '' : '*'}</td><td>${x.top[0] ? `${esc(x.top[0])}, ${x.top[1] ? Number(x.top[1]).toLocaleString() + ' ft' : '?'}: ${fmt(x.top[3])} in` : DASH}</td></tr>`;
         }).join('');
-        $('eval-coco').innerHTML = `<div class="eval-scroll"><table class="eval-table"><thead><tr><th>Weekend</th>${S.area === 'ALL' ? '<th>Area</th>' : ''}<th>SNOTEL estimate</th><th>NBM median</th><th>CoCoRaHS median</th><th>Stations</th><th>Highest station</th></tr></thead><tbody>${body}</tbody></table></div>
-            <p class="eval-sub">${esc(win)}, inches. Volunteer stations within 25 km. They are mostly in valleys and towns, well below the forecast elevation, so they check the storm, not the amount. A star means a station missed some days, so its total is a floor. This is a cross-check and is not part of any score.</p>`;
+        $('eval-coco').innerHTML = `<div class="eval-scroll"><table class="eval-table"><thead><tr><th>Weekend</th>${area ? '<th>Area</th>' : ''}<th>SNOTEL estimate</th><th>NBM median</th><th>CoCoRaHS median</th><th>Stations</th><th>Highest station</th></tr></thead><tbody>${body}</tbody></table></div>
+            ${rows.length > COCO_ROWS ? `<p class="eval-sub"><button type="button" class="eval-more" id="coco-more">${COCO.all ? 'Show fewer' : `Show all ${rows.length} rows`}</button></p>` : ''}
+            <p class="eval-sub">${esc(win)}, inches; ${rows.length} area-weekend${rows.length === 1 ? '' : 's'}. Volunteer stations within 25 km. They are mostly in valleys and towns, well below the forecast elevation, so they check the storm, not the amount. A star means a station missed some days, so its total is a floor. This is a cross-check and is not part of any score.</p>`;
+        const more = $('coco-more');
+        if (more) more.addEventListener('click', () => { COCO.all = !COCO.all; renderCoco(); });
     }
 
     // ---- snow level ---------------------------------------------------------------------------
@@ -441,6 +486,7 @@
         $('eval-main').hidden = empty;
         if (empty) return;
         refreshProducts();
+        renderCocoControls();
         renderAll();
         if (map) map.invalidateSize();
     }

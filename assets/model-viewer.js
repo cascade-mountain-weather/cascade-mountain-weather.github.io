@@ -288,6 +288,9 @@
             } else extra.hidden = true;
             const multi = view.hours.length > 1;
             controls.hidden = !multi;
+            // one-panel figures can be held narrower (the page asks for it); zoom and full screen still work
+            stage.style.maxWidth = !multi && cfg.singleMaxWidth ? cfg.singleMaxWidth + 'px' : '';
+            stage.style.marginLeft = stage.style.marginRight = !multi && cfg.singleMaxWidth ? 'auto' : '';
             slider.max = view.hours.length - 1;
             idx = Math.min(idx, view.hours.length - 1);
             if (!multi) idx = 0;
