@@ -70,10 +70,17 @@
                 <div class="mv-time" aria-live="polite"></div>
             </div>
             <div class="mv-stage">
-                <img class="mv-img SynopticPlot" alt="" />
+                <img class="mv-img" alt="" draggable="false" />
+                <div class="mv-zoom" role="group" aria-label="Zoom">
+                    <button type="button" class="mv-zbtn mv-zin" aria-label="Zoom in">+</button>
+                    <button type="button" class="mv-zbtn mv-zout" aria-label="Zoom out">&minus;</button>
+                    <button type="button" class="mv-zbtn mv-zreset" aria-label="Fit to width">Fit</button>
+                    <button type="button" class="mv-zbtn mv-zfull" aria-label="Full screen">&#9974;</button>
+                </div>
                 <div class="mv-loading" hidden>Loading…</div>
                 <div class="mv-fail" hidden></div>
             </div>
+            <p class="mv-hint">Zoom with the + and &minus; buttons, a pinch, Ctrl + scroll, or a double-click. Drag to move around when zoomed.</p>
             <figure class="mv-extra" hidden><img class="mv-extra-img" alt="" /><figcaption></figcaption></figure>
             <details class="mv-info" open>
                 <summary>What this shows</summary>
@@ -307,6 +314,7 @@
             cfg.selectors.forEach(s => p.set(s.key, state[s.key]));
             try { history.replaceState(null, '', '#' + p.toString()); } catch (e) { /* file:// etc. */ }
             renderSelectors();
+            resetZoom();
             load();
         }
 
@@ -320,12 +328,90 @@
         });
         slider.addEventListener('input', () => { stop(); show(+slider.value); });
 
-        // swipe on the image: left = next, right = previous
-        let sx = null;
+        // ---- zoom and pan: the image is scaled inside the stage; frames keep the zoom as you step through them ----
         const stage = $('.mv-stage');
-        stage.addEventListener('touchstart', e => { sx = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+        const Z = { s: 1, x: 0, y: 0, baseH: 0 }, MAX_ZOOM = 6;
+        const pointers = new Map();
+        let pinch = null, panFrom = null, moved = false;
+        function applyZoom() {
+            const sw = stage.clientWidth, sh = stage.clientHeight, iw = img.offsetWidth, ih = img.offsetHeight;
+            Z.x = Math.min(0, Math.max(sw - iw * Z.s, Z.x));
+            Z.y = Math.min(0, Math.max(sh - ih * Z.s, Z.y));
+            if (Z.s === 1) { Z.x = 0; Z.y = 0; }
+            img.style.transform = Z.s === 1 ? '' : `translate(${Z.x}px, ${Z.y}px) scale(${Z.s})`;
+            stage.classList.toggle('is-zoomed', Z.s > 1);
+            stage.style.touchAction = Z.s > 1 ? 'none' : 'pan-y';
+        }
+        function zoomAt(factor, cx, cy) {
+            const ns = Math.min(MAX_ZOOM, Math.max(1, Z.s * factor));
+            if (ns === Z.s) return;
+            if (Z.s === 1) { Z.baseH = stage.offsetHeight; stage.style.height = Z.baseH + 'px'; }   // hold the stage height while zoomed
+            const r = ns / Z.s;
+            Z.x = cx - (cx - Z.x) * r;
+            Z.y = cy - (cy - Z.y) * r;
+            Z.s = ns;
+            if (Z.s === 1) stage.style.height = '';
+            applyZoom();
+        }
+        function resetZoom() { Z.s = 1; Z.x = 0; Z.y = 0; stage.style.height = ''; applyZoom(); }
+        const centre = () => [stage.clientWidth / 2, stage.clientHeight / 2];
+        const local = e => { const b = stage.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+        $('.mv-zin').addEventListener('click', () => zoomAt(1.6, ...centre()));
+        $('.mv-zout').addEventListener('click', () => zoomAt(1 / 1.6, ...centre()));
+        $('.mv-zreset').addEventListener('click', resetZoom);
+        $('.mv-zfull').addEventListener('click', () => {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+        });
+        document.addEventListener('fullscreenchange', () => { resetZoom(); });
+        stage.addEventListener('wheel', e => {
+            if (!(e.ctrlKey || e.metaKey)) return;          // plain scrolling still scrolls the page
+            e.preventDefault();
+            zoomAt(Math.exp(-e.deltaY * 0.01), ...local(e));
+        }, { passive: false });
+        stage.addEventListener('dblclick', e => {
+            if (e.target.closest('.mv-zoom')) return;
+            if (Z.s > 1) resetZoom(); else zoomAt(2.5, ...local(e));
+        });
+        stage.addEventListener('pointerdown', e => {
+            if (e.target.closest('.mv-zoom')) return;
+            pointers.set(e.pointerId, [e.clientX, e.clientY]);
+            moved = false;
+            if (pointers.size === 2) {
+                const [a, b] = [...pointers.values()];
+                pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) };
+                panFrom = null;
+            } else if (Z.s > 1) {
+                panFrom = { x: e.clientX, y: e.clientY, zx: Z.x, zy: Z.y };
+                try { stage.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ }
+            }
+        });
+        stage.addEventListener('pointermove', e => {
+            if (!pointers.has(e.pointerId)) return;
+            pointers.set(e.pointerId, [e.clientX, e.clientY]);
+            if (pinch && pointers.size === 2) {
+                const [a, b] = [...pointers.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+                const bb = stage.getBoundingClientRect();
+                zoomAt(d / pinch.d, (a[0] + b[0]) / 2 - bb.left, (a[1] + b[1]) / 2 - bb.top);
+                pinch.d = d;
+                moved = true;
+            } else if (panFrom && Z.s > 1) {
+                if (Math.abs(e.clientX - panFrom.x) + Math.abs(e.clientY - panFrom.y) > 3) moved = true;
+                Z.x = panFrom.zx + (e.clientX - panFrom.x);
+                Z.y = panFrom.zy + (e.clientY - panFrom.y);
+                applyZoom();
+            }
+        });
+        const endPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (!pointers.size) panFrom = null; };
+        stage.addEventListener('pointerup', endPointer);
+        stage.addEventListener('pointercancel', endPointer);
+        window.addEventListener('resize', applyZoom);
+
+        // swipe on the image: left = next, right = previous (only when not zoomed; zoomed, a drag moves the image)
+        let sx = null;
+        stage.addEventListener('touchstart', e => { sx = e.touches.length === 1 && Z.s === 1 ? e.touches[0].clientX : null; }, { passive: true });
         stage.addEventListener('touchend', e => {
-            if (sx == null || view.hours.length < 2) return;
+            if (sx == null || view.hours.length < 2 || Z.s > 1) return;
             const dx = e.changedTouches[0].clientX - sx;
             sx = null;
             if (Math.abs(dx) > 50) { stop(); const d = dx < 0 ? 1 : -1; show(idx + d, { dir: d }); }
@@ -333,6 +419,11 @@
 
         // keyboard: arrows step, space plays, when focus is inside the viewer
         root.addEventListener('keydown', e => {
+            if (!/^(SELECT|INPUT)$/.test(e.target.tagName)) {
+                if (e.key === '+' || e.key === '=') zoomAt(1.6, ...centre());
+                else if (e.key === '-') zoomAt(1 / 1.6, ...centre());
+                else if (e.key === '0') resetZoom();
+            }
             if (view.hours.length < 2 || /^(SELECT|INPUT)$/.test(e.target.tagName) && e.key === ' ') return;
             if (e.key === 'ArrowLeft') { e.preventDefault(); stop(); show(idx - 1, { dir: -1 }); }
             else if (e.key === 'ArrowRight') { e.preventDefault(); stop(); show(idx + 1); }

@@ -1,5 +1,5 @@
 /* Shared model viewer (see assets/model-viewer.js) */
-.mv { width: 100%; max-width: 1000px; min-width: 0; box-sizing: border-box; margin: 0 auto; padding: 0 0 2rem; color: #0f172a; overflow-x: clip; }
+.mv { width: 100%; max-width: 1200px; min-width: 0; box-sizing: border-box; margin: 0 auto; padding: 0 0 2rem; color: #0f172a; overflow-x: clip; }
 .mv *, .mv *::before, .mv *::after { box-sizing: border-box; }
 .mv > * { min-width: 0; max-width: 100%; }
 .mv-selectors { display: flex; flex-direction: column; gap: 0.7rem; margin: 0 0 1rem; }
@@ -22,8 +22,21 @@
     position: relative; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
     min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.mv-img { display: block; width: auto; max-width: 100%; height: auto; max-height: 72vh; margin: 0 auto !important; transition: opacity 0.12s; }
+.mv-img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 !important; transform-origin: 0 0; transition: opacity 0.12s; user-select: none; -webkit-user-drag: none; }
+.mv-stage.is-zoomed .mv-img { cursor: grab; max-width: none; }
+.mv-stage.is-zoomed:active .mv-img { cursor: grabbing; }
 .mv-img:not([src]) { display: none; }
+.mv-stage { touch-action: pan-y; }
+.mv-stage:fullscreen { background: #fff; align-items: flex-start; }
+.mv-zoom { position: absolute; top: 8px; right: 8px; z-index: 5; display: flex; gap: 4px; }
+.mv-zbtn {
+    min-width: 36px; height: 36px; padding: 0 0.5rem; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: rgba(255, 255, 255, 0.92); color: #1e3c72; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+}
+.mv-zbtn:hover { background: #eef4fb; }
+.mv-zbtn:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+.mv-zreset { font-size: 0.8rem; }
+.mv-hint { margin: 0.3rem 0 0.8rem; font-size: 0.78rem; color: #64748b; text-align: left; }
 .mv-img.is-loading { opacity: 0.55; }
 .mv-loading, .mv-fail {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
