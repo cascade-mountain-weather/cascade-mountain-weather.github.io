@@ -11,7 +11,8 @@
 <meta name="author" content="Cascade Mountain Weather">
 <meta name="robots" content="{% if page.noindex %}noindex, nofollow{% else %}index, follow{% endif %}">
 <link rel="canonical" href="{{ page.url | absolute_url }}">
-<link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+<link rel="icon" type="image/png" sizes="48x48" href="{{ '/assets/images/favicon-48.png' | relative_url }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/images/favicon-32.png' | relative_url }}">
 
 <!-- Open Graph / Social Media -->
 <meta property="og:type" content="{{ page.og_type | default: 'website' }}">
@@ -19,13 +20,13 @@
 <meta property="og:description" content="{{ page.og_description | default: page.description | default: site.description }}">
 <meta property="og:url" content="{{ page.url | absolute_url }}">
 <meta property="og:site_name" content="Cascade Mountain Weather">
-<meta property="og:image" content="{{ '/assets/images/favicon.svg' | absolute_url }}">
+<meta property="og:image" content="{{ '/assets/images/icon-512.png' | absolute_url }}">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="{{ og_title }}">
 <meta name="twitter:description" content="{{ page.og_description | default: page.description | default: site.description }}">
-<meta name="twitter:image" content="{{ '/assets/images/favicon.svg' | absolute_url }}">
+<meta name="twitter:image" content="{{ '/assets/images/icon-512.png' | absolute_url }}">
 
 {% if page.pwa_meta %}
 <meta name="theme-color" content="#1e3c72">
@@ -33,7 +34,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CMW">
-<link rel="apple-touch-icon" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+<link rel="apple-touch-icon" href="{{ '/assets/images/apple-touch-icon.png' | relative_url }}">
 {% endif %}
 
 {% if page.structured_data %}
@@ -47,7 +48,7 @@
   "publisher": {
     "@type": "Organization",
     "name": "Cascade Mountain Weather",
-    "logo": { "@type": "ImageObject", "url": "{{ '/assets/images/favicon.svg' | absolute_url }}" }
+    "logo": { "@type": "ImageObject", "url": "{{ '/assets/images/icon-512.png' | absolute_url }}" }
   },
   "mainEntityOfPage": { "@type": "WebPage", "@id": "{{ page.url | absolute_url }}" },
   "datePublished": "{{ page.date | date_to_xmlschema }}",

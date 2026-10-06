@@ -40,6 +40,29 @@ og_description: "Rep the Cascades. Shop Cascade Mountain Weather gear."
     background: #005f8f;
     transform: translateY(-2px);
   }
+  .merch-examples {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 0 0 1.75rem;
+  }
+  .merch-examples figure {
+    flex: 1 1 0;
+    max-width: 180px;
+    margin: 0;
+  }
+  .merch-examples img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: #f1f5f9;
+  }
+  .merch-examples figcaption {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 0.3rem;
+  }
   .merch-note {
     margin-top: 1.5rem;
     font-size: 0.9rem;
@@ -54,6 +77,11 @@ og_description: "Rep the Cascades. Shop Cascade Mountain Weather gear."
     Every order is printed on demand and ships straight from Printful — every purchase helps
     cover the cost of keeping the forecasts, tools, and site running.
   </p>
+  <div class="merch-examples">
+    <figure><img src="{{ '/assets/images/cap.png' | relative_url }}" alt="Black Cascade Mountain Weather cap" loading="lazy"><figcaption>Cap</figcaption></figure>
+    <figure><img src="{{ '/assets/images/shirt.png' | relative_url }}" alt="Gray Cascade Mountain Weather t-shirt" loading="lazy"><figcaption>Tee</figcaption></figure>
+    <figure><img src="{{ '/assets/images/hoody.png' | relative_url }}" alt="Black Cascade Mountain Weather hoodie" loading="lazy"><figcaption>Hoodie</figcaption></figure>
+  </div>
   <a href="https://cascade-mountain-weather.printful.me/" target="_blank" rel="noopener noreferrer" class="merch-shop-btn">
     Shop the Store →
   </a>
