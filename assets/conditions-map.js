@@ -257,11 +257,17 @@
 
         // Station dots go on top of the basins; clicking one opens its own area first.
         data.areas.forEach(area => area.stations.forEach(s => {
-            const dot = L.circleMarker([s.lat, s.lon], {
-                radius: 5, weight: 1.5, color: '#fff', fillOpacity: 1,
-                fillColor: s.trust.ok ? '#1e3c72' : '#9ca3af', bubblingMouseEvents: false,
+            // SNOTEL stations are circles, NWAC stations are diamonds; grey means questionable or no recent data
+            const shape = s.network === 'NWAC' ? 'diamond' : 'circle';
+            const dot = L.marker([s.lat, s.lon], {
+                icon: L.divIcon({
+                    className: 'cmap-pin',
+                    html: `<span class="cmap-pin-${shape}${s.trust.ok ? '' : ' cmap-pin--flag'}"></span>`,
+                    iconSize: [18, 18], iconAnchor: [9, 9],
+                }),
+                bubblingMouseEvents: false, keyboard: false,
             }).addTo(map);
-            dot.bindTooltip(`${esc(s.label)}${s.elev_ft ? ` (${s.elev_ft.toLocaleString()}')` : ''}`, { direction: 'top' });
+            dot.bindTooltip(`${esc(s.label)}${s.elev_ft ? ` (${s.elev_ft.toLocaleString()}')` : ''}`, { direction: 'top', offset: [0, -8] });
             dot.on('click', () => openAt(L.latLng(s.lat, s.lon), areasByBasin.get(area.basin), area));
         }));
 
