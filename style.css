@@ -37,8 +37,7 @@ header h1 {
 }
 
 /* The site header only (not the post header): logo and tagline side by side */
-.header-full,
-.header-compact {
+.header-full {
     padding: 0.9rem 1rem;
     display: flex;
     align-items: center;
@@ -46,8 +45,7 @@ header h1 {
     gap: 1.4rem;
 }
 
-.header-full h1,
-.header-compact h1 {
+.header-full h1 {
     margin-bottom: 0;
 }
 
@@ -92,31 +90,6 @@ header h1 {
     display: block;
 }
 
-/* Inner pages: a slim bar, small logo with the tagline on one line */
-.header-compact {
-    padding: 0.4rem 1rem;
-    gap: 0.9rem;
-}
-
-.header-compact .cmw-header-main-logo {
-    width: 54px;
-}
-
-.header-compact .tagline {
-    font-size: 0.95rem;
-    text-align: left;
-}
-
-.header-compact .tagline span {
-    display: inline;
-}
-
-@media (max-width: 700px) {
-    .header-compact .tagline {
-        display: none;
-    }
-}
-
 /* Buy Me a Coffee Button */
 .buy-coffee-btn {
     position: absolute;
@@ -142,10 +115,6 @@ header h1 {
 @media (max-width: 768px) {
     .cmw-header-main-logo {
         width: clamp(80px, 24vw, 105px);
-    }
-
-    .header-compact .cmw-header-main-logo {
-        width: 46px;
     }
 
     .tagline {
@@ -186,6 +155,35 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+/* Once the header has scrolled away, the logo appears at the left of the sticky nav bar */
+.nav-mini-logo {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.nav-mini-logo img {
+    display: block;
+    height: 34px;
+    width: auto;
+}
+
+@media (min-width: 769px) {
+    .nav-mini-logo {
+        display: block;
+        pointer-events: none;
+    }
+
+    nav.scrolled .nav-mini-logo {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 nav ul {

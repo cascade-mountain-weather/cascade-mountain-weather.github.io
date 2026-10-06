@@ -79,6 +79,17 @@
     }
   }catch(err){ console.warn('header title logo injection error', err); }
 
+  // Once the header has scrolled out of view, show the small logo in the nav bar
+  try{
+    const bar = document.querySelector('nav');
+    const top = document.querySelector('body > header');
+    if(bar && top){
+      const mark = function(){ bar.classList.toggle('scrolled', window.pageYOffset > top.offsetHeight); };
+      window.addEventListener('scroll', mark, { passive: true });
+      mark();
+    }
+  }catch(err){ console.warn('nav logo error', err); }
+
   // Mobile nav hamburger toggle
   try{
     const nav = document.querySelector('nav');
