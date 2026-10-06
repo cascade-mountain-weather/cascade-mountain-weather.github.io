@@ -56,22 +56,24 @@
         root.innerHTML = `
             <div class="mv-selectors"></div>
             <h2 class="mv-title" aria-live="polite"></h2>
+            <div class="mv-bar">
+                <div class="mv-controls" hidden>
+                    <button type="button" class="mv-btn mv-prev" aria-label="Previous frame">&#9664;</button>
+                    <button type="button" class="mv-btn mv-play" aria-label="Play">&#9654;</button>
+                    <button type="button" class="mv-btn mv-next" aria-label="Next frame">&#9654;</button>
+                    <div class="mv-sliderwrap">
+                        <input type="range" class="mv-slider" min="0" value="0" step="1" aria-label="Forecast hour" />
+                        <div class="mv-days" aria-hidden="true"></div>
+                    </div>
+                    <button type="button" class="mv-btn mv-speed" aria-label="Playback speed">1×</button>
+                </div>
+                <div class="mv-time" aria-live="polite"></div>
+            </div>
             <div class="mv-stage">
                 <img class="mv-img SynopticPlot" alt="" />
                 <div class="mv-loading" hidden>Loading…</div>
                 <div class="mv-fail" hidden></div>
             </div>
-            <div class="mv-controls" hidden>
-                <button type="button" class="mv-btn mv-prev" aria-label="Previous frame">&#9664;</button>
-                <button type="button" class="mv-btn mv-play" aria-label="Play">&#9654;</button>
-                <button type="button" class="mv-btn mv-next" aria-label="Next frame">&#9654;</button>
-                <div class="mv-sliderwrap">
-                    <input type="range" class="mv-slider" min="0" value="0" step="1" aria-label="Forecast hour" />
-                    <div class="mv-days" aria-hidden="true"></div>
-                </div>
-                <button type="button" class="mv-btn mv-speed" aria-label="Playback speed">1\u00d7</button>
-            </div>
-            <div class="mv-time" aria-live="polite"></div>
             <figure class="mv-extra" hidden><img class="mv-extra-img" alt="" /><figcaption></figcaption></figure>
             <details class="mv-info" open>
                 <summary>What this shows</summary>

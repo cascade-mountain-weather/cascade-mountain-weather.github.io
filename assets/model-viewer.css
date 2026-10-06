@@ -22,7 +22,7 @@
     position: relative; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
     min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.mv-img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 !important; transition: opacity 0.12s; }
+.mv-img { display: block; width: auto; max-width: 100%; height: auto; max-height: 72vh; margin: 0 auto !important; transition: opacity 0.12s; }
 .mv-img:not([src]) { display: none; }
 .mv-img.is-loading { opacity: 0.55; }
 .mv-loading, .mv-fail {
@@ -33,7 +33,13 @@
 .mv-fail { pointer-events: auto; background: #f8fafc; }
 .mv-fail p { margin: 0.25rem 0; }
 
-.mv-controls { display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0 0; }
+.mv-bar {
+    /* slider and time stay in view while the plot is scrolled */
+    position: sticky; top: 0; z-index: 20; background: #fff; margin: 0 0 0.6rem; padding: 0.5rem 0 0.1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+@media (min-width: 769px) { .mv-bar { top: 52px; } }   /* below the sticky nav bar */
+.mv-controls { display: flex; align-items: center; gap: 0.5rem; margin: 0; }
 .mv-controls[hidden] { display: none; }
 .mv-btn {
     flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #cbd5e1;
@@ -51,7 +57,7 @@
 .mv-days { position: absolute; left: 0; right: 0; bottom: 0; height: 1.1rem; font-size: 0.7rem; color: #64748b; pointer-events: none; }
 .mv-days span { position: absolute; transform: translateX(-2px); white-space: nowrap; padding-left: 3px; border-left: 1px solid #94a3b8; }
 
-.mv-time { margin: 0.5rem 0 0.9rem; text-align: left; }
+.mv-time { margin: 0.2rem 0 0.4rem; text-align: left; }
 .mv-valid { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; align-items: baseline; font-size: 1.05rem; color: #0f172a; }
 .mv-z { font-size: 0.85rem; color: #64748b; font-variant-numeric: tabular-nums; }
 .mv-run { font-size: 0.8rem; color: #64748b; margin-top: 0.15rem; }
