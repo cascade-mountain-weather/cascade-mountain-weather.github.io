@@ -63,25 +63,30 @@
         }
         const maxBar = Math.max(1, ...p75.filter(v => v != null), ...det.filter(v => v != null));
         const maxCum = Math.max(1, cum.hi[cum.hi.length - 1] || 0);
-        const nice = m => { const st = m <= 4 ? 1 : m <= 12 ? 2 : m <= 30 ? 5 : 10; return Math.ceil(m / st) * st; };
+        const nice = m => { const st = m <= 1 ? 0.25 : m <= 2 ? 0.5 : m <= 4 ? 1 : m <= 12 ? 2 : m <= 30 ? 5 : 10; return Math.ceil(m / st) * st; };
         const topMax = nice(maxBar * 1.1), botMax = nice(maxCum * 1.05);
-        const A = { y0: 44, h: 170 }, B = { y0: 270, h: 170 };
+        const qpf = Array.isArray(site.precip) && site.precip.some(v => v != null) ? site.precip : null;
+        const A = { y0: 44, h: 170 }, Q = { y0: 262, h: 110 }, B = { y0: qpf ? 424 : 270, h: 170 };
+        const H_ = qpf ? 646 : 492;
+        const qMax = qpf ? nice(Math.max(0.25, ...qpf.filter(v => v != null)) * 1.1) : 1;
+        const YQ = v => Q.y0 + Q.h - v / qMax * Q.h;
         const YA = v => A.y0 + A.h - v / topMax * A.h, YB = v => B.y0 + B.h - v / botMax * B.h;
         const out = [];
         const grid = (P, M, Y, label) => {
-            const st = M <= 4 ? 1 : M <= 12 ? 2 : M <= 30 ? 5 : 10;
+            const st = M <= 1 ? 0.25 : M <= 2 ? 0.5 : M <= 4 ? 1 : M <= 12 ? 2 : M <= 30 ? 5 : 10;
             for (let v = 0; v <= M; v += st) out.push(`<line x1="${pad.l}" x2="${W_ - pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e2e8f0"/><text x="${pad.l - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="#64748b">${v}</text>`);
             out.push(`<text x="14" y="${P.y0 + P.h / 2}" transform="rotate(-90 14 ${P.y0 + P.h / 2})" text-anchor="middle" font-size="12" fill="#334155">${label}</text>`);
         };
-        out.push(`<rect width="${W_}" height="492" fill="#fff"/>`);
+        out.push(`<rect width="${W_}" height="${H_}" fill="#fff"/>`);
         out.push(`<text x="${pad.l}" y="18" font-size="14" font-weight="700" fill="#1e3c72">NBM snowfall</text>`);
         out.push(`<text x="${pad.l}" y="34" font-size="11" fill="#64748b">Bars: median per 6 hours. Whiskers: 25th to 75th percentile. Dot: NBM deterministic.</text>`);
         grid(A, topMax, YA, 'inches per 6 h');
-        grid(B, botMax, YB, 'inches accumulated');
+        if (qpf) grid(Q, qMax, YQ, 'liquid inches per 6 h');
+        grid(B, botMax, YB, 'snow inches accumulated');
         // Pacific midnights and day labels
         for (let t = Math.ceil(t0 / 3600e3) * 3600e3; t <= t1; t += 3600e3) {
             if (+PAC_H.format(t) !== 0) continue;
-            for (const P of [A, B]) out.push(`<line x1="${X(t)}" x2="${X(t)}" y1="${P.y0}" y2="${P.y0 + P.h}" stroke="#94a3b8" stroke-dasharray="3 3"/>`);
+            for (const P of (qpf ? [A, Q, B] : [A, B])) out.push(`<line x1="${X(t)}" x2="${X(t)}" y1="${P.y0}" y2="${P.y0 + P.h}" stroke="#94a3b8" stroke-dasharray="3 3"/>`);
             if (X(t) > W_ - pad.r - 50) continue;
             out.push(`<text x="${X(t) + 4}" y="${B.y0 + B.h + 16}" font-size="11" fill="#334155">${PAC_D.format(t + 6 * 3600e3).replace(',', '')}</text>`);
         }
@@ -98,6 +103,18 @@
             if (p25[i] != null && p75[i] != null) out.push(`<line x1="${xc}" x2="${xc}" y1="${YA(p25[i])}" y2="${YA(p75[i])}" stroke="#1e3a8a" stroke-width="1.6"/><line x1="${xc - 3}" x2="${xc + 3}" y1="${YA(p75[i])}" y2="${YA(p75[i])}" stroke="#1e3a8a" stroke-width="1.6"/><line x1="${xc - 3}" x2="${xc + 3}" y1="${YA(p25[i])}" y2="${YA(p25[i])}" stroke="#1e3a8a" stroke-width="1.6"/>`);
             if (det[i] != null) out.push(`<circle cx="${xc}" cy="${YA(det[i])}" r="3" fill="#f59e0b" stroke="#fff" stroke-width="1"/>`);
         }
+        // liquid precipitation row: deterministic NBM value per window
+        if (qpf) {
+            out.push(`<text x="${pad.l}" y="${Q.y0 - 8}" font-size="12" font-weight="700" fill="#1e3c72">NBM liquid precipitation <tspan font-weight="400" fill="#64748b">(rain plus the water in snow; deterministic, 6-hour totals)</tspan></text>`);
+            let tot = 0, seen = 0;
+            for (let i = 0; i < n; i++) {
+                const xc = X(ends[i] - W / 2);
+                if (qpf[i] == null) { out.push(`<rect x="${xc - bw / 2}" y="${Q.y0}" width="${bw}" height="${Q.h}" fill="#f1f5f9"/>`); continue; }
+                tot += qpf[i]; seen++;
+                out.push(`<rect x="${xc - bw / 2}" y="${YQ(qpf[i])}" width="${bw}" height="${Math.max(0, YQ(0) - YQ(qpf[i]))}" fill="#0f766e" opacity="0.85"/>`);
+            }
+            if (seen) out.push(`<text x="${W_ - pad.r}" y="${Q.y0 - 8}" text-anchor="end" font-size="12" font-weight="700" fill="#0f766e">Total ${num(tot, 2)} in</text>`);
+        }
         // cumulative band + median
         if (known > 0) {
             const xs = [t0, ...ends.slice(0, known)].map(X);
@@ -108,7 +125,7 @@
             out.push(`<text x="${Math.min(lastX + 6, W_ - 4)}" y="${YB(cum.mid[known]) - 6}" text-anchor="${lastX > W_ - 120 ? 'end' : 'start'}" font-size="12" font-weight="700" fill="#1e3c72">${num(cum.mid[known])}" (${num(cum.lo[known])}\u2013${num(cum.hi[known])}")</text>`);
         }
         out.push(`<text x="${pad.l}" y="${B.y0 - 6}" font-size="11" fill="#64748b">Accumulation: line is the sum of the medians, shading the sum of the 25th and 75th percentiles (approximate).</text>`);
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W_}" height="492" viewBox="0 0 ${W_} 492" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif">${out.join('')}</svg>`;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W_}" height="${H_}" viewBox="0 0 ${W_} ${H_}" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif">${out.join('')}</svg>`;
         return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     }
 
@@ -291,7 +308,7 @@
                 fallbackUrl: 'https://www.weather.gov/mdl/nbm_home',
             }),
             info: {
-                what: 'Snowfall from the National Blend of Models (NBM), NOAA&rsquo;s statistical blend of many models, for the grid cell nearest this area (2.5 km), in 6-hour windows. Bars are the median, whiskers span the 25th to 75th percentile, and the orange dot is the NBM deterministic value. The lower panel adds the windows up. Updated every 6 hours.',
+                what: 'Snowfall from the National Blend of Models (NBM), NOAA&rsquo;s statistical blend of many models, for the grid cell nearest this area (2.5 km), in 6-hour windows. Bars are the median, whiskers span the 25th to 75th percentile, and the orange dot is the NBM deterministic value. The middle panel is the NBM liquid precipitation (rain plus the water in snow) for the same windows, as a single deterministic value with its total, and the bottom panel adds the snowfall windows up. Updated every 6 hours.',
                 how: 'A blend like this tends to be smooth and conservative, so compare its total and spread with the West-WRF and Utah ensembles: when they all agree, confidence is high. Percentiles do not add exactly, so the accumulated shading is approximate. Gaps mean the NBM has no snowfall window for that period.',
                 source: 'NOAA National Blend of Models, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
             },

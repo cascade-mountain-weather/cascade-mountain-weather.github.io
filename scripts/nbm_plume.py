@@ -4,7 +4,8 @@
     python scripts/nbm_plume.py                 # newest long NBM cycle, 5 days
     python scripts/nbm_plume.py --hours 96 --cycle "2026-10-06 13:00"
 
-It also records NBM total cloud cover (percent, deterministic) every 3 hours for the same sites.
+It also records the NBM 6-hour liquid precipitation (deterministic, the only version the NBM carries for
+these windows) for the same windows, and total cloud cover (percent, deterministic) every 3 hours.
 
 Output: assets/data/nbm_plumes.json (under assets/ so the site can serve it; bot-generated, do not hand-edit).
 
@@ -17,6 +18,7 @@ as an approximation and says so.
 """
 import argparse
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -54,6 +56,17 @@ def newest_long_cycle(hours):
     sys.exit("no long NBM cycle with the needed forecast hour found")
 
 
+def liquid_window(cycle, start, end, grid):
+    """6-hour liquid precipitation (inches) per site, from the same file as the snowfall window, or None."""
+    fs, fe = int((start - cycle).total_seconds() // 3600), int((end - cycle).total_seconds() // 3600)
+    try:
+        H = nbm.herbie_for(cycle, fe)
+        return nbm.fetch(H, grid, re.escape(f":APCP:surface:{fs}-{fe} hour acc fcst:") + "$") / 25.4   # kg/m2 -> inches
+    except Exception as exc:
+        print(f"  precip window ending {end:%d %H}Z failed: {str(exc)[:80]}", file=sys.stderr)
+        return None
+
+
 def window_ends(cycle, hours):
     """Window end times: every 6 h on the 00/06/12/18Z grid, from the first full window after the cycle."""
     first = cycle.ceil("6h")
@@ -84,7 +97,7 @@ def main():
     grid = nbm.Grid(sites)
     t0 = time.time()
     ends = window_ends(cycle, args.hours)
-    per_site = {s["name"]: {k: [] for k in ("p25", "p50", "p75", "det", "method")} for s in sites}
+    per_site = {s["name"]: {k: [] for k in ("p25", "p50", "p75", "det", "method", "precip")} for s in sites}
     for e in ends:
         s = e - pd.Timedelta(hours=WINDOW_H)
         try:
@@ -93,9 +106,11 @@ def main():
             print(f"  window ending {e:%d %H}Z failed: {str(exc)[:80]}", file=sys.stderr)
             w = {"method": None}
         print(f"  {e:%a %d %H}Z  {w['method']}  ({time.time() - t0:.0f}s)")
+        qpf = liquid_window(cycle, s, e, grid)
         for k, site in enumerate(sites):
             d = per_site[site["name"]]
             d["method"].append(w["method"])
+            d["precip"].append(nbm.r(qpf[k], 2) if qpf is not None else None)
             for key, src in (("p25", "p25"), ("p50", "p50"), ("p75", "p75"), ("det", "deterministic")):
                 d[key].append(nbm.r(w[src][k]) if w.get(src) is not None else None)
 
@@ -115,12 +130,13 @@ def main():
         "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}",
         "window_hours": WINDOW_H,
         "window_end_utc": [f"{e:%Y-%m-%dT%H:%MZ}" for e in ends],
-        "units": "inches of snow per window; cloud cover in percent",
+        "units": "inches of snow and of liquid precipitation per window; cloud cover in percent",
         "cloud_time_utc": cloud_times,
         "notes": [
             "NBM core CONUS (2.5 km), nearest grid point to each site; not corrected for elevation.",
             "p25/p50/p75 are percentiles of the NBM blend for each 6-hour window ending at the listed time.",
             "Percentiles of consecutive windows do not add; cumulative curves built from them are approximate.",
+            "precip is the NBM deterministic liquid precipitation (rain plus the water in snow) for the same 6-hour windows.",
         ],
         "sites": {name: {"km_to_grid_point": grid.km[i], **per_site[name], "cloud_pct": cloud[name]} for i, name in enumerate(per_site)},
     }

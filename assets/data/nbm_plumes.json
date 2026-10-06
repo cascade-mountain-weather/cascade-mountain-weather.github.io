@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_utc": "2026-10-06T20:50Z",
+ "generated_utc": "2026-10-06T20:59Z",
  "cycle_utc": "2026-10-06T19:00Z",
  "window_hours": 6,
  "window_end_utc": [
@@ -24,7 +24,7 @@
   "2026-10-11T12:00Z",
   "2026-10-11T18:00Z"
  ],
- "units": "inches of snow per window; cloud cover in percent",
+ "units": "inches of snow and of liquid precipitation per window; cloud cover in percent",
  "cloud_time_utc": [
   "2026-10-06T22:00Z",
   "2026-10-07T01:00Z",
@@ -70,7 +70,8 @@
  "notes": [
   "NBM core CONUS (2.5 km), nearest grid point to each site; not corrected for elevation.",
   "p25/p50/p75 are percentiles of the NBM blend for each 6-hour window ending at the listed time.",
-  "Percentiles of consecutive windows do not add; cumulative curves built from them are approximate."
+  "Percentiles of consecutive windows do not add; cumulative curves built from them are approximate.",
+  "precip is the NBM deterministic liquid precipitation (rain plus the water in snow) for the same 6-hour windows."
  ],
  "sites": {
   "Mt. Baker": {
@@ -179,6 +180,27 @@
     "percentile",
     "percentile",
     "percentile"
+   ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.15,
+    0.15,
+    0.08,
+    0.01,
+    0.02,
+    0.02,
+    0.0,
+    0.0,
+    0.0
    ],
    "cloud_pct": [
     61.0,
@@ -330,6 +352,27 @@
     "percentile",
     "percentile"
    ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.02,
+    0.03,
+    0.01,
+    0.0,
+    0.0,
+    0.0,
+    0.03,
+    0.0,
+    0.0
+   ],
    "cloud_pct": [
     56.0,
     72.0,
@@ -479,6 +522,27 @@
     "percentile",
     "percentile",
     "percentile"
+   ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.03,
+    0.09,
+    0.03,
+    0.02,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
    ],
    "cloud_pct": [
     33.0,
@@ -630,6 +694,27 @@
     "percentile",
     "percentile"
    ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.04,
+    0.01,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
    "cloud_pct": [
     64.0,
     61.0,
@@ -779,6 +864,27 @@
     "percentile",
     "percentile",
     "percentile"
+   ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
    ],
    "cloud_pct": [
     31.0,
@@ -930,6 +1036,27 @@
     "percentile",
     "percentile"
    ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.06,
+    0.13,
+    0.05,
+    0.01,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
    "cloud_pct": [
     32.0,
     36.0,
@@ -1079,6 +1206,27 @@
     "percentile",
     "percentile",
     "percentile"
+   ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
    ],
    "cloud_pct": [
     4.0,
@@ -1230,6 +1378,27 @@
     "percentile",
     "percentile"
    ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.04,
+    0.03,
+    0.01,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
    "cloud_pct": [
     5.0,
     41.0,
@@ -1379,6 +1548,27 @@
     "percentile",
     "percentile",
     "percentile"
+   ],
+   "precip": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.01,
+    0.01,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
    ],
    "cloud_pct": [
     2.0,
