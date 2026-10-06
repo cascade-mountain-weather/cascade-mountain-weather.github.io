@@ -1,28 +1,23 @@
 ---
 name: run-evaluation
-description: Run the weekly forecast evaluation (SNOTEL observations vs saved forecast) and refresh evaluation.html. Use after a forecast period ends.
+description: Score the latest forecast weekend against SNOTEL and soundings and refresh the evaluation page data. Use on Monday after a forecast weekend ends.
 ---
 
 # Weekly forecast evaluation
 
-Scripts live in `scripts/` and expect to run from that directory.
+Run from the repo root in the `cmw-herbie` conda env (Herbie, cfgrib, eccodes; see `docs/nbm_fields.md`).
 
-## Pipeline
+## Each weekend
 
-1. `get_nbm_forecast.py` renames downloaded NBM CSVs into `data/forecasts/<site>.csv` (only if the user has fresh downloads).
-2. `build_fx_evaluation.py <snow_level_min> <snow_level_max>` (snow levels in feet) loads the saved forecast, pulls SNOTEL observations via metloom, and writes `data/evaluation_reports/evaluation_YYYY-MM-DD.txt` plus `season_evaluation_summary.txt`.
-3. `populate_evaluation_html.py` writes results into `evaluation.html`.
+1. **Thursday, when the forecast is written:** `python scripts/nbm_snapshot.py` (newest long NBM cycle, Friday to Sunday). It writes `data/forecasts/nbm_snapshot_<first-day>.json`. The NBM cannot be rebuilt later for the exact run you saw, so capture it then.
+   `python scripts/draft_forecast_tables.py` drafts the post's snowfall and snow-level tables from it.
+2. **Monday, after the weekend:** `python scripts/score_forecast.py data/forecasts/nbm_snapshot_<first-day>.json` scores it against SNOTEL snowfall (`scripts/snotel_obs.py`) and radiosonde snow level, and reads your ranges from the published post (`scripts/ours_from_posts.py`). Output: `data/evaluation/score_<first-day>.json`.
+3. `python scripts/build_evaluation_json.py` rebuilds `assets/data/evaluation.json`, which `evaluation.html` reads in the browser. The weekend's season comes from its date.
 
-`evaluate_fx.sh` wraps steps 2 and 3 but is interactive (prompts for a conda env, default `DGZefficiency`). From an agent shell, prefer activating the env yourself and running the two Python scripts directly. If the env or dependencies (`metloom`, `selenium`, `pandas`, `bs4`) are missing, tell the user instead of installing into the wrong environment.
+## Notes
 
-## Before running
-
-- Ask the user for the two snow-level arguments if not given. Do not guess.
-- Confirm which forecast week is being evaluated and that its `eval_forecast_*.json` exists.
-- Selenium and network access are used, so failures can be transient. Report the actual error output.
-
-## After running
-
-- Show the new report's headline results and the `git status` diff summary (expect `evaluation.html`, a new report `.txt`, and the season summary to change).
-- `evaluation.html` is a Jekyll page (front matter + body); `populate_evaluation_html.py` does regex-based in-place edits on the file's raw text keyed to specific classes (`stat-number`, `seasonal-card[data-region=...]`, etc.), so it works the same as before the Jekyll migration — no changes needed to the script. Run `jekyll build` afterward and check `_site/evaluation.html` to confirm the new numbers render.
-- Do not commit or push unless asked.
+- Your forecast ranges come from the post's weekend-total table. The saved `eval_forecast_*.json` files are retired: several held wrong ranges.
+- The observed snowfall is an estimate and a wide range; see the docstring in `scripts/snotel_obs.py` for the checks (trace precipitation, rain on snow, depth spikes).
+- To redo a whole past season after changing the method: `python scripts/backfill_evaluation.py --rescore`.
+- A new season needs an entry in `SEASONS` in `scripts/build_evaluation_json.py`. Test weekends before a season's first real forecast go in `PRESEASON`.
+- Run `jekyll build` and open `/evaluation.html` to check it. Do not commit or push unless asked.

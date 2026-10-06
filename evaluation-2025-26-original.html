@@ -1,0 +1,1089 @@
+---
+layout: page
+title: "2025-26 Forecast Evaluation, original method | Cascade Mountain Weather"
+description: "The original 2025-26 forecast evaluation, kept for reference. The current evaluation uses a different method."
+noindex: true
+sitemap: false
+---
+<p style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:0.7rem 1rem;margin:1rem auto;max-width:1100px;font-size:0.95rem;">
+    <strong>Archived.</strong> This is the original 2025&ndash;26 evaluation, kept for reference. It used a different snowfall estimate and forecast sources, so its numbers are not comparable with the current
+    <a href="{{ '/evaluation.html' | relative_url }}">evaluation</a>.</p>
+<style>
+        .evaluation-intro {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        
+        .evaluation-table th,
+        .evaluation-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .evaluation-table th {
+            background-color: #2a5298;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .evaluation-table tr:hover {
+            background-color: #f5f7fa;
+        }
+        
+        .accuracy-good {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .accuracy-fair {
+            color: #f57f17;
+            font-weight: 600;
+        }
+        
+        .accuracy-poor {
+            color: #c62828;
+            font-weight: 600;
+        }
+        
+        .accuracy-neutral {
+            color: #757575;
+            font-weight: 600;
+            font-style: italic;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #2a5298;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .evaluation-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .evaluation-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .evaluation-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        .evaluation-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 0.75rem;
+        }
+        
+        .evaluation-card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 0;
+        }
+        
+        .evaluation-card-accuracy {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .evaluation-card-accuracy.good {
+            background-color: #c8e6c9;
+            color: #1b5e20;
+        }
+        
+        .evaluation-card-accuracy.poor {
+            background-color: #ffcdd2;
+            color: #b71c1c;
+        }
+        
+        .evaluation-card-accuracy.neutral {
+            background-color: #e0e0e0;
+            color: #424242;
+        }
+        
+        .evaluation-card-body {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .evaluation-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .evaluation-metric:last-child {
+            border-bottom: none;
+        }
+        
+        .evaluation-metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .evaluation-metric-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+        
+        .region-selector-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 2rem 0;
+            max-width: 400px;
+        }
+        
+        .region-selector-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+        
+        .region-selector-dropdown {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #2a5298;
+            border-radius: 6px;
+            background-color: white;
+            color: #1e3c72;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .region-selector-dropdown:hover {
+            background-color: #f5f7fa;
+            box-shadow: 0 2px 8px rgba(42, 82, 152, 0.15);
+        }
+        
+        .region-selector-dropdown:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.2);
+        }
+        
+        .evaluation-card-display {
+            margin-top: 2rem;
+        }
+        
+        .seasonal-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .seasonal-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        .seasonal-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .seasonal-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 0;
+        }
+        
+        .seasonal-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .seasonal-stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .seasonal-stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .seasonal-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+    </style>
+
+<section class="evaluation-intro">
+            <h2>📊 Forecast Evaluation</h2>
+            <p><strong>Transparency and accountability matter!</strong> This page tracks the accuracy of our weekend ski forecasts by comparing predictions against actual observed conditions.</p>
+            <p>Data is collected from SNOTEL stations, NWS observations, and resort reports. Evaluation helps improve future forecasts and builds trust with readers.</p>
+        </section>
+
+        <section>
+            <h2>Season Statistics (2025-2026)</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Blogs Written</div>
+                    <div class="stat-number">21</div>
+                    <p>Total blogs written for the season</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Forecasts Evaluated</div>
+                    <div class="stat-number">189</div>
+                    <p>Total forecasts evaluated for all sites</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Within Range</div>
+                    <div class="stat-number">112/189 (59.3%)</div>
+                    <p>Forecasts within predicted range</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Mean Error</div>
+                    <div class="stat-number">4.0 in</div>
+                    <p>Average forecasted snowfall error</p>
+                </div>
+            </div>
+
+            <p><em>Statistics will be updated as we collect more forecast evaluation data throughout the season.</em></p>
+        </section>
+
+        <section>
+            <h2>Recent Forecast Evaluation</h2>
+            <p>Select a backcountry region to view detailed forecast evaluation for the most recent forecast period:</p>
+            
+            <div class="region-selector-container">
+                <label for="region-selector" class="region-selector-label">Choose Backcountry Forecast Region:</label>
+                <select id="region-selector" class="region-selector-dropdown">
+                    <option value="">-- Select a Region --</option>
+                    <option value="mt-baker">Mt. Baker</option>
+                    <option value="stevens-pass">Stevens Pass</option>
+                    <option value="blewett-pass">Blewett Pass</option>
+                    <option value="snoqualmie-pass">Snoqualmie Pass</option>
+                    <option value="crystal-mountain">Crystal Mountain</option>
+                    <option value="paradise">Paradise</option>
+                    <option value="white-pass">White Pass</option>
+                    <option value="hurricane-ridge">Hurricane Ridge</option>
+                    <option value="washington-pass">Washington Pass</option>
+                </select>
+            </div>
+            
+            <div class="evaluation-card-display" id="evaluation-card-display" style="display: none;">
+                <!-- Selected card will be shown here -->
+            </div>
+            
+            <div class="evaluation-cards-grid" id="evaluation-cards-data" style="display: none;">
+                <!-- All cards stored here for reference, hidden from view -->
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Stevens Pass</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">0.0 (0.0-0.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.2"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">N/A</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">2887-7270 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Blewett Pass</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">0.0 (0.0-0.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+0.0</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">2730-7165 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Mt. Baker</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">2.0 (0.0-2.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+0.0</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✗</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">1" (0-2")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+1.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">2730-7165 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Snoqualmie Pass</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">0.0 (0.0-0.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+0.0</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">3176-7244 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Paradise</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">0.0 (0.0-0.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                        <span class="evaluation-metric-value">None inches</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+0.0</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">None - None ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Hurricane Ridge</h3>
+                        <span class="evaluation-card-accuracy poor">Outside Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">1.8 (1.2-2.3")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+1.8</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✗</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+1.8"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✗</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">3045-7165 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+                <div class="evaluation-card">
+                    <div class="evaluation-card-header">
+                        <h3 class="evaluation-card-title">Washington Pass</h3>
+                        <span class="evaluation-card-accuracy good">Within Range</span>
+                    </div>
+                    <div class="evaluation-card-body">
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snowfall:</span>
+                    <span class="evaluation-metric-value">0.0 (0.0-0.0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Forecast:</span>
+                    <span class="evaluation-metric-value">0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">NBM Error:</span>
+                    <span class="evaluation-metric-value">+0.0</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Was the NBM within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Forecast:</span>
+                    <span class="evaluation-metric-value">0" (0-0")</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Our Error:</span>
+                    <span class="evaluation-metric-value">+0.0"</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Were we within range?:</span>
+                    <span class="evaluation-metric-value">✓</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Forecast Snow Level:</span>
+                    <span class="evaluation-metric-value">3176-7244 ft</span>
+                </div>
+                <div class="evaluation-metric">
+                    <span class="evaluation-metric-label">Actual Snow Level:</span>
+                    <span class="evaluation-metric-value">3576-10138 ft</span>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Seasonal Backcountry Region Performance</h2>
+            <p>Select a region to view seasonal forecast evaluation statistics:</p>
+            
+            <div class="region-selector-container">
+                <label for="seasonal-region-selector" class="region-selector-label">Choose Backcountry Region:</label>
+                <select id="seasonal-region-selector" class="region-selector-dropdown">
+                    <option value="">-- Select a Region --</option>
+                    <option value="mt-baker">Mt. Baker</option>
+                    <option value="stevens-pass">Stevens Pass</option>
+                    <option value="blewett-pass">Blewett Pass</option>
+                    <option value="snoqualmie-pass">Snoqualmie Pass</option>
+                    <option value="crystal-mountain">Crystal Mountain</option>
+                    <option value="paradise">Paradise</option>
+                    <option value="white-pass">White Pass</option>
+                    <option value="hurricane-ridge">Hurricane Ridge</option>
+                    <option value="washington-pass">Washington Pass</option>
+                </select>
+            </div>
+            
+            <div id="seasonal-card-display" style="display: none;">
+                <!-- Selected seasonal card will be shown here -->
+            </div>
+            
+            <div id="seasonal-cards-data" style="display: none;">
+                <!-- All seasonal cards stored here, hidden from view -->
+                <div class="seasonal-card" data-region="mt-baker">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Mt. Baker</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">5.0"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">8/21 (38.1%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">2.7"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">+0.2"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">15/21 (71.4%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="stevens-pass">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Stevens Pass</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">3.6"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">15/21 (71.4%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">4.8"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">+2.9"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">14/21 (66.7%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="blewett-pass">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Blewett Pass</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">1.1"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">7/21 (33.3%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">1.8"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">+0.1"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">12/21 (57.1%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="snoqualmie-pass">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Snoqualmie Pass</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">3.5"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">16/21 (76.2%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">1.6"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">-1.1"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">16/21 (76.2%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="white-pass">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">White Pass</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">4.6"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">9/21 (42.9%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">4.5"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">-0.2"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">11/21 (52.4%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="hurricane-ridge">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Hurricane Ridge</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">4.7"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">10/21 (47.6%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">2.4"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">-1.4"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">11/21 (52.4%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="washington-pass">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Washington Pass</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">5.9"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">11/21 (52.4%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">3.9"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">-1.5"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">10/21 (47.6%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="crystal-mountain">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Crystal Mountain</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">4.9"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">4/21 (19.0%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">3.9"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">-0.6"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">10/21 (47.6%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seasonal-card" data-region="paradise">
+                    <div class="seasonal-card-header">
+                        <h3 class="seasonal-card-title">Paradise</h3>
+                    </div>
+                    <div class="seasonal-stats-grid">
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Forecasts Evaluated</span>
+                            <span class="seasonal-stat-value">21</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM MAE</span>
+                            <span class="seasonal-stat-value">4.6"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">NBM Within Range</span>
+                            <span class="seasonal-stat-value">4/21 (19.0%)</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Our MAE</span>
+                            <span class="seasonal-stat-value">3.1"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Mean Bias</span>
+                            <span class="seasonal-stat-value">+2.0"</span>
+                        </div>
+                        <div class="seasonal-stat">
+                            <span class="seasonal-stat-label">Were we within range?</span>
+                            <span class="seasonal-stat-value">13/21 (61.9%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Methodology</h2>
+            <h3>Data Sources</h3>
+            <ul>
+                <li><strong>SNOTEL Stations:</strong> Automated snow and weather stations from NRCS</li>
+                <li><strong>NWS Observations:</strong> National Weather Service Radar Wind Profiler Snow Levels</li>
+                <li><strong>Resort Reports:</strong> Official snow reports from ski areas</li>
+            </ul>
+            
+            <h3>Evaluation Process</h3>
+            <ol>
+                <li>Forecast data is saved at time of posting (stored in data/forecasts/)</li>
+                <li>After the forecast period, actual observations are collected</li>
+                <li>Automated scripts compare forecast vs. actual values</li>
+                <li>Evaluation reports are generated and posted here</li>
+            </ol>
+            
+            <h3>Accuracy Metrics</h3>
+            <ul>
+                <li><strong>Within Range:</strong> Did actual fall within the forecast range?</li>
+                <li><strong>Mean Error:</strong> Forecast - Actual</li>
+                <li><strong>Mean Absolute Error (MAE):</strong> Average error across all forecasts</li>
+            </ul>
+        </section>
+
+        <section class="about">
+            <h2>Why Evaluation Matters</h2>
+            <p>Forecast evaluation serves multiple purposes:</p>
+            <ul>
+                <li><strong>Accountability:</strong> Being transparent about makes us perfect</li>
+                <li><strong>Improvement:</strong> Identifying patterns in errors helps refine future forecasts</li>
+                <li><strong>Learning:</strong> Understanding which weather patterns are harder to forecast</li>
+                <li><strong>Comparison:</strong> See how different ski areas snow totals differ from each other</li>
+            </ul>
+            <p> Paraphrasing George Box: "All forecasts are wrong, but some are useful!" </p>
+        </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selector = document.getElementById('region-selector');
+            const cardDisplay = document.getElementById('evaluation-card-display');
+            const cardsData = document.getElementById('evaluation-cards-data');
+            
+            // Map of region values to their card titles
+            const regionMap = {
+                'mt-baker': 'Mt. Baker',
+                'stevens-pass': 'Stevens Pass',
+                'blewett-pass': 'Blewett Pass',
+                'snoqualmie-pass': 'Snoqualmie Pass',
+                'crystal-mountain': 'Crystal Mountain',
+                'paradise': 'Paradise',
+                'white-pass': 'White Pass',
+                'hurricane-ridge': 'Hurricane Ridge',
+                'washington-pass': 'Washington Pass'
+            };
+            
+            selector.addEventListener('change', function() {
+                const selectedValue = this.value;
+                
+                if (!selectedValue) {
+                    // Hide the card display if no region is selected
+                    cardDisplay.style.display = 'none';
+                    return;
+                }
+                
+                // Find the card with matching title
+                const regionTitle = regionMap[selectedValue];
+                const allCards = cardsData.querySelectorAll('.evaluation-card');
+                let selectedCard = null;
+                
+                for (let card of allCards) {
+                    const cardTitle = card.querySelector('.evaluation-card-title').textContent;
+                    if (cardTitle === regionTitle) {
+                        selectedCard = card;
+                        break;
+                    }
+                }
+                
+                if (selectedCard) {
+                    // Clone the card and display it
+                    const clonedCard = selectedCard.cloneNode(true);
+                    cardDisplay.innerHTML = '';
+                    cardDisplay.appendChild(clonedCard);
+                    cardDisplay.style.display = 'block';
+                    
+                    // Scroll the card into view smoothly
+                    cardDisplay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+            
+            // Seasonal region selector
+            const seasonalSelector = document.getElementById('seasonal-region-selector');
+            const seasonalCardDisplay = document.getElementById('seasonal-card-display');
+            const seasonalCardsData = document.getElementById('seasonal-cards-data');
+            
+            seasonalSelector.addEventListener('change', function() {
+                const selectedValue = this.value;
+                
+                if (!selectedValue) {
+                    seasonalCardDisplay.style.display = 'none';
+                    return;
+                }
+                
+                // Find the card with matching data-region
+                const allSeasonalCards = seasonalCardsData.querySelectorAll('.seasonal-card');
+                let selectedCard = null;
+                
+                for (let card of allSeasonalCards) {
+                    if (card.getAttribute('data-region') === selectedValue) {
+                        selectedCard = card;
+                        break;
+                    }
+                }
+                
+                if (selectedCard) {
+                    // Clone the card and display it
+                    const clonedCard = selectedCard.cloneNode(true);
+                    seasonalCardDisplay.innerHTML = '';
+                    seasonalCardDisplay.appendChild(clonedCard);
+                    seasonalCardDisplay.style.display = 'block';
+                    
+                    // Scroll the card into view smoothly
+                    seasonalCardDisplay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+    </script>
