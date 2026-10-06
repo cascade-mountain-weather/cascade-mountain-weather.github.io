@@ -79,7 +79,7 @@ def pick_cycle(requested, period_end):
         if cycle.hour not in LONG_CYCLES or last_fxx < 1:
             continue
         try:
-            if len(herbie_for(cycle, last_fxx).inventory()) > 100:
+            if len(herbie_for(cycle, last_fxx).inventory()) > 10:
                 return cycle
         except Exception:
             continue

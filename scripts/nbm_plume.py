@@ -36,12 +36,15 @@ WINDOW_H = 6
 def newest_long_cycle(hours):
     """Newest long cycle whose file at the last needed hour is real (not a ~1 MB placeholder)."""
     now = pd.Timestamp(datetime.now(timezone.utc)).tz_localize(None).floor("h")
+    # Only some hours have real files (hourly to F48, then F50, F53, F56, ...), so test the last of those,
+    # not `hours` itself (F120 is a placeholder). A real file has dozens of messages; a placeholder has one.
+    check = cloud_hours(hours)[-1]
     for back in range(0, 40):
         cycle = now - pd.Timedelta(hours=back)
         if cycle.hour not in nbm.LONG_CYCLES:
             continue
         try:
-            if len(nbm.herbie_for(cycle, hours).inventory()) > 100:
+            if len(nbm.herbie_for(cycle, check).inventory()) > 10:
                 return cycle
         except Exception:
             continue
