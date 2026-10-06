@@ -146,6 +146,30 @@
 
     const ENSEMBLE_HOW = 'Look at the range of the ensemble members (the ensemble spread) to judge uncertainty in the forecast. A larger spread means lower confidence.';
     const UTAH = 'https://weather.utah.edu/';
+
+    // ---- UW WRF (University of Washington Atmospheric Sciences): Washington-wide maps ----
+    const uwRuns = n => {
+        const step = 12 * 3600e3, base = Math.floor(Date.now() / step) * step;
+        return Array.from({ length: n }, (_, i) => new Date(base - i * step));
+    };
+    // Deterministic: /wrfrt/data/{YYYYMMDDHH}/images_d4/wa_{var}.{FF}.0000.gif
+    // Ensemble mean: /mm5rt/ensembles/{YYYYMMDDHH}/images_d3/{var}.{FF}.mean.gif
+    const UW = 'https://a.atmos.washington.edu';
+    const UW_SRC = { source: 'UW Atmospheric Sciences', sourceUrl: UW + '/wrfrt/' };
+    const uwDet = (v, hours, probeHour) => ({
+        hours, probeHour, runs: uwRuns(6), runExact: true,
+        urlFor: (r, h) => `${UW}/wrfrt/data/${ymdh(r)}/images_d4/wa_${v}.${pad(h, 2)}.0000.gif`,
+        fallbackUrl: UW + '/wrfrt/',
+    });
+    const uwEns = (v, hours, probeHour) => ({
+        hours, probeHour, runs: uwRuns(6), runExact: true,
+        urlFor: (r, h) => `${UW}/mm5rt/ensembles/${ymdh(r)}/images_d3/${v}.${pad(h, 2)}.mean.gif`,
+        fallbackUrl: UW + '/mm5rt/ensembles/',
+    });
+    const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
+    const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
+
+
     const PRODUCTS = {
         wwrf_snow: {
             label: 'Snow (West-WRF)',
@@ -225,6 +249,39 @@
                 source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
             },
         },
+        uw_snow: {
+            region: true, label: 'UW WRF snow',
+            models: { acc: 'Accumulated (WRF)', p3: '3-hour (WRF)', ens: '24-hour (ensemble mean)' },
+            title: (a, st) => ({ acc: 'UW WRF accumulated snowfall', p3: 'UW WRF 3-hour snowfall', ens: 'UW WRF ensemble mean 24-hour snowfall' })[st.model] || 'UW WRF accumulated snowfall',
+            build: (a, st) => ({ acc: uwDet('snowacc', HOURLY48, 3), p3: uwDet('snow3', range(6, 48, 3), 6), ens: uwEns('msnow24', HOURLY_ENS, 24) })[st.model] || uwDet('snowacc', HOURLY48, 3),
+            info: Object.assign({
+                what: 'Snowfall from the University of Washington WRF model over Washington. The deterministic WRF (the 1.33 km domain) shows either the snow total accumulated through each forecast hour or the snow that falls in each 3-hour period. The ensemble option is the mean of the UW WRF ensemble&rsquo;s 24-hour snowfall.',
+                how: 'Use the accumulated map for totals and the 3-hour map to see when the heaviest bursts hit. Compare the WRF with the ensemble mean: if a single run shows much more snow than the mean, treat it as the high end. ' + ENS_NOTE,
+            }, UW_SRC),
+        },
+        uw_precip: {
+            region: true, label: 'UW WRF total precip',
+            models: { tot: 'Accumulated (24, 36, 48 h)', p3: '3-hour' },
+            title: (a, st) => st.model === 'p3' ? 'UW WRF 3-hour precipitation' : 'UW WRF total accumulated precipitation',
+            build: (a, st) => st.model === 'p3' ? uwDet('pcp3', range(6, 48, 3), 6) : uwDet('pcpt', [24, 36, 48], 24),
+            info: Object.assign({
+                what: 'Precipitation (rain plus the water in snow) from the UW WRF model over Washington: either the total accumulated since the start of the run, which the model posts at 24, 36 and 48 hours, or the amount that falls in each 3-hour period.',
+                how: 'Compare it with the snow map: where precipitation is high but snow is low, the model has rain or a high snow level. Use the 3-hour maps for timing. Totals are heavily shaped by terrain, so look at the Cascade crest and windward slopes.',
+            }, UW_SRC),
+        },
+        uw_cloud: {
+            region: true, label: 'UW WRF clouds',
+            models: { low: '0-3,000 ft', mid: '3,000-10,000 ft', high: '10,000-20,000 ft' },
+            title: (a, st) => 'UW WRF ensemble mean cloud water, ' + ({ low: '0-3,000 ft', mid: '3,000-10,000 ft', high: '10,000-20,000 ft' })[st.model || 'low'],
+            build: (a, st) => {
+                const hrs = HOURLY_ENS.concat([0]).sort((x, y) => x - y);
+                return ({ low: uwEns('qclst', hrs, 0), mid: uwEns('qcll', hrs, 0), high: uwEns('qclm', hrs, 0) })[st.model] || uwEns('qclst', hrs, 0);
+            },
+            info: Object.assign({
+                what: 'Ensemble mean cloud water in three layers: the lowest 3,000 ft (valley fog and low stratus), 3,000 to 10,000 ft (the layer covering ski terrain), and 10,000 to 20,000 ft (higher cloud).',
+                how: 'Use the middle layer to see whether the terrain will be in cloud, the low layer to judge valley fog and inversions, and the high layer to judge sunshine and sky color. ' + ENS_NOTE,
+            }, UW_SRC),
+        },
         nbm: {
             label: 'NBM snow (6 h)',
             title: a => `${a.label}: NBM snowfall, 6-hour windows`,
@@ -278,7 +335,7 @@
                 { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).map(k => ({ value: k, label: AREAS[k].label })) },
                 { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
-                { key: 'model', label: 'Model', options: st => st.product === 'frz' ? Object.keys(PRODUCTS.frz.models).map(m => ({ value: m, label: PRODUCTS.frz.models[m] })) : [{ value: '-', label: '-' }] },
+                { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
             ],
             resolve(st) {
                 const a = AREAS[st.area], p = PRODUCTS[st.product];
