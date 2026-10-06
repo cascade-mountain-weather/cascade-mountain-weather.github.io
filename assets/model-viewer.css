@@ -77,3 +77,8 @@
 /* the page's hero card sets the width; never let the viewer push past it */
 .hero:has(.mv) { min-width: 0; max-width: 100%; overflow-x: clip; }
 .hero:has(.mv) h1 { line-height: 1.2; }
+
+.mv-extra { margin: 0 0 0.9rem; text-align: left; }
+.mv-extra[hidden] { display: none; }
+.mv-extra img { display: block; width: 100%; max-width: 360px; height: auto; border: 1px solid #e2e8f0; border-radius: 10px; margin: 0 0 0.25rem; }
+.mv-extra figcaption { font-size: 0.8rem; color: #64748b; }
