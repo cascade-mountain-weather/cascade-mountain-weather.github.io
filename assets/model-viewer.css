@@ -1,0 +1,74 @@
+/* Shared model viewer (see assets/model-viewer.js) */
+.mv { max-width: 1000px; margin: 0 auto; padding: 0 0.25rem 2rem; color: #0f172a; }
+.mv-selectors { display: flex; flex-direction: column; gap: 0.7rem; margin: 0 0 1rem; }
+.mv-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.mv-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.mv-chips { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.mv-chip {
+    flex: 0 0 auto; min-height: 40px; padding: 0 1rem; border-radius: 999px;
+    border: 1px solid #cbd5e1; background: #fff; color: #1e3c72;
+    font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.mv-chip:hover { background: #eef4fb; }
+.mv-chip[aria-checked="true"] { background: #1e3c72; border-color: #1e3c72; color: #fff; }
+.mv-select {
+    width: 100%; max-width: 420px; min-height: 44px; padding: 0 0.8rem; border-radius: 10px;
+    border: 1px solid #cbd5e1; background: #fff; color: #1e3c72; font: inherit; font-weight: 600;
+}
+.mv-title { font-size: 1.15rem; color: #1e3c72; margin: 0.2rem 0 0.5rem; text-align: left; }
+
+.mv-stage {
+    position: relative; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.mv-img { display: block; width: 100%; height: auto; margin: 0 !important; transition: opacity 0.12s; }
+.mv-img:not([src]) { display: none; }
+.mv-img.is-loading { opacity: 0.55; }
+.mv-loading, .mv-fail {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 1rem; color: #475569; font-size: 0.95rem; pointer-events: none;
+}
+.mv-loading[hidden], .mv-fail[hidden] { display: none; }
+.mv-fail { pointer-events: auto; background: #f8fafc; }
+.mv-fail p { margin: 0.25rem 0; }
+
+.mv-controls { display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0 0; }
+.mv-controls[hidden] { display: none; }
+.mv-btn {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #cbd5e1;
+    background: #fff; color: #1e3c72; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.mv-btn:hover { background: #eef4fb; }
+.mv-btn:active { transform: scale(0.96); }
+.mv-play { width: 54px; height: 54px; background: #1e3c72; border-color: #1e3c72; color: #fff; font-size: 1.15rem; }
+.mv-play:hover { background: #2a5298; }
+.mv-speed { font-size: 0.85rem; font-weight: 700; }
+.mv-btn:focus-visible, .mv-chip:focus-visible, .mv-slider:focus-visible, .mv-select:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+
+.mv-sliderwrap { position: relative; flex: 1 1 auto; min-width: 0; padding-bottom: 1.3rem; }
+.mv-slider { width: 100%; height: 32px; margin: 0; accent-color: #1e3c72; cursor: pointer; touch-action: pan-y; }
+.mv-days { position: absolute; left: 0; right: 0; bottom: 0; height: 1.1rem; font-size: 0.7rem; color: #64748b; pointer-events: none; }
+.mv-days span { position: absolute; transform: translateX(-2px); white-space: nowrap; padding-left: 3px; border-left: 1px solid #94a3b8; }
+
+.mv-time { margin: 0.5rem 0 0.9rem; text-align: left; }
+.mv-valid { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; align-items: baseline; font-size: 1.05rem; color: #0f172a; }
+.mv-z { font-size: 0.85rem; color: #64748b; font-variant-numeric: tabular-nums; }
+.mv-run { font-size: 0.8rem; color: #64748b; margin-top: 0.15rem; }
+
+.mv details { border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; margin: 0 0 0.6rem; padding: 0 1rem; text-align: left; }
+.mv summary { cursor: pointer; padding: 0.75rem 0; font-weight: 700; color: #1e3c72; min-height: 24px; }
+.mv details > div { padding: 0 0 0.9rem; font-size: 0.92rem; line-height: 1.5; color: #334155; }
+.mv details h3 { font-size: 0.95rem; margin: 0.6rem 0 0.2rem; color: #1e3c72; }
+.mv details p, .mv details ul { margin: 0.2rem 0 0.5rem; }
+.mv details ul { padding-left: 1.2rem; }
+.mv-source { font-size: 0.82rem; color: #64748b; }
+
+@media (min-width: 720px) {
+    .mv-selectors { flex-direction: row; flex-wrap: wrap; gap: 0.7rem 2rem; }
+    .mv-group { min-width: 0; }
+}
+@media (max-width: 480px) {
+    .mv-speed { display: none; }
+    .mv-btn { width: 42px; height: 42px; }
+    .mv-play { width: 50px; height: 50px; }
+}
