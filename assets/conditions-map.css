@@ -274,3 +274,13 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 .cmap-pick[aria-pressed="true"] small { color: #cbd5e1; }
 .cmap-tiles--flag .cmap-tile strong { color: #94a3b8; }
 .cmap-basin-tip { font-weight: 700; color: #1e3c72; }
+
+/* Popup stays a fraction of the map: scrolls inside, big close target */
+.cmap-popup .leaflet-popup-content-wrapper { overflow: hidden; }
+.cmap-popup .leaflet-popup-content { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cmap-popup .leaflet-popup-close-button {
+    width: 36px; height: 36px; top: 0; right: 0; font-size: 26px; line-height: 36px;
+    text-align: center; padding: 0; z-index: 2; color: #475569;
+}
+.cmap-popup .cmap-title { padding-right: 28px; }
+.cmap-popup .leaflet-popup-scrolled { border-bottom: 0; }

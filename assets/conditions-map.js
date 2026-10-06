@@ -235,8 +235,11 @@
 
         const openAt = (latlng, areas, preferred) => {
             const ordered = preferred ? [preferred, ...areas.filter(a => a !== preferred)] : areas;
+            // Cap the popup at about half the map so there is always map left to drag or tap to close;
+            // anything taller scrolls inside the popup.
             const popup = L.popup({
                 maxWidth: popupWidth, minWidth: Math.min(300, popupWidth), className: 'cmap-popup', autoPanPadding: [12, 12],
+                maxHeight: Math.max(180, Math.round(map.getSize().y * 0.5)),
             }).setLatLng(latlng).setContent(popupContent(ordered));
             openPopupRef = popup;
             popup.openOn(map);
