@@ -17,11 +17,11 @@
         bigwet: 'How often a day is in the station&rsquo;s top 10% of wet days, snow or rain, relative to normal.',
     };
     const INDEX = {
-        mjo: { label: 'MJO phase', short: 'MJO', lag: 8, cls: { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3', 4: 'Phase 4', 5: 'Phase 5', 6: 'Phase 6', 7: 'Phase 7', 8: 'Phase 8' },
-            note: 'The MJO is a pulse of tropical storminess that circles the globe in 30 to 60 days. Its effect on the Northwest arrives days later, so pick a lag: the best one is the top of the curve below.' },
-        pna: { label: 'PNA', short: 'PNA', lag: 0, cls: { '-2': 'Strong &minus;PNA', '-1': '&minus;PNA', 0: 'Neutral', 1: '+PNA', 2: 'Strong +PNA' },
+        mjo: { label: 'MJO phase', short: 'MJO', lag: 8, lagLabel: 'Days after the phase is in place', lagNote: 'The MJO&rsquo;s effect on the Northwest arrives days after the phase is in place, so the lag is how many days later the stations are looked at. Lag 8 means the conditions 8 days after the MJO reached that phase. The best lag is the top of the curve below.', cls: { 1: 'Phase 1', 2: 'Phase 2', 3: 'Phase 3', 4: 'Phase 4', 5: 'Phase 5', 6: 'Phase 6', 7: 'Phase 7', 8: 'Phase 8' },
+            note: 'The MJO is a pulse of tropical storminess that circles the globe in 30 to 60 days.' },
+        pna: { label: 'PNA', short: 'PNA', lag: 0, lagLabel: 'Days after the PNA class', lagNote: 'The PNA changes within a week or two, so here the lag shows how long a PNA state keeps its grip: 0 is the same day, and the effect fades toward zero after about 10 days.', cls: { '-2': 'Strong &minus;PNA', '-1': '&minus;PNA', 0: 'Neutral', 1: '+PNA', 2: 'Strong +PNA' },
             note: 'The PNA is a pattern of upper-air ridges and troughs over the Pacific and North America. Strong negative (a trough off the coast side) is the coldest tenth of days; strong positive (a ridge over the West) the warmest tenth. The index is a 5-day average.' },
-        enso: { label: 'ENSO (ONI)', short: 'ENSO', lag: 0, cls: { '-2': 'La Ni&ntilde;a (ONI &le; &minus;1)', '-1': 'Weak La Ni&ntilde;a', 0: 'Neutral', 1: 'Weak El Ni&ntilde;o', 2: 'El Ni&ntilde;o (ONI &ge; 1)' },
+        enso: { label: 'ENSO (ONI)', short: 'ENSO', lag: 0, noLag: true, cls: { '-2': 'La Ni&ntilde;a (ONI &le; &minus;1)', '-1': 'Weak La Ni&ntilde;a', 0: 'Neutral', 1: 'Weak El Ni&ntilde;o', 2: 'El Ni&ntilde;o (ONI &ge; 1)' },
             note: 'The monthly Oceanic Ni&ntilde;o Index. There are only 35 winters, so only a handful sit in each class: read these as a tendency, not a rule.' },
     };
     const TIERS = [['all', 'All stations', () => true], ['low', 'Low, under 4,000 ft', e => e < 4000], ['mid', 'Mid, 4,000&ndash;5,000 ft', e => e >= 4000 && e < 5000], ['high', 'High, 5,000 ft and up', e => e >= 5000]];
@@ -74,17 +74,17 @@
                     <div class="ol-group"><span class="ol-label">Index</span>${chips('index', Object.entries(INDEX).map(([k, v]) => [k, v.label]), S.index)}</div>
                     <div class="ol-group"><span class="ol-label">What to look at</span>${chips('metric', METRICS, S.metric)}</div>
                     <div class="ol-group"><span class="ol-label">Stations</span>${chips('tier', TIERS.map(t => [t[0], t[1]]), S.tier)}</div>
-                    <div class="ol-group"><label class="ol-label" for="ts-lag">Days later (lag): <b>${S.lag}</b></label><input id="ts-lag" type="range" min="${L[0]}" max="${L[L.length - 1]}" step="1" value="${S.lag}" style="width:220px;max-width:100%">
-                        <label class="ol-label" for="ts-spr" style="margin-top:.3rem">Blend nearby days (spread): <b>&plusmn;${S.spread}</b></label><input id="ts-spr" type="range" min="0.5" max="4" step="0.5" value="${S.spread}" style="width:220px;max-width:100%"></div>
+                    ${idx.noLag ? '' : `<div class="ol-group"><label class="ol-label" for="ts-lag">${idx.lagLabel}: <b>${S.lag}</b></label><input id="ts-lag" type="range" min="${L[0]}" max="${L[L.length - 1]}" step="1" value="${S.lag}" style="width:220px;max-width:100%">
+                        <label class="ol-label" for="ts-spr" style="margin-top:.3rem">Blend nearby days (spread): <b>&plusmn;${S.spread}</b></label><input id="ts-spr" type="range" min="0.5" max="4" step="0.5" value="${S.spread}" style="width:220px;max-width:100%"></div>`}
                 </div>
-                <p class="ci-hint">${idx.note} ${METRIC_NOTE[S.metric]} ${S.tier !== 'all' ? 'Only the stations in the elevation group are averaged.' : ''}</p>
+                <p class="ci-hint">${idx.note} ${idx.noLag ? 'The ENSO value is a monthly number, so it does not change over a couple of weeks and there is no lag to choose. ' : idx.lagNote + ' '}${METRIC_NOTE[S.metric]} ${S.tier !== 'all' ? 'Only the stations in the elevation group are averaged.' : ''}</p>
                 <div class="ts-grid"><div class="ts-box"><h3>Average by ${idx.label}</h3><div id="ts-bars"></div></div>
                     <div class="ts-box"><h3>Where: ${S.show === 'class' ? idx.cls[S.cls] : S.show === 'best' ? 'the class with the highest value at each station' : 'the class with the lowest value at each station'}</h3>
                         <div class="ol-chips" style="margin-bottom:.4rem"><button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'class'}" data-k="show" data-v="class">Selected class</button>
                         <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'best'}" data-k="show" data-v="best">Highest at each station
                         <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'worst'}" data-k="show" data-v="worst">Lowest at each station</div>
                         <div id="ts-map"></div></div></div>
-                <div class="ts-box"><h3>How the effect changes with lag: ${idx.cls[S.cls]}</h3><div id="ts-lag-chart"></div></div>
+                ${idx.noLag ? '' : `<div class="ts-box"><h3>How the effect changes with the lag: ${idx.cls[S.cls]}</h3><div id="ts-lag-chart"></div></div>`}
                 <p class="ci-hint">Click a bar to choose the class shown on the map and lag curve. Dots on a bar are single stations. A ring on a map station marks a difference the season-bootstrap test calls real at the 90% level (not corrected for testing many combinations, and nearby stations share the same storms).</p>
             </div>`;
             root.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => {
@@ -94,11 +94,12 @@
                 render();
                 const nb = root.querySelector(`[data-k="${k}"][aria-checked="true"]`); if (nb) nb.focus();
             }));
-            root.querySelector('#ts-lag').addEventListener('input', e => { S.lag = +e.target.value; render(); root.querySelector('#ts-lag').focus(); });
-            root.querySelector('#ts-spr').addEventListener('input', e => { S.spread = +e.target.value; render(); root.querySelector('#ts-spr').focus(); });
+            const lagEl = root.querySelector('#ts-lag'), sprEl = root.querySelector('#ts-spr');
+            if (lagEl) lagEl.addEventListener('input', e => { S.lag = +e.target.value; render(); root.querySelector('#ts-lag').focus(); });
+            if (sprEl) sprEl.addEventListener('input', e => { S.spread = +e.target.value; render(); root.querySelector('#ts-spr').focus(); });
             bars(root.querySelector('#ts-bars'), classes, perClass, ids, V, base, lim, unit, idx);
-            map(root.querySelector('#ts-map'), classes, ids, V, base, lim, unit, idx);
-            lagChart(root.querySelector('#ts-lag-chart'), ids, classes, base, unit);
+            (window.L ? mapLeaflet : mapSvg)(root.querySelector('#ts-map'), classes, ids, V, base, lim, unit, idx);
+            if (!idx.noLag) lagChart(root.querySelector('#ts-lag-chart'), ids, classes, base, unit);
         }
 
         function bars(host, classes, perClass, ids, V, base, lim, unit, idx) {
@@ -128,7 +129,7 @@
             host.innerHTML = ''; host.appendChild(svg);
         }
 
-        function map(host, classes, ids, V, base, lim, unit, idx) {
+        function mapSvg(host, classes, ids, V, base, lim, unit, idx) {
             const W = 480, H = 440, lon0 = -124.2, lon1 = -117, lat0 = 45.6, lat1 = 49.1, k = Math.cos(47 * Math.PI / 180);
             const sx = (W - 10) / ((lon1 - lon0) * k), sy = (H - 10) / (lat1 - lat0), sc = Math.min(sx, sy);
             const X = lon => 5 + (lon - lon0) * k * sc, Y = lat => 5 + (lat1 - lat) * sc;
@@ -153,6 +154,54 @@
             host.innerHTML = ''; host.appendChild(svg);
             const note = document.createElement('p'); note.className = 'ci-hint';
             note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. Hover a dot for the station.' : (S.index === 'mjo' ? 'Dot color and number are the MJO phase.' : 'Dot color shows the size of the effect.') + ' Hover a dot for the station.';
+            host.appendChild(note);
+        }
+
+
+        // Station map on a real background (Esri World Topo tiles, as on the normals map). The Leaflet map is created once and kept
+        // between redraws so the view does not jump when a control changes. mapSvg above is the fallback when Leaflet is missing.
+        let LM = null, LLayer = null;
+        const mapDiv = document.createElement('div');
+        mapDiv.className = 'ts-leaflet';
+        function pickStations(classes, ids, V, base, lim, unit, idx) {
+            const ci = classes.findIndex(c => +c === +S.cls), out = [];
+            const Ls = lags(S.index), nearest = Ls.reduce((a, b) => Math.abs(b - S.lag) < Math.abs(a - S.lag) ? b : a, Ls[0]);
+            ids.forEach(s => {
+                const row = V[s];
+                let v, cidx = ci;
+                if (S.show !== 'class') {
+                    const cand = row.map((x, i) => [x, i]).filter(p => p[0] != null); if (!cand.length) return;
+                    const pk = cand.reduce((a, b) => (S.show === 'best' ? b[0] > a[0] : b[0] < a[0]) ? b : a); v = pk[0]; cidx = pk[1];
+                } else v = row[ci];
+                if (v == null) return;
+                const fill = S.show === 'class' || S.index !== 'mjo' ? color(v, S.metric, lim) : PHASE_COL[cidx];
+                out.push({ st: data.stations[s], v, cidx, fill, sig: data.data[S.index][S.metric][String(nearest)].sig[s][cidx] });
+            });
+            return out;
+        }
+        function mapLeaflet(host, classes, ids, V, base, lim, unit, idx) {
+            host.innerHTML = '';
+            host.appendChild(mapDiv);
+            if (!LM) {
+                LM = L.map(mapDiv, { scrollWheelZoom: false, dragging: true, maxZoom: 11 });
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 11 }).addTo(LM);
+                if (basins) L.geoJSON(basins, { style: { color: '#475569', weight: 1, fill: false, opacity: 0.7 }, interactive: false }).addTo(LM);
+                LM.fitBounds([[45.8, -124.0], [49.1, -117.1]]);
+                LLayer = L.layerGroup().addTo(LM);
+            } else { LM.invalidateSize(); }
+            LLayer.clearLayers();
+            pickStations(classes, ids, V, base, lim, unit, idx).forEach(p => {
+                const tip = `${p.st.name}, ${p.st.elev_ft.toLocaleString()} ft: ${unit(p.v)}${S.show !== 'class' ? ' (' + idx.cls[classes[p.cidx]].replace(/&[^;]+;/g, '') + ')' : ''}`;
+                let m;
+                if (S.show !== 'class' && S.index === 'mjo') {
+                    m = L.marker([p.st.lat, p.st.lon], { icon: L.divIcon({ className: 'ts-pin', html: `<span style="background:${p.fill};border-color:${p.sig ? '#0f172a' : '#fff'}">${classes[p.cidx]}</span>`, iconSize: [22, 22] }) });
+                } else {
+                    m = L.circleMarker([p.st.lat, p.st.lon], { radius: 8, fillColor: p.fill, fillOpacity: 0.95, color: p.sig ? '#0f172a' : '#64748b', weight: p.sig ? 2.5 : 1 });
+                }
+                m.bindTooltip(tip).addTo(LLayer);
+            });
+            const note = document.createElement('p'); note.className = 'ci-hint';
+            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. A dark ring marks a difference the test calls real. Hover or tap a dot for the station. Thin lines are river basins.' : (S.index === 'mjo' ? 'Dot color and number are the MJO phase. ' : 'Dot color shows the size of the effect. ') + 'Hover or tap a dot for the station.';
             host.appendChild(note);
         }
 

@@ -58,7 +58,7 @@
 @media (max-width: 700px) { .lt-figs.lt-figs--2 { grid-template-columns: 1fr; } }
 
 /* Teleconnections and snow explorer (see assets/tele-snow.js) */
-.ts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0.5rem 0; }
+.ts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0.5rem 0; align-items: start; }
 .ts-box { min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff; margin-bottom: 0.6rem; }
 .ts-box h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: #1e3c72; }
 @media (max-width: 800px) { .ts-grid { grid-template-columns: 1fr; } }
@@ -90,3 +90,7 @@
 .tl-rowbtn small { display: block; font-weight: 400; color: #64748b; }
 .tl-rowbtn[aria-pressed="true"] { text-decoration: underline; }
 @media (max-width: 640px) { .tl-over th:not(:first-child) { font-size: 0.68rem; } .tl-over td { padding: 0.35rem 0.4rem; font-size: 0.8rem; } }
+
+.ts-leaflet { height: 440px; border: 1px solid #e2e8f0; border-radius: 6px; z-index: 0; }
+.ts-pin span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 700 11px/1 sans-serif; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+@media (max-width: 600px) { .ts-leaflet { height: 340px; } }
