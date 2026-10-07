@@ -230,6 +230,19 @@
         urlFor: (r, h) => `${UW}/mm5rt/ensembles/${ymdh(r)}/images_d3/${v}.${pad(h, 2)}.mean.gif`,
         fallbackUrl: UW + '/mm5rt/ensembles/',
     });
+    // ---- CW3E West-WRF 3 km snowfall maps (West Coast): runs at 00Z and 12Z, forecast hours every 6 h out to 120 ----
+    // /images/snow_{W}h_map/{season}/WWRF_3km_{GFS|ECMWF}/WCQPF/{YYYYMMDDHH}/1/snow_{W}h_map__{season}__WWRF_3km_{M}__WCQPF__{YYYYMMDDHH}__1__F{HHH}.png
+    // An accumulation window W exists only from forecast hour W on (a 72-hour total needs 72 hours of run).
+    const cw3eRuns = n => {
+        const step = 12 * 3600e3, base = Math.floor(Date.now() / step) * step;
+        return Array.from({ length: n }, (_, i) => new Date(base - i * step));
+    };
+    const cw3eSeason = d => { const y = d.getUTCFullYear(), s = d.getUTCMonth() >= 6 ? y : y - 1; return `${s}-${s + 1}`; };
+    const cw3eSnow = (model, w) => ({
+        hours: range(w, 120, 6), probeHour: w, runs: cw3eRuns(6), runExact: true,
+        urlFor: (r, h) => `${CW3E}/snow_${w}h_map/${cw3eSeason(r)}/WWRF_3km_${model}/WCQPF/${ymdh(r)}/1/snow_${w}h_map__${cw3eSeason(r)}__WWRF_3km_${model}__WCQPF__${ymdh(r)}__1__F${pad(h, 3)}.png`,
+        fallbackUrl: 'https://cw3e.ucsd.edu/',
+    });
     const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
     const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
 
@@ -337,7 +350,20 @@
                 how: 'Compare it with the snow map: where precipitation is high but snow is low, the model has rain or a high snow level. Use the 3-hour maps for timing. Totals are heavily shaped by terrain, so look at the Cascade crest and windward slopes.',
             }, UW_SRC),
         },
+        cw3e_snow: {
+            region: true, label: 'West-WRF 3 km snow (CW3E)',
+            models: { GFS: 'GFS-driven', ECMWF: 'ECMWF-driven' },
+            accums: { 6: '6 hours', 24: '24 hours', 48: '48 hours', 72: '72 hours' },
+            title: (a, st) => `West-WRF 3 km snowfall, ${st.accum || 24}-hour accumulation (${st.model === 'ECMWF' ? 'ECMWF' : 'GFS'}-driven)`,
+            build: (a, st) => cw3eSnow(st.model === 'ECMWF' ? 'ECMWF' : 'GFS', +st.accum || 24),
+            info: {
+                what: 'Maps of forecast snowfall for the whole West Coast from West-WRF, the regional model run by the Center for Western Weather and Water Extremes (CW3E) at UC San Diego at 3 km grid spacing. It is run twice a day, once driven by the GFS (American) and once by the ECMWF (European) global model, out to 5 days. You can show the snow that falls in each 6 hours, or the total over the last 24, 48 or 72 hours, ending at the forecast hour you pick. Runs from October to March.',
+                how: 'The two drivers give two views of the same storm: where the GFS-driven and ECMWF-driven maps agree on the snow axis and the totals, confidence is higher, and where they differ the uncertainty is real. Compare 24, 48 and 72-hour totals to see how much of a storm total comes in the first day. The model needs a few hours after its run time to post, so the newest run may not be there yet; this page falls back to the previous run automatically.',
+                source: 'CW3E West-WRF forecasts', sourceUrl: 'https://cw3e.ucsd.edu/',
+            },
+        },
         uw_cloud: {
+            cat: 'cloud',
             region: true, label: 'UW WRF clouds',
             models: { low: '0-3,000 ft', mid: '3,000-10,000 ft', high: '10,000-20,000 ft' },
             title: (a, st) => 'UW WRF ensemble mean cloud water, ' + ({ low: '0-3,000 ft', mid: '3,000-10,000 ft', high: '10,000-20,000 ft' })[st.model || 'low'],
@@ -365,6 +391,7 @@
             },
         },
         nbm_cloud: {
+            cat: 'cloud',
             label: 'NBM clouds',
             title: a => `${a.label}: NBM cloud cover`,
             build: (a, st) => ({
@@ -437,14 +464,27 @@
         },
     };
 
+    // Products are split into "Precipitation Products" and "Cloud Cover Products" (a Type chip before Product).
+    // The freezing-level page has only one kind, so its Type chip is hidden.
+    const CATS = [{ value: 'precip', label: 'Precipitation Products' }, { value: 'cloud', label: 'Cloud Cover Products' }, { value: 'level', label: 'Levels' }];
+    const catOf = p => p.cat || (pageOf(p) === 'level' ? 'level' : 'precip');
+    const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))));
+    // Links made before the split (#product=uw_cloud or nbm_cloud) pick their type.
+    (() => {
+        const h = new URLSearchParams(location.hash.slice(1));
+        if (h.get('product') && !h.get('cat') && PRODUCTS[h.get('product')]) { h.set('cat', catOf(PRODUCTS[h.get('product')])); history.replaceState(null, '', '#' + h.toString()); }
+    })();
+
     const mount = () => {
         CMWViewer.mount(document.getElementById('viewer'), {
             singleMaxWidth: 760,
             selectors: [
                 { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).filter(k => PAGE === 'precip' || !AREAS[k].region).map(k => ({ value: k, label: AREAS[k].label })) },
-                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[st.area].region && (!PRODUCTS[k].needs || AREAS[st.area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
+                { key: 'cat', label: 'Type', options: st => CATS.filter(c => productsFor(st.area).some(k => catOf(PRODUCTS[k]) === c.value)) },
+                { key: 'product', label: 'Product', options: st => productsFor(st.area).filter(k => catOf(PRODUCTS[k]) === st.cat).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
                 { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
+                { key: 'accum', label: 'Accumulation', options: st => PRODUCTS[st.product].accums ? Object.keys(PRODUCTS[st.product].accums).map(m => ({ value: m, label: PRODUCTS[st.product].accums[m] })) : [{ value: '-', label: '-' }] },
             ],
             resolve(st) {
                 const a = AREAS[st.area], p = PRODUCTS[st.product];

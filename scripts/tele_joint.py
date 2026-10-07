@@ -43,10 +43,13 @@ def predictors(idx, lag):
     pdo = pd.Series(pj["values"], index=pd.period_range(f"{y0}-01", periods=len(pj["values"]), freq="M"))
     pdo = pdo.reindex(pd.PeriodIndex(idx.to_period("M"))).values
     z = lambda v: (v - np.nanmean(v)) / np.nanstd(v)
+    stats = {k: {"mean": float(np.nanmean(v)), "sd": float(np.nanstd(v))} for k, v in [("PNA", pna), ("ONI", oni), ("PDO", pdo)]}
     X = {"PNA": z(pna), "ONI": z(oni), "PDO": z(pdo)}
     for k in range(1, 9):
         X[f"MJO{k}"] = (ind["mjo"].values == k).astype(float)
-    return pd.DataFrame(X, index=idx)
+    df = pd.DataFrame(X, index=idx)
+    df.attrs["stats"] = stats
+    return df
 
 
 def fit_boot(X, y, season, terms, nboot, rng):
@@ -65,7 +68,7 @@ def fit_boot(X, y, season, terms, nboot, rng):
     b = solve(np.arange(len(years)))
     bs = np.array([solve(rng.integers(0, len(years), len(years))) for _ in range(nboot)])
     lo, hi = np.percentile(bs, [5, 95], axis=0)
-    return b[1:], lo[1:], hi[1:]
+    return b, lo, hi          # the first entry is the intercept
 
 
 def main():
@@ -78,6 +81,8 @@ def main():
     season = z["season"]
     st = pd.read_csv(RES / "stations.csv", dtype={"id": str})
     X = predictors(idx, a.lag)
+    import json
+    (RES / "joint_stats.json").write_text(json.dumps({"lag": a.lag, "stats": X.attrs["stats"]}, indent=1), encoding="utf-8")
     rng = np.random.default_rng(11)
     print("daily correlation between PNA, ONI and PDO (cold season):")
     print(X[["PNA", "ONI", "PDO"]].corr().round(2).to_string())
@@ -101,7 +106,7 @@ def main():
                 if name.startswith("st:") and model != "joint":
                     continue
                 b, lo, hi = fit_boot(X, y, season, terms, a.boot if not name.startswith("st:") else 60, rng)
-                for t, bb, l, h in zip(terms, b, lo, hi):
+                for t, bb, l, h in zip(["intercept"] + terms, b, lo, hi):
                     rows.append((m, name, model, t, bb, l, h))
         print("done", m)
     R = pd.DataFrame(rows, columns=["metric", "unit", "model", "term", "coef", "lo", "hi"])

@@ -62,3 +62,20 @@
 .ts-box { min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff; margin-bottom: 0.6rem; }
 .ts-box h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: #1e3c72; }
 @media (max-width: 800px) { .ts-grid { grid-template-columns: 1fr; } }
+
+/* Reading the Tea Leaves predictor (see assets/tea-leaves.js) */
+.tl-inputs { display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; margin: 0.4rem 0 0.6rem; }
+.tl-inputs input[type=range] { width: 240px; max-width: 100%; min-height: 32px; }
+.tl-mjo { flex-basis: 100%; }
+.tl-w { text-transform: none; letter-spacing: 0; font-weight: 400; color: #475569; font-size: 0.8rem; }
+.tl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; margin: 0.6rem 0; }
+.tl-card { border: 1px solid #e2e8f0; border-top: 5px solid #94a3b8; border-radius: 8px; padding: 0.7rem 0.9rem; background: #fff; }
+.tl-card h3 { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.tl-verdict { margin: 0.2rem 0 0.5rem; font-size: 1.15rem; font-weight: 700; color: #1e3c72; line-height: 1.25; }
+.tl-good { border-top-color: #0f766e; } .tl-cool { border-top-color: #2563eb; } .tl-warm { border-top-color: #dc2626; } .tl-warn { border-top-color: #c2410c; } .tl-none { border-top-color: #94a3b8; }
+.tl-card table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+.tl-card th { text-align: left; font-weight: 400; color: #475569; padding: 0.15rem 0; }
+.tl-card td { text-align: right; font-weight: 600; padding: 0.15rem 0; }
+.tl-card td small { font-weight: 400; color: #64748b; }
+.tl-g { color: #0f766e; } .tl-b { color: #b91c1c; } .tl-n { color: #64748b; }
+.tl-note { margin: 0.4rem 0 0; font-size: 0.8rem; color: #64748b; }
