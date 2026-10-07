@@ -25,6 +25,13 @@
             note: 'The monthly Oceanic Ni&ntilde;o Index. There are only 35 winters, so only a handful sit in each class: read these as a tendency, not a rule.' },
     };
     const TIERS = [['all', 'All stations', () => true], ['low', 'Low, under 4,000 ft', e => e < 4000], ['mid', 'Mid, 4,000&ndash;5,000 ft', e => e >= 4000 && e < 5000], ['high', 'High, 5,000 ft and up', e => e >= 5000]];
+    // PNA and ENSO classes as symbols on the map: ++ strong positive (El Nino), + positive, none for neutral, - negative, -- strong negative (La Nina)
+    const SYM = { '-2': '\u2212\u2212', '-1': '\u2212', '0': '', '1': '+', '2': '++' };
+    const SYM_COL = { '-2': '#1d4ed8', '-1': '#60a5fa', '0': '#cbd5e1', '1': '#fb923c', '2': '#c2410c' };
+    const EXTREME = {
+        swe: ['Snowiest', 'Least snowy'], bigsnow: ['Most big snow days', 'Fewest big snow days'], tanom: ['Warmest', 'Coldest'],
+        rain: ['Rainiest', 'Least rain'], bigwet: ['Most big precipitation days', 'Fewest big precipitation days'],
+    };
     const PHASE_COL = ['#d73027', '#f46d43', '#fdae61', '#c9b100', '#66bd63', '#1a9850', '#4575b4', '#8e6bbf'];
     const el = (t, a, kids) => { const n = document.createElementNS(NS, t); for (const k in a || {}) n.setAttribute(k, a[k]); (kids || []).forEach(c => n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c)); return n; };
 
@@ -79,10 +86,10 @@
                 </div>
                 <p class="ci-hint">${idx.note} ${idx.noLag ? 'The ENSO value is a monthly number, so it does not change over a couple of weeks and there is no lag to choose. ' : idx.lagNote + ' '}${METRIC_NOTE[S.metric]} ${S.tier !== 'all' ? 'Only the stations in the elevation group are averaged.' : ''}</p>
                 <div class="ts-grid"><div class="ts-box"><h3>Average by ${idx.label}</h3><div id="ts-bars"></div></div>
-                    <div class="ts-box"><h3>Where: ${S.show === 'class' ? idx.cls[S.cls] : S.show === 'best' ? 'the class with the highest value at each station' : 'the class with the lowest value at each station'}</h3>
-                        <div class="ol-chips" style="margin-bottom:.4rem"><button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'class'}" data-k="show" data-v="class">Selected class</button>
-                        <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'best'}" data-k="show" data-v="best">Highest at each station
-                        <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'worst'}" data-k="show" data-v="worst">Lowest at each station</div>
+                    <div class="ts-box"><h3>Where: ${S.show === 'class' ? idx.cls[S.cls] : EXTREME[S.metric][S.show === 'best' ? 0 : 1] + ' ' + (S.index === 'mjo' ? 'phase' : 'class') + ' at each station'}</h3>
+                        <div class="ol-chips" style="margin-bottom:.4rem"><button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'class'}" data-k="show" data-v="class">Selected ${S.index === 'mjo' ? 'phase' : 'class'}</button>
+                        <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'best'}" data-k="show" data-v="best">${EXTREME[S.metric][0]} ${S.index === 'mjo' ? 'phase' : 'class'}</button>
+                        <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'worst'}" data-k="show" data-v="worst">${EXTREME[S.metric][1]} ${S.index === 'mjo' ? 'phase' : 'class'}</button></div>
                         <div id="ts-map"></div></div></div>
                 ${idx.noLag ? '' : `<div class="ts-box"><h3>How the effect changes with the lag: ${idx.cls[S.cls]}</h3><div id="ts-lag-chart"></div></div>`}
                 <p class="ci-hint">Click a bar to choose the class shown on the map and lag curve. Dots on a bar are single stations. A ring on a map station marks a difference the season-bootstrap test calls real at the 90% level (not corrected for testing many combinations, and nearby stations share the same storms).</p>
@@ -174,7 +181,7 @@
                     const pk = cand.reduce((a, b) => (S.show === 'best' ? b[0] > a[0] : b[0] < a[0]) ? b : a); v = pk[0]; cidx = pk[1];
                 } else v = row[ci];
                 if (v == null) return;
-                const fill = S.show === 'class' || S.index !== 'mjo' ? color(v, S.metric, lim) : PHASE_COL[cidx];
+                const fill = S.show === 'class' ? color(v, S.metric, lim) : (S.index === 'mjo' ? PHASE_COL[cidx] : SYM_COL[String(classes[cidx])]);
                 out.push({ st: data.stations[s], v, cidx, fill, sig: data.data[S.index][S.metric][String(nearest)].sig[s][cidx] });
             });
             return out;
@@ -193,15 +200,16 @@
             pickStations(classes, ids, V, base, lim, unit, idx).forEach(p => {
                 const tip = `${p.st.name}, ${p.st.elev_ft.toLocaleString()} ft: ${unit(p.v)}${S.show !== 'class' ? ' (' + idx.cls[classes[p.cidx]].replace(/&[^;]+;/g, '') + ')' : ''}`;
                 let m;
-                if (S.show !== 'class' && S.index === 'mjo') {
-                    m = L.marker([p.st.lat, p.st.lon], { icon: L.divIcon({ className: 'ts-pin', html: `<span style="background:${p.fill};border-color:${p.sig ? '#0f172a' : '#fff'}">${classes[p.cidx]}</span>`, iconSize: [22, 22] }) });
+                if (S.show !== 'class') {
+                    const lab = S.index === 'mjo' ? String(classes[p.cidx]) : SYM[String(classes[p.cidx])];
+                    m = L.marker([p.st.lat, p.st.lon], { icon: L.divIcon({ className: 'ts-pin', html: `<span style="background:${p.fill};border-color:${p.sig ? '#0f172a' : '#fff'};${S.index !== 'mjo' && p.fill === SYM_COL['0'] ? 'color:#334155;text-shadow:none' : ''}">${lab}</span>`, iconSize: [24, 24] }) });
                 } else {
                     m = L.circleMarker([p.st.lat, p.st.lon], { radius: 8, fillColor: p.fill, fillOpacity: 0.95, color: p.sig ? '#0f172a' : '#64748b', weight: p.sig ? 2.5 : 1 });
                 }
                 m.bindTooltip(tip).addTo(LLayer);
             });
             const note = document.createElement('p'); note.className = 'ci-hint';
-            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. A dark ring marks a difference the test calls real. Hover or tap a dot for the station. Thin lines are river basins.' : (S.index === 'mjo' ? 'Dot color and number are the MJO phase. ' : 'Dot color shows the size of the effect. ') + 'Hover or tap a dot for the station.';
+            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. A dark ring marks a difference the test calls real. Hover or tap a dot for the station. Thin lines are river basins.' : (S.index === 'mjo' ? 'Each dot shows the MJO phase (1 to 8) with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station. ' : S.index === 'pna' ? 'Each dot is the PNA class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ strong positive PNA, + positive, no mark neutral, \u2212 negative, \u2212\u2212 strong negative. ' : 'Each dot is the ENSO class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ El Ni\u00f1o, + weak El Ni\u00f1o, no mark neutral, \u2212 weak La Ni\u00f1a, \u2212\u2212 La Ni\u00f1a. ') + 'A dark ring marks a difference the test calls real. Hover or tap a dot for the station.';
             host.appendChild(note);
         }
 

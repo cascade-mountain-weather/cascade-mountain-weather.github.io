@@ -92,5 +92,5 @@
 @media (max-width: 640px) { .tl-over th:not(:first-child) { font-size: 0.68rem; } .tl-over td { padding: 0.35rem 0.4rem; font-size: 0.8rem; } }
 
 .ts-leaflet { height: 440px; border: 1px solid #e2e8f0; border-radius: 6px; z-index: 0; }
-.ts-pin span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 700 11px/1 sans-serif; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.ts-pin span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 700 11px/1 sans-serif; text-shadow: 0 0 2px rgba(0,0,0,.6); }
 @media (max-width: 600px) { .ts-leaflet { height: 340px; } }
