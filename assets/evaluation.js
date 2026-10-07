@@ -52,14 +52,15 @@
         RAW.weekends.forEach((w, i) => { if (w.season === id) { idx[i] = wk.length; wk.push(w); } });
         const keep = r => idx[r.w] !== undefined;
         const renum = r => Object.assign({}, r, { w: idx[r.w] });
-        // Friday view: each record becomes its day-1 values (observed, NBM, HRRR, HRDPS, and ours when a day-level forecast was saved).
-        const friday = r => {
-            const d = r.days && r.days.day1;
+        // A single-window view: each record becomes the values for that window. Friday is day 1 (observed, NBM, HRRR, HRDPS, and
+        // ours when a day-level forecast was saved); the 12-hour periods carry observed and NBM (and HRRR/HRDPS where archived).
+        const winRec = r => {
+            const d = S.win === 'day1' ? (r.days && r.days.day1) : (r.periods && r.periods[S.win]);
             if (!d || !d.obs) return null;
-            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days };
+            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days, periods: r.periods };
         };
         let recs = RAW.records.filter(keep).map(renum);
-        if (S.win === 'day1') recs = recs.map(friday).filter(Boolean);
+        if (S.win !== 'total') recs = recs.map(winRec).filter(Boolean);
         return Object.assign({}, RAW, { weekends: wk, records: recs, snow_level: RAW.snow_level.filter(keep).map(renum) });
     }
 
@@ -73,6 +74,21 @@
         if (pid === 'ours') return r.ours ? { lo: r.ours[0], mid: (r.ours[0] + r.ours[1]) / 2, hi: r.ours[1], obs: o } : null;
         const x = r[pid];                                           // a single-valued product (HRRR, HRDPS)
         return typeof x === 'number' ? { lo: x, mid: x, hi: x, obs: o } : null;
+    }
+
+    const isPeriod = () => S.win !== 'total' && S.win !== 'day1';
+    // Name of the window being compared, for captions. A period is day (12Z-0Z) or night (0Z-12Z).
+    function winName() {
+        if (S.win === 'total') return 'weekend total';
+        if (S.win === 'day1') return 'Friday';
+        const p = ((RAW && RAW.periods) || []).find(x => x.id === S.win);
+        return p ? p.label.toLowerCase() : S.win;
+    }
+    function winCaption() {
+        if (S.win === 'total') return 'Weekend total.';
+        if (S.win === 'day1') return 'Friday only (Friday 4 am to Saturday 4 am Pacific).';
+        const night = /night$/.test(S.win);
+        return `${winName().replace(/^./, c => c.toUpperCase())} (${night ? '0Z to 12Z, about 4 pm to 4 am' : '12Z to 0Z, about 4 am to 4 pm'} Pacific). NBM values for 12-hour periods are approximate: the NBM has no 12-hour window, so each is built from two 6-hour windows.`;
     }
 
     const inArea = (r, area) => area === 'ALL' || r.a === area;
@@ -107,8 +123,8 @@
 
         $('eval-trackers').innerHTML = D.products.map(p => {
             if (!live.some(l => l.id === p.id)) {
-                const why = POINT.includes(p.id) ? (S.win !== 'day1' ? 'Choose the Friday view to compare' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
-                    : p.id === 'ours' && S.win === 'day1' ? 'No day-level forecast saved yet' : 'Coming soon';
+                const why = POINT.includes(p.id) ? (S.win === 'total' ? 'Choose the Friday view to compare' : isPeriod() ? 'Not archived for 12-hour periods yet' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
+                    : p.id === 'ours' && S.win !== 'total' ? (isPeriod() ? 'Our forecast is the weekend total only' : 'No day-level forecast saved yet') : 'Coming soon';
                 return `<div class="eval-card eval-card--off"><h4>${esc(p.label)}</h4><div class="eval-note">${why}</div></div>`;
             }
             const m = metrics(items(p.id, S.area)), rank = ranked.findIndex(r => r.id === p.id);
@@ -271,7 +287,7 @@
         });
         $('eval-plot').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecasts and observed snowfall for each weekend">${g}</svg>`;
 
-        $('eval-plotcaption').textContent = `${S.area === 'ALL' ? 'Average of the 9 areas' : S.area}. ${S.win === 'day1' ? 'Friday only (Friday 4 am to Saturday 4 am Pacific).' : 'Weekend total.'} Click a weekend for the day-by-day view.`;
+        $('eval-plotcaption').textContent = `${S.area === 'ALL' ? 'Average of the 9 areas' : S.area}. ${winCaption()} Click a weekend for the day-by-day view.`;
         $('eval-key').innerHTML = `<span><i style="background:#94a3b8;opacity:.6"></i>Observed range</span>` +
             available().map(p => `<span><i style="background:${COLORS[p.id]}"></i>${esc(p.label)} ${POINT.includes(p.id) ? '(circle = model value)' : '(bar = range, circle = middle)'}</span>`).join('');
     }
@@ -319,7 +335,7 @@
         box.hidden = false;
         box.innerHTML = `<button type="button" class="ed-close" aria-label="Close">&times;</button>
             <h4>${esc(wk.label)} &middot; ${S.area === 'ALL' ? 'average of the 9 areas' : esc(S.area)}</h4>
-            <ul class="eval-lines">${line(S.win === 'day1' ? 'Observed, Friday' : 'Observed, weekend total', tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${tot.hrrr ? `<li>HRRR: <strong>${fmt(tot.hrrr[1])} in</strong></li>` : ''}${tot.hrdps ? `<li>HRDPS: <strong>${fmt(tot.hrdps[1])} in</strong></li>` : ''}</ul>
+            <ul class="eval-lines">${line(`Observed, ${winName()}`, tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${tot.hrrr ? `<li>HRRR: <strong>${fmt(tot.hrrr[1])} in</strong></li>` : ''}${tot.hrdps ? `<li>HRDPS: <strong>${fmt(tot.hrdps[1])} in</strong></li>` : ''}</ul>
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Day by day, observed and NBM">${g}</svg>
             <p class="eval-note">Grey = observed. Blue = NBM.${dayVals.some(d => d.ours) ? ' Orange = our forecast.' : ' Our forecast was only a weekend total.'}</p>`;
     }
@@ -405,8 +421,12 @@
     }
 
     function renderCoco() {
-        const rows = cocoRows(), win = S.win === 'day1' ? 'Friday' : 'weekend total';
+        const rows = cocoRows(), win = winName();
         const area = S.area === 'ALL';
+        if (isPeriod()) {
+            $('eval-coco').innerHTML = '<p class="eval-sub">CoCoRaHS volunteers report once a day, so the cross-check is not available for 12-hour periods. Choose the weekend total or Friday.</p>';
+            return;
+        }
         if (!rows.length) {
             $('eval-coco').innerHTML = `<p class="eval-sub">No CoCoRaHS reports match these filters near ${area ? 'any area' : esc(S.area)} for this season and window. Few volunteers live near ski terrain, so most areas have none.</p>`;
             return;

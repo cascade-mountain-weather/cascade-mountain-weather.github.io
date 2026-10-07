@@ -17,7 +17,7 @@ og_description: "How accurate are our weekend snowfall forecasts for Washington 
     <div class="eval-controls">
         <label>Season <select id="eval-season" aria-label="Season"></select></label>
         <label>Area <select id="eval-area" aria-label="Area"></select></label>
-        <label>Compare <select id="eval-window" aria-label="Window compared"><option value="total">Weekend total</option><option value="day1">Friday only (adds HRRR and HRDPS)</option></select></label>
+        <label>Compare <select id="eval-window" aria-label="Window compared"><option value="total">Weekend total</option><option value="day1">Friday only (adds HRRR and HRDPS)</option><optgroup label="12-hour periods (NBM)"><option value="fri_day">Friday day</option><option value="fri_night">Friday night</option><option value="sat_day">Saturday day</option><option value="sat_night">Saturday night</option><option value="sun_day">Sunday day</option><option value="sun_night">Sunday night</option></optgroup></select></label>
     </div>
     <p class="eval-banner" id="eval-seasonnote" hidden></p>
     <p class="eval-empty" id="eval-empty" hidden>No weekends have been scored this season yet. Each weekend appears here after its forecast is scored the following Monday.</p>

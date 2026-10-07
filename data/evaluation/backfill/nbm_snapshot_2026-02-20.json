@@ -47,6 +47,54 @@
     17,
     89
    ]
+  },
+  "fri_day": {
+   "start_utc": "2026-02-20T12:00Z",
+   "end_utc": "2026-02-21T00:00Z",
+   "fxx": [
+    17,
+    29
+   ]
+  },
+  "fri_night": {
+   "start_utc": "2026-02-21T00:00Z",
+   "end_utc": "2026-02-21T12:00Z",
+   "fxx": [
+    29,
+    41
+   ]
+  },
+  "sat_day": {
+   "start_utc": "2026-02-21T12:00Z",
+   "end_utc": "2026-02-22T00:00Z",
+   "fxx": [
+    41,
+    53
+   ]
+  },
+  "sat_night": {
+   "start_utc": "2026-02-22T00:00Z",
+   "end_utc": "2026-02-22T12:00Z",
+   "fxx": [
+    53,
+    65
+   ]
+  },
+  "sun_day": {
+   "start_utc": "2026-02-22T12:00Z",
+   "end_utc": "2026-02-23T00:00Z",
+   "fxx": [
+    65,
+    77
+   ]
+  },
+  "sun_night": {
+   "start_utc": "2026-02-23T00:00Z",
+   "end_utc": "2026-02-23T12:00Z",
+   "fxx": [
+    77,
+    89
+   ]
   }
  },
  "series_times_utc": [
@@ -109,6 +157,48 @@
      "p50": 7.1,
      "p75": 9.8,
      "deterministic": 7.4
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.1,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.2,
+     "deterministic": 0.1
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.1,
+     "p75": 0.8,
+     "deterministic": 2.3
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.2,
+     "p50": 0.5,
+     "p75": 1.9,
+     "deterministic": 2.1
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.2,
+     "p50": 2.4,
+     "p75": 3.5,
+     "deterministic": 2.4
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 2.8,
+     "p50": 3.8,
+     "p75": 4.5,
+     "deterministic": 3.4
     }
    },
    "snow_level_ft": {
@@ -342,6 +432,48 @@
      "p50": 7.5,
      "p75": 9.3,
      "deterministic": 7.7
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.1,
+     "p50": 0.4,
+     "p75": 0.9,
+     "deterministic": 1.4
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.3,
+     "p50": 0.8,
+     "p75": 1.4,
+     "deterministic": 2.2
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 2.0,
+     "p50": 2.5,
+     "p75": 3.8,
+     "deterministic": 3.2
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 2.4,
+     "p50": 3.6,
+     "p75": 4.6,
+     "deterministic": 3.6
     }
    },
    "snow_level_ft": {
@@ -575,6 +707,48 @@
      "p50": 6.8,
      "p75": 9.3,
      "deterministic": 7.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.2,
+     "p50": 0.6,
+     "p75": 1.3,
+     "deterministic": 0.9
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.2,
+     "p50": 0.7,
+     "p75": 1.6,
+     "deterministic": 1.4
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.4,
+     "p50": 2.1,
+     "p75": 2.9,
+     "deterministic": 1.8
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 2.3,
+     "p50": 3.3,
+     "p75": 4.2,
+     "deterministic": 3.0
     }
    },
    "snow_level_ft": {
@@ -808,6 +982,48 @@
      "p50": 7.9,
      "p75": 9.5,
      "deterministic": 8.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.1
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.8,
+     "p50": 1.4,
+     "p75": 2.3,
+     "deterministic": 1.5
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.5,
+     "p50": 2.2,
+     "p75": 2.8,
+     "deterministic": 2.3
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.5,
+     "p50": 2.1,
+     "p75": 2.5,
+     "deterministic": 2.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.6,
+     "p50": 2.4,
+     "p75": 3.2,
+     "deterministic": 2.4
     }
    },
    "snow_level_ft": {
@@ -1041,6 +1257,48 @@
      "p50": 3.0,
      "p75": 8.4,
      "deterministic": 5.3
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.2,
+     "p50": 0.5,
+     "p75": 1.5,
+     "deterministic": 1.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 2.8,
+     "deterministic": 1.8
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.7,
+     "p50": 1.1,
+     "p75": 1.8,
+     "deterministic": 1.3
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.3,
+     "p50": 0.8,
+     "p75": 1.4,
+     "deterministic": 1.1
     }
    },
    "snow_level_ft": {
@@ -1274,6 +1532,48 @@
      "p50": 3.9,
      "p75": 5.5,
      "deterministic": 4.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.5,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.4,
+     "p50": 1.1,
+     "p75": 2.1,
+     "deterministic": 1.4
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.1,
+     "p50": 0.2,
+     "p75": 1.0,
+     "deterministic": 0.5
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.2,
+     "p50": 0.5,
+     "p75": 1.0,
+     "deterministic": 0.5
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.5,
+     "deterministic": 0.7
     }
    },
    "snow_level_ft": {
@@ -1507,6 +1807,48 @@
      "p50": 10.7,
      "p75": 12.8,
      "deterministic": 10.7
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.3,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.2,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.2,
+     "p50": 2.7,
+     "p75": 4.0,
+     "deterministic": 3.9
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.4,
+     "p50": 1.0,
+     "p75": 1.7,
+     "deterministic": 1.8
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.7,
+     "p50": 2.4,
+     "p75": 3.0,
+     "deterministic": 2.2
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 3.2,
+     "p50": 4.1,
+     "p75": 5.4,
+     "deterministic": 4.3
     }
    },
    "snow_level_ft": {
@@ -1740,6 +2082,48 @@
      "p50": 13.0,
      "p75": 16.5,
      "deterministic": 13.4
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.4,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.6,
+     "p50": 3.2,
+     "p75": 4.8,
+     "deterministic": 4.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.4,
+     "p50": 1.1,
+     "p75": 2.3,
+     "deterministic": 2.1
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.9,
+     "p50": 2.9,
+     "p75": 3.5,
+     "deterministic": 2.5
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 4.4,
+     "p50": 6.3,
+     "p75": 7.6,
+     "deterministic": 5.8
     }
    },
    "snow_level_ft": {
@@ -1973,6 +2357,48 @@
      "p50": 9.9,
      "p75": 12.0,
      "deterministic": 9.3
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.2,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.2,
+     "p50": 2.5,
+     "p75": 3.3,
+     "deterministic": 2.1
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.4,
+     "p50": 1.3,
+     "p75": 2.2,
+     "deterministic": 1.9
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 1.7,
+     "p50": 2.2,
+     "p75": 2.8,
+     "deterministic": 1.9
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 2.2,
+     "p50": 3.4,
+     "p75": 4.4,
+     "deterministic": 3.2
     }
    },
    "snow_level_ft": {

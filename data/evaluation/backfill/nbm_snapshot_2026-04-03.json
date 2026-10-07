@@ -47,6 +47,54 @@
     17,
     89
    ]
+  },
+  "fri_day": {
+   "start_utc": "2026-04-03T12:00Z",
+   "end_utc": "2026-04-04T00:00Z",
+   "fxx": [
+    17,
+    29
+   ]
+  },
+  "fri_night": {
+   "start_utc": "2026-04-04T00:00Z",
+   "end_utc": "2026-04-04T12:00Z",
+   "fxx": [
+    29,
+    41
+   ]
+  },
+  "sat_day": {
+   "start_utc": "2026-04-04T12:00Z",
+   "end_utc": "2026-04-05T00:00Z",
+   "fxx": [
+    41,
+    53
+   ]
+  },
+  "sat_night": {
+   "start_utc": "2026-04-05T00:00Z",
+   "end_utc": "2026-04-05T12:00Z",
+   "fxx": [
+    53,
+    65
+   ]
+  },
+  "sun_day": {
+   "start_utc": "2026-04-05T12:00Z",
+   "end_utc": "2026-04-06T00:00Z",
+   "fxx": [
+    65,
+    77
+   ]
+  },
+  "sun_night": {
+   "start_utc": "2026-04-06T00:00Z",
+   "end_utc": "2026-04-06T12:00Z",
+   "fxx": [
+    77,
+    89
+   ]
   }
  },
  "series_times_utc": [
@@ -109,6 +157,48 @@
      "p50": 0.0,
      "p75": 0.2,
      "deterministic": 0.1
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.2,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
     }
    },
    "snow_level_ft": {
@@ -338,6 +428,48 @@
     },
     "total": {
      "method": "percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
      "p25": 0.0,
      "p50": 0.0,
      "p75": 0.0,
@@ -575,6 +707,48 @@
      "p50": 0.0,
      "p75": 0.0,
      "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
     }
    },
    "snow_level_ft": {
@@ -804,6 +978,48 @@
     },
     "total": {
      "method": "percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
      "p25": 0.0,
      "p50": 0.0,
      "p75": 0.0,
@@ -1041,6 +1257,48 @@
      "p50": 0.0,
      "p75": 0.0,
      "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
     }
    },
    "snow_level_ft": {
@@ -1270,6 +1528,48 @@
     },
     "total": {
      "method": "percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
      "p25": 0.0,
      "p50": 0.0,
      "p75": 0.0,
@@ -1507,6 +1807,48 @@
      "p50": 0.0,
      "p75": 0.0,
      "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
     }
    },
    "snow_level_ft": {
@@ -1740,6 +2082,48 @@
      "p50": 0.0,
      "p75": 0.0,
      "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
     }
    },
    "snow_level_ft": {
@@ -1969,6 +2353,48 @@
     },
     "total": {
      "method": "percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "fri_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sat_night": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_day": {
+     "method": "scaled-sum of 6 h percentile",
+     "p25": 0.0,
+     "p50": 0.0,
+     "p75": 0.0,
+     "deterministic": 0.0
+    },
+    "sun_night": {
+     "method": "scaled-sum of 6 h percentile",
      "p25": 0.0,
      "p50": 0.0,
      "p75": 0.0,

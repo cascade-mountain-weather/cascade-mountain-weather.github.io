@@ -21,6 +21,9 @@ Record fields (inches), per weekend and area:
   days      {day1|day2|day3: {obs: [...], nbm: [...], hrrr: x, hrdps: x, coco: {...}}}  for the per-day view and the
             Friday comparison (HRRR and HRDPS run 48 hours, so they have a value for day1 only; HRDPS only for weekends
             scored live, since it is not archived)
+  periods   {fri_day|fri_night|sat_day|sat_night|sun_day|sun_night: {obs: [...], nbm: [...], hrrr: x, hrdps: x}}   the six
+            12 h periods (day 12Z-0Z, night 0Z-12Z). The NBM values are scaled sums of two 6 h windows (approximate; see
+            scaled_sum in scripts/nbm_snapshot.py); no CoCoRaHS (it reports once a day)
   coco      CoCoRaHS cross-check (volunteer stations within 25 km): {n, nr, full, med, max, top: [name, elev_ft, in]}
             for the weekend total, and the same under days. Not part of any score.
 """
@@ -39,6 +42,12 @@ SEASONS = [
     {"id": "2026-27", "label": "2026–27", "note": ""},
     {"id": "2025-26", "label": "2025–26", "note": "Rebuilt with the new method from the model archive. These are not the numbers the original evaluation showed."},
 ]
+PERIODS = [   # 12 h periods, UTC windows from the first Friday 12Z: day is 12Z-0Z, night 0Z-12Z
+    {"id": "fri_day", "label": "Friday day"}, {"id": "fri_night", "label": "Friday night"},
+    {"id": "sat_day", "label": "Saturday day"}, {"id": "sat_night", "label": "Saturday night"},
+    {"id": "sun_day", "label": "Sunday day"}, {"id": "sun_night", "label": "Sunday night"},
+]
+PERIOD_IDS = tuple(p["id"] for p in PERIODS)
 PRESEASON = {"2026-10-03"}   # first-day dates of test weekends before the 2026-27 forecasts began
 
 
@@ -116,6 +125,15 @@ def main():
                     if isinstance(w.get("ours"), list):          # a day-level forecast of ours, when one was saved
                         days[wid]["ours"] = w["ours"]
             rec["days"] = days
+            periods = {}
+            for wid, w in a["windows"].items():
+                if wid in PERIOD_IDS:
+                    periods[wid] = {"obs": triple(w.get("observed"), ("low", "mid", "high")), "nbm": triple(w.get("nbm"), ("p25", "p50", "p75"))}
+                    for model in ("hrrr", "hrdps"):
+                        if w.get(model) and w[model].get("snowfall_in") is not None:
+                            periods[wid][model] = w[model]["snowfall_in"]
+            if periods:
+                rec["periods"] = periods
             if coco(tot, a, "total"):
                 rec["coco"] = coco(tot, a, "total")
             records.append(rec)
@@ -133,6 +151,7 @@ def main():
             {"id": "hrrr", "label": "HRRR", "long": "HRRR (single value, first 48 hours: Friday)", "kind": "point", "available": True},
             {"id": "hrdps", "label": "HRDPS", "long": "HRDPS (single value, first 48 hours: Friday; assumes 10:1 snow ratio)", "kind": "point", "available": True},
         ],
+        "periods": PERIODS,
         "areas": list(areas.values()),
         "weekends": weekends,
         "records": records,

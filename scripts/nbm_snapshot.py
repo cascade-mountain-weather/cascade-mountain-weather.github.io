@@ -177,6 +177,57 @@ def snowfall_window(cycle, start, end, grid, n):
     return out
 
 
+# Six 12 h periods per weekend, in UTC from the first Friday 12Z: day = 12Z-0Z, night = 0Z-12Z
+# (docs/forecast-cycles-design.md). The NBM has no 12 h snowfall window, so each period is two 6 h windows added up.
+PERIODS = [("fri_day", 0), ("fri_night", 12), ("sat_day", 24), ("sat_night", 36), ("sun_day", 48), ("sun_night", 60)]
+# Percentiles do not add. Summing 6 h percentiles was biased against the real 24 h percentiles (82 site-weekends of
+# 2025-26, docs/nbm_percentile_test.json): the summed median ran low (most for small totals), the summed p25 far
+# too low, the summed p75 4-12% high. Fit on those 24 h windows (four 6 h parts, leave-one-weekend-out error
+# 0.33 / 0.47 / 0.48 in for p25 / p50 / p75, against 0.71 / 0.63 / 0.47 for one global factor per percentile):
+#   p50 = s50 * (1 + A * exp(-s50 / B))                s50, s25, s75 = sums of the parts' percentiles
+#   p25 = max(0, p50 - K_LO * (s50 - s25))             the spread of the sum is narrower than the summed spread
+#   p75 = max(p50, F75 * s75)
+# For a 12 h period (two parts) the corrections are weakened by (n - 1) / 3, an assumption: the bias comes from
+# adding windows, and there is no 12 h truth to test it. Entries say "scaled-sum" so the page can show them as approximate.
+SCALED = {"A": 0.7, "B": 3.0, "K_LO": 0.7, "F75": 0.9, "N_FIT": 4}
+
+
+def scaled_sum(parts):
+    """Combine consecutive 6 h snowfall_window results into one period (see SCALED), and add up the deterministic
+    values. Returns {"method": None} when a part has no percentiles."""
+    if any(p.get("method") is None or any(k not in p for k in ("p25", "p50", "p75")) for p in parts):
+        return {"method": None}
+    c, n = SCALED, len(parts)
+    w = (n - 1) / (c["N_FIT"] - 1)                            # how much of the fitted correction applies
+    rho = (16 * c["K_LO"] ** 2 - c["N_FIT"]) / (c["N_FIT"] * (c["N_FIT"] - 1))   # correlation implied by the fitted spread
+    k_lo = np.sqrt(n + n * (n - 1) * rho) / n                 # the same spread ratio for n parts
+    s25, s50, s75 = (sum(p[k] for p in parts) for k in ("p25", "p50", "p75"))
+    p50 = s50 * (1 + w * c["A"] * np.exp(-s50 / c["B"]))
+    out = {"p25": np.maximum(0.0, p50 - k_lo * (s50 - s25)), "p50": p50, "p75": np.maximum(p50, (1 - w * (1 - c["F75"])) * s75)}
+    if all("deterministic" in p for p in parts):
+        out["deterministic"] = sum(p["deterministic"] for p in parts)
+    out["method"] = "scaled-sum of 6 h " + "/".join(sorted({p["method"] for p in parts}))
+    return out
+
+
+def period_snowfall(cycle, p_start, grid, n, verbose=True):
+    """{period id: (start, end, snowfall dict)} for the six 12 h periods starting at p_start (the first Friday 12Z)."""
+    res = {}
+    for pid, off in PERIODS:
+        s = p_start + pd.Timedelta(hours=off)
+        m, e = s + pd.Timedelta(hours=6), s + pd.Timedelta(hours=12)
+        try:
+            parts = [snowfall_window(cycle, s, m, grid, n), snowfall_window(cycle, m, e, grid, n)]
+            d = scaled_sum(parts)
+        except Exception as exc:   # noqa: BLE001 -- one missing file must not lose the other periods
+            print(f"    {pid}: skipped ({str(exc)[:80]})", file=sys.stderr)
+            d = {"method": None}
+        if verbose:
+            print(f"snowfall {pid}: {s:%a %HZ}-{e:%a %HZ}  method: {d['method']}")
+        res[pid] = (s, e, d)
+    return res
+
+
 def r(x, nd=1):
     return None if x is None or (isinstance(x, float) and np.isnan(x)) else round(float(x), nd)
 
@@ -220,6 +271,12 @@ def main():
         snow[wid] = snowfall_window(cycle, s, e, grid, n)
         print(f"    method: {snow[wid]['method']}")
 
+    if args.days == 3:   # the six 12 h periods (built from 6 h windows; see scaled_sum)
+        for pid, (ps, pe, d) in period_snowfall(cycle, p_start, grid, n).items():
+            windows[pid] = {"start_utc": f"{ps:%Y-%m-%dT%H:%MZ}", "end_utc": f"{pe:%Y-%m-%dT%H:%MZ}",
+                            "fxx": [int((ps - cycle).total_seconds() // 3600), int((pe - cycle).total_seconds() // 3600)]}
+            snow[pid] = d
+
     # 3-hourly series
     fxx0 = int((p_start - cycle).total_seconds() // 3600)
     fxx1 = int((p_end - cycle).total_seconds() // 3600)
@@ -252,7 +309,8 @@ def main():
             "Temperature correction: saturated adiabatic lapse rate from the NBM cell's mean elevation to "
             "the site's elevation. It assumes saturated air, so in dry or clear weather it under-corrects, "
             "and under an inversion the true change can have the opposite sign.",
-            "Snowfall windows run 12Z to 12Z (4 am PST / 5 am PDT).",
+            "Snowfall windows run 12Z to 12Z (4 am PST / 5 am PDT). The six 12 h periods (fri_day ... sun_night; day 12Z-0Z, night 0Z-12Z) are "
+            "scaled sums of two 6 h windows, because the NBM has no 12 h window (see scaled_sum in scripts/nbm_snapshot.py).",
             "p25/p50/p75 are the 25th, 50th (median) and 75th percentiles of the NBM ensemble blend.",
             "snowfall method 'exceedance-interp' means the percentiles were interpolated from "
             "exceedance probabilities (more than 0.1, 1, 2, 4, 6, 8, 10, 12, 18, 24 in); treat as approximate.",

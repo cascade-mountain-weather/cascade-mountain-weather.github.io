@@ -63,6 +63,7 @@ SLACK_FRAC = 0.10            # slack grows with the amount: 10% of the observed 
 SLACK_FT = 500.0
 SATURATED_WITHIN_M = 300.0   # actual and fully saturated snow levels this close = column is near saturation
 M_TO_FT = 3.28084
+PERIOD_IDS = ("fri_day", "fri_night", "sat_day", "sat_night", "sun_day", "sun_night")   # 12 h periods, see scripts/nbm_snapshot.py
 
 
 # ---------------------------------------------------------------- your forecast
@@ -206,7 +207,8 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
     sites = {s["name"]: s for s in site_list}
     # CoCoRaHS volunteer reports within 25 km of each site: a cross-check next to the SNOTEL estimate, not part of the score
     try:
-        coco = cocorahs_obs.window_obs(cocorahs_obs.stations_near(site_list), windows)
+        # CoCoRaHS reports once a day (morning), so it cannot say anything about a 12 h period
+        coco = cocorahs_obs.window_obs(cocorahs_obs.stations_near(site_list), {k: v for k, v in windows.items() if k not in PERIOD_IDS})
     except Exception as exc:  # noqa: BLE001 -- the cross-check must not stop the scoring
         print(f"  CoCoRaHS skipped: {str(exc)[:100]}")
         coco = {}
@@ -223,6 +225,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
             "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window.",
             "HRRR and HRDPS cover 48 hours, so they are scored on the windows inside that (normally Friday). HRDPS snowfall assumes a 10:1 ratio.",
             "CoCoRaHS reports are a cross-check from volunteer stations within 25 km, mostly lowland; they are not part of the score.",
+            "The six 12 h periods (fri_day ... sun_night; day is 12Z-0Z, night 0Z-12Z) are scored for the NBM only; its values are scaled sums of two 6 h windows (approximate).",
         ],
         "windows": {wid: {"start_utc": snap["windows"][wid]["start_utc"], "end_utc": snap["windows"][wid]["end_utc"]} for wid in windows},
         "areas": {},
