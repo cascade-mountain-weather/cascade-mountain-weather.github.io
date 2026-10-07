@@ -5,11 +5,18 @@ description: "Seasonal temperature and precipitation outlooks for the Pacific No
 disclaimer: true
 under_development: true
 ---
+<link rel="stylesheet" href="{{ '/assets/outlooks.css' | relative_url }}">
 <div class="lt-page">
 <section class="hero">
     <h1 class="PlotTitle">Seasonal Outlooks</h1>
     <p>The odds for the next few months as a whole. A seasonal outlook cannot say whether a given storm will deliver, but it can tilt expectations for the winter: a little warmer or colder, a little wetter or drier.</p>
 </section>
+
+<div class="lt-card">
+    <h2>ECMWF seasonal (SEAS5)</h2>
+    <p>The ECMWF seasonal system gives the odds for the next few three-month seasons. Pick a season to compare temperature, precipitation and the 500 hPa pattern, or pick a product to compare the seasons.</p>
+    <div class="ol-mount" data-kind="seasonal"><p class="ol-run">Loading the ECMWF charts&hellip;</p></div>
+</div>
 
 <div class="lt-card">
     <h2>Climate Prediction Center (NOAA)</h2>
@@ -22,18 +29,17 @@ under_development: true
 </div>
 
 <div class="lt-card">
+    <h2>CW3E (UC San Diego)</h2>
+    <p>CW3E seasonal products for the cold season will appear here when they start up.</p>
+    <div class="ol-cw3e"></div>
+</div>
+
+<div class="lt-card">
     <h2>What we plan to add</h2>
-    <div class="lt-planned">
-        <h3>ECMWF seasonal</h3>
-        <p>The ECMWF seasonal forecast for temperature and precipitation. For now, see the <a href="https://charts.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF chart catalogue</a>.</p>
-    </div>
-    <div class="lt-planned">
-        <h3>CW3E</h3>
-        <p>CW3E seasonal products. For now, see <a href="https://cw3e.ucsd.edu/" target="_blank" rel="noopener noreferrer">cw3e.ucsd.edu</a>.</p>
-    </div>
     <div class="lt-planned">
         <h3>Our winter outlook</h3>
         <p>A written outlook for the Cascades each season, tied to the <a href="{{ '/outlooks/teleconnections.html' | relative_url }}">teleconnections</a> and to <a href="{{ '/outlooks/analog-years.html' | relative_url }}">how similar past seasons turned out</a>.</p>
     </div>
 </div>
 </div>
+<script src="{{ '/assets/outlooks.js' | relative_url }}"></script>

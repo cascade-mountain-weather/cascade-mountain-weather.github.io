@@ -1,0 +1,31 @@
+/* Long-term outlook pages: ECMWF chart comparison (see assets/outlooks.js). Cards, figures and headings use the .lt-* styles in style.css. */
+.ol { margin: 0.5rem 0 0; }
+.ol-ctrl { display: flex; flex-wrap: wrap; gap: 0.7rem 2rem; margin: 0.5rem 0 1rem; }
+.ol-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.ol-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.ol-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; min-width: 0; }
+.ol-chip {
+    min-height: 40px; padding: 0 0.9rem; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff;
+    color: #1e3c72; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.ol-chip:hover { background: #eef4fb; }
+.ol-chip[aria-checked="true"] { background: #1e3c72; border-color: #1e3c72; color: #fff; }
+.ol-chip:focus-visible, .ol-select:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+.ol-select {
+    min-height: 44px; padding: 0 0.8rem; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff;
+    color: #1e3c72; font: inherit; font-weight: 600; max-width: 100%;
+}
+.ol-run { font-size: 0.85rem; color: #64748b; margin: 0 0 0.6rem; }
+.ol-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 0.5rem 0; }
+.ol-figs--wide { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.ol-fig { margin: 0; min-width: 0; }
+.ol-fig img { display: block; width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; cursor: zoom-in; }
+.ol-fig figcaption { font-size: 0.85rem; color: #475569; margin-top: 0.35rem; line-height: 1.45; }
+.ol-fig figcaption strong { color: #1e3c72; }
+.ol-how { display: block; color: #64748b; font-size: 0.8rem; margin-top: 0.15rem; }
+.ol-credit { font-size: 0.8rem; color: #64748b; margin: 0.6rem 0 0; }
+.ol-fail { padding: 0.8rem 1rem; border-left: 4px solid #f59e0b; background: #fffbeb; color: #475569; border-radius: 4px; }
+.ol-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #92400e; background: #fef3c7; border-radius: 999px; padding: 0.05rem 0.55rem; margin-left: 0.4rem; vertical-align: middle; }
+@media (max-width: 480px) {
+    .ol-figs, .ol-figs--wide { grid-template-columns: 1fr; }
+}

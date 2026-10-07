@@ -5,11 +5,18 @@ description: "Two to six week outlooks for the Pacific Northwest from the Climat
 disclaimer: true
 under_development: true
 ---
+<link rel="stylesheet" href="{{ '/assets/outlooks.css' | relative_url }}">
 <div class="lt-page">
 <section class="hero">
     <h1 class="PlotTitle">Sub-seasonal Outlooks</h1>
     <p>Roughly week 2 through week 6. Skill is low, so read these as shifts in the odds toward warmer or colder, wetter or drier than normal, not as a day-by-day forecast.</p>
 </section>
+
+<div class="lt-card">
+    <h2>ECMWF extended range (weekly averages)</h2>
+    <p>The ECMWF ensemble run out to about six weeks, shown as weekly averages for the sub-seasonal range (weeks 2 to 6). Pick a week to compare precipitation, temperature and the 500 hPa pattern side by side, or pick a product to compare the weeks.</p>
+    <div class="ol-mount" data-kind="extended"><p class="ol-run">Loading the ECMWF charts&hellip;</p></div>
+</div>
 
 <div class="lt-card">
     <h2>Climate Prediction Center (NOAA)</h2>
@@ -24,18 +31,17 @@ under_development: true
 </div>
 
 <div class="lt-card">
+    <h2>CW3E (UC San Diego)</h2>
+    <p>CW3E sub-seasonal products start up for the cold season and will appear here: atmospheric river activity for weeks 2 to 4, an atmospheric river outlook for Seattle, and the West Coast weather regime forecast.</p>
+    <div class="ol-cw3e"></div>
+</div>
+
+<div class="lt-card">
     <h2>What we plan to add</h2>
-    <div class="lt-planned">
-        <h3>ECMWF extended range</h3>
-        <p>Weekly-mean temperature and precipitation anomalies for the Pacific Northwest, out to six weeks. For now, see the <a href="https://charts.ecmwf.int/" target="_blank" rel="noopener noreferrer">ECMWF chart catalogue</a>.</p>
-    </div>
-    <div class="lt-planned">
-        <h3>CW3E</h3>
-        <p>CW3E sub-seasonal products, such as longer-range atmospheric river and precipitation outlooks. For now, see <a href="https://cw3e.ucsd.edu/" target="_blank" rel="noopener noreferrer">cw3e.ucsd.edu</a>.</p>
-    </div>
     <div class="lt-planned">
         <h3>Our summary</h3>
         <p>A short weekly note in plain language: what the outlooks agree on, where they disagree, and what it could mean for the snowpack.</p>
     </div>
 </div>
 </div>
+<script src="{{ '/assets/outlooks.js' | relative_url }}"></script>
