@@ -7,6 +7,7 @@
 #
 # Fields
 #   id, name          short id used in the data files, and the display name
+#   live_areas        ids in assets/data/live_conditions.json whose stations report the snow on the ground here (the base gate)
 #   modes             resort | backcountry | nordic: which modes can recommend this zone
 #   nwac_zone         NWAC forecast zone (backcountry gating); null for non-US or outside NWAC
 #   forecast_point    where the NBM is sampled (lat, lon); usually near the winter access point, raised to ski-terrain height
@@ -34,6 +35,7 @@ zones:
   - id: snoqualmie
     name: Snoqualmie Pass
     modes: [resort, backcountry, nordic]
+    live_areas: [alpental, snoqualmie-east, snoqualmie-west]
     nwac_zone: Snoqualmie Pass
     forecast_point: {lat: 47.428, lon: -121.417}
     winter_access: {name: Snoqualmie Pass summit / I-90 exits 52-54, lat: 47.428, lon: -121.417}
@@ -52,6 +54,7 @@ zones:
   - id: stevens
     name: Stevens Pass
     modes: [resort, backcountry, nordic]
+    live_areas: [stevens-pass]
     nwac_zone: Stevens Pass
     forecast_point: {lat: 47.745, lon: -121.089}
     winter_access: {name: Stevens Pass summit lot, lat: 47.745, lon: -121.089}
@@ -67,6 +70,7 @@ zones:
   - id: baker
     name: Mt. Baker / Highway 542
     modes: [resort, backcountry]
+    live_areas: [mt-baker]
     nwac_zone: Mt Baker
     forecast_point: {lat: 48.857, lon: -121.667}
     winter_access: {name: Mt. Baker ski area lot, lat: 48.857, lon: -121.667}
@@ -84,6 +88,7 @@ zones:
   - id: crystal
     name: Crystal Mountain / Chinook Pass
     modes: [resort, backcountry]
+    live_areas: [crystal-mountain]
     nwac_zone: Mt Rainier
     forecast_point: {lat: 46.936, lon: -121.475}
     winter_access: {name: Crystal Mountain base lot, lat: 46.936, lon: -121.475}
@@ -100,6 +105,7 @@ zones:
   - id: paradise
     name: Paradise (Mt. Rainier)
     modes: [backcountry]
+    live_areas: [paradise]
     nwac_zone: Mt Rainier
     forecast_point: {lat: 46.786, lon: -121.735}
     winter_access: {name: Paradise lot (road open to Paradise only on good days), lat: 46.786, lon: -121.735}
@@ -116,6 +122,7 @@ zones:
   - id: white_pass
     name: White Pass
     modes: [resort, backcountry, nordic]
+    live_areas: [white-pass]
     nwac_zone: White Pass
     forecast_point: {lat: 46.638, lon: -121.391}
     winter_access: {name: White Pass ski area lot, lat: 46.638, lon: -121.391}
@@ -131,6 +138,7 @@ zones:
   - id: blewett
     name: Blewett Pass
     modes: [backcountry, nordic]
+    live_areas: [blewett-pass]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.350, lon: -120.580}
     winter_access: {name: Blewett Pass summit, lat: 47.349, lon: -120.580}
@@ -146,6 +154,7 @@ zones:
   - id: washington_pass
     name: Washington Pass / Methow
     modes: [backcountry, nordic]
+    live_areas: [washington-pass, mazama]
     nwac_zone: Washington Pass
     forecast_point: {lat: 48.524, lon: -120.646}
     winter_access: {name: SR 20 winter closure gate (varies with the season), lat: 48.55, lon: -120.62}
@@ -164,6 +173,7 @@ zones:
   - id: hurricane
     name: Hurricane Ridge
     modes: [resort, backcountry, nordic]
+    live_areas: [hurricane-ridge]
     nwac_zone: Olympics
     forecast_point: {lat: 47.970, lon: -123.498}
     winter_access: {name: Hurricane Ridge lodge lot, lat: 47.970, lon: -123.498}
@@ -179,6 +189,7 @@ zones:
   - id: st_helens
     name: Mt. St. Helens
     modes: [backcountry]
+    live_areas: [mt-st-helens]
     nwac_zone: Mt St Helens
     forecast_point: {lat: 46.200, lon: -122.190}
     winter_access: {name: Marble Mountain Sno-Park, lat: 46.160, lon: -122.200}
@@ -195,6 +206,7 @@ zones:
   - id: icicle
     name: Leavenworth / Icicle Creek
     modes: [backcountry, nordic]
+    live_areas: [leavenworth-icicle]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.590, lon: -120.880}
     winter_access: {name: Icicle Creek Road, lat: 47.580, lon: -120.700}
@@ -210,6 +222,7 @@ zones:
   - id: mission
     name: Mission Ridge
     modes: [resort]
+    live_areas: [mission-ridge]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.293, lon: -120.400}
     winter_access: {name: Mission Ridge lot, lat: 47.293, lon: -120.400}
@@ -225,6 +238,7 @@ zones:
   - id: whistler
     name: Whistler Blackcomb (BC)
     modes: [resort]
+    live_areas: []
     nwac_zone: null
     forecast_point: {lat: 50.116, lon: -122.957}
     winter_access: {name: Whistler Village, lat: 50.116, lon: -122.957}

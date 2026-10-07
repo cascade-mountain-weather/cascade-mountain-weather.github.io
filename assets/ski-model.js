@@ -21,6 +21,9 @@
         { id: 'road', label: 'Road reliability', w: 3, tip: 'Lower chance of a traction or avalanche-control delay on the pass, from how much snow is forecast (based on seven winters of I-90 delays)' },
     ];
     const MODES = { resort: 'Resort', backcountry: 'Backcountry', nordic: 'Nordic' };
+    // Rough starting values, to be tuned: the snow on the ground a mode needs, and the months resorts are closed.
+    const MIN_BASE = { resort: 20, backcountry: 24, nordic: 12 };
+    const CLOSED_MONTHS = [5, 6, 7, 8, 9];          // 0-based: June to October
     let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)
     const S = { mode: 'resort', day: 0, origin: 'seattle', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
 
@@ -39,16 +42,23 @@
             else if (d.avy_danger >= 4) why.push(`Avalanche danger ${AVY[d.avy_danger]}`);
         }
         if (d.gate_hold) why.push('The Longmire gate is likely held: avalanche danger High or above closes the Paradise road (NPS winter road rules)');
+        if (d.new_snow_in == null) why.push('No forecast for this day yet');
+        const offSeason = S.mode === 'resort' && CLOSED_MONTHS.includes(+d.date.slice(5, 7) - 1);
+        if (offSeason) why.push('Ski areas are closed for the season (lifts usually open in late November)');
+        if (z.base_in !== undefined && !offSeason) {
+            if (z.base_in == null) { if (S.mode !== 'resort') why.push('No snow-depth report from this area right now'); }
+            else if (z.base_in < MIN_BASE[S.mode]) why.push(`Only ${z.base_in.toFixed(0)} in of snow on the ground at ${z.base_station} (${MODES[S.mode].toLowerCase()} needs about ${MIN_BASE[S.mode]} in)`);
+        }
         const live = S.day === 0 ? liveClosed(z) : null;           // a closure reported right now only counts for today
         if (live) why.push('Road closed right now: ' + live);
         // snow level: rain at your minimum elevation only matters when something is falling
-        const raining = d.new_snow_in >= 0.5 && d.snow_level_ft > S.minElev + 1500;
+        const raining = d.new_snow_in >= 0.5 && d.snow_level_ft != null && d.snow_level_ft > S.minElev + 1500;
         if (raining && S.mode !== 'nordic') why.push(`Snow level ${d.snow_level_ft.toLocaleString()} ft is well above your ${S.minElev.toLocaleString()} ft minimum`);
         const s = {
-            fresh: clamp(d.new_snow_in / 10),
-            quality: clamp((d.snow_ratio - 9) / 6),
-            wind: 1 - clamp((d.gust_mph - 15) / 35),
-            vis: 0.6 * clamp(d.vis_mi / 6) + 0.4 * (1 - d.cloud_pct / 100),
+            fresh: clamp((d.new_snow_in || 0) / 10),
+            quality: d.snow_ratio == null ? 0.5 : clamp((d.snow_ratio - 9) / 6),                 // no ratio: neutral
+            wind: d.gust_mph == null ? 0.5 : 1 - clamp((d.gust_mph - 15) / 35),
+            vis: (d.vis_mi == null ? 0.5 : 0.6 * clamp(d.vis_mi / 6)) + (d.cloud_pct == null ? 0.2 : 0.4 * (1 - d.cloud_pct / 100)),
             vert: clamp(vert / 3500),
             drive: drive == null ? 0 : 1 - clamp(drive / S.maxDrive),
             road: 1 - clamp(d.road_risk / 0.5),         // a 50% chance of a delay scores zero
@@ -65,7 +75,8 @@
         const notes = [];
         if (d.avy_danger === 3) notes.push('Avalanche danger Considerable: be conservative with terrain choices.');
         if (S.mode !== 'backcountry' && d.avy_danger >= 4) notes.push(`Avalanche danger ${AVY[d.avy_danger]} in the mountains; expect slower travel and a higher chance of road control work.`);
-        if (d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
+        if (d.new_snow_in != null && d.new_snow_in < 0.5 && S.mode === 'resort') notes.push('Little or no new snow forecast: expect whatever snow is already on the ground.');
+        if (d.gust_mph != null && d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
         if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
         else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on the way` + (d.risk_parts && d.risk_parts.length > 1 ? ' (' + d.risk_parts.map(p => p.route.replace(/ (Snoqualmie|Stevens|White|Blewett) Pass| North Cascades Highway/, '') + ' ' + Math.round(p.p * 100) + '%').join(', ') + ')' : ' on ' + z.road_risk.route) + ' that day.');
         return { z, d, drive, vert, total, parts, why, notes };
@@ -79,6 +90,11 @@
         if (z.road_risk.model === 'nps_gate' && LIVE.paradise_gate && LIVE.paradise_gate.open === false) return (LIVE.paradise_gate.status || 'closed').slice(0, 90);
         for (const t of tags) for (const it of (LIVE.passes[t] || [])) if (it.closed) return (it.text || 'closed').slice(0, 90);
         return null;
+    }
+
+    function cycleLabel(iso) {
+        const d = new Date(iso);
+        return `run of ${WD[d.getUTCDay()]} ${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${String(d.getUTCHours()).padStart(2, '0')}Z`;
     }
 
     function dayLabel(iso) {
@@ -102,8 +118,8 @@
                     <div class="sk-head"><span class="sk-rank">${i + 1}</span><h3>${esc(r.z.name)}</h3><span class="sk-score">${Math.round(r.total)}<small>/100</small></span></div>
                     <p class="sk-why">Leads on ${top.join(' and ')}.</p>
                     <ul class="sk-facts">
-                        <li><strong>${d.new_snow_in.toFixed(1)} in</strong> new snow</li><li>snow level <strong>${d.snow_level_ft.toLocaleString()} ft</strong></li>
-                        <li>gusts <strong>${d.gust_mph} mph</strong></li><li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
+                        <li><strong>${d.new_snow_in == null ? '?' : d.new_snow_in.toFixed(1)} in</strong> new snow${d.new_snow_lo_in != null && d.new_snow_hi_in != null ? ` (${d.new_snow_lo_in.toFixed(1)}&ndash;${d.new_snow_hi_in.toFixed(1)})` : ''}</li><li>snow level <strong>${d.snow_level_ft == null ? '?' : d.snow_level_ft.toLocaleString() + ' ft'}</strong></li>
+                        <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li><li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
                         <li>about <strong>${Math.round(r.vert).toLocaleString()} ft</strong> of vert</li>
                         ${r.z.nwac_zone ? `<li>avalanche <strong>${esc(AVY[d.avy_danger] || 'n/a')}</strong></li>` : ''}
                     </ul>
@@ -113,7 +129,8 @@
                 </article>`;
             };
             el.innerHTML = `
-            <div class="sk-banner" role="note"><strong>Sample data.</strong> This is a first draft: the numbers below are made up to test the scoring and layout. They are not a forecast and not for planning a trip.</div>
+            ${data.mock ? '<div class="sk-banner" role="note"><strong>Sample data.</strong> This is a first draft: the numbers below are made up to test the scoring and layout. They are not a forecast and not for planning a trip.</div>'
+                : `<div class="sk-banner" role="note"><strong>Beta test.</strong> Snow, snow level, wind, cloud and visibility are the National Blend of Models forecast${data.forecast ? ' (' + cycleLabel(data.forecast.cycle_utc) + ')' : ''} at one point near each area, not corrected for elevation. Avalanche forecasts begin in late November, so backcountry mode has nothing to check yet. Drive times are estimates. It has not yet been checked against what happened; do not use it to plan a trip.</div>`}
             <div class="sk-ctrl">
                 <div class="sk-group"><span class="sk-label">Mode</span>${chips(Object.entries(MODES), S.mode, 'mode')}</div>
                 <div class="sk-group"><span class="sk-label">Day</span>${chips(data.zones[0].days.map((d, i) => [i, dayLabel(d.date)]), S.day, 'day')}</div>
