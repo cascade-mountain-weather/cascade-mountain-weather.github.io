@@ -1,0 +1,44 @@
+{
+ "source": "WSDOT Snoqualmie Winter Operations Study (Dec 2024), Figure 4; SNOTEL Meadows Pass (897)",
+ "n_days": 1216,
+ "n_delay_days": 69,
+ "n_long_days": 31,
+ "max_swe_in": 3.0,
+ "curves": {
+  "delay": {
+   "label": "any weather delay",
+   "shape": "sqrt",
+   "a": -4.4982,
+   "b": 3.336,
+   "at": {
+    "0": 0.011,
+    "0.1": 0.031,
+    "0.25": 0.056,
+    "0.5": 0.105,
+    "0.75": 0.167,
+    "1.0": 0.238,
+    "1.5": 0.398,
+    "2.0": 0.555,
+    "3.0": 0.782
+   }
+  },
+  "long": {
+   "label": "delay of 3 hours or more",
+   "shape": "sqrt",
+   "a": -5.3042,
+   "b": 3.1509,
+   "at": {
+    "0": 0.005,
+    "0.1": 0.013,
+    "0.25": 0.023,
+    "0.5": 0.044,
+    "0.75": 0.071,
+    "1.0": 0.104,
+    "1.5": 0.191,
+    "2.0": 0.3,
+    "3.0": 0.538
+   }
+  }
+ },
+ "generated_utc": "2026-10-07T21:46Z"
+}

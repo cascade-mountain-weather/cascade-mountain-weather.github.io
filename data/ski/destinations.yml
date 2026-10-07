@@ -13,6 +13,9 @@
 #   winter_access     the plowed terminus: drive time is measured to it
 #   top_ft            high point of the terrain people ski (rough); vert = top_ft minus the lowest access elevation
 #   road_dependencies WSDOT pass ids that must be open to reach the zone (filled in from real data later)
+#   road_risk         model: curve = the I-90 delay curve (scripts/pass_risk.py) applied to this pass; nps_gate = the Mount Rainier
+#                     Longmire-to-Paradise opening matrix (high danger holds the gate; staffing and plowing can also close it);
+#                     tags = names in the pass log (scripts/pass_log.py) that describe this road right now
 #   pass              what it costs to park/enter: sno_park | trail_pass | resort_ticket | none (typed, not boolean)
 #   snotel            nearby SNOTEL station triplets for "what actually fell" (primary one first)
 #   url               a page to check conditions
@@ -36,6 +39,7 @@ zones:
     top_ft: 5400
     road_dependencies: [snoqualmie]
     pass: {type: sno_park}
+    road_risk: {model: curve, tags: [snoqualmie], route: "I-90 Snoqualmie Pass"}
     snotel: ["672:WA:SNTL", "788:WA:SNTL"]
     url: https://summitatsnoqualmie.com
     grooming_url: https://parks.wa.gov/find-sno-parks/hyak-sno-park
@@ -53,6 +57,7 @@ zones:
     top_ft: 5800
     road_dependencies: [stevens]
     pass: {type: resort_ticket}
+    road_risk: {model: curve, tags: [stevens], route: "US 2 Stevens Pass"}
     snotel: ["791:WA:SNTL"]
     url: https://www.stevenspass.com
     drive_hours: {seattle: 1.7, tacoma: 2.1, bellingham: 2.7, olympia: 2.7, portland: 5.0}
@@ -67,6 +72,7 @@ zones:
     top_ft: 5700
     road_dependencies: [baker]
     pass: {type: resort_ticket}
+    road_risk: {model: curve, tags: [baker], route: "SR 542"}
     snotel: ["909:WA:SNTL", "998:WA:SNTL"]
     url: https://www.mtbaker.us
     drive_hours: {seattle: 2.9, tacoma: 3.3, bellingham: 1.5, olympia: 3.7, portland: 5.9}
@@ -83,6 +89,7 @@ zones:
     top_ft: 7000
     road_dependencies: [crystal]
     pass: {type: resort_ticket}
+    road_risk: {model: curve, tags: [chinook], route: "SR 410"}
     snotel: ["642:WA:SNTL"]
     url: https://www.crystalmountainresort.com
     drive_hours: {seattle: 2.0, tacoma: 1.6, bellingham: 3.8, olympia: 2.2, portland: 3.7}
@@ -98,6 +105,7 @@ zones:
     top_ft: 9000
     road_dependencies: []
     pass: {type: none}
+    road_risk: {model: nps_gate, tags: [paradise, rainier_706], route: "Longmire to Paradise road (NPS winter gate)"}
     snotel: ["679:WA:SNTL"]
     url: https://www.nps.gov/mora
     drive_hours: {seattle: 2.5, tacoma: 2.0, bellingham: 4.2, olympia: 2.1, portland: 3.2}
@@ -113,6 +121,7 @@ zones:
     top_ft: 6500
     road_dependencies: [white]
     pass: {type: resort_ticket}
+    road_risk: {model: curve, tags: [white], route: "US 12 White Pass"}
     snotel: ["863:WA:SNTL"]
     url: https://skiwhitepass.com
     drive_hours: {seattle: 2.6, tacoma: 2.1, bellingham: 4.3, olympia: 1.9, portland: 3.0}
@@ -127,6 +136,7 @@ zones:
     top_ft: 5100
     road_dependencies: [blewett]
     pass: {type: sno_park}
+    road_risk: {model: curve, tags: [blewett], route: "US 97 Blewett Pass"}
     snotel: ["352:WA:SNTL"]
     url: https://wsdot.com/travel/real-time/mountainpasses
     drive_hours: {seattle: 2.6, tacoma: 2.8, bellingham: 4.3, olympia: 3.4, portland: 4.7}
@@ -141,6 +151,7 @@ zones:
     top_ft: 7000
     road_dependencies: [washington]
     pass: {type: trail_pass}
+    road_risk: {model: curve, tags: [washington], route: "SR 20 North Cascades Highway"}
     snotel: ["711:WA:SNTL", "515:WA:SNTL"]
     url: https://methowtrails.org/conditions
     grooming_url: https://methowtrails.org/conditions

@@ -9,6 +9,7 @@ level (`"mock": true`) and the page shows a banner; nothing in it is a forecast.
 """
 import argparse
 import json
+import math
 import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,7 +22,21 @@ ELEV = ROOT / "data" / "ski" / "elevations.json"
 OUT = ROOT / "assets" / "data" / "ski_features.json"
 
 
-def mock_days(zone, elev, start):
+CURVE = ROOT / "assets" / "data" / "pass_risk_curve.json"
+
+
+def delay_risk(curves, swe_in):
+    """(chance of a weather delay that day, chance of one lasting 3 hours or more) from one day's new snow water equivalent, inches."""
+    x = min(max(swe_in, 0.0), curves["max_swe_in"])
+    out = []
+    for k in ("delay", "long"):
+        c = curves["curves"][k]
+        v = math.sqrt(x) if c["shape"] == "sqrt" else x
+        out.append(round(1 / (1 + math.exp(-(c["a"] + c["b"] * v))), 3))
+    return out
+
+
+def mock_days(zone, elev, start, curves):
     """Plausible-looking sample numbers, deterministic per zone and day, scaled by elevation. Not a forecast."""
     out = []
     for k in range(3):
@@ -39,8 +54,17 @@ def mock_days(zone, elev, start):
             "vis_mi": round(max(0.3, 8 - 7 * storm + r.uniform(-1, 1)), 1),
             "temp_f": int(20 + 14 * (1 - storm) + r.uniform(-3, 3)),
             "avy_danger": min(5, max(1, int(1 + storm * 3 + r.uniform(0, 1.2)))),     # 1 low .. 5 extreme; -1 would mean no forecast
-            "road_risk": round(min(1.0, max(0.0, storm * 0.7 + r.uniform(-0.2, 0.2))), 2),   # 0 none .. 1 closure likely
         })
+        d = out[-1]
+        model = (zone.get("road_risk") or {}).get("model")
+        if model in ("curve", "nps_gate"):
+            swe = snow / d["snow_ratio"]                                   # forecast new snow (in) to water equivalent (in)
+            d["swe_in"] = round(swe, 2)
+            d["delay_risk"], d["delay_risk_3h"] = delay_risk(curves, swe)
+            d["gate_hold"] = bool(model == "nps_gate" and d["avy_danger"] >= 4)   # NPS matrix: High or Extreme danger holds the Paradise gate
+            d["road_risk"] = 0.9 if d["gate_hold"] else d["delay_risk"]
+        else:
+            d["road_risk"] = 0.0
     return out
 
 
@@ -53,6 +77,7 @@ def main():
         raise SystemExit("only --mock exists so far (Phase 3 adds the real extraction)")
     cfg = yaml.safe_load(SRC.read_text(encoding="utf-8"))
     elev = json.loads(ELEV.read_text(encoding="utf-8"))["zones"]
+    curves = json.loads(CURVE.read_text(encoding="utf-8"))
     start = datetime.now(timezone.utc).date() + timedelta(days=1)
     zones = []
     for z in cfg["zones"]:
@@ -61,11 +86,11 @@ def main():
             "id": z["id"], "name": z["name"], "modes": z["modes"], "nwac_zone": z["nwac_zone"],
             "top_ft": z["top_ft"], "access_ft": e["winter_access"], "forecast_ft": e["forecast_point"],
             "pass": z["pass"], "url": z.get("url"), "grooming_url": z.get("grooming_url"),
-            "drive_hours": z["drive_hours"],
+            "drive_hours": z["drive_hours"], "road_risk": z.get("road_risk"),
             "access_points": [{"id": p["id"], "name": p["name"], "type": p["type"], "modes": p["modes"], "ft": e.get("ap:" + p["id"])} for p in z["access_points"]],
-            "days": mock_days(z, e, start),
+            "days": mock_days(z, e, start, curves),
         })
-    out = {"mock": True, "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
+    out = {"mock": True, "risk_source": curves["source"], "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
            "note": "Sample numbers to build and test the scorer. Not a forecast.",
            "origins": {k: v["name"] for k, v in cfg["origins"].items()}, "zones": zones}
     Path(a.out).write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")

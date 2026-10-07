@@ -161,7 +161,7 @@ Avalanche gating cannot be replayed until NWAC forecasts resume (about late Nove
 
 ### Build order
 
-- **Status (Oct 7 2026):** Phase 0 done (`docs/nbm_fields.md`). Phase 1 skeleton drafted: `data/ski/destinations.yml` (13 zones, coordinates approximate, `verify` lists per zone), `scripts/ski_dem.py` -> `data/ski/elevations.json`. Phase 2 first draft: `scripts/ski_features.py --mock` -> `assets/data/ski_features.json` (sample numbers, flagged `mock`), scorer and page in `assets/ski-model.js` / `in-house/ski-model.html` with a sample-data banner. Phase 3 (real NBM, NWAC, WSDOT) not started.
+- **Status (Oct 7 2026):** Phase 0 done (`docs/nbm_fields.md`). Phase 1 skeleton drafted: `data/ski/destinations.yml` (13 zones, coordinates approximate, `verify` lists per zone), `scripts/ski_dem.py` -> `data/ski/elevations.json`. Phase 2 first draft: `scripts/ski_features.py --mock` -> `assets/data/ski_features.json` (sample numbers, flagged `mock`), scorer and page in `assets/ski-model.js` / `in-house/ski-model.html` with a sample-data banner. Phase 3 (real NBM, NWAC, WSDOT) not started. Road risk (Oct 7 2026): delay curve fitted to the WSDOT Snoqualmie study applied to the highway passes, NPS Longmire matrix for Paradise, and a pass logger bot (`scripts/pass_log.py`) started; see `docs/pass-closures.md`.
 - **Phase 0 (spike, no UI):** one script samples three points (Snoqualmie, Colchuck, Whistler) with Herbie, prints the GRIB inventory, records run time and file size, and compares values with the viewer CSV for the same site. Output: `docs/nbm_fields.md`.
 - **Phase 1:** `data/ski/destinations.yml` skeleton plus the DEM script. Start the daily archive snapshot as soon as the bot runs.
 - **Phase 2:** scorer and UI on mock data.

@@ -18,9 +18,10 @@
         { id: 'vis', label: 'Visibility and sun', w: 2, tip: 'Visibility and cloud cover' },
         { id: 'vert', label: 'Vertical', w: 2, tip: 'Terrain between your minimum elevation and the top', modes: ['resort', 'backcountry'] },
         { id: 'drive', label: 'Short drive', w: 3, tip: 'Free-flow drive time from your starting city; the more of your limit it uses, the lower the score' },
-        { id: 'road', label: 'Road reliability', w: 3, tip: 'Lower chance of a pass closure or chain requirement' },
+        { id: 'road', label: 'Road reliability', w: 3, tip: 'Lower chance of a traction or avalanche-control delay on the pass, from how much snow is forecast (based on seven winters of I-90 delays)' },
     ];
     const MODES = { resort: 'Resort', backcountry: 'Backcountry', nordic: 'Nordic' };
+    let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)
     const S = { mode: 'resort', day: 0, origin: 'seattle', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
 
     function score(z, d, S) {
@@ -37,7 +38,9 @@
             else if (d.avy_danger == null || d.avy_danger < 0) why.push('No avalanche forecast right now');
             else if (d.avy_danger >= 4) why.push(`Avalanche danger ${AVY[d.avy_danger]}`);
         }
-        if (d.road_risk >= 0.85) why.push('Pass closure likely');
+        if (d.gate_hold) why.push('The Longmire gate is likely held: avalanche danger High or above closes the Paradise road (NPS winter road rules)');
+        const live = S.day === 0 ? liveClosed(z) : null;           // a closure reported right now only counts for today
+        if (live) why.push('Road closed right now: ' + live);
         // snow level: rain at your minimum elevation only matters when something is falling
         const raining = d.new_snow_in >= 0.5 && d.snow_level_ft > S.minElev + 1500;
         if (raining && S.mode !== 'nordic') why.push(`Snow level ${d.snow_level_ft.toLocaleString()} ft is well above your ${S.minElev.toLocaleString()} ft minimum`);
@@ -48,7 +51,7 @@
             vis: 0.6 * clamp(d.vis_mi / 6) + 0.4 * (1 - d.cloud_pct / 100),
             vert: clamp(vert / 3500),
             drive: drive == null ? 0 : 1 - clamp(drive / S.maxDrive),
-            road: 1 - d.road_risk,
+            road: 1 - clamp(d.road_risk / 0.5),         // a 50% chance of a delay scores zero
         };
         let num = 0, den = 0;
         const parts = [];
@@ -63,7 +66,19 @@
         if (d.avy_danger === 3) notes.push('Avalanche danger Considerable: be conservative with terrain choices.');
         if (S.mode !== 'backcountry' && d.avy_danger >= 4) notes.push(`Avalanche danger ${AVY[d.avy_danger]} in the mountains; expect slower travel and a higher chance of road control work.`);
         if (d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
+        if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
+        else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on ${z.road_risk.route} that day.`);
         return { z, d, drive, vert, total, parts, why, notes };
+    }
+
+    // A closure or restriction the log has seen on this zone's road, if the log is fresh (under 4 hours old).
+    function liveClosed(z) {
+        if (!LIVE || !LIVE.generated_utc || !z.road_risk) return null;
+        if ((Date.now() - Date.parse(LIVE.generated_utc.replace(/Z$/, ':00Z'))) > 4 * 3600e3) return null;
+        const tags = z.road_risk.tags || [];
+        if (z.road_risk.model === 'nps_gate' && LIVE.paradise_gate && LIVE.paradise_gate.open === false) return (LIVE.paradise_gate.status || 'closed').slice(0, 90);
+        for (const t of tags) for (const it of (LIVE.passes[t] || [])) if (it.closed) return (it.text || 'closed').slice(0, 90);
+        return null;
     }
 
     function dayLabel(iso) {
@@ -88,7 +103,7 @@
                     <p class="sk-why">Leads on ${top.join(' and ')}.</p>
                     <ul class="sk-facts">
                         <li><strong>${d.new_snow_in.toFixed(1)} in</strong> new snow</li><li>snow level <strong>${d.snow_level_ft.toLocaleString()} ft</strong></li>
-                        <li>gusts <strong>${d.gust_mph} mph</strong></li><li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>
+                        <li>gusts <strong>${d.gust_mph} mph</strong></li><li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
                         <li>about <strong>${Math.round(r.vert).toLocaleString()} ft</strong> of vert</li>
                         ${r.z.nwac_zone ? `<li>avalanche <strong>${esc(AVY[d.avy_danger] || 'n/a')}</strong></li>` : ''}
                     </ul>
@@ -125,7 +140,8 @@
 
     const el = document.getElementById('ski-app');
     if (!el) return;
-    fetch(BASE + 'data/ski_features.json', { cache: 'no-cache' })
+    fetch(BASE + 'data/pass_now.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(j => { LIVE = j; })
+        .then(() => fetch(BASE + 'data/ski_features.json', { cache: 'no-cache' }))
         .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
         .then(d => mount(el, d))
         .catch(() => { el.innerHTML = '<p class="sk-banner">The conditions data could not be loaded right now.</p>'; });
