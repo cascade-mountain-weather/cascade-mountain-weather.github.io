@@ -56,3 +56,9 @@
 /* CPC figures: two columns (two rows for four charts) on wider screens, one column on phones */
 .lt-figs.lt-figs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 700px) { .lt-figs.lt-figs--2 { grid-template-columns: 1fr; } }
+
+/* Teleconnections and snow explorer (see assets/tele-snow.js) */
+.ts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0.5rem 0; }
+.ts-box { min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff; margin-bottom: 0.6rem; }
+.ts-box h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: #1e3c72; }
+@media (max-width: 800px) { .ts-grid { grid-template-columns: 1fr; } }

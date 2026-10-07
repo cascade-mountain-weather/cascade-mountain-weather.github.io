@@ -170,6 +170,7 @@ zones:
     nwac_zone: Mt St Helens
     forecast_point: {lat: 46.200, lon: -122.190}
     winter_access: {name: Marble Mountain Sno-Park, lat: 46.160, lon: -122.200}
+    elevation_override_ft: {winter_access: 2700, "ap:marble": 2700}   # sno-park is about 2700 ft (the DEM at these rough coordinates read 4112); the Swift Creek SNOTEL at about 4400 ft is the more useful reference for skiers
     top_ft: 8300
     road_dependencies: []
     pass: {type: sno_park}

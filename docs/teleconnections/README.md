@@ -64,7 +64,29 @@ Leading modes (`eofs.png`): the first mode of daily snowfall is basically "storm
 6. The harmonic (linear in PC1/PC2) fit is weak and its "peak phase" is not the same thing as the composite's best phase. The phase-composites are the better description.
 7. 35 winters of data is short for ENSO classes.
 
+## Separating the overlap: PNA + ENSO + PDO + MJO together (`scripts/tele_joint.py`)
+
+One regression per response (state average, three elevation tiers, every station) with PNA (5-day), ONI, PDO (monthly, all standardized) and the MJO phases at lag 8 as predictors, 90% intervals by resampling winters.
+The three slow indices are correlated (daily PNA-ONI 0.16, PNA-PDO 0.24, **ONI-PDO 0.43**), which is why the joint fit matters. Per +1 sd, state average:
+
+| | alone | together |
+|---|---|---|
+| **PNA, temperature** | +2.1 F | **+2.1 F** (unchanged: robust) |
+| PNA, snowfall | -16% | -14% (still clear) |
+| **ONI, temperature** | +0.76 F | +0.53 F (shrinks, still clear) |
+| ONI, snowfall | -12% | -12% (interval now just touches zero) |
+| **PDO, temperature** | **+0.49 F** | **-0.25 F** (not distinguishable from zero) |
+| PDO, snowfall | -5% | +4% (zero) |
+
+- **PNA is the independent, dominant control.** Its effect is the same alone or with everything else, at every elevation (temperature +1.9 to +2.4 F per sd, strongest at 5,000+ ft; snowfall -21% per sd at low stations, about -10% higher up).
+- **The PDO's apparent warming signal is borrowed from ENSO and PNA.** Alone it looks like +0.5 F; once they are in the model it vanishes (and the sign flips, though within the noise). That fits Mantua et al. (1997) and Cayan (1996): the PDO-linked snowpack pattern in the Northwest is largely the PNA circulation, so the PDO may mostly set how often the PNA is in one phase over years. Because the index is monthly and winters are only 35, the PDO has very few independent samples; this says "no independent signal found", not "no effect".
+- **MJO phase effects survive removing the slow indices** (phase 2: snowfall +38% and big-snow days +67% versus a weak MJO; phase 4: +18% and +50%; phase 7 about -8%). Phases 3, 4 and 8 stand out for temperature (-0.3, +0.5 and -0.6 F).
+- **Sore thumbs** (`joint_sore_thumbs.csv`, `joint_station_maps.png`): the stations whose PNA snow response differs from the state: **Harts Pass** (6,490 ft) and **Park Creek Ridge** and Rainy Pass (the northern Cascades crest) have almost no snowfall response to the PNA (about 0 versus -14% elsewhere), while the low southern stations (**Spirit Lake, Cougar Mountain, Sheep Canyon**) have roughly double (-28 to -29%). For temperature, the high stations (Paradise, Corral Pass, Harts Pass, Trough, +2.5 to +2.8 F) warm more than the state, while Fish Lake, White Pass and Pope Ridge (+1.4 to +1.7 F) warm less. The pattern is: *north crest and high = temperature responds, snow does not; low and south = snow responds strongly*, which is the rain-snow-line idea again.
+- Caveats: the interpretation that PNA is the cause is a statistical one (PNA is the same pressure pattern the others are partly measured against); the standard errors for single stations use only 60 bootstrap draws, so the sore-thumb list is a screening tool.
+
 ## Files
+
+- `joint_alone_vs_together.png`, `joint_mjo_phases.png`, `joint_station_maps.png`; tables `joint_coefs.csv`, `joint_sore_thumbs.csv`, `joint_predictor_corr.csv`
 
 - `mjo_region_by_lag.png`: phase x lag heatmaps for six measures
 - `mjo_region_lag0.png`, `mjo_region_lag8.png`, `pna_region.png`, `enso_region.png`: regional response by class and elevation tier
