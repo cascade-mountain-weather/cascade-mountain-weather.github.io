@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_utc": "2026-10-07T02:34Z",
+ "generated_utc": "2026-10-07T11:54Z",
  "window_hours": 6,
  "units": "inches of snow and of liquid precipitation per 6-hour window",
  "notes": [
@@ -10,16 +10,16 @@
  "models": {
   "hrrr": {
    "label": "HRRR (NOAA, 3 km)",
-   "cycle_utc": "2026-10-07T00:00Z",
+   "cycle_utc": "2026-10-07T06:00Z",
    "window_end_utc": [
-    "2026-10-07T06:00Z",
     "2026-10-07T12:00Z",
     "2026-10-07T18:00Z",
     "2026-10-08T00:00Z",
     "2026-10-08T06:00Z",
     "2026-10-08T12:00Z",
     "2026-10-08T18:00Z",
-    "2026-10-09T00:00Z"
+    "2026-10-09T00:00Z",
+    "2026-10-09T06:00Z"
    ],
    "sites": {
     "Mt. Baker": {
@@ -256,16 +256,16 @@
   },
   "hrdps": {
    "label": "HRDPS (Environment Canada, 2.5 km)",
-   "cycle_utc": "2026-10-06T18:00Z",
+   "cycle_utc": "2026-10-07T06:00Z",
    "window_end_utc": [
-    "2026-10-07T00:00Z",
-    "2026-10-07T06:00Z",
     "2026-10-07T12:00Z",
     "2026-10-07T18:00Z",
     "2026-10-08T00:00Z",
     "2026-10-08T06:00Z",
     "2026-10-08T12:00Z",
-    "2026-10-08T18:00Z"
+    "2026-10-08T18:00Z",
+    "2026-10-09T00:00Z",
+    "2026-10-09T06:00Z"
    ],
    "sites": {
     "Mt. Baker": {
