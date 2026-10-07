@@ -380,21 +380,21 @@
             build: a => {
                 const site = soundings[a.uw];
                 return {
-                    hours: site.frames.map(f => f.hour), runs: [CMWSounding.initDate(site)], runExact: true,
+                    hours: site.frames.map(f => f.hour), runs: [CMWSounding.initDate(site)], runExact: true, maxWidth: 640,
                     urlFor: (r, h) => CMWSounding.skewT(site, Math.max(0, site.frames.findIndex(f => f.hour === h))),
                     fallbackUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
                 };
             },
             info: a => ({
-                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone (-12 to -18&deg;C), where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the melting-model snow level. The gray dashed line is the temperature at the start of the run, so you can see how the air column changes.`,
-                how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer inside the purple band is when fluffy dendrites form. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
+                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone, the layer between -12 and -18&deg;C where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the melting-model snow level. The gray dashed line is the temperature at the start of the run, so you can see how the air column changes.`,
+                how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer (red and green lines together) inside the purple band is when fluffy dendrites form. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             }),
         },
         uw_lvl: {
             needs: 'uw',
             label: 'UW WRF levels over time',
-            title: a => `${a.label}: UW WRF freezing level, snow level and growth zone (${soundings[a.uw].name.replace(',WA', '')})`,
+            title: a => `${a.label}: UW WRF freezing level, snow level and dendritic growth zone (${soundings[a.uw].name.replace(',WA', '')})`,
             build: a => {
                 const site = soundings[a.uw];
                 return {
@@ -404,8 +404,8 @@
                 };
             },
             info: {
-                what: 'The freezing level (blue), the melting-model snow level (orange) and the dendritic growth zone (purple band, base to top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The lower panel shows how thick the growth zone is (dashed) and how much of it is near saturation (bars), since the zone only makes snow where the air is moist.',
-                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Tall purple bars mean a deep, moist growth zone: the setup for light, fluffy snow. One model run is one scenario.',
+                what: 'The freezing level (blue), the melting-model snow level (orange) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
+                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. A thick purple band over a snow level below your elevation is the setup for light snow, if the sounding shows the layer is saturated. One model run is one scenario.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             },
         },
