@@ -9,17 +9,17 @@ under_development: true
 <div class="lt-page">
 <section class="hero">
     <h1 class="PlotTitle">{{ site.analogs_name }}</h1>
-    <p>Every winter is different, so matching one past year to this one does not tell you much. What does hold up are the general relationships: when the PNA, ENSO and the MJO have been in a given state, how did Washington snow stations do on average? Enter the outlook below and we read what those 35 winters say about the pattern, or say that the signal is too weak to call. The working title is a placeholder.</p>
+    <p>Every winter is different, so matching one past year to this one does not tell you much. What does hold up are the general relationships: when the PNA, ENSO and the MJO have been in a given state, how did Washington snow stations do on average? We read the current state of the ocean and atmosphere from the latest data, say what those 35 winters suggest for the next two weeks, or say that the signal is too weak to call. You can also type in numbers of your own, such as a single ensemble member. The working title is a placeholder.</p>
 </section>
 
 <div class="lt-card">
-    <h2>Predict the pattern</h2>
+    <h2>What the current data suggest</h2>
     <div class="tl-mount"><p>Loading&hellip;</p></div>
 </div>
 
 <div class="lt-card">
-    <h2>The outlook right now</h2>
-    <p>Use these to fill in the boxes above: the PNA forecast (a seasonal outlook, so it is only a tilt), and the MJO forecast from the NOAA GEFS and the ECMWF ensemble. The MJO matters about eight days after the phase it is in.</p>
+    <h2>Check the outlook yourself</h2>
+    <p>The predictor above uses the observed MJO and the GEFS PNA forecast. The MJO forecasts below are not published as data we can read, so for the second week it leaves the MJO out until the observed values arrive; if you read a phase from these figures, choose &ldquo;Your own values&rdquo; above and enter it. The MJO matters about eight days after the phase it is in. The SEAS5 PNA chart is a monthly outlook, so it is only a tilt.</p>
     <div class="lt-figs">
         <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/mjo/img/GEFS_BC.png" alt="NOAA GEFS forecast of the MJO RMM phase diagram"><figcaption><strong>NOAA GEFS</strong> &middot; MJO forecast, next two weeks (bias corrected). The thin lines are the ensemble members.</figcaption></figure>
         <figure class="ol-slot" data-index="mjo" data-caption="MJO forecast, ensemble members at days 1, 5, 10, 15 and 20, with the ensemble mean"></figure>
@@ -32,7 +32,8 @@ under_development: true
 <div class="lt-card">
     <h2>How it works, and what it cannot do</h2>
     <ul>
-        <li><strong>The data:</strong> 36 Washington SNOTEL stations with records back to 1990 or earlier, every day from November through May, 1992 to 2026. For each day we measured temperature compared with normal, new snow (daily gain in snow water equivalent), rain (precipitation that did not add to the snowpack) and big snow days, then fit all the indices at once so that one does not take credit for another. The analysis is on the <a href="{{ '/outlooks/teleconnections.html' | relative_url }}">Teleconnections</a> page.</li>
+        <li><strong>What is read automatically (updated daily):</strong> the observed daily PNA and the GEFS ensemble forecast of it (31 members, 15 days; the 5-day mean of the ensemble mean is used, and the spread among members widens the range), the observed MJO from NOAA PSL&rsquo;s real-time ROMI index (rotated to match the phase numbering the relationships were built with; 100% of days within one phase of the OMI, 69% exactly), and the latest monthly ONI and PDO.</li>
+        <li><strong>The data behind the relationships:</strong> 36 Washington SNOTEL stations with records back to 1990 or earlier, every day from November through May, 1992 to 2026. For each day we measured temperature compared with normal, new snow (daily gain in snow water equivalent), rain (precipitation that did not add to the snowpack) and big snow days, then fit all the indices at once so that one does not take credit for another. The analysis is on the <a href="{{ '/outlooks/teleconnections.html' | relative_url }}">Teleconnections</a> page.</li>
         <li><strong>The rule:</strong> the prediction is the sum of the effects of the three indices, added to what the MJO phase has meant eight days later. A pattern is only named (cooler, warmer, snowier, less snow, rainier) when its range of uncertainty does not include zero; otherwise it is reported as <em>no clear signal</em>.</li>
         <li><strong>PDO:</strong> it is in the fit, but once ENSO and the PNA are known it adds no independent information we can detect. Leave it where it is.</li>
         <li><strong>The limits:</strong> these are averages over many winters, not a forecast of any one storm. Effects add up in the model but may not in the atmosphere. The uncertainty shown is approximate (the ranges of the parts are combined as if independent), and with only 35 winters, ENSO and the PDO have few independent samples. A <em>no clear signal</em> answer is common.</li>
