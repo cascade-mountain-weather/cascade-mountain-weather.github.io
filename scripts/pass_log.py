@@ -1,4 +1,4 @@
-"""Log pass closures and road restrictions as they happen, so the delay-risk model can be calibrated for every pass (bot, every 30 min).
+"""Log pass closures and road restrictions as they happen, so the delay-risk model can be calibrated for every pass (bot, three runs a day around the 7 to 8 am decision).
 
     python scripts/pass_log.py            # writes data/passes/log/*.jsonl and assets/data/pass_now.json
 
@@ -11,8 +11,8 @@ What it writes:
   data/passes/log/state.json       what is open right now (written only when something changed)
   data/passes/log/events.jsonl     one line per finished event: first seen, last seen, ended (the poll that noticed it was gone), text history
   data/passes/log/nps_gate.jsonl   one line each time the Longmire to Paradise status text changes
-  assets/data/pass_now.json        current closures and restrictions by pass, for the ski tool, rewritten every run
-Times are the poll times, so an event's start and end are good to within one polling interval (GitHub's schedule is best effort and has run late).
+  assets/data/pass_now.json        current closures and restrictions by pass, for the ski tool, rewritten every run (its generated_utc says how fresh it is)
+Times are the poll times: with three runs in the morning an event's start and end are only known to within hours, which is enough to say that a pass was closed that morning but not for how long.
 """
 import hashlib
 import json
@@ -168,11 +168,7 @@ def main():
     now_doc = {"generated_utc": now, "errors": errors, "passes": by_pass,
                "paradise_gate": {"status": gate, "open": None if gate is None else gate.upper().startswith("OPEN"), "source": NPS_ROADS}}
     NOW_JSON.parent.mkdir(parents=True, exist_ok=True)
-    prev = read_json(NOW_JSON, {})
-    same = {k: v for k, v in prev.items() if k != "generated_utc"} == {k: v for k, v in now_doc.items() if k != "generated_utc"}
-    age_h = (datetime.now(timezone.utc) - datetime.strptime(prev["generated_utc"], "%Y-%m-%dT%H:%MZ").replace(tzinfo=timezone.utc)).total_seconds() / 3600 if prev.get("generated_utc") else 99
-    if not (same and age_h < 3):                       # rewrite on a change, or as a heartbeat every 3 hours so the page can tell the data is fresh
-        NOW_JSON.write_text(json.dumps(now_doc, indent=1), encoding="utf-8")
+    NOW_JSON.write_text(json.dumps(now_doc, indent=1), encoding="utf-8")
     print(f"{now}: {len(cur)} items on pass corridors/NPS alerts, {len(state['open'])} open in the log, errors: {errors or 'none'}")
     if gate:
         print("  Longmire to Paradise:", gate[:100])

@@ -35,12 +35,13 @@ Per the NPS matrix: avalanche danger High or Extreme holds the gate (a hard gate
 stands in for unsafe road conditions and priority snow removal, and the card carries a standing note that staffing and plowing also close it. No history of gate closures is
 published, so the logger below starts the record.
 
-## Logger (`scripts/pass_log.py`, workflow `pass_log.yml`, every 30 min, best effort)
+## Logger (`scripts/pass_log.py`, workflow `pass_log.yml`, three runs a day, best effort)
 
-Records every closure or restriction on the pass corridors (WSDOT alerts inside a box around each pass), the NPS Rainier alerts, and changes in the NPS Longmire to Paradise
+Road status matters for the morning decision, so it runs at 14:30, 15:30 and 16:30 UTC (6:30, 7:30 and 8:30 am in winter, an hour later in daylight time).
+It records every closure or restriction on the pass corridors (WSDOT alerts inside a box around each pass), the NPS Rainier alerts, and changes in the NPS Longmire to Paradise
 status, into `data/passes/log/` (`events.jsonl` for finished events with first seen, last seen, ended and text history; `nps_gate.jsonl`; `state.json` for what is open). The tool
-reads `assets/data/pass_now.json` (rewritten when something changes and at least every 3 hours, so a page can tell it is stale) and treats a closure as current for today only
-if the file is under 4 hours old. Event times are the poll times, so they are good to within the polling gap, which GitHub's schedule can stretch to hours.
+reads `assets/data/pass_now.json` (rewritten every run) and treats a closure as current for today only if the file is under 6 hours old. With three morning polls, event times are only
+good to within hours: enough to say a pass was closed that morning and why, not for how long. If we later want closure lengths for the calibration, add an afternoon run.
 
 ## What to do with the log
 

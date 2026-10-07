@@ -2,8 +2,9 @@ name: Log Pass Closures
 
 on:
   schedule:
-    # Best effort: GitHub has run "hourly" schedules every 6 to 8 hours, so event times are only as precise as the polls that happen.
-    - cron: "*/30 * * * *"
+    # Road status matters for the morning decision, so poll around 7 to 8 am Pacific: 14:30, 15:30 and 16:30 UTC is 6:30, 7:30 and 8:30
+    # in winter (PST), an hour later in daylight time. Best effort: GitHub's schedule can run late.
+    - cron: "30 14,15,16 * * *"
   workflow_dispatch:
 
 permissions:

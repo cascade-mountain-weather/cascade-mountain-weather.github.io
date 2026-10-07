@@ -71,10 +71,10 @@
         return { z, d, drive, vert, total, parts, why, notes };
     }
 
-    // A closure or restriction the log has seen on this zone's road, if the log is fresh (under 4 hours old).
+    // A closure or restriction the log has seen on this zone's road, if the log is fresh (under 6 hours old; it is read in the morning).
     function liveClosed(z) {
         if (!LIVE || !LIVE.generated_utc || !z.road_risk) return null;
-        if ((Date.now() - Date.parse(LIVE.generated_utc.replace(/Z$/, ':00Z'))) > 4 * 3600e3) return null;
+        if ((Date.now() - Date.parse(LIVE.generated_utc.replace(/Z$/, ':00Z'))) > 6 * 3600e3) return null;
         const tags = z.road_risk.tags || [];
         if (z.road_risk.model === 'nps_gate' && LIVE.paradise_gate && LIVE.paradise_gate.open === false) return (LIVE.paradise_gate.status || 'closed').slice(0, 90);
         for (const t of tags) for (const it of (LIVE.passes[t] || [])) if (it.closed) return (it.text || 'closed').slice(0, 90);
