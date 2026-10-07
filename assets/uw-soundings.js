@@ -53,7 +53,7 @@
     };
 
     function skewT(site, idx) {
-        const f = site.frames[idx], f0 = site.frames[0];
+        const f = site.frames[idx];
         const valid = Date.parse(f.valid_utc), init = initDate(site).getTime();
         let g = '';
         // isotherms
@@ -76,8 +76,6 @@
                 g += `<text x="${X0 + 8}" y="${yOf(pt) + 14}" font-size="12" font-weight="700" fill="${C.dgz}" ${halo}>dendritic growth zone</text>`;
             }
         }
-        // hour-0 temperature for reference, then this frame
-        if (idx > 0) g += `<polyline points="${pts(f0.t, f0.p)}" fill="none" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="5 4"/>`;
         g += `<polyline points="${pts(f.td, f.p)}" fill="none" stroke="${C.td}" stroke-width="2.6" stroke-linejoin="round"/>`;
         g += `<polyline points="${pts(f.t, f.p)}" fill="none" stroke="${C.t}" stroke-width="2.8" stroke-linejoin="round"/>`;
         // freezing level and snow level
@@ -114,7 +112,6 @@
         const legend = `<g font-size="12" fill="${C.text}">
             <line x1="${X0}" y1="${H - 36}" x2="${X0 + 22}" y2="${H - 36}" stroke="${C.t}" stroke-width="3"/><text x="${X0 + 28}" y="${H - 32}">temperature</text>
             <line x1="${X0 + 108}" y1="${H - 36}" x2="${X0 + 130}" y2="${H - 36}" stroke="${C.td}" stroke-width="3"/><text x="${X0 + 136}" y="${H - 32}">dew point</text>
-            <line x1="${X0 + 218}" y1="${H - 36}" x2="${X0 + 240}" y2="${H - 36}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 4"/><text x="${X0 + 246}" y="${H - 32}">temperature at start of run</text>
             <text x="${X0}" y="${H - 16}" fill="${C.muted}">Dendritic growth zone (-12 to -18 &#176;C): ${dgz}.</text>
             <text x="${X0}" y="${H - 2}" fill="${C.muted}">Snow level is the melting-model (wet bulb) level, not the freezing level.</text></g>`;
         return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="system-ui,Segoe UI,Arial,sans-serif" role="img" aria-label="Skew-T sounding"><rect width="${W}" height="${H}" fill="#fff"/>

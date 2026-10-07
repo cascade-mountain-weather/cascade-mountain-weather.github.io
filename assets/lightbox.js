@@ -17,13 +17,14 @@
 
     ready(function () {
         const images = Array.from(document.querySelectorAll(SELECTOR));
-        if (images.length === 0) return;
+        // (no early return when there are none: pages that add figures later call CMWLightbox.bind)
 
-        images.forEach((img) => {
+        function mark(img) {
             img.classList.add('cmw-lightbox-trigger');
             img.setAttribute('tabindex', '0');
             img.setAttribute('role', 'button');
-        });
+        }
+        images.forEach(mark);
 
         const overlay = document.createElement('div');
         overlay.id = 'cmw-lightbox';
@@ -82,7 +83,7 @@
             lbImg.src = '';
         }
 
-        images.forEach((img) => {
+        function wire(img) {
             img.addEventListener('click', () => {
                 if (usable(img)) open(img);
             });
@@ -92,7 +93,10 @@
                     open(img);
                 }
             });
-        });
+        }
+        images.forEach(wire);
+        // For figures a page adds after load (e.g. the outlook pages): window.CMWLightbox.bind(img)
+        window.CMWLightbox = { bind(img) { if (!images.includes(img)) { images.push(img); mark(img); wire(img); } } };
 
         btnClose.addEventListener('click', close);
         btnPrev.addEventListener('click', () => show(index - 1));

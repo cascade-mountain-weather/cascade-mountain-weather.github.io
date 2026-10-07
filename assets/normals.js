@@ -400,7 +400,8 @@
         } else {
             if (detailEl) { detailEl.hidden = true; detailEl.innerHTML = ''; detailId = null; }
             popupId = id;
-            popup = L.popup({ maxWidth: 340, minWidth: 300, autoPanPadding: [12, 12], className: 'normals-popup' })
+            // maxHeight makes a popup taller than the map scroll inside itself instead of being cut off
+            popup = L.popup({ maxWidth: 340, minWidth: 300, maxHeight: Math.max(180, map.getSize().y - 70), autoPanPadding: [12, 12], className: 'normals-popup' })
                 .setLatLng(m.getLatLng()).setContent(detailHtml(a)).openOn(map);
         }
     }
