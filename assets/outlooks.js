@@ -107,11 +107,26 @@
         return live;
     }
 
+    // Single ECMWF charts (the MJO forecast and the PNA outlook) dropped into an existing figure grid on the Teleconnections
+    // page: <figure class="ol-slot" data-index="mjo|pna" data-caption="..."></figure>. The chart address comes from the same JSON.
+    function fillSlots(data) {
+        document.querySelectorAll('[data-index]').forEach(el => {
+            const it = ((data && data.indices) || {})[el.dataset.index];
+            if (!it) { el.hidden = true; return; }
+            const d = dt(it.base_time);
+            el.innerHTML = `<img class="PlotFormat" loading="lazy" src="${esc(it.url)}" alt="${esc(it.label)}">
+                <figcaption><strong>${esc(it.label)}</strong>${el.dataset.caption ? ' &middot; ' + esc(el.dataset.caption) : ''}
+                <span class="ol-how">${esc(runLabel(it.base_time, 'ECMWF'))} &copy; ECMWF, CC BY 4.0.</span></figcaption>`;
+            if (window.CMWLightbox) window.CMWLightbox.bind(el.querySelector('img'));
+        });
+    }
+
     document.querySelectorAll('.ol-cw3e').forEach(mountCW3E);
     const mounts = document.querySelectorAll('.ol-mount');
-    if (!mounts.length) return;
+    const slots = document.querySelectorAll('[data-index]');
+    if (!mounts.length && !slots.length) return;
     fetch(BASE + 'data/outlook_links.json', { cache: 'no-cache' })
         .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
-        .then(data => mounts.forEach(el => mount(el, data, el.dataset.kind)))
-        .catch(() => mounts.forEach(el => { el.innerHTML = '<p class="ol-fail">The ECMWF charts could not be loaded right now. You can still see them at <a href="https://charts.ecmwf.int/" target="_blank" rel="noopener noreferrer">charts.ecmwf.int</a>.</p>'; }));
+        .then(data => { mounts.forEach(el => mount(el, data, el.dataset.kind)); fillSlots(data); })
+        .catch(() => { slots.forEach(el => { el.hidden = true; }); mounts.forEach(el => { el.innerHTML = '<p class="ol-fail">The ECMWF charts could not be loaded right now. You can still see them at <a href="https://charts.ecmwf.int/" target="_blank" rel="noopener noreferrer">charts.ecmwf.int</a>.</p>'; }); });
 }());

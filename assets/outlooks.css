@@ -29,3 +29,5 @@
 @media (max-width: 480px) {
     .ol-figs, .ol-figs--wide { grid-template-columns: 1fr; }
 }
+/* single-chart rows on the Teleconnections page: keep a lone chart from stretching across the whole card */
+.lt-figs.ol-narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 560px)); }

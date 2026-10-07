@@ -5,6 +5,7 @@ description: "ENSO (El Nino and La Nina), the PNA, the MJO and the PDO: the larg
 disclaimer: true
 under_development: true
 ---
+<link rel="stylesheet" href="{{ '/assets/outlooks.css' | relative_url }}">
 <div class="lt-page">
 <section class="hero">
     <h1 class="PlotTitle">Teleconnections</h1>
@@ -20,9 +21,13 @@ under_development: true
 <div class="lt-card">
     <h2>Pacific&ndash;North American pattern (PNA)</h2>
     <p>A pattern of upper-level pressure over the Pacific and North America, which changes over weeks. A positive phase tends to put a ridge over the West and a trough over the East; a negative phase tends to favor a trough and more active weather in the Pacific Northwest.</p>
-    <div class="lt-figs">
-        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.mrf.obs.gif" alt="Observed and forecast PNA index"><figcaption>PNA index, observed and forecast</figcaption></figure>
-        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.gefs.fcst.png" alt="GEFS ensemble PNA index forecast"><figcaption>GEFS ensemble PNA forecast</figcaption></figure>
+    <div class="lt-figs ol-narrow">
+        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.gefs.fcst.png" alt="GEFS ensemble PNA index forecast"><figcaption>GEFS ensemble PNA forecast: the observed index over the past months, then the forecast</figcaption></figure>
+    </div>
+    <h3>Seasonal outlook</h3>
+    <p>Where the PNA is headed over the coming months, from the ECMWF seasonal system. Each month shows the forecast ensemble (purple boxes) against the model&rsquo;s own climate (gray) and the observed range (yellow and orange). Purple sitting above the gray favors a positive PNA that month, below it a negative one. Individual months are noisy, so look for a consistent lean.</p>
+    <div class="lt-figs ol-narrow">
+        <figure class="ol-slot" data-index="pna" data-caption="monthly forecast, SEAS5"></figure>
     </div>
     <p>Source: <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.shtml" target="_blank" rel="noopener noreferrer">NOAA Climate Prediction Center</a>.</p>
 </div>
@@ -30,10 +35,12 @@ under_development: true
 <div class="lt-card">
     <h2>Madden&ndash;Julian Oscillation (MJO)</h2>
     <p>A pulse of tropical thunderstorms that circles the globe every 30 to 60 days. Its phase influences the storm track and atmospheric river activity in the weeks that follow, which makes it useful for sub-seasonal outlooks.</p>
+    <p>Read the diagram by where the path sits. Inside the small circle the MJO is weak and says little. Outside it, the angle gives the phase (1 to 8, the tropical Pacific and Indian Ocean regions named on the chart), and the farther out the stronger the signal. Compare the two forecasts: when the American and European ensembles agree on the phase and strength, the signal is more trustworthy.</p>
     <div class="lt-figs">
-        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/mjo/img/rmm_obs40.png" alt="MJO RMM phase diagram for the last 40 days"><figcaption>MJO phase diagram, last 40 days</figcaption></figure>
+        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/mjo/img/GEFS_BC.png" alt="NOAA GEFS forecast of the MJO RMM phase diagram"><figcaption><strong>NOAA GEFS</strong> &middot; MJO forecast, next two weeks (bias corrected). The thin lines are the ensemble members.</figcaption></figure>
+        <figure class="ol-slot" data-index="mjo" data-caption="MJO forecast, ensemble members at days 1, 5, 10, 15 and 20, with the ensemble mean"></figure>
     </div>
-    <p>Source: <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml" target="_blank" rel="noopener noreferrer">NOAA Climate Prediction Center</a>.</p>
+    <p>Sources: <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml" target="_blank" rel="noopener noreferrer">NOAA Climate Prediction Center</a> and ECMWF (charts &copy; ECMWF, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>).</p>
 </div>
 
 <div class="lt-card">
@@ -49,3 +56,4 @@ under_development: true
     </div>
 </div>
 </div>
+<script src="{{ '/assets/outlooks.js' | relative_url }}"></script>
