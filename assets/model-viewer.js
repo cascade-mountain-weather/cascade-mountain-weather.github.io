@@ -80,7 +80,7 @@
                 <div class="mv-loading" hidden>Loading…</div>
                 <div class="mv-fail" hidden></div>
             </div>
-            <p class="mv-hint">Zoom with the + and &minus; buttons, a pinch, Ctrl + scroll, or a double-click. Drag to move around when zoomed.</p>
+            <p class="mv-hint">Zoom with the + and &minus; buttons, a pinch, Ctrl + scroll, or a double-click; &minus; also shrinks the figure below its default size. Drag to move around when zoomed.</p>
             <figure class="mv-extra" hidden><img class="mv-extra-img" alt="" /><figcaption></figcaption></figure>
             <details class="mv-info" open>
                 <summary>What this shows</summary>
@@ -334,10 +334,21 @@
 
         // ---- zoom and pan: the image is scaled inside the stage; frames keep the zoom as you step through them ----
         const stage = $('.mv-stage');
-        const Z = { s: 1, x: 0, y: 0, baseH: 0 }, MAX_ZOOM = 6;
+        const Z = { s: 1, x: 0, y: 0, baseH: 0 }, MAX_ZOOM = 6, MIN_ZOOM = 0.4;   // below 1 the figure is shrunk to a share of the frame width
         const pointers = new Map();
         let pinch = null, panFrom = null, moved = false;
         function applyZoom() {
+            if (Z.s < 1) {   // smaller than the default: set the width, centered; the frame follows the figure's height
+                Z.x = 0; Z.y = 0;
+                img.style.transform = '';
+                img.style.setProperty('width', `${Z.s * 100}%`, 'important');
+                img.style.setProperty('margin', '0 auto', 'important');
+                stage.classList.remove('is-zoomed');
+                stage.style.touchAction = 'pan-y';
+                return;
+            }
+            img.style.removeProperty('width');
+            img.style.removeProperty('margin');
             const sw = stage.clientWidth, sh = stage.clientHeight, iw = img.offsetWidth, ih = img.offsetHeight;
             Z.x = Math.min(0, Math.max(sw - iw * Z.s, Z.x));
             Z.y = Math.min(0, Math.max(sh - ih * Z.s, Z.y));
@@ -347,14 +358,17 @@
             stage.style.touchAction = Z.s > 1 ? 'none' : 'pan-y';
         }
         function zoomAt(factor, cx, cy) {
-            const ns = Math.min(MAX_ZOOM, Math.max(1, Z.s * factor));
+            let ns = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Z.s * factor));
+            if ((Z.s < 1 && ns > 1) || (Z.s > 1 && ns < 1)) ns = 1;   // the default size is always a stop on the way through
             if (ns === Z.s) return;
+            if (ns < 1) { Z.s = ns; stage.style.height = ''; applyZoom(); return; }
+            if (Z.s < 1) { Z.s = 1; applyZoom(); }                      // leave the shrunk state before zooming in
+            if (ns === 1) { Z.s = 1; stage.style.height = ''; applyZoom(); return; }
             if (Z.s === 1) { Z.baseH = stage.offsetHeight; stage.style.height = Z.baseH + 'px'; }   // hold the stage height while zoomed
             const r = ns / Z.s;
             Z.x = cx - (cx - Z.x) * r;
             Z.y = cy - (cy - Z.y) * r;
             Z.s = ns;
-            if (Z.s === 1) stage.style.height = '';
             applyZoom();
         }
         function resetZoom() { Z.s = 1; Z.x = 0; Z.y = 0; stage.style.height = ''; applyZoom(); }
@@ -375,7 +389,7 @@
         }, { passive: false });
         stage.addEventListener('dblclick', e => {
             if (e.target.closest('.mv-zoom')) return;
-            if (Z.s > 1) resetZoom(); else zoomAt(2.5, ...local(e));
+            if (Z.s !== 1) resetZoom(); else zoomAt(2.5, ...local(e));
         });
         stage.addEventListener('pointerdown', e => {
             if (e.target.closest('.mv-zoom')) return;
