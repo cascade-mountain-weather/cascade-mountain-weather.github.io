@@ -1,0 +1,47 @@
+name: Update Climate Indices
+
+on:
+  schedule:
+    # ONI (CPC) and the PDO (NCEI) each update about once a month. A daily check is two requests and commits nothing unless a value changed.
+    - cron: "40 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: climate-indices
+  cancel-in-progress: false
+
+jobs:
+  update-climate-indices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Collect the ONI and PDO
+        run: python scripts/collect_climate_indices.py
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/climate_indices.json
+          git commit -m "Update climate indices [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

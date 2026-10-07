@@ -13,8 +13,15 @@ under_development: true
 </section>
 
 <div class="lt-card">
+    <h2>Climate index explorer: ENSO and PDO</h2>
+    <p>Two monthly indices side by side. Pick ENSO (the Oceanic Ni&ntilde;o Index), the PDO, or overlay both with a separate axis for each, and choose how far back to look. Both update once a month.</p>
+    <div class="ci-mount"><p class="ol-run">Loading the index data&hellip;</p></div>
+</div>
+
+<div class="lt-card">
     <h2>El Ni&ntilde;o / La Ni&ntilde;a (ENSO)</h2>
     <p>The state of the tropical Pacific. La Ni&ntilde;a winters tend to lean cooler and wetter in the Pacific Northwest, and El Ni&ntilde;o winters tend to lean warmer. The effect is modest and varies from year to year.</p>
+    <p>The Oceanic Ni&ntilde;o Index (ONI) is the three-month average sea surface temperature anomaly in the central tropical Pacific (the Ni&ntilde;o 3.4 region). Values of +0.5&deg;C or more are in the El Ni&ntilde;o range and &minus;0.5&deg;C or less in the La Ni&ntilde;a range; the farther from zero, the stronger the event. The chart above shows it back to 1950. NOAA declares an event using more than this one number, so check the CPC discussion for the official status.</p>
     <p>Current status: <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/" target="_blank" rel="noopener noreferrer">CPC ENSO diagnostic discussion</a> and the <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener noreferrer">Oceanic Ni&ntilde;o Index</a>.</p>
 </div>
 
@@ -45,8 +52,11 @@ under_development: true
 
 <div class="lt-card">
     <h2>Pacific Decadal Oscillation (PDO)</h2>
-    <p>A slower pattern of North Pacific ocean temperatures that shifts over years to decades. It shades the odds for cool or warm winters in the Northwest in the same direction as ENSO.</p>
-    <p>Current values: <a href="https://www.ncei.noaa.gov/access/monitoring/pdo/" target="_blank" rel="noopener noreferrer">NOAA NCEI PDO index</a>.</p>
+    <p>The leading pattern of sea surface temperature variability in the North Pacific. It shifts slowly, with phases that often last for years. The chart above shows it back to 1950 to match the ENSO record; the NOAA data go back to 1850. NOAA NCEI describes the two phases this way:</p>
+    <p><em>&ldquo;When SSTs are anomalously cool in the interior North Pacific and warm along the Pacific Coast, and when sea level pressures are below average over the North Pacific, the PDO has a positive value. When the climate anomaly patterns are reversed, with warm SST anomalies in the interior and cool SST anomalies along the North American coast, or above average sea level pressures over the North Pacific, the PDO has a negative value.&rdquo;</em> (NOAA NCEI)</p>
+    <h3>What it tends to mean for the Northwest</h3>
+    <p>In the negative phase the water along the coast is cool, which has tended to go with cooler, wetter winters and a deeper mountain snowpack in the Pacific Northwest; the positive phase has leaned warmer, with a thinner snowpack (for example, Mantua et al. 1997). The higher pressure of a negative phase sits over the North Pacific interior, so it is not by itself a ridge over the coast. The effect is modest, and it is clearest when ENSO is in the same direction: when the two disagree, as they do when a negative PDO meets El Ni&ntilde;o, the signals partly cancel and the odds shift very little.</p>
+    <p>More: <a href="https://www.ncei.noaa.gov/access/monitoring/pdo/" target="_blank" rel="noopener noreferrer">NOAA NCEI PDO index</a>.</p>
 </div>
 
 <div class="lt-card">
@@ -57,3 +67,4 @@ under_development: true
 </div>
 </div>
 <script src="{{ '/assets/outlooks.js' | relative_url }}"></script>
+<script src="{{ '/assets/climate-indices.js' | relative_url }}"></script>

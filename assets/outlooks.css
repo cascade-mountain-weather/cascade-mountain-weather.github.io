@@ -29,5 +29,27 @@
 @media (max-width: 480px) {
     .ol-figs, .ol-figs--wide { grid-template-columns: 1fr; }
 }
-/* single-chart rows on the Teleconnections page: keep a lone chart from stretching across the whole card */
-.lt-figs.ol-narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 560px)); }
+/* single-chart rows on the Teleconnections page: keep a lone chart from stretching across the card, and center it */
+.lt-figs.ol-narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 560px)); justify-content: center; }
+
+/* Climate index explorer (see assets/climate-indices.js) */
+.ci-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 0.5rem 0 0.8rem; }
+.ci-stat { border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8; border-radius: 8px; padding: 0.7rem 1rem; background: #f8fafc; }
+.ci-stat--oni { border-left-color: #c2410c; }
+.ci-stat--pdo { border-left-color: #0f766e; }
+.ci-stat-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.ci-stat-big { font-size: 1.9rem; font-weight: 700; color: #1e3c72; line-height: 1.1; }
+.ci-stat p { margin: 0.3rem 0 0; font-size: 0.88rem; line-height: 1.45; color: #475569; }
+.ci-note { margin: 0 0 0.8rem; padding: 0.6rem 0.9rem; border-left: 4px solid #f59e0b; background: #fffbeb; border-radius: 4px; font-size: 0.9rem; line-height: 1.5; color: #475569; }
+.ci-chart { position: relative; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; overflow: hidden; min-height: 260px; }
+.ci-chart svg { display: block; max-width: 100%; height: auto; }
+.ci-tip { position: absolute; background: rgba(255, 255, 255, 0.96); border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.3rem 0.55rem; font-size: 0.8rem; color: #0f172a; pointer-events: none; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); white-space: nowrap; }
+.ci-tip[hidden] { display: none; }
+.ci-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.3rem; }
+.ci-hint { font-size: 0.8rem; color: #64748b; margin: 0.4rem 0 0.2rem; }
+.ci-table { margin: 0.4rem 0; }
+.ci-table summary { cursor: pointer; font-weight: 600; color: #1e3c72; min-height: 24px; }
+.ci-table table { border-collapse: collapse; margin-top: 0.4rem; font-size: 0.88rem; }
+.ci-table th, .ci-table td { text-align: right; padding: 0.2rem 0.8rem; border-bottom: 1px solid #e2e8f0; }
+.ci-table th:first-child, .ci-table td:first-child { text-align: left; }
+@media (max-width: 480px) { .ci-stat-big { font-size: 1.6rem; } }
