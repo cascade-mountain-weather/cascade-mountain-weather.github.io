@@ -135,7 +135,8 @@ def gain(samples, times, tseries, noise=0.0):
     return cold, warm
 
 
-def station_window(series_by_el, start, end):
+def station_window_v1(series_by_el, start, end):
+    """Original window-level estimator (6 h steps). Kept only to compare against station_window."""
     times = []
     t = start
     while t <= end:
@@ -186,6 +187,145 @@ def station_window(series_by_el, start, end):
         out['snowfall_in'] = estimate_snowfall(swe_eff, depth_eff)
         if out['snowfall_in'] and out['snowfall_in']['mid'] == 0 and (out['swe_gain_warm_ignored_in'] or 0) >= 0.1:
             out['snowfall_in']['method'] = 'warm steps only (rain on snow)'
+    return out
+
+
+# --- Step-based estimator (Oct 2026) -----------------------------------------------------------------
+# Every check runs on a fixed 3-hour UTC grid and depends only on the data around that step, never on the
+# window being scored. Window totals are therefore sums of cleaned steps, so two 12 h periods add up to
+# the 24 h total and to the weekend total by construction (the old window-level checks did not).
+STEP_NEW_H = 3
+PAD = 10                     # extra grid steps read on each side of a window (context for the checks)
+SWE_STEP_MAX_IN = 2.0        # a single 3 h SWE rise above this is a sensor fault, not snow
+DEPTH_STEP_MAX_IN = 12.0     # same for depth
+SWE_SPIKE_IN, DEPTH_SPIKE_IN = 0.5, 4.0   # a one-step jump that is undone by the next step is a glitch
+DENSITY_MIN, DENSITY_MAX = 0.04, 0.25     # depth-implied density outside this is not believed
+DEPTH_MIN_NEIGHBOURHOOD_IN = 2.0          # need this much depth gain nearby to estimate density from it
+
+
+def _despike(vals, thr):
+    """Replace a one-step excursion of at least `thr` that the next sample undoes by the previous value."""
+    out = list(vals)
+    for i in range(1, len(out) - 1):
+        a, b, c = out[i - 1], out[i], out[i + 1]
+        if None in (a, b, c):
+            continue
+        if abs(b - a) >= thr and abs(c - a) < thr / 2:
+            out[i] = a
+    return out
+
+
+def station_steps(series_by_el, start, end):
+    """Cleaned 3 h steps covering [start, end] (plus context): a list of dicts, oldest first.
+
+    Each step has t0, t1 (UTC), snow {low, mid, high} in inches, swe_in (cleaned cold SWE gain), depth_in
+    (cleaned cold depth gain), warm_in (SWE gain ignored because it was warm), trace_in (SWE gain the
+    precipitation record around it does not support: more than 1.3 x the 24 h precipitation), fault_in (implausible rise), temp_f.
+    """
+    h = timedelta(hours=STEP_NEW_H)
+    edges = [start + (k - PAD) * h for k in range(int((end - start) / h) + 2 * PAD + 1)]
+    wteq_s, snwd_s, tobs_s = (series_by_el.get(k, {}) for k in ('WTEQ', 'SNWD', 'TOBS'))
+    prec_s = series_by_el.get('PREC', {})
+    swe = _despike([sample(wteq_s, t, 3) for t in edges], SWE_SPIKE_IN)
+    dep = _despike([sample(snwd_s, t, 3) for t in edges], DEPTH_SPIKE_IN)
+
+    steps = []
+    for j in range(1, len(edges)):
+        t0, t1 = edges[j - 1], edges[j]
+        st = {'t0': t0, 't1': t1, 'swe_in': 0.0, 'depth_in': 0.0, 'warm_in': 0.0, 'trace_in': 0.0, 'fault_in': 0.0,
+              'avail_swe': None not in (swe[j - 1], swe[j]), 'avail_depth': None not in (dep[j - 1], dep[j]),
+              'temp_f': mean_temp(tobs_s, t0, t1)}
+        p1, p0 = sample(prec_s, t1 + timedelta(hours=12), 12), sample(prec_s, t1 - timedelta(hours=12), 12)
+        st['p24'] = None if p0 is None or p1 is None else max(0.0, p1 - p0)
+        cold = st['temp_f'] is None or st['temp_f'] <= SNOW_T_MAX_F
+        too_warm = st['temp_f'] is not None and st['temp_f'] >= WARM_F
+        dswe = swe[j] - swe[j - 1] if st['avail_swe'] else 0.0
+        ddep = dep[j] - dep[j - 1] if st['avail_depth'] else 0.0
+        if dswe > SWE_STEP_MAX_IN:
+            st['fault_in'] = dswe
+        elif dswe > SWE_NOISE_IN:
+            if not cold or too_warm:
+                st['warm_in'] = dswe
+            else:
+                st['swe_in'] = dswe
+        st['depth_raw'] = ddep if 1 <= ddep <= DEPTH_STEP_MAX_IN and cold and not too_warm else 0.0
+        steps.append(st)
+
+    # SWE cannot exceed 1.3 x the precipitation measured around it (wind loading allows some excess).
+    raw = [s['swe_in'] for s in steps]
+    for j, s in enumerate(steps):
+        near = sum(raw[max(0, j - 4):j + 5])
+        if s['p24'] is not None and near > PRECIP_CAP * s['p24']:
+            s['swe_in'] = raw[j] * PRECIP_CAP * s['p24'] / near
+            s['trace_in'] = raw[j] - s['swe_in']   # the part the precipitation record does not support
+    # Depth sets the snow density locally: gain over +-2 steps next to the SWE gain (depth lags SWE a little).
+    for j, s in enumerate(steps):
+        lo_j, hi_j = max(0, j - 2), j + 3
+        swe_n = sum(x['swe_in'] for x in steps[lo_j:hi_j])
+        dep_n = sum(x['depth_raw'] for x in steps[lo_j:hi_j])
+        dens = swe_n / dep_n if dep_n >= DEPTH_MIN_NEIGHBOURHOOD_IN and swe_n >= 0.1 else None
+        if dens is not None and not DENSITY_MIN <= dens <= DENSITY_MAX:
+            dens = None
+        w = s['swe_in']
+        mid = w / (dens or DENSITY_TYPICAL)
+        s['snow'] = {'low': min(w / DENSITY_LOW, mid), 'mid': mid, 'high': max(w / DENSITY_HIGH, mid)}
+        s['depth_in'] = s['depth_raw'] if swe_n >= 0.1 else 0.0
+    return steps
+
+
+def station_window(series_by_el, start, end):
+    """Observed snowfall at one station over [start, end] from cleaned 3 h steps (see station_steps).
+
+    start and end must be on the 3 h UTC grid (the 12Z and 0Z period edges are). Same output keys as v1.
+    """
+    steps = station_steps(series_by_el, start, end)
+    inside = [s for s in steps if s['t0'] >= start and s['t1'] <= end]
+    n = len(inside)
+    out = {}
+    share = lambda k: sum(s[k] for s in inside) / n if n else 0.0  # noqa: E731
+    temps = [s['temp_f'] for s in inside if s['temp_f'] is not None]
+    out['coverage'] = {'swe': round(share('avail_swe'), 2), 'depth': round(share('avail_depth'), 2),
+                       'temp': round(len(temps) / n, 2) if n else 0.0}
+    have_swe, have_depth = share('avail_swe') >= MIN_SAMPLE_SHARE, share('avail_depth') >= MIN_SAMPLE_SHARE
+    prec = series_by_el.get('PREC', {})
+    p0, p1 = sample(prec, start, back_h=12), sample(prec, end, back_h=12)
+    out['precip_in'] = round(max(0.0, p1 - p0), 2) if p0 is not None and p1 is not None else None
+    out['temp_mean_f'] = round(sum(temps) / len(temps), 1) if temps else None
+    out['swe_end_in'] = sample(series_by_el.get('WTEQ', {}), end, 3)
+    out['depth_end_in'] = sample(series_by_el.get('SNWD', {}), end, 3)
+    warm = sum(s['warm_in'] for s in inside)
+    out['swe_gain_warm_ignored_in'] = round(warm, 2) if have_swe else None
+    out['swe_gain_in'] = round(sum(s['swe_in'] for s in inside), 2) if have_swe else None
+    out['depth_gain_in'] = round(sum(s['depth_in'] for s in inside), 1) if have_depth else None
+    out['flags'] = {'trace_ignored_in': round(sum(s['trace_in'] for s in inside), 2),
+                    'fault_ignored_in': round(sum(s['fault_in'] for s in inside), 2)}
+
+    if have_swe:
+        tot = {k: round(sum(s['snow'][k] for s in inside), 1) for k in ('low', 'mid', 'high')}
+        tot['method'] = 'cleaned 3 h steps' if tot['mid'] > 0 else 'none observed'
+    elif have_depth:   # no usable SWE: depth only, with the same cold/trace screening, steps of 2 in or more
+        d = round(sum(s['depth_raw'] for s in inside if s['depth_raw'] >= 2), 1)
+        tot = {'low': d, 'mid': d, 'high': d, 'method': 'depth only'}
+    else:
+        out['gate'], out['snowfall_in'] = None, None
+        return out
+    # A gain this small is at the sensors' resolution (0.1 in SWE): keep the middle estimate, but the true
+    # amount may be nothing, so the low end is 0 and the window is flagged.
+    out['flags']['near_sensor_resolution'] = bool(have_swe and 0 < out['swe_gain_in'] < 0.2)
+    if out['flags']['near_sensor_resolution']:
+        tot['low'] = 0.0
+    gate = None
+    if tot['mid'] == 0:
+        if out['flags']['trace_ignored_in'] > 0 or (out['precip_in'] is not None and out['precip_in'] < TRACE_PRECIP_IN):
+            gate = 'trace precipitation' if (out['precip_in'] or out['flags']['trace_ignored_in']) else 'no precipitation'
+        elif out['temp_mean_f'] is not None and out['temp_mean_f'] >= WARM_F:
+            gate = 'too warm for snow'
+        elif warm >= 0.1:
+            tot['method'] = 'warm steps only (rain on snow)'
+        if gate == 'trace precipitation' and out['precip_in']:
+            tot['high'] = round(out['precip_in'] / DENSITY_HIGH, 1)
+    out['gate'] = gate
+    out['snowfall_in'] = tot
     return out
 
 

@@ -1,0 +1,48 @@
+name: Update UW WRF Soundings
+
+on:
+  schedule:
+    # UW WRF runs at 00Z and 12Z; the publication delay is not known yet, so poll from 3 to 6 hours after each run.
+    # An attempt is cheap when nothing new is there (one request) and a run already archived is skipped.
+    - cron: "15 3,4,5,6,15,16,17,18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: uw-soundings
+  cancel-in-progress: false
+
+jobs:
+  update-uw-soundings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests numpy
+
+      - name: Fetch the newest complete run and derive snow diagnostics
+        run: python scripts/uw_soundings.py --loc all --quiet --out assets/data/uw_soundings.json --profile-dir assets/data/uw_soundings --archive-dir data/cycles/uw_wrf
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/uw_soundings.json assets/data/uw_soundings data/cycles/uw_wrf
+          git commit -m "Update UW WRF soundings [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

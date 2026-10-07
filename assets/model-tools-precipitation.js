@@ -3,6 +3,7 @@
     'use strict';
     const BASE = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');
     let nbmData = null; // assets/data/nbm_plumes.json, written by scripts/nbm_plume.py
+    let soundings = {}; // assets/data/uw_soundings/<site>.json (UW WRF forecast soundings), written by scripts/uw_soundings.py
     let hiresData = null; // assets/data/hires_plumes.json (HRRR and HRDPS), written by scripts/hires_plume.py
     const pad = (n, w) => String(n).padStart(w, '0');
     const ymd = d => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1, 2)}${pad(d.getUTCDate(), 2)}`;
@@ -26,16 +27,16 @@
     // basins: CW3E watershed freezing-level plots (HUC8 id).
     const AREAS = {
         'nw': { label: 'Northwest region (maps)', region: true },
-        'mt-baker': { label: 'Mt. Baker (Heather Meadows)', wwrf: 'WA543', utah: 'MTB42', basins: [{ id: '17110005', label: 'Upper Skagit' }] },
+        'mt-baker': { label: 'Mt. Baker (Heather Meadows)', uw: 'discl', wwrf: 'WA543', utah: 'MTB42', basins: [{ id: '17110005', label: 'Upper Skagit' }] },
         'stevens': { label: 'Stevens Pass', wwrf: 'US2', utah: 'TSTEV', basins: [{ id: '17110009', label: 'Skykomish (west side)' }, { id: '17020011', label: 'Wenatchee (east side)' }] },
-        'snoqualmie': { label: 'Snoqualmie Pass', wwrf: 'I90', utah: 'SNO30', basins: [{ id: '17110010', label: 'Snoqualmie (west side)' }, { id: '17030001', label: 'Upper Yakima (east side)' }] },
-        'hurricane': { label: 'Hurricane Ridge', utah: 'HUR53', basins: [{ id: '17110020', label: 'Dungeness-Elwha' }] },
-        'winthrop': { label: 'Winthrop / Mazama (Methow Valley)', wwrf: 'S52', basins: [{ id: '17020008', label: 'Methow' }] },
-        'blewett': { label: 'Blewett Pass', wwrf: 'US97', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }] },
-        'crystal': { label: 'Crystal Mountain', wwrf: 'MRNP', utah: 'CMT', basins: [{ id: '17110014', label: 'Puyallup' }] },
-        'paradise': { label: 'Paradise (Mt. Rainier)', wwrf: 'MRNP', utah: 'PVC54', basins: [{ id: '17110015', label: 'Nisqually' }] },
-        'white': { label: 'White Pass', wwrf: 'US12', utah: 'WPS45', basins: [{ id: '17080004', label: 'Upper Cowlitz' }] },
-        'washington': { label: 'Washington Pass', wwrf: 'WA20', utah: 'WAP55', basins: [{ id: '17020009', label: 'Lake Chelan (west side)' }, { id: '17020008', label: 'Methow (east side)' }] },
+        'snoqualmie': { label: 'Snoqualmie Pass', uw: 'ksmp', wwrf: 'I90', utah: 'SNO30', basins: [{ id: '17110010', label: 'Snoqualmie (west side)' }, { id: '17030001', label: 'Upper Yakima (east side)' }] },
+        'hurricane': { label: 'Hurricane Ridge', uw: 'dowlx', utah: 'HUR53', basins: [{ id: '17110020', label: 'Dungeness-Elwha' }] },
+        'winthrop': { label: 'Winthrop / Mazama (Methow Valley)', uw: 'mtwpm', wwrf: 'S52', basins: [{ id: '17020008', label: 'Methow' }] },
+        'blewett': { label: 'Blewett Pass', uw: 'lvwth', wwrf: 'US97', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }] },
+        'crystal': { label: 'Crystal Mountain', uw: 'pvc55', wwrf: 'MRNP', utah: 'CMT', basins: [{ id: '17110014', label: 'Puyallup' }] },
+        'paradise': { label: 'Paradise (Mt. Rainier)', uw: 'pvc55', wwrf: 'MRNP', utah: 'PVC54', basins: [{ id: '17110015', label: 'Nisqually' }] },
+        'white': { label: 'White Pass', uw: 'rimrk', wwrf: 'US12', utah: 'WPS45', basins: [{ id: '17080004', label: 'Upper Cowlitz' }] },
+        'washington': { label: 'Washington Pass', uw: 'mtwpm', wwrf: 'WA20', utah: 'WAP55', basins: [{ id: '17020009', label: 'Lake Chelan (west side)' }, { id: '17020008', label: 'Methow (east side)' }] },
     };
 
 
@@ -372,6 +373,42 @@
                 source: 'NOAA National Blend of Models, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
             },
         },
+        uw_snd: {
+            needs: 'uw',
+            label: 'UW WRF sounding',
+            title: a => `${a.label}: UW WRF forecast sounding (${soundings[a.uw].name.replace(',WA', '')}, ${Math.round(soundings[a.uw].elevation_ft).toLocaleString('en-US')} ft)`,
+            build: a => {
+                const site = soundings[a.uw];
+                return {
+                    hours: site.frames.map(f => f.hour), runs: [CMWSounding.initDate(site)], runExact: true,
+                    urlFor: (r, h) => CMWSounding.skewT(site, Math.max(0, site.frames.findIndex(f => f.hour === h))),
+                    fallbackUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
+                };
+            },
+            info: a => ({
+                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone (-12 to -18&deg;C), where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the melting-model snow level. The gray dashed line is the temperature at the start of the run, so you can see how the air column changes.`,
+                how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer inside the purple band is when fluffy dendrites form. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
+                source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
+            }),
+        },
+        uw_lvl: {
+            needs: 'uw',
+            label: 'UW WRF levels over time',
+            title: a => `${a.label}: UW WRF freezing level, snow level and growth zone (${soundings[a.uw].name.replace(',WA', '')})`,
+            build: a => {
+                const site = soundings[a.uw];
+                return {
+                    hours: [null], runs: [CMWSounding.initDate(site)], runExact: true,
+                    urlFor: () => CMWSounding.levels(site),
+                    fallbackUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
+                };
+            },
+            info: {
+                what: 'The freezing level (blue), the melting-model snow level (orange) and the dendritic growth zone (purple band, base to top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The lower panel shows how thick the growth zone is (dashed) and how much of it is near saturation (bars), since the zone only makes snow where the air is moist.',
+                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Tall purple bars mean a deep, moist growth zone: the setup for light, fluffy snow. One model run is one scenario.',
+                source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
+            },
+        },
         frz: {
             needs: 'basins',
             label: 'Freezing level',
@@ -403,13 +440,19 @@
             ],
             resolve(st) {
                 const a = AREAS[st.area], p = PRODUCTS[st.product];
-                const info = typeof p.info === 'function' ? p.info(st) : p.info;
+                const info = typeof p.info === 'function' ? p.info(st.product === 'uw_snd' ? a : st) : p.info;
                 return Object.assign({ hours: [null], runs: null, runExact: false, title: p.title(a, st), info,
                     latestNote: 'Always the most recent run. The run and valid times are printed on the figure, in Z (UTC).' }, p.build(a, st));
             },
         });
     };
     const getJson = name => fetch(BASE + 'data/' + name, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    Promise.all([getJson('nbm_plumes.json'), getJson('hires_plumes.json')])
-        .then(([nbm, hires]) => { nbmData = nbm; hiresData = hires; mount(); });
+    const uwSites = [...new Set(Object.values(AREAS).map(a => a.uw).filter(Boolean))];
+    Promise.all([getJson('nbm_plumes.json'), getJson('hires_plumes.json'), Promise.all(uwSites.map(k => CMWSounding.load(k)))])
+        .then(([nbm, hires, uw]) => {
+            nbmData = nbm; hiresData = hires;
+            uwSites.forEach((k, i) => { if (uw[i] && uw[i].frames && uw[i].frames.length) soundings[k] = uw[i]; });
+            Object.values(AREAS).forEach(a => { if (a.uw && !soundings[a.uw]) delete a.uw; });   // no data: hide the products for that area
+            mount();
+        });
 }());

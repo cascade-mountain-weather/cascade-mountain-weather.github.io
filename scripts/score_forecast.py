@@ -24,9 +24,9 @@ Your weekend total is scored against what fell over YOUR forecast period, 4 pm T
 What is scored, per area and window
 -----------------------------------
   nbm_error_in   NBM median minus the observed estimate (positive = NBM too high)
-  nbm_iqr_hit    observed estimate inside the NBM 25th-75th range (plus 0.5 in of slack)
+  nbm_iqr_hit    observed estimate inside the NBM 25th-75th range (plus slack: 1 in or 10% of the observed amount, whichever is larger)
   ours_error_in  middle of your range minus the observed estimate
-  ours_hit       observed estimate inside your range (plus 0.5 in of slack)
+  ours_hit       observed estimate inside your range (plus slack: 1 in or 10% of the observed amount, whichever is larger)
   hrrr_error_in  HRRR minus the observed estimate, and the same for hrdps (only for windows the models reach,
                  normally Friday; see scripts/hires_models.py). Both are single values, not ranges.
   obs_overlaps_* the observed range (wide, because new-snow density is unknown) overlaps the forecast
@@ -58,7 +58,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SITES_FILE = ROOT / "data" / "nbm" / "sites.yml"
 POSTS = ROOT / "_posts"
 OUT_DIR = ROOT / "data" / "evaluation"
-SLACK_IN = 0.5
+SLACK_IN = 1.0               # floor on the slack for a snowfall hit, inches
+SLACK_FRAC = 0.10            # slack grows with the amount: 10% of the observed value, so a big storm is held to a range, not a point
 SLACK_FT = 500.0
 SATURATED_WITHIN_M = 300.0   # actual and fully saturated snow levels this close = column is near saturation
 M_TO_FT = 3.28084
@@ -95,12 +96,19 @@ def our_period(first_day):
 
 # ---------------------------------------------------------------- scoring helpers
 
+def slack_in(amount):
+    """Slack on each side of a forecast range: the larger of SLACK_IN and 10% of the observed amount."""
+    return max(SLACK_IN, SLACK_FRAC * amount)
+
+
 def within(value, lo, hi):
-    return lo - SLACK_IN <= value <= hi + SLACK_IN
+    k = slack_in(value)
+    return lo - k <= value <= hi + k
 
 
 def overlaps(a_lo, a_hi, b_lo, b_hi):
-    return a_lo <= b_hi + SLACK_IN and b_lo <= a_hi + SLACK_IN
+    k = slack_in(max(a_hi, b_hi))
+    return a_lo <= b_hi + k and b_lo <= a_hi + k
 
 
 def score_nbm(nbm, obs):
@@ -211,7 +219,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
         "notes": [
             "Observed snowfall is an estimate from SNOTEL snow water equivalent and snow depth; see scripts/snotel_obs.py.",
             "SNOTEL stations sit at their own elevation, not the 5000 ft forecast elevation (elevations are recorded per area).",
-            f"A hit allows {SLACK_IN} in of slack on each side.",
+            f"A hit allows slack on each side of the range: {SLACK_IN} in or {int(SLACK_FRAC * 100)}% of the observed amount, whichever is larger.",
             "The author's weekend total is scored against the author's own period (4 pm Thursday to 4 am Monday), not the NBM window.",
             "HRRR and HRDPS cover 48 hours, so they are scored on the windows inside that (normally Friday). HRDPS snowfall assumes a 10:1 ratio.",
             "CoCoRaHS reports are a cross-check from volunteer stations within 25 km, mostly lowland; they are not part of the score.",
