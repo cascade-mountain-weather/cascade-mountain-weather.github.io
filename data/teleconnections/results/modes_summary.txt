@@ -1,0 +1,30 @@
+MJO harmonic fit (lag 8): peak phase by metric (median over stations) and explained variance
+         peak_phase     r2    amp
+metric                           
+bigsnow           3  0.001  0.141
+rain              6  0.001  0.075
+swe               3  0.003  0.081
+tanom             5  0.005  0.371
+
+What explains the differences between stations (OLS on standardized elevation, latitude, longitude; coefficients are the effect of +1 sd; |t|>2 notable)
+                            effect    R2   elev    lat    lon  t_elev  t_lat  t_lon  spread
+MJO phase 2 snowfall ratio (lag 8) 0.371 -0.044 -0.036  0.022  -3.303 -2.638  1.557   0.089
+MJO phase 7 snowfall ratio (lag 8) 0.388  0.012 -0.022  0.029   1.495 -2.722  3.488   0.053
+MJO phase 5 temp anomaly F (lag 8) 0.274  0.104 -0.095  0.037   2.568 -2.282  0.848   0.255
+MJO phase 3 temp anomaly F (lag 8) 0.227 -0.050  0.070 -0.029  -1.809  2.455 -0.982   0.168
+        strong +PNA snowfall ratio 0.555  0.055  0.100 -0.010   2.782  4.939 -0.452   0.157
+        strong -PNA snowfall ratio 0.687 -0.058 -0.093 -0.025  -3.496 -5.468 -1.398   0.158
+        strong +PNA temp anomaly F 0.411  0.431 -0.212  0.021   4.270 -2.041  0.191   0.703
+            El Nino snowfall ratio 0.115  0.004  0.025  0.009   0.249  1.512  0.517   0.093
+            La Nina snowfall ratio 0.278 -0.051  0.009  0.020  -3.433  0.618  1.276   0.093
+            La Nina temp anomaly F 0.360 -0.228  0.005  0.228  -3.440  0.072  3.204   0.443
+
+EOF of daily swe: variance explained by modes 1-4 = [51.6  6.7  4.9  3.2] %
+   EOF1: correlation of loadings with elevation -0.07, latitude -0.25
+   EOF2: correlation of loadings with elevation +0.43, latitude +0.79
+   mean PC1 score by MJO phase: 1:+0.03, 2:+0.22, 3:+0.02, 4:+0.07, 5:+0.01, 6:+0.03, 7:-0.10, 8:-0.04
+
+EOF of daily tanom: variance explained by modes 1-4 = [83.5  5.1  1.8  1.4] %
+   EOF1: correlation of loadings with elevation +0.03, latitude -0.51
+   EOF2: correlation of loadings with elevation -0.31, latitude +0.52
+   mean PC1 score by MJO phase: 1:-0.07, 2:-0.04, 3:-0.15, 4:+0.10, 5:+0.13, 6:+0.04, 7:+0.03, 8:-0.05
