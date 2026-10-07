@@ -15,6 +15,7 @@
 #   road_dependencies WSDOT pass ids that must be open to reach the zone (filled in from real data later)
 #   road_risk         model: curve = the I-90 delay curve (scripts/pass_risk.py) applied to this pass; nps_gate = the Mount Rainier
 #                     Longmire-to-Paradise opening matrix (high danger holds the gate; staffing and plowing can also close it);
+#                     via = other zones whose pass snow forecast also counts for the trip (model: via = only those; the chances combine as 1 - product of (1 - p))
 #                     tags = names in the pass log (scripts/pass_log.py) that describe this road right now
 #   pass              what it costs to park/enter: sno_park | trail_pass | resort_ticket | none (typed, not boolean)
 #   snotel            nearby SNOTEL station triplets for "what actually fell" (primary one first)
@@ -151,7 +152,7 @@ zones:
     top_ft: 7000
     road_dependencies: [washington]
     pass: {type: trail_pass}
-    road_risk: {model: curve, tags: [washington], route: "SR 20 North Cascades Highway"}
+    road_risk: {model: curve, via: [snoqualmie, blewett], tags: [washington, snoqualmie, blewett], route: "SR 20 North Cascades Highway"}   # Mazama is reached over I-90 and US 97 as well
     snotel: ["711:WA:SNTL", "515:WA:SNTL"]
     url: https://methowtrails.org/conditions
     grooming_url: https://methowtrails.org/conditions
@@ -200,6 +201,7 @@ zones:
     top_ft: 6000
     road_dependencies: [stevens]
     pass: {type: sno_park}
+    road_risk: {model: via, via: [stevens], tags: [stevens], route: "US 2 Stevens Pass"}
     snotel: ["1338:WA:SNTL"]
     url: https://www.leavenworth.org
     drive_hours: {seattle: 2.3, tacoma: 2.7, bellingham: 3.4, olympia: 3.3, portland: 5.3}
@@ -214,6 +216,7 @@ zones:
     top_ft: 6800
     road_dependencies: []
     pass: {type: resort_ticket}
+    road_risk: {model: via, via: [snoqualmie], tags: [snoqualmie], route: "I-90 Snoqualmie Pass"}
     snotel: ["507:WA:SNTL"]
     url: https://www.missionridge.com
     drive_hours: {seattle: 2.7, tacoma: 3.0, bellingham: 4.2, olympia: 3.5, portland: 4.9}

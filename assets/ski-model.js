@@ -67,7 +67,7 @@
         if (S.mode !== 'backcountry' && d.avy_danger >= 4) notes.push(`Avalanche danger ${AVY[d.avy_danger]} in the mountains; expect slower travel and a higher chance of road control work.`);
         if (d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
         if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
-        else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on ${z.road_risk.route} that day.`);
+        else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on the way` + (d.risk_parts && d.risk_parts.length > 1 ? ' (' + d.risk_parts.map(p => p.route.replace(/ (Snoqualmie|Stevens|White|Blewett) Pass| North Cascades Highway/, '') + ' ' + Math.round(p.p * 100) + '%').join(', ') + ')' : ' on ' + z.road_risk.route) + ' that day.');
         return { z, d, drive, vert, total, parts, why, notes };
     }
 

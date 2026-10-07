@@ -55,17 +55,30 @@ def mock_days(zone, elev, start, curves):
             "temp_f": int(20 + 14 * (1 - storm) + r.uniform(-3, 3)),
             "avy_danger": min(5, max(1, int(1 + storm * 3 + r.uniform(0, 1.2)))),     # 1 low .. 5 extreme; -1 would mean no forecast
         })
-        d = out[-1]
-        model = (zone.get("road_risk") or {}).get("model")
-        if model in ("curve", "nps_gate"):
-            swe = snow / d["snow_ratio"]                                   # forecast new snow (in) to water equivalent (in)
-            d["swe_in"] = round(swe, 2)
-            d["delay_risk"], d["delay_risk_3h"] = delay_risk(curves, swe)
-            d["gate_hold"] = bool(model == "nps_gate" and d["avy_danger"] >= 4)   # NPS matrix: High or Extreme danger holds the Paradise gate
-            d["road_risk"] = 0.9 if d["gate_hold"] else d["delay_risk"]
-        else:
-            d["road_risk"] = 0.0
+        out[-1]["swe_in"] = round(snow / out[-1]["snow_ratio"], 2)         # forecast new snow (in) to water equivalent (in)
     return out
+
+
+def add_risk(zones, curves):
+    """Road delay chance per zone and day: the zone's own pass (curve), plus the passes it is reached over (via); NPS gate rule for Paradise."""
+    by_id = {z["id"]: z for z in zones}
+    for z in zones:
+        rr = z.get("road_risk") or {}
+        for k, d in enumerate(z["days"]):
+            parts = []
+            if rr.get("model") in ("curve", "nps_gate"):
+                parts.append((rr["route"], *delay_risk(curves, d["swe_in"])))
+            for vid in rr.get("via", []):
+                v = by_id[vid]
+                parts.append((v["road_risk"]["route"], *delay_risk(curves, v["days"][k]["swe_in"])))
+            if not parts:
+                d["road_risk"] = 0.0
+                continue
+            d["risk_parts"] = [{"route": r, "p": p} for r, p, _ in parts]
+            d["delay_risk"] = round(1 - math.prod(1 - p for _, p, _ in parts), 3)
+            d["delay_risk_3h"] = round(1 - math.prod(1 - q for _, _, q in parts), 3)
+            d["gate_hold"] = bool(rr.get("model") == "nps_gate" and d["avy_danger"] >= 4)     # NPS matrix: High or Extreme danger holds the Paradise gate
+            d["road_risk"] = 0.9 if d["gate_hold"] else d["delay_risk"]
 
 
 def main():
@@ -90,6 +103,7 @@ def main():
             "access_points": [{"id": p["id"], "name": p["name"], "type": p["type"], "modes": p["modes"], "ft": e.get("ap:" + p["id"])} for p in z["access_points"]],
             "days": mock_days(z, e, start, curves),
         })
+    add_risk(zones, curves)
     out = {"mock": True, "risk_source": curves["source"], "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
            "note": "Sample numbers to build and test the scorer. Not a forecast.",
            "origins": {k: v["name"] for k, v in cfg["origins"].items()}, "zones": zones}

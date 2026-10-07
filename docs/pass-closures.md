@@ -25,7 +25,9 @@ log loss) gives the chance of a weather delay that day: about 1% at 0 in, 11% at
 4%, 10%, 19%, 30%. Curves are in `assets/data/pass_risk_curve.json`.
 
 Applied, by decision (Oct 2026), to US 2 (Stevens), US 12 (White), SR 410 (Chinook/Crystal), SR 542 (Baker), US 97 (Blewett) and SR 20, on the assumption that
-other Cascade passes behave like I-90. Limits: seven winters; the study lists delays above some length and gives no clock times, so the unit is the day; the forecast
+other Cascade passes behave like I-90. Zones that are reached over another zone's pass borrow that pass's snow forecast (`via` in `data/ski/destinations.yml`): Mission Ridge over I-90,
+Leavenworth/Icicle over US 2, and Mazama (Washington Pass / Methow) over I-90 and US 97 as well as its own SR 20. When a trip crosses more than one pass the chances combine as
+1 minus the product of (1 minus each), so two 10% passes make 19%. Limits: seven winters; the study lists delays above some length and gives no clock times, so the unit is the day; the forecast
 input is the NBM snowfall converted to water equivalent; the curve says nothing about collisions on clear days (about 1% of days); I-90 has avalanche bridges and a
 heavy truck share that other passes do not.
 
