@@ -1,7 +1,12 @@
-// Precipitation tools page: area x product catalog for assets/model-viewer.js.
+// Area x product catalog for assets/model-viewer.js, shared by two pages (set by data-page on #viewer):
+//   precip  tools/model-tools-precipitation.html       snow, precipitation, clouds
+//   level   tools/model-tools-freezing-level.html      forecast soundings, freezing level and snow level
+// A product belongs to the 'level' page when it has page: 'level'; everything else is 'precip'.
 (function () {
     'use strict';
     const BASE = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');
+    const PAGE = (document.getElementById('viewer') || {}).dataset && document.getElementById('viewer').dataset.page === 'level' ? 'level' : 'precip';
+    const pageOf = p => p.page || 'precip';
     let nbmData = null; // assets/data/nbm_plumes.json, written by scripts/nbm_plume.py
     let soundings = {}; // assets/data/uw_soundings/<site>.json (UW WRF forecast soundings), written by scripts/uw_soundings.py
     let hiresData = null; // assets/data/hires_plumes.json (HRRR and HRDPS), written by scripts/hires_plume.py
@@ -374,6 +379,7 @@
             },
         },
         uw_snd: {
+            page: 'level',
             needs: 'uw',
             label: 'UW WRF sounding',
             title: a => `${a.label}: UW WRF forecast sounding (${soundings[a.uw].name.replace(',WA', '')}, ${Math.round(soundings[a.uw].elevation_ft).toLocaleString('en-US')} ft)`,
@@ -392,6 +398,7 @@
             }),
         },
         uw_lvl: {
+            page: 'level',
             needs: 'uw',
             label: 'UW WRF levels over time',
             title: a => `${a.label}: UW WRF freezing level, snow level and dendritic growth zone (${soundings[a.uw].name.replace(',WA', '')})`,
@@ -410,6 +417,7 @@
             },
         },
         frz: {
+            page: 'level',
             needs: 'basins',
             label: 'Freezing level',
             models: { ecmwf: 'ECMWF (European)', gefs: 'GEFS (American)' },
@@ -433,8 +441,8 @@
         CMWViewer.mount(document.getElementById('viewer'), {
             singleMaxWidth: 760,
             selectors: [
-                { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).map(k => ({ value: k, label: AREAS[k].label })) },
-                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => !!PRODUCTS[k].region === !!AREAS[st.area].region && (!PRODUCTS[k].needs || AREAS[st.area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
+                { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).filter(k => PAGE === 'precip' || !AREAS[k].region).map(k => ({ value: k, label: AREAS[k].label })) },
+                { key: 'product', label: 'Product', options: st => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[st.area].region && (!PRODUCTS[k].needs || AREAS[st.area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[st.area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc)))).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
                 { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
             ],
@@ -447,6 +455,11 @@
         });
     };
     const getJson = name => fetch(BASE + 'data/' + name, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    // Links made before the split (#product=frz, uw_snd, uw_lvl on the precipitation page) go to the new page.
+    if (PAGE === 'precip' && /[#&]product=(frz|uw_snd|uw_lvl)(&|$)/.test(location.hash)) {
+        location.replace(BASE.replace(/assets\/$/, 'tools/model-tools-freezing-level.html') + location.hash);
+        return;
+    }
     const uwSites = [...new Set(Object.values(AREAS).map(a => a.uw).filter(Boolean))];
     Promise.all([getJson('nbm_plumes.json'), getJson('hires_plumes.json'), Promise.all(uwSites.map(k => CMWSounding.load(k)))])
         .then(([nbm, hires, uw]) => {

@@ -2,16 +2,16 @@
 layout: page
 disclaimer: true
 title: "Precipitation Models | Cascade Mountain Weather"
-description: "Precipitation, snowfall and freezing level forecast models for Washington Cascade ski areas. Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more."
-keywords: "Cascade Mountain Weather precipitation, snow forecast models, Washington ski snow forecast, freezing level forecast, West-WRF, ensemble snowfall, PNW ski forecast"
-og_description: "Snow, precipitation and freezing level forecast models for Washington Cascade ski areas."
+description: "Snowfall, precipitation and cloud forecast models for Washington Cascade ski areas. Mt. Baker, Stevens Pass, Crystal Mountain, Snoqualmie Pass, and more."
+keywords: "Cascade Mountain Weather precipitation, snow forecast models, Washington ski snow forecast, West-WRF, NBM snowfall, ensemble snowfall, PNW ski forecast"
+og_description: "Snow, precipitation and cloud forecast models for Washington Cascade ski areas."
 ---
 <link rel="stylesheet" href="{{ '/assets/model-viewer.css' | relative_url }}">
 <section class="hero">
-    <h1 class="PlotTitle">Precipitation &amp; Freezing Level Tools</h1>
-    <p>Choose an area and a product. Ensemble plots show many model runs at once, so the <em>spread</em> between lines is your confidence: tight means the models agree, wide means they do not. The Northwest region view has maps of snow, precipitation and clouds from the HRRR, RRFS, UW WRF and the Utah ensemble.</p>
-    <div id="viewer"></div>
+    <h1 class="PlotTitle">Precipitation Tools</h1>
+    <p>How much, and when? Choose an area and a product. Ensemble plots show many model runs at once, so the <em>spread</em> between lines is your confidence: tight means the models agree, wide means they do not. The Northwest region view has maps of snow, precipitation and clouds from the HRRR, RRFS, UW WRF and the Utah ensemble. For rain versus snow, see the <a href="{{ '/tools/model-tools-freezing-level.html' | relative_url }}">Freezing &amp; Snow Level tools</a>.</p>
+    <div id="viewer" data-page="precip"></div>
 </section>
 <script src="{{ '/assets/model-viewer.js' | relative_url }}"></script>
 <script src="{{ '/assets/uw-soundings.js' | relative_url }}"></script>
-<script src="{{ '/assets/model-tools-precipitation.js' | relative_url }}"></script>
+<script src="{{ '/assets/model-tools-areas.js' | relative_url }}"></script>
