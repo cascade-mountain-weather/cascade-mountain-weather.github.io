@@ -7,7 +7,6 @@
     'use strict';
     const root = document.getElementById('mt');
     if (!root) return;
-    const BASE = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');
 
     // ---- palettes: [value, color] stops, blended linearly between stops ----
     const PAL = {
@@ -43,11 +42,10 @@
     const fHour = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', hourCycle: 'h23' });
     const fFull = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', hour: 'numeric', timeZoneName: 'short' });
     const pacHour = d => { const h = +fHour.format(d); return h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p'; };
-    const zHour = d => String(d.getUTCHours()).padStart(2, '0') + 'Z';
     const dayName = d => fDay.format(d).replace(',', '');
 
     const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { /* ignore */ } return null; };
-    const state = { site: null, span: 48, step: 3, zulu: false, humid: 'td', units: store('mg-units') === 'metric' ? 'metric' : 'us' };
+    const state = { site: null, span: 48, step: 3, humid: 'td', units: store('mg-units') === 'metric' ? 'metric' : 'us' };
     let data = null;
     const F2C = v => (v - 32) * 5 / 9, MPH2MS = 0.44704, IN2MM = 25.4;
     const SHORT = { nbm: 'NBM', hrrr: 'HRRR', hrdps: 'HRDPS' };
@@ -111,7 +109,7 @@
             if (last && last.k === k) last.n++; else days.push({ k, n: 1, label: dayName(c.d) }); });
         const isMid = c => +fHour.format(c.d) === 0;
         const head = () => `<tr><th class="mt-name"></th>${days.map(d => `<th class="mt-day" colspan="${d.n}">${d.label}</th>`).join('')}</tr>
-            <tr><th class="mt-name"></th>${cols.map(c => `<th class="mt-hour${isMid(c) ? ' mt-midnight' : ''}" title="${fFull.format(c.d)} / ${zHour(c.d)} ${c.d.getUTCDate()}">${state.zulu ? zHour(c.d) : pacHour(c.d)}</th>`).join('')}</tr>`;
+            <tr><th class="mt-name"></th>${cols.map(c => `<th class="mt-hour${isMid(c) ? ' mt-midnight' : ''}" title="${fFull.format(c.d)}">${pacHour(c.d)}</th>`).join('')}</tr>`;
 
         let body = '';
         SECTIONS.forEach(s => {
@@ -132,7 +130,7 @@
                     let txt = show(s, v);
                     if (s.key === 'pcp' && v < 0.005) txt = '';
                     if (s.key === 'wind' && dirs[i] != null) txt += `<span class="mt-arrow" style="transform:rotate(${(dirs[i] + 180) % 360}deg)">↑</span>`;
-                    const tip = `${SHORT[m] || m}, ${fFull.format(c.d)} (${zHour(c.d)}): ${show(s, v)}${unitOf(s)}${s.key === 'wind' && dirs[i] != null ? ' from ' + Math.round(dirs[i]) + '°' : ''}`;
+                    const tip = `${SHORT[m] || m}, ${fFull.format(c.d)}: ${show(s, v)}${unitOf(s)}${s.key === 'wind' && dirs[i] != null ? ' from ' + Math.round(dirs[i]) + '°' : ''}`;
                     body += `<td class="mt-cell${s.key === 'wind' ? ' mt-wind' : ''}${mid}" style="background:${css(col)};color:${ink(col)}" title="${tip}">${txt}</td>`;
                 });
                 body += '</tr>';
@@ -147,21 +145,19 @@
             ${ctl('Column step', chips('step', [[1, '1 h'], [3, '3 h'], [6, '6 h']], state.step))}
             ${ctl('Humidity', chips('humid', [['td', 'Dew point'], ['rh', 'Relative humidity']], state.humid))}
             ${ctl('Units', chips('units', [['us', '°F, mph, in'], ['metric', '°C, m/s, mm']], state.units))}
-            ${ctl('Clock', chips('zulu', [[0, 'Pacific'], [1, 'Z (UTC)']], state.zulu ? 1 : 0))}
         </div>
         <div class="mt-scroll"><table class="mt-table">${body}</table></div>
-        <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction, so temperatures run warmer and snow lower than on the slopes. Wind arrows point the way the wind blows toward. Colors approximate the National Weather Service palettes. Updated ${fFull.format(gen)} (${zHour(gen)}). Hover or tap a cell for details.</p>`;
+        <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction, so temperatures run warmer and snow lower than on the slopes. Wind arrows point the way the wind blows toward. Colors approximate the National Weather Service palettes. Times are Pacific. Updated ${fFull.format(gen)}.</p>`;
         root.querySelector('#mt-site').addEventListener('change', e => { state.site = e.target.value; store('mg-site', state.site); render(); });
         const bind = (name, fn) => root.querySelectorAll(`[data-${name}]`).forEach(b => b.addEventListener('click', () => { fn(b.dataset[name]); render(); }));
         bind('span', v => { state.span = +v; });
         bind('step', v => { state.step = +v; });
         bind('humid', v => { state.humid = v; });
         bind('units', v => { state.units = v; store('mg-units', v); });
-        bind('zulu', v => { state.zulu = v === '1'; });
     }
 
     const hash = new URLSearchParams(location.hash.slice(1));
-    fetch(BASE + 'data/meteograms.json', { cache: 'no-cache' })
+    fetch(root.dataset.src, { cache: 'no-cache' })
         .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then(d => {
             data = d;
