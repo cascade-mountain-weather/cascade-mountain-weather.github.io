@@ -1,7 +1,9 @@
 """Build assets/data/nwac_zones.geojson: the NWAC forecast-zone boundaries the live conditions map and the
 station maps draw to group nearby stations.
 
-Source: the public avalanche.org map-layer feed for the Northwest Avalanche Center (NWAC). Only each zone's
+Source: the public avalanche.org map-layer feed for the Northwest Avalanche Center (NWAC):
+https://api.avalanche.org/v2/public/products/map-layer/NWAC (a GeoJSON FeatureCollection; each feature has the zone's
+name, center_id, state, danger fields and an `id` on the feature itself). Only each zone's
 NAME, ID and OUTLINE are kept. The feed also carries danger ratings and travel advice; those are deliberately
 dropped. This site shows the zone boundaries for orientation only; it does not republish or imitate an NWAC
 forecast, and every place the outlines appear says so and points to nwac.us.
@@ -64,7 +66,7 @@ def simplify(geom):
 
 
 def main():
-    resp = requests.get(URL, timeout=60, headers={"User-Agent": "cascade-mountain-weather (zone outlines only)"})
+    resp = requests.get(URL, timeout=60, headers={"User-Agent": "cascade-mountain-weather (zone outlines only)", "Accept": "application/json"})
     resp.raise_for_status()
     feats = []
     for f in resp.json().get("features", []):
@@ -72,11 +74,13 @@ def main():
         geom = f.get("geometry")
         if not geom or geom.get("type") not in ("Polygon", "MultiPolygon") or not p.get("name"):
             continue
+        if p.get("center_id") and p["center_id"] != "NWAC":
+            continue
         if p.get("state") and p["state"] != "WA":     # the feed also covers Mt Hood (OR); the site covers Washington
             continue
         g = simplify(geom)
         if g:
-            feats.append({"type": "Feature", "properties": {"zone": p["name"], "id": p.get("id")}, "geometry": g})
+            feats.append({"type": "Feature", "properties": {"zone": p["name"], "id": f.get("id")}, "geometry": g})
     if not feats:
         raise SystemExit("no zone polygons found in the feed")
     OUT.parent.mkdir(parents=True, exist_ok=True)
