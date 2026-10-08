@@ -1,6 +1,6 @@
 <section id="meteogram" class="mg-card" data-src="{{ '/assets/data/meteograms.json' | relative_url }}">
     <h2>Point Forecast</h2>
-    <p class="mg-desc">The next 48 hours at each ski area from three models. Hover or tap the chart for values.</p>
+    <p class="mg-desc">The next 48 hours at each ski area from three models. Hover or tap the chart for values, or <a href="{{ '/tools/model-table.html' | relative_url }}">see it as a color table</a>.</p>
     <div class="mg-warn" role="note"><strong>Grid-based, not downscaled.</strong> Each line is the model grid cell nearest the ski area (2.5&ndash;3 km wide). It does not account for the mountain&rsquo;s elevation or terrain, so temperatures run warmer and snow lower than on the slopes. Use it as a quick look; the forecast post has the detail.</div>
     <div class="mg-controls">
         <label>Ski area <select id="mg-site" aria-label="Ski area"></select></label>

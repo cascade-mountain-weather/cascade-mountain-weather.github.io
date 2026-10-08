@@ -85,7 +85,7 @@ def nan(grid):
     return np.full(len(grid.sites), np.nan)
 
 
-def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "wind_mph", "precip_in")):
+def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_mph", "wind_dir", "precip_in")):
     """Run one_hour(f) for f = 1..hours (the first one alone so the grid binds, then in threads); -> {var: [arrays]}."""
     res = {1: one_hour(1)}
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
@@ -97,20 +97,28 @@ def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "wind_mph", "precip_i
 def nbm_series(cycle, hours, grid):
     def one(f):
         H = nbm.herbie_for(cycle, f)
-        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:nan|:WIND:10 m above ground:{f} hour fcst:nan"
+        v = multi(H, grid, rf"(:(TMP|RH|DPT):2 m above ground:{f} hour fcst:nan|:(WIND|WDIR):10 m above ground:{f} hour fcst:nan"
                            rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:nan)")
         print(f"  nbm F{f:02d} {sorted(v)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
+                "dewpoint_f": k_to_f(v.get("d2m", nan(grid))), "wind_dir": v.get("wdir10", nan(grid)),
                 "wind_mph": v.get("si10", nan(grid)) * MPS_TO_MPH, "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
     return run_hours(one, hours, grid)
+
+
+def wind_from(u, v):
+    """Direction (degrees) the wind blows FROM, from its eastward and northward components."""
+    return (270 - np.degrees(np.arctan2(v, u))) % 360
 
 
 def hrrr_series(cycle, hours, grid):
     def one(f):
         H = Herbie(cycle, model="hrrr", product="sfc", fxx=f, verbose=False)
-        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:|:(UGRD|VGRD):10 m above ground:|:APCP:surface:{f - 1}-{f} hour acc fcst)")
+        v = multi(H, grid, rf"(:(TMP|RH|DPT):2 m above ground:|:(UGRD|VGRD):10 m above ground:|:APCP:surface:{f - 1}-{f} hour acc fcst)")
         print(f"  hrrr F{f:02d} {sorted(v)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
+                "dewpoint_f": k_to_f(v.get("d2m", nan(grid))),
+                "wind_dir": wind_from(v.get("u10", nan(grid)), v.get("v10", nan(grid))),
                 "wind_mph": np.hypot(v.get("u10", nan(grid)), v.get("v10", nan(grid))) * MPS_TO_MPH,
                 "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
     return run_hours(one, hours, grid)
@@ -135,11 +143,13 @@ def hrdps_field(cycle, var, level, fxx, grid):
 def hrdps_series(cycle, hours, grid):
     def one(f):
         r = {"temp_f": k_to_f(hrdps_field(cycle, "TMP", "AGL-2m", f, grid)), "rh": hrdps_field(cycle, "RH", "AGL-2m", f, grid),
+             "dewpoint_f": k_to_f(hrdps_field(cycle, "DPT", "AGL-2m", f, grid)),
+             "wind_dir": hrdps_field(cycle, "WDIR", "AGL-10m", f, grid),
              "wind_mph": hrdps_field(cycle, "WIND", "AGL-10m", f, grid) * MPS_TO_MPH,
              "cum_in": hrdps_field(cycle, "APCP", "Sfc", f, grid) * MM_TO_IN}      # accumulated since the run started
         print(f"  hrdps F{f:02d}")
         return r
-    res = run_hours(one, hours, grid, keys=("temp_f", "rh", "wind_mph", "cum_in"))
+    res = run_hours(one, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_dir", "wind_mph", "cum_in"))
     cum, prev, per_hour = res.pop("cum_in"), np.zeros(len(grid.sites)), []
     for c in cum:
         per_hour.append(np.maximum(c - prev, 0))
@@ -161,7 +171,7 @@ def main():
     cfg = yaml.safe_load(nbm.SITES_FILE.read_text(encoding="utf-8"))
     sites = [s for s in cfg["sites"] if not args.sites or s["name"] in args.sites]
     out = {"schema": 1, "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
-           "units": {"temp_f": "F, 2 m", "rh": "percent, 2 m", "wind_mph": "mph, 10 m", "precip_in": "inches of liquid per hour"},
+           "units": {"temp_f": "F, 2 m", "rh": "percent, 2 m", "dewpoint_f": "F, 2 m", "wind_mph": "mph, 10 m", "wind_dir": "degrees the wind blows FROM, 10 m", "precip_in": "inches of liquid per hour"},
            "notes": ["Model grid-cell values at the point nearest each ski area; not downscaled or corrected for elevation or terrain."],
            "sites": [{"name": s["name"], "lat": s["lat"], "lon": s["lon"]} for s in sites], "models": {}}
     t0 = time.time()
