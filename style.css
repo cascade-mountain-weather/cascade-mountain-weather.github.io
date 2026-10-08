@@ -678,7 +678,7 @@ footer p {
     nav.open ul {
         display: flex;
         margin-top: 0;
-        padding-top: 3.4rem; /* clear of the menu button in the top-right corner */
+        padding-top: 0; /* the first item shares its row with the menu button in the top-right corner (no empty gap above it) */
         max-height: 100vh;
         overflow-y: auto;
         background: white;
@@ -1054,6 +1054,14 @@ nav a,
     transform: translateX(-50%);
     right: auto;
     top: calc(100% + 2px); /* keep consistent small gap */
+}
+
+/* The first dropdown (Home) sits near the left edge on mid-width screens: left-align its menu so it is not centered off-screen */
+@media (min-width: 801px) {
+    #primary-nav > .nav-item.dropdown:first-child > .dropdown-menu {
+        left: 0;
+        transform: none;
+    }
 }
 
 /* Show dropdown only when .open class is present (controlled by JavaScript) */
