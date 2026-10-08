@@ -1,0 +1,15 @@
+<section id="meteogram" class="mg-card" data-src="{{ '/assets/data/meteograms.json' | relative_url }}">
+    <h2>Point Forecast</h2>
+    <p class="mg-desc">The next 48 hours at each ski area from three models. Hover or tap the chart for values.</p>
+    <div class="mg-warn" role="note"><strong>Grid-based, not downscaled.</strong> Each line is the model grid cell nearest the ski area (2.5&ndash;3 km wide). It does not account for the mountain&rsquo;s elevation or terrain, so temperatures run warmer and snow lower than on the slopes. Use it as a quick look; the forecast post has the detail.</div>
+    <div class="mg-controls">
+        <label>Ski area <select id="mg-site" aria-label="Ski area"></select></label>
+        <div id="mg-models" class="mg-models"></div>
+    </div>
+    <div id="mg-chart" class="mg-chart"><noscript>The point forecast needs JavaScript.</noscript>Loading&hellip;<div id="mg-tip" class="mg-tip" hidden></div></div>
+    <p class="mg-meta" id="mg-meta"></p>
+    <p class="mg-meta" id="mg-grid"></p>
+    <p class="mg-meta">Sources: NOAA National Blend of Models, NOAA HRRR, Environment Canada HRDPS, read through Herbie. HRDPS and HRRR are single runs; the NBM is a blend of many models.</p>
+</section>
+<link rel="stylesheet" href="{{ '/assets/meteogram.css' | relative_url }}">
+<script src="{{ '/assets/meteogram.js' | relative_url }}" defer></script>
