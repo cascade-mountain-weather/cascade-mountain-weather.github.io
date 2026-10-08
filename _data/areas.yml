@@ -24,7 +24,7 @@ areas:
   - id: hurricane-ridge
     name: Hurricane Ridge
     basin: "17110020"
-    page: null
+    page: /tools/model-tools-precipitation.html#area=hurricane
     webcams:
       - {type: windy, id: "1523123339", label: "Hurricane Hill - Mount Olympus"}
     stations:
@@ -54,7 +54,7 @@ areas:
   - id: mazama
     name: Mazama
     basin: "17020008"
-    page: null
+    page: /tools/model-tools-precipitation.html#area=winthrop
     stations:
       - {id: MAZ22, network: NWAC, label: Mazama, primary: true}
 
