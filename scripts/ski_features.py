@@ -65,8 +65,10 @@ LIVE = ROOT / "assets" / "data" / "live_conditions.json"
 
 
 def base_depths(cfg):
-    """{zone id: {base_in, stations, asof}}: the deepest snow depth reported at the zone's stations (None if none report one).
-    Depth reports in the off-season can be sensor noise, which is why the page compares them with a threshold, not with zero."""
+    """{zone id: {base_in, stations, asof}}: the deepest snow depth reported by the zone's trusted stations (None if none report one).
+    A station that fails the live conditions map's data checks (scripts/collect_live_conditions.py `trust`: off-season depth,
+    negative depth, a 36 in swing in 24 h, depth with no SWE, far above nearby SNOTEL, stale or missing report) is ignored here,
+    so sensor noise such as Heather Meadows' 7 in in October cannot count as snow on the ground."""
     live = json.loads(LIVE.read_text(encoding="utf-8"))
     areas = {a["id"]: a for a in live["areas"]}
     out = {}
@@ -74,6 +76,8 @@ def base_depths(cfg):
         best, who = None, None
         for aid in z.get("live_areas", []):
             for s in areas.get(aid, {}).get("stations", []):
+                if not (s.get("trust") or {}).get("ok"):
+                    continue
                 d = s.get("snow_depth_in")
                 if d is not None and (best is None or d > best):
                     best, who = d, f"{s['label']} ({s.get('network')})"
