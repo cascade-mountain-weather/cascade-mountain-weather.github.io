@@ -29,7 +29,7 @@
 .sk-bars { display: flex; gap: 0.3rem; height: 56px; margin: 0.4rem 0 1.1rem; }
 .sk-bar { flex: 1; position: relative; background: #f1f5f9; border-radius: 3px; display: flex; align-items: flex-end; }
 .sk-bar span { display: block; width: 100%; background: #3b82f6; border-radius: 3px; }
-.sk-bar em { position: absolute; top: 100%; left: 0; right: 0; text-align: center; font-size: 0.62rem; color: #64748b; font-style: normal; }
+.sk-bar em { position: absolute; top: 100%; left: -2px; right: -2px; text-align: center; font-size: 0.6rem; color: #64748b; font-style: normal; white-space: nowrap; overflow: hidden; }
 .sk-note { margin: 0.2rem 0; font-size: 0.82rem; color: #92400e; }
 .sk-access { margin: 0.3rem 0 0; font-size: 0.8rem; color: #64748b; }
 .sk-null { padding: 1rem; border-left: 4px solid #94a3b8; background: #f8fafc; border-radius: 4px; margin-bottom: 1rem; }

@@ -25,11 +25,13 @@
         { id: 'road', label: 'Road reliability', w: 3, tip: 'Lower chance of a traction or avalanche-control delay on the pass, from how much snow is forecast (based on seven winters of I-90 delays)' },
     ];
     const MODES = { resort: 'Resort', backcountry: 'Backcountry', nordic: 'Nordic', hike: 'Hike / run', bike: 'Bike' };
+    const TOWN_DAY = "🧺 Go to the farmer's market, 🎿 wax your skis, 🧶 knit, or 🍞 make some sourdough.";
+    const SHORT = { fresh: 'Snow', quality: 'Quality', wind: 'Wind', vis: 'Sun', vert: 'Vert', comfort: 'Temp', trail: 'Trail', dry: 'Dry', drive: 'Drive', road: 'Road' };
     const LOW = ['hike', 'bike'];            // the low-snow-day modes: no snow, no avalanche gates, no season gate
     const COMFORT = { hike: [40, 65], bike: [50, 75] };      // comfortable temperature band, F (a first guess)
     const MAX_TRAIL_SNOW = 4;                // inches on the ground that rule a trail out
     const MAX_TRAIL_NEW = 2;                 // inches of forecast new snow that rule it out
-    const STAY_IN_TOWN = 40;                 // best score below this: nothing looks good enough to drive for
+    const STAY_IN_TOWN = 30;                 // best score below this: nothing looks good enough to drive for
     // Rough starting values, to be tuned: the snow on the ground a mode needs, and the months resorts are closed.
     const MIN_BASE = { resort: 20, backcountry: 24, nordic: 12 };
     const CLOSED_MONTHS = [5, 6, 7, 8, 9];          // 0-based: June to October
@@ -157,6 +159,7 @@
         if (MODES[hp.get('mode')]) S.mode = hp.get('mode');
         if (hp.get('day') >= 0 && hp.get('day') < data.zones[0].days.length) S.day = +hp.get('day');
         if (WET[hp.get('wet')]) S.wet = hp.get('wet');
+        if (hp.get('drive') > 0) S.maxDrive = +hp.get('drive');
         function render() {
             const rows = data.zones.map(z => score(z, z.days[S.day], S));
             const ok = rows.filter(r => !r.why.length).sort((a, b) => b.total - a.total);
@@ -176,7 +179,7 @@
                         ${LOW.includes(S.mode) ? '' : `<li>about <strong>${Math.round(r.vert).toLocaleString()} ft</strong> of vert</li>`}
                         ${r.z.nwac_zone && !LOW.includes(S.mode) ? `<li>avalanche <strong>${esc(AVY[d.avy_danger] || 'n/a')}</strong></li>` : ''}
                     </ul>
-                    <div class="sk-bars" aria-label="score breakdown">${r.parts.map(p => `<div class="sk-bar" title="${esc(p.label)}: ${Math.round(p.s * 100)}% (weight ${p.w})"><span style="height:${Math.round(p.s * 100)}%"></span><em>${esc(p.label.split(' ')[0])}</em></div>`).join('')}</div>
+                    <div class="sk-bars" aria-label="score breakdown">${r.parts.map(p => `<div class="sk-bar" title="${esc(p.label)}: ${Math.round(p.s * 100)}% (weight ${p.w})"><span style="height:${Math.round(p.s * 100)}%"></span><em>${esc(SHORT[p.id] || p.label.split(' ')[0])}</em></div>`).join('')}</div>
                     ${r.notes.map(n => `<p class="sk-note">${esc(n)}</p>`).join('')}
                     <p class="sk-access">Park at: ${r.z.access_points.filter(p => p.modes.includes(S.mode)).map(p => esc(p.name)).join(', ') || 'see zone page'} &middot; <a href="${esc(r.z.url)}" target="_blank" rel="noopener noreferrer">conditions</a></p>
                 </article>`;
@@ -198,8 +201,8 @@
                 <div class="sk-wgrid">${modeCrit.map(c => `<label title="${esc(c.tip)}"><span>${esc(c.label)}</span><input type="range" min="0" max="5" step="1" value="${S.w[c.id]}" data-w="${c.id}"><b>${S.w[c.id]}</b></label>`).join('')}</div>
                 <p class="sk-small">Slide to 0 to ignore a factor. Scores are a weighted average of each factor from 0 to 1, so the bars on each card show exactly where its score comes from.</p></details>
             ${ok.length ? `<h2 class="sk-h">Best bets for ${esc(dayLabel(data.zones[0].days[S.day].date))}</h2><div class="sk-list">${ok.map(card).join('')}</div>`
-                : `<div class="sk-null"><strong>Nothing fits your criteria today.</strong> Every area was ruled out; the reasons are listed below. ${LOW.includes(S.mode) ? 'Stay in town: a city run or ride, or a gym day.' : 'Loosen the drive limit or minimum elevation, or try another day. Not enough snow to ski? Try <button type="button" class="sk-link" data-k="mode" data-v="hike">Hike / run</button> or <button type="button" class="sk-link" data-k="mode" data-v="bike">Bike</button>.'}</div>`}
-            ${ok.length && LOW.includes(S.mode) && ok[0].total < STAY_IN_TOWN ? `<div class="sk-null"><strong>Nothing looks great.</strong> The best option scores under ${STAY_IN_TOWN}, so staying in town may be the better day.</div>` : ''}
+                : `<div class="sk-null"><strong>Nothing fits your criteria today.</strong> Every area was ruled out; the reasons are listed below. ${LOW.includes(S.mode) ? '<br>Stay in town. ' + TOWN_DAY : 'Loosen the drive limit or minimum elevation, or try another day. Not enough snow to ski? Try <button type="button" class="sk-link" data-k="mode" data-v="hike">Hike / run</button> or <button type="button" class="sk-link" data-k="mode" data-v="bike">Bike</button>.'}</div>`}
+            ${ok.length && LOW.includes(S.mode) && ok[0].total < STAY_IN_TOWN ? `<div class="sk-null"><strong>Nothing looks great.</strong> The best option scores under ${STAY_IN_TOWN}, so staying in town may be the better day. ${TOWN_DAY}</div>` : ''}
             ${out.length ? `<details class="sk-out" ${ok.length ? '' : 'open'}><summary>Ruled out (${out.length})</summary><ul>${out.map(r => `<li><strong>${esc(r.z.name)}</strong>: ${r.why.map(esc).join('; ')}</li>`).join('')}</ul></details>` : ''}
             <p class="sk-small">&ldquo;Fits your criteria&rdquo; is not &ldquo;safe&rdquo;. Backcountry travel needs the avalanche forecast, your own assessment and the right gear.</p>`;
             el.querySelectorAll('.sk-chip, .sk-link').forEach(b => b.addEventListener('click', () => { S[b.dataset.k] = b.dataset.k === 'day' ? +b.dataset.v : b.dataset.v; render(); }));
