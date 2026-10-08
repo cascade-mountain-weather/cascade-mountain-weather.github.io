@@ -35,3 +35,4 @@
 .sk-null { padding: 1rem; border-left: 4px solid #94a3b8; background: #f8fafc; border-radius: 4px; margin-bottom: 1rem; }
 .sk-small { font-size: 0.82rem; color: #64748b; }
 @media (max-width: 480px) { .sk-wgrid label { grid-template-columns: 7rem 1fr 1.2rem; } .sk-group input[type=range] { width: 100%; } }
+.sk-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; font-weight: 600; }

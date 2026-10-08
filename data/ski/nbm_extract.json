@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_utc": "2026-10-07T23:25Z",
+ "generated_utc": "2026-10-08T01:00Z",
  "cycle_utc": "2026-10-07T19:00Z",
  "model": "NOAA National Blend of Models (core CONUS, 2.5 km), via Herbie",
  "km_to_grid_point": {
@@ -16,7 +16,8 @@
   "st_helens": 0.5,
   "icicle": 1.0,
   "mission": 1.1,
-  "whistler": 0.8
+  "whistler": 0.8,
+  "north_bend": 1.1
  },
  "windows_utc": [
   {
@@ -863,6 +864,68 @@
     "cloud_pct": 3.3,
     "vis_mi": null,
     "temp_f": 42.0
+   }
+  ],
+  "north_bend": [
+   {
+    "date": "2026-10-09",
+    "hours_sampled": [
+     45,
+     48,
+     50
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.28,
+    "snow_ratio": 0.6,
+    "snow_level_ft": 5905.5,
+    "gust_mph": 16.1,
+    "cloud_pct": 80.0,
+    "vis_mi": 9.1,
+    "temp_f": 53.0
+   },
+   {
+    "date": "2026-10-10",
+    "hours_sampled": [
+     68,
+     71,
+     74
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.02,
+    "snow_ratio": 3.2,
+    "snow_level_ft": 4479.4,
+    "gust_mph": 4.9,
+    "cloud_pct": 70.3,
+    "vis_mi": 9.4,
+    "temp_f": 48.0
+   },
+   {
+    "date": "2026-10-11",
+    "hours_sampled": [
+     92,
+     95,
+     98
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 2.7,
+    "snow_level_ft": 4549.4,
+    "gust_mph": 6.5,
+    "cloud_pct": 6.3,
+    "vis_mi": null,
+    "temp_f": 50.0
    }
   ]
  }

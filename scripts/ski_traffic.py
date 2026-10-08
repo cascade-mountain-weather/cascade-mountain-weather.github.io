@@ -78,7 +78,7 @@ def apply_drive_hours():
         m = re.match(r"  - id: (\w+)", line)
         if m:
             zid = m.group(1)
-        if zid and line.startswith("    drive_hours:"):
+        if zid and zid not in SKIP_ZONES and line.startswith("    drive_hours:"):
             vals = {o: res.get(f"{o}|{zid}|07:00") for o in ORIGINS}
             if all(vals.values()):
                 line = "    drive_hours: {" + ", ".join(f"{o}: {round(v['min'] / 60, 1)}" for o, v in vals.items()) + "}" + chr(10)

@@ -8,7 +8,7 @@
 # Fields
 #   id, name          short id used in the data files, and the display name
 #   live_areas        ids in assets/data/live_conditions.json whose stations report the snow on the ground here (the base gate)
-#   modes             resort | backcountry | nordic: which modes can recommend this zone
+#   modes             resort | backcountry | nordic | hike | bike: which modes can recommend this zone (hike covers hiking and trail running; hike and bike are the low-snow-day modes)
 #   nwac_zone         NWAC forecast zone (backcountry gating); null for non-US or outside NWAC
 #   forecast_point    where the NBM is sampled (lat, lon); usually near the winter access point, raised to ski-terrain height
 #   winter_access     the plowed terminus: drive time is measured to it
@@ -34,7 +34,7 @@ origins:
 zones:
   - id: snoqualmie
     name: Snoqualmie Pass
-    modes: [resort, backcountry, nordic]
+    modes: [resort, backcountry, nordic, hike, bike]
     live_areas: [alpental, snoqualmie-east, snoqualmie-west]
     nwac_zone: Snoqualmie Pass
     forecast_point: {lat: 47.428, lon: -121.417}
@@ -48,12 +48,12 @@ zones:
     grooming_url: https://parks.wa.gov/find-sno-parks/hyak-sno-park
     drive_hours: {seattle: 0.9, tacoma: 1.2, bellingham: 2.6, olympia: 1.9, portland: 4.3}
     access_points:
-      - {id: alpental, name: Alpental lot, type: resort_lot, lat: 47.444, lon: -121.418, modes: [resort, backcountry]}
-      - {id: pass_summit, name: Snoqualmie summit lot, type: resort_lot, lat: 47.428, lon: -121.417, modes: [resort, backcountry]}
-      - {id: hyak, name: Hyak Sno-Park, type: sno_park, lat: 47.390, lon: -121.388, modes: [nordic, backcountry]}
+      - {id: alpental, name: Alpental lot, type: resort_lot, lat: 47.444, lon: -121.418, modes: [resort, backcountry, hike, bike]}
+      - {id: pass_summit, name: Snoqualmie summit lot, type: resort_lot, lat: 47.428, lon: -121.417, modes: [resort, backcountry, hike, bike]}
+      - {id: hyak, name: Hyak Sno-Park, type: sno_park, lat: 47.390, lon: -121.388, modes: [nordic, backcountry, hike, bike]}
   - id: stevens
     name: Stevens Pass
-    modes: [resort, backcountry, nordic]
+    modes: [resort, backcountry, nordic, hike, bike]
     live_areas: [stevens-pass]
     nwac_zone: Stevens Pass
     forecast_point: {lat: 47.745, lon: -121.089}
@@ -66,10 +66,10 @@ zones:
     url: https://www.stevenspass.com
     drive_hours: {seattle: 1.7, tacoma: 2.1, bellingham: 2.7, olympia: 2.7, portland: 5.0}
     access_points:
-      - {id: stevens_lot, name: Stevens Pass resort lot, type: resort_lot, lat: 47.745, lon: -121.089, modes: [resort, backcountry]}
+      - {id: stevens_lot, name: Stevens Pass resort lot, type: resort_lot, lat: 47.745, lon: -121.089, modes: [resort, backcountry, hike, bike]}
   - id: baker
     name: Mt. Baker / Highway 542
-    modes: [resort, backcountry]
+    modes: [resort, backcountry, hike, bike]
     live_areas: [mt-baker]
     nwac_zone: Mt Baker
     forecast_point: {lat: 48.857, lon: -121.667}
@@ -82,12 +82,12 @@ zones:
     url: https://www.mtbaker.us
     drive_hours: {seattle: 2.9, tacoma: 3.3, bellingham: 1.5, olympia: 3.7, portland: 5.9}
     access_points:
-      - {id: baker_lot, name: Mt. Baker ski area lot, type: resort_lot, lat: 48.857, lon: -121.667, modes: [resort, backcountry]}
-      - {id: artist_point, name: Artist Point (road closed in winter, ski in), type: trailhead, lat: 48.845, lon: -121.690, modes: [backcountry]}
+      - {id: baker_lot, name: Mt. Baker ski area lot, type: resort_lot, lat: 48.857, lon: -121.667, modes: [resort, backcountry, hike, bike]}
+      - {id: artist_point, name: Artist Point (road closed in winter, ski in), type: trailhead, lat: 48.845, lon: -121.690, modes: [backcountry, hike, bike]}
     verify: [which lot is the real plowed terminus for touring]
   - id: crystal
     name: Crystal Mountain / Chinook Pass
-    modes: [resort, backcountry]
+    modes: [resort, backcountry, hike, bike]
     live_areas: [crystal-mountain]
     nwac_zone: Mt Rainier
     forecast_point: {lat: 46.936, lon: -121.475}
@@ -100,11 +100,11 @@ zones:
     url: https://www.crystalmountainresort.com
     drive_hours: {seattle: 2.0, tacoma: 1.6, bellingham: 3.8, olympia: 2.2, portland: 3.7}
     access_points:
-      - {id: crystal_lot, name: Crystal Mountain lot, type: resort_lot, lat: 46.936, lon: -121.475, modes: [resort, backcountry]}
+      - {id: crystal_lot, name: Crystal Mountain lot, type: resort_lot, lat: 46.936, lon: -121.475, modes: [resort, backcountry, hike, bike]}
     verify: [Chinook and Cayuse passes are closed in winter, so the road dependency is SR 410 up to Crystal only]
   - id: paradise
     name: Paradise (Mt. Rainier)
-    modes: [backcountry]
+    modes: [backcountry, hike, bike]
     live_areas: [paradise]
     nwac_zone: Mt Rainier
     forecast_point: {lat: 46.786, lon: -121.735}
@@ -117,11 +117,11 @@ zones:
     url: https://www.nps.gov/mora
     drive_hours: {seattle: 2.5, tacoma: 2.0, bellingham: 4.2, olympia: 2.1, portland: 3.2}
     access_points:
-      - {id: paradise_lot, name: Paradise upper lot, type: trailhead, lat: 46.786, lon: -121.735, modes: [backcountry]}
+      - {id: paradise_lot, name: Paradise upper lot, type: trailhead, lat: 46.786, lon: -121.735, modes: [backcountry, hike, bike]}
     verify: [park entry fee and winter vehicle access rules, since the road above Longmire can close]
   - id: white_pass
     name: White Pass
-    modes: [resort, backcountry, nordic]
+    modes: [resort, backcountry, nordic, hike, bike]
     live_areas: [white-pass]
     nwac_zone: White Pass
     forecast_point: {lat: 46.638, lon: -121.391}
@@ -134,10 +134,10 @@ zones:
     url: https://skiwhitepass.com
     drive_hours: {seattle: 2.6, tacoma: 2.1, bellingham: 4.3, olympia: 1.9, portland: 3.0}
     access_points:
-      - {id: white_lot, name: White Pass lot, type: resort_lot, lat: 46.638, lon: -121.391, modes: [resort, backcountry, nordic]}
+      - {id: white_lot, name: White Pass lot, type: resort_lot, lat: 46.638, lon: -121.391, modes: [resort, backcountry, nordic, hike, bike]}
   - id: blewett
     name: Blewett Pass
-    modes: [backcountry, nordic]
+    modes: [backcountry, nordic, hike, bike]
     live_areas: [blewett-pass]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.350, lon: -120.580}
@@ -150,10 +150,10 @@ zones:
     url: https://wsdot.com/travel/real-time/mountainpasses
     drive_hours: {seattle: 2.6, tacoma: 2.8, bellingham: 4.3, olympia: 3.4, portland: 4.7}
     access_points:
-      - {id: blewett_summit, name: Blewett Pass summit, type: trailhead, lat: 47.349, lon: -120.580, modes: [backcountry, nordic]}
+      - {id: blewett_summit, name: Blewett Pass summit, type: trailhead, lat: 47.349, lon: -120.580, modes: [backcountry, nordic, hike, bike]}
   - id: washington_pass
     name: Washington Pass / Methow
-    modes: [backcountry, nordic]
+    modes: [backcountry, nordic, hike, bike]
     live_areas: [washington-pass, mazama]
     nwac_zone: Washington Pass
     forecast_point: {lat: 48.524, lon: -120.646}
@@ -167,12 +167,12 @@ zones:
     grooming_url: https://methowtrails.org/conditions
     drive_hours: {seattle: 4.3, tacoma: 4.6, bellingham: 3.3, olympia: 5.1, portland: 7.0}
     access_points:
-      - {id: mazama, name: Mazama / Methow trailheads, type: sno_park, lat: 48.597, lon: -120.430, modes: [nordic]}
-      - {id: wapass, name: Washington Pass overlook (gate), type: trailhead, lat: 48.524, lon: -120.647, modes: [backcountry]}
+      - {id: mazama, name: Mazama / Methow trailheads, type: sno_park, lat: 48.597, lon: -120.430, modes: [nordic, hike, bike]}
+      - {id: wapass, name: Washington Pass overlook (gate), type: trailhead, lat: 48.524, lon: -120.647, modes: [backcountry, hike, bike]}
     verify: [the SR 20 gate location, which changes by storm]
   - id: hurricane
     name: Hurricane Ridge
-    modes: [resort, backcountry, nordic]
+    modes: [resort, backcountry, nordic, hike, bike]
     live_areas: [hurricane-ridge]
     nwac_zone: Olympics
     forecast_point: {lat: 47.970, lon: -123.498}
@@ -184,11 +184,11 @@ zones:
     url: https://www.nps.gov/olym
     drive_hours: {seattle: 2.7, tacoma: 2.5, bellingham: 4.0, olympia: 2.2, portland: 4.3}
     access_points:
-      - {id: hurricane_lot, name: Hurricane Ridge lot, type: trailhead, lat: 47.970, lon: -123.498, modes: [backcountry, resort, nordic]}
+      - {id: hurricane_lot, name: Hurricane Ridge lot, type: trailhead, lat: 47.970, lon: -123.498, modes: [backcountry, resort, nordic, hike, bike]}
     verify: [the road only opens to Hurricane Ridge on some winter weekends, and the ferry or Tacoma Narrows route adds time]
   - id: st_helens
     name: Mt. St. Helens
-    modes: [backcountry]
+    modes: [backcountry, hike, bike]
     live_areas: [mt-st-helens]
     nwac_zone: Mt St Helens
     forecast_point: {lat: 46.200, lon: -122.190}
@@ -201,11 +201,11 @@ zones:
     url: https://www.fs.usda.gov/gpnf
     drive_hours: {seattle: 2.9, tacoma: 2.4, bellingham: 4.7, olympia: 1.9, portland: 1.9}
     access_points:
-      - {id: marble, name: Marble Mountain Sno-Park, type: sno_park, lat: 46.160, lon: -122.200, modes: [backcountry]}
+      - {id: marble, name: Marble Mountain Sno-Park, type: sno_park, lat: 46.160, lon: -122.200, modes: [backcountry, hike, bike]}
     verify: [the NWAC zone name, and the Marble Mountain Sno-Park coordinates (the DEM at these coordinates reads 4112 ft; the sno-park is nearer 2700 ft)]
   - id: icicle
     name: Leavenworth / Icicle Creek
-    modes: [backcountry, nordic]
+    modes: [backcountry, nordic, hike, bike]
     live_areas: [leavenworth-icicle]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.590, lon: -120.880}
@@ -218,10 +218,10 @@ zones:
     url: https://www.leavenworth.org
     drive_hours: {seattle: 2.3, tacoma: 2.7, bellingham: 3.4, olympia: 3.3, portland: 5.3}
     access_points:
-      - {id: icicle_rd, name: Icicle Creek Road, type: trailhead, lat: 47.580, lon: -120.700, modes: [backcountry, nordic]}
+      - {id: icicle_rd, name: Icicle Creek Road, type: trailhead, lat: 47.580, lon: -120.700, modes: [backcountry, nordic, hike, bike]}
   - id: mission
     name: Mission Ridge
-    modes: [resort]
+    modes: [resort, hike, bike]
     live_areas: [mission-ridge]
     nwac_zone: East Slopes Central
     forecast_point: {lat: 47.293, lon: -120.400}
@@ -234,10 +234,10 @@ zones:
     url: https://www.missionridge.com
     drive_hours: {seattle: 2.7, tacoma: 3.0, bellingham: 4.2, olympia: 3.5, portland: 4.9}
     access_points:
-      - {id: mission_lot, name: Mission Ridge lot, type: resort_lot, lat: 47.293, lon: -120.400, modes: [resort]}
+      - {id: mission_lot, name: Mission Ridge lot, type: resort_lot, lat: 47.293, lon: -120.400, modes: [resort, hike, bike]}
   - id: whistler
     name: Whistler Blackcomb (BC)
-    modes: [resort]
+    modes: [resort, backcountry, nordic, hike, bike]
     live_areas: []
     nwac_zone: null
     forecast_point: {lat: 50.116, lon: -122.957}
@@ -249,5 +249,21 @@ zones:
     url: https://www.whistlerblackcomb.com
     drive_hours: {seattle: 4.8, tacoma: 5.2, bellingham: 3.3, olympia: 5.8, portland: 8.5}
     access_points:
-      - {id: whistler_village, name: Whistler Village, type: resort_lot, lat: 50.116, lon: -122.957, modes: [resort]}
+      - {id: whistler_village, name: Whistler Village, type: resort_lot, lat: 50.116, lon: -122.957, modes: [resort, backcountry, nordic, hike, bike]}
     verify: [border crossing time, which is not in the free-flow drive time, and DEM coverage (the USGS service is US only)]
+  - id: north_bend
+    name: North Bend (lowland trails)
+    modes: [hike, bike]
+    live_areas: []
+    nwac_zone: null
+    forecast_point: {lat: 47.496, lon: -121.787}
+    winter_access: {name: North Bend (town and trailheads), lat: 47.496, lon: -121.787}
+    top_ft: 4167
+    road_dependencies: []
+    pass: {type: none}
+    snotel: []
+    url: https://www.wta.org/go-hiking/regions/snoqualmie-pass
+    drive_hours: {seattle: 0.6, tacoma: 1.0, bellingham: 2.2, olympia: 1.6, portland: 3.4}
+    access_points:
+      - {id: north_bend_town, name: North Bend trailheads (Rattlesnake Ledge, Mt. Si, Twin Falls), type: trailhead, lat: 47.496, lon: -121.787, modes: [hike, bike]}
+    verify: [hand-estimated drive times until the Google pull is applied; top_ft is the Mt. Si summit; list of lowland trailheads to include]
