@@ -1,0 +1,37 @@
+/* Home-page point forecast heat table (see assets/model-table.js) */
+.mg-card { max-width: 1100px; margin: 1.5rem auto; padding: 1.25rem 1.5rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); }
+.mg-card h2 { color: #1e3c72; font-size: 1.25rem; margin: 0 0 0.3rem; }
+.mg-desc { margin: 0 0 0.6rem; color: #475569; }
+.mg-meta { margin: 0.4rem 0 0; font-size: 0.82rem; color: #64748b; }
+@media (max-width: 600px) { .mg-card { margin: 1rem 0; padding: 1rem; border-radius: 0; } }
+.mt { width: 100%; max-width: 1100px; min-width: 0; box-sizing: border-box; margin: 0 auto; padding-bottom: 2rem; color: #0f172a; text-align: left; }
+.mt *, .mt *::before, .mt *::after { box-sizing: border-box; }
+.mt-controls { display: flex; flex-wrap: wrap; gap: 0.7rem 1.5rem; margin: 0 0 0.9rem; }
+.mt-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.mt-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.mt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.mt-chip { min-height: 40px; padding: 0 0.9rem; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #1e3c72; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.mt-chip:hover { background: #eef4fb; }
+.mt-chip[aria-pressed="true"] { background: #1e3c72; border-color: #1e3c72; color: #fff; }
+.mt-select { min-height: 44px; min-width: 220px; max-width: 100%; padding: 0 0.8rem; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; color: #1e3c72; font: inherit; font-weight: 600; }
+.mt-chip:focus-visible, .mt-select:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+
+.mt-scroll { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; -webkit-overflow-scrolling: touch; }
+.mt-table { min-width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.mt-table th, .mt-table td { padding: 0; text-align: center; white-space: nowrap; }
+.mt-table .mt-name { position: sticky; left: 0; z-index: 2; background: #fff; min-width: 84px; max-width: 110px; padding: 0 0.5rem; text-align: left; font-weight: 700; color: #1e3c72; border-right: 1px solid #e2e8f0; }
+.mt-name small { display: block; font-weight: 400; font-size: 0.66rem; color: #64748b; }
+.mt-table .mt-day { font-size: 0.72rem; font-weight: 700; color: #334155; background: #f1f5f9; padding: 0.25rem 0; border-left: 1px solid #cbd5e1; }
+.mt-table .mt-hour { font-size: 0.68rem; color: #64748b; padding: 0.15rem 0; min-width: 40px; }
+.mt-table .mt-hour.mt-midnight, .mt-table td.mt-midnight { border-left: 1px solid #94a3b8; }
+.mt-section th.mt-sec { text-align: left; padding: 0.55rem 0.5rem 0.2rem; font-size: 0.85rem; color: #1e3c72; background: #fff; position: sticky; left: 0; }
+.mt-cell { height: 34px; min-width: 40px; font-weight: 600; line-height: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.7); }
+.mt-cell.mt-null { background: #f1f5f9; color: #cbd5e1; font-weight: 400; }
+.mt-wind .mt-arrow { display: inline-block; font-size: 0.8rem; margin-left: 1px; }
+.mt-legend-bar { height: 10px; width: 180px; border-radius: 5px; border: 1px solid #e2e8f0; }
+.mt-note { font-size: 0.8rem; color: #64748b; margin: 0.6rem 0 0; }
+.mt-empty { padding: 1.2rem; border: 1px dashed #cbd5e1; border-radius: 12px; color: #475569; }
+@media (max-width: 480px) { .mt-select { min-width: 0; width: 100%; } .mt-group { width: 100%; } }
+
+.mt-sec-in { position: sticky; left: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1rem; width: max-content; max-width: calc(100vw - 64px); }
+.mt-legend { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; font-weight: 400; color: #64748b; }
