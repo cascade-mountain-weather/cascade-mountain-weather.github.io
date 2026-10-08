@@ -18,14 +18,28 @@
         { id: 'vis', label: 'Visibility and sun', w: 2, tip: 'Visibility and cloud cover' },
         { id: 'vert', label: 'Vertical', w: 2, tip: 'Terrain between your minimum elevation and the top', modes: ['resort', 'backcountry'] },
         { id: 'drive', label: 'Short drive', w: 3, tip: 'Free-flow drive time from your starting city; the more of your limit it uses, the lower the score' },
+        { id: 'dry', label: 'Staying dry', w: 2, tip: 'Rain, or snow wet enough to soak through (near freezing), expected while you are out. Counts only liquid that falls as rain at your skiing elevations or as wet snow' },
         { id: 'road', label: 'Road reliability', w: 3, tip: 'Lower chance of a traction or avalanche-control delay on the pass, from how much snow is forecast (based on seven winters of I-90 delays)' },
     ];
     const MODES = { resort: 'Resort', backcountry: 'Backcountry', nordic: 'Nordic' };
     // Rough starting values, to be tuned: the snow on the ground a mode needs, and the months resorts are closed.
     const MIN_BASE = { resort: 20, backcountry: 24, nordic: 12 };
     const CLOSED_MONTHS = [5, 6, 7, 8, 9];          // 0-based: June to October
+    const WET = { ok: 'Fine with wet', prefer: 'Prefer dry', dry: 'Keep me dry' };
+    const WET_LIMIT = 0.1;          // inches of liquid that gets you wet: the "Keep me dry" cutoff
     let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)
-    const S = { mode: 'resort', day: 0, origin: 'seattle', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
+    const S = { mode: 'resort', day: 0, origin: 'seattle', wet: 'prefer', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
+
+    // Liquid (in) that reaches you as rain or wet snow during the ski window. Rain share: 50% when the snow level is at the middle of
+    // your skiing range, ramping over +/-1,000 ft. Wet-snow share: highest at 34 F, zero by 29 and 39 F (the NBM temperature is the
+    // grid point's, not corrected for elevation, so this is a rough flag). Null when there is no liquid forecast.
+    function wetness(d, lowest, top) {
+        if (d.liquid_in == null) return null;
+        const mid = (lowest + top) / 2;
+        const rain = d.snow_level_ft == null ? 0.5 : clamp((d.snow_level_ft - mid) / 2000 + 0.5);
+        const slush = d.temp_f == null ? 0 : clamp(1 - Math.abs(d.temp_f - 34) / 5);
+        return d.liquid_in * (rain + (1 - rain) * slush);
+    }
 
     function score(z, d, S) {
         const why = [];
@@ -54,7 +68,10 @@
         // snow level: rain at your minimum elevation only matters when something is falling
         const raining = d.new_snow_in >= 0.5 && d.snow_level_ft != null && d.snow_level_ft > S.minElev + 1500;
         if (raining && S.mode !== 'nordic') why.push(`Snow level ${d.snow_level_ft.toLocaleString()} ft is well above your ${S.minElev.toLocaleString()} ft minimum`);
+        const wet = wetness(d, lowest, z.top_ft);
+        if (S.wet === 'dry' && wet != null && wet >= WET_LIMIT) why.push(`About ${wet.toFixed(2)} in of rain or wet snow forecast (your limit is ${WET_LIMIT} in)`);
         const s = {
+            dry: wet == null ? 0.5 : 1 - clamp(wet / 0.3),
             fresh: clamp((d.new_snow_in || 0) / 10),
             quality: d.snow_ratio == null ? 0.5 : clamp((d.snow_ratio - 9) / 6),                 // no ratio: neutral
             wind: d.gust_mph == null ? 0.5 : 1 - clamp((d.gust_mph - 15) / 35),
@@ -67,7 +84,7 @@
         const parts = [];
         CRIT.forEach(c => {
             if (c.modes && !c.modes.includes(S.mode)) return;
-            const w = S.w[c.id];
+            const w = c.id === 'dry' && S.wet === 'ok' ? 0 : S.w[c.id];
             num += w * s[c.id]; den += w;
             parts.push({ id: c.id, label: c.label, s: s[c.id], w });
         });
@@ -76,10 +93,11 @@
         if (d.avy_danger === 3) notes.push('Avalanche danger Considerable: be conservative with terrain choices.');
         if (S.mode !== 'backcountry' && d.avy_danger >= 4) notes.push(`Avalanche danger ${AVY[d.avy_danger]} in the mountains; expect slower travel and a higher chance of road control work.`);
         if (d.new_snow_in != null && d.new_snow_in < 0.5 && S.mode === 'resort') notes.push('Little or no new snow forecast: expect whatever snow is already on the ground.');
+        if (wet != null && wet >= 0.05 && S.wet !== 'dry') notes.push(`About ${wet.toFixed(2)} in of rain or wet snow likely while you are out` + (d.temp_f != null && Math.abs(d.temp_f - 34) < 5 ? ' (near freezing, so expect wet snow or slush)' : '') + '.');
         if (d.gust_mph != null && d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
         if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
         else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on the way` + (d.risk_parts && d.risk_parts.length > 1 ? ' (' + d.risk_parts.map(p => p.route.replace(/ (Snoqualmie|Stevens|White|Blewett) Pass| North Cascades Highway/, '') + ' ' + Math.round(p.p * 100) + '%').join(', ') + ')' : ' on ' + z.road_risk.route) + ' that day.');
-        return { z, d, drive, vert, total, parts, why, notes };
+        return { z, d, drive, vert, total, parts, why, notes, wet };
     }
 
     // A closure or restriction the log has seen on this zone's road, if the log is fresh (under 6 hours old; it is read in the morning).
@@ -119,7 +137,7 @@
                     <p class="sk-why">Leads on ${top.join(' and ')}.</p>
                     <ul class="sk-facts">
                         <li><strong>${d.new_snow_in == null ? '?' : d.new_snow_in.toFixed(1)} in</strong> new snow${d.new_snow_lo_in != null && d.new_snow_hi_in != null ? ` (${d.new_snow_lo_in.toFixed(1)}&ndash;${d.new_snow_hi_in.toFixed(1)})` : ''}</li><li>snow level <strong>${d.snow_level_ft == null ? '?' : d.snow_level_ft.toLocaleString() + ' ft'}</strong></li>
-                        <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li><li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
+                        <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li>${r.wet != null ? `<li>wet <strong>${r.wet.toFixed(2)} in</strong></li>` : ''}<li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
                         <li>about <strong>${Math.round(r.vert).toLocaleString()} ft</strong> of vert</li>
                         ${r.z.nwac_zone ? `<li>avalanche <strong>${esc(AVY[d.avy_danger] || 'n/a')}</strong></li>` : ''}
                     </ul>
@@ -133,6 +151,7 @@
                 : `<div class="sk-banner" role="note"><strong>Beta test.</strong> Snow, snow level, wind, cloud and visibility are the National Blend of Models forecast${data.forecast ? ' (' + cycleLabel(data.forecast.cycle_utc) + ')' : ''} at one point near each area, not corrected for elevation. Avalanche forecasts begin in late November, so backcountry mode has nothing to check yet. Drive times are estimates. It has not yet been checked against what happened; do not use it to plan a trip.</div>`}
             <div class="sk-ctrl">
                 <div class="sk-group"><span class="sk-label">Mode</span>${chips(Object.entries(MODES), S.mode, 'mode')}</div>
+                <div class="sk-group"><span class="sk-label">Getting wet</span>${chips(Object.entries(WET), S.wet, 'wet')}</div>
                 <div class="sk-group"><span class="sk-label">Day</span>${chips(data.zones[0].days.map((d, i) => [i, dayLabel(d.date)]), S.day, 'day')}</div>
                 <div class="sk-group"><label class="sk-label" for="sk-origin">Starting from</label>
                     <select id="sk-origin" class="sk-select">${Object.entries(data.origins).map(([k, v]) => `<option value="${k}"${k === S.origin ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></div>
