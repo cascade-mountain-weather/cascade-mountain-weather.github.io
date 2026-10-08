@@ -34,7 +34,7 @@ areas:
   - id: mt-baker
     name: Mt. Baker
     basin: "17110004"
-    page: /tools/mt-baker.html
+    page: /tools/model-tools-precipitation.html#area=mt-baker
     webcams:
       - {type: windy, id: "1754511676", label: "Mount Shuksan"}
     stations:
@@ -45,7 +45,7 @@ areas:
   - id: washington-pass
     name: Washington Pass
     basin: "17020008"
-    page: /tools/washington-pass.html
+    page: /tools/model-tools-precipitation.html#area=washington
     stations:
       - {id: WAP67, network: NWAC, label: Washington Pass Upper}
       - {id: WAP55, network: NWAC, label: Washington Pass Base, primary: true}
@@ -61,7 +61,7 @@ areas:
   - id: stevens-pass
     name: Stevens Pass
     basin: "17110009"
-    page: /tools/stevens-pass.html
+    page: /tools/model-tools-precipitation.html#area=stevens
     webcams:
       - {type: windy, id: "1346275221", label: "US 2 at East Stevens Pass Summit"}
       - {type: windy, id: "1793897716", label: "Dirtyface Peak - Natapoc Ridge"}
@@ -83,7 +83,7 @@ areas:
     name: Blewett Pass
     basin: "17020011"
     basins: ["17020011", "17030001"]   # straddles Wenatchee (north) and Upper Yakima (south)
-    page: /tools/blewett-pass.html
+    page: /tools/model-tools-precipitation.html#area=blewett
     webcams:
       - {type: windy, id: "1346275220", label: "US 97 Blewett Pass Summit"}
     stations:
@@ -112,14 +112,14 @@ areas:
   - id: snoqualmie-east
     name: Snoqualmie East
     basin: "17110013"
-    page: /tools/snoqualmie-pass.html
+    page: /tools/model-tools-precipitation.html#area=snoqualmie
     stations:
       - {id: "788:WA:SNTL", network: SNOTEL, label: Stampede Pass, resort: Snoqualmie East, primary: true}
 
   - id: snoqualmie-west
     name: Snoqualmie West
     basin: "17110010"
-    page: /tools/snoqualmie-pass.html
+    page: /tools/model-tools-precipitation.html#area=snoqualmie
     webcams:
       - {type: youtube, id: "w4Sno8NIjmU", label: "Summit Central (top)"}
       - {type: windy, id: "1346275207", label: "I-90 at Snoqualmie Summit"}
@@ -129,7 +129,7 @@ areas:
   - id: alpental
     name: Alpental
     basin: "17110010"
-    page: /tools/snoqualmie-pass.html
+    page: /tools/model-tools-precipitation.html#area=snoqualmie
     webcams:
       - {type: youtube, id: "8wk81COX2cg", label: "Alpental (top)"}
     stations:
@@ -140,7 +140,7 @@ areas:
   - id: crystal-mountain
     name: Crystal Mountain
     basin: "17110014"
-    page: /tools/crystal-mountain.html
+    page: /tools/model-tools-precipitation.html#area=crystal
     stations:
       - {id: CMT69, network: NWAC, label: Crystal Summit}
       - {id: GRN62, network: NWAC, label: Green Valley, primary: true}
@@ -151,7 +151,7 @@ areas:
   - id: paradise
     name: Paradise - Mt. Rainier
     basin: "17110015"
-    page: /tools/paradise.html
+    page: /tools/model-tools-precipitation.html#area=paradise
     webcams:
       - {type: windy, id: "1384985408", label: "Henry M. Jackson Visitor Center"}
     stations:
@@ -169,7 +169,7 @@ areas:
   - id: white-pass
     name: White Pass
     basin: "17080004"
-    page: /tools/white-pass.html
+    page: /tools/model-tools-precipitation.html#area=white
     webcams:
       - {type: windy, id: "1459260236", label: "US 12 at White Pass Summit"}
     stations:
