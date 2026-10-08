@@ -6,11 +6,11 @@
     if (!root) return;
     const COLORS = { nbm: '#1e3c72', hrrr: '#d97706', hrdps: '#0d9488' };
     const NAMES = { nbm: 'NBM', hrrr: 'HRRR', hrdps: 'HRDPS' };
-    const MPH_TO_KMH = 1.609344, IN_TO_MM = 25.4;
+    const MPH_TO_MS = 0.44704, IN_TO_MM = 25.4;
     // Data are stored in US units (F, mph, inches). `conv` turns them into the chosen system.
     const PANELS = [
         { key: 'temp_f', title: { us: 'Temperature (°F)', metric: 'Temperature (°C)' }, conv: { us: v => v, metric: v => (v - 32) * 5 / 9 }, dec: { us: 0, metric: 0 }, unit: { us: '°F', metric: '°C' }, ref: { us: 32, metric: 0 } },
-        { key: 'wind_mph', title: { us: 'Wind speed (mph)', metric: 'Wind speed (km/h)' }, conv: { us: v => v, metric: v => v * MPH_TO_KMH }, dec: { us: 0, metric: 0 }, unit: { us: ' mph', metric: ' km/h' }, min0: true },
+        { key: 'wind_mph', title: { us: 'Wind speed (mph)', metric: 'Wind speed (m/s)' }, conv: { us: v => v, metric: v => v * MPH_TO_MS }, dec: { us: 0, metric: 1 }, unit: { us: ' mph', metric: ' m/s' }, min0: true },
         { key: 'rh', title: { us: 'Relative humidity (%)', metric: 'Relative humidity (%)' }, conv: { us: v => v, metric: v => v }, dec: { us: 0, metric: 0 }, unit: { us: '%', metric: '%' }, lo: 0, hi: 100 },
         { key: 'precip_in', title: { us: 'Precipitation (in per hour)', metric: 'Precipitation (mm per hour)' }, conv: { us: v => v, metric: v => v * IN_TO_MM }, dec: { us: 2, metric: 1 }, unit: { us: ' in', metric: ' mm' }, bars: true, min0: true, minHi: { us: 0.1, metric: 2.5 } },
     ];
