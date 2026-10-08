@@ -288,3 +288,8 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 /* Side-to-side scroll inside the popup when the table is wider than the popup */
 .cmap-popup .cmap-popup-body { min-width: min-content; }
 .cmap-popup .cmap-scroll { overflow-x: visible; }
+
+/* NWAC zone outlines are backdrops, never a forecast: say so beside the map and in every popup */
+.cmap-zone-banner { margin: 0.5rem 0 0; padding: 0.55rem 0.75rem; border-left: 4px solid #d97706; background: #fffbeb; color: #78350f; font-size: 0.82rem; line-height: 1.4; }
+.cmap-zone-banner[hidden] { display: none; }
+.cmap-zone-note { margin: 0.7rem 0 0; padding-top: 0.5rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; line-height: 1.35; color: #64748b; }
