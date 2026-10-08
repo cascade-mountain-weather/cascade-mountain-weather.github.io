@@ -160,7 +160,7 @@
             });
             host.innerHTML = ''; host.appendChild(svg);
             const note = document.createElement('p'); note.className = 'ci-hint';
-            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. Hover a dot for the station.' : (S.index === 'mjo' ? 'Dot color and number are the MJO phase.' : 'Dot color shows the size of the effect.') + ' Hover a dot for the station.';
+            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. Hover a dot for the station.' : (S.index === 'mjo' ? 'Dot color and number are the MJO phase.' : 'Dot color shows the size of the effect.') + ' Hover a dot for the station.' + (basins && basins.features.some(f => f.properties && f.properties.zone) ? ' Outlines are NWAC forecast zones, shown only for location; they are not a forecast from NWAC.' : '');
             host.appendChild(note);
         }
 
@@ -209,7 +209,7 @@
                 m.bindTooltip(tip).addTo(LLayer);
             });
             const note = document.createElement('p'); note.className = 'ci-hint';
-            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. A dark ring marks a difference the test calls real. Hover or tap a dot for the station. Thin lines are river basins.' : (S.index === 'mjo' ? 'Each dot shows the MJO phase (1 to 8) with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station. ' : S.index === 'pna' ? 'Each dot is the PNA class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ strong positive PNA, + positive, no mark neutral, \u2212 negative, \u2212\u2212 strong negative. ' : 'Each dot is the ENSO class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ El Ni\u00f1o, + weak El Ni\u00f1o, no mark neutral, \u2212 weak La Ni\u00f1a, \u2212\u2212 La Ni\u00f1a. ') + 'A dark ring marks a difference the test calls real. Hover or tap a dot for the station.';
+            note.innerHTML = S.show === 'class' ? 'Brown is below normal and green above for snow and rain measures; blue is colder and red warmer. A dark ring marks a difference the test calls real. Hover or tap a dot for the station. ' + (basins && basins.features.some(f => f.properties && f.properties.zone) ? 'Thin lines are NWAC forecast zone boundaries, drawn only to show where the stations are; they are not a forecast from NWAC (see nwac.us).' : 'Thin lines are river basins.') + '' : (S.index === 'mjo' ? 'Each dot shows the MJO phase (1 to 8) with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station. ' : S.index === 'pna' ? 'Each dot is the PNA class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ strong positive PNA, + positive, no mark neutral, \u2212 negative, \u2212\u2212 strong negative. ' : 'Each dot is the ENSO class with the ' + EXTREME[S.metric][S.show === 'best' ? 0 : 1].toLowerCase() + ' results at that station: ++ El Ni\u00f1o, + weak El Ni\u00f1o, no mark neutral, \u2212 weak La Ni\u00f1a, \u2212\u2212 La Ni\u00f1a. ') + 'A dark ring marks a difference the test calls real. Hover or tap a dot for the station.';
             host.appendChild(note);
         }
 
@@ -240,7 +240,7 @@
 
     const root = document.querySelector('.ts-mount');
     if (!root) return;
-    Promise.all([fetch(BASE + 'data/tele_composites.json').then(r => r.json()), fetch(BASE + 'data/basins.geojson').then(r => r.json()).catch(() => null)])
+    Promise.all([fetch(BASE + 'data/tele_composites.json').then(r => r.json()), fetch(BASE + 'data/nwac_zones.geojson').then(r => (r.ok ? r.json() : Promise.reject())).catch(() => fetch(BASE + 'data/basins.geojson').then(r => r.json())).catch(() => null)])
         .then(([d, b]) => mount(root, d, b))
         .catch(() => { root.innerHTML = '<p class="ol-fail">The station data could not be loaded right now.</p>'; });
 }());

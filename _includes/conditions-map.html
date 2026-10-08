@@ -11,8 +11,10 @@
      role="region" aria-label="Map of Washington Cascades forecast areas with live station conditions"
      data-src="{{ '/assets/data/live_conditions.json' | relative_url }}"
      data-basins="{{ '/assets/data/basins.geojson' | relative_url }}"
+     data-zones="{{ '/assets/data/nwac_zones.geojson' | relative_url }}"
      data-base="{{ site.baseurl }}"></div>
 <p id="conditions-status" class="cmap-status" role="status">Loading live conditions...</p>
+<p id="cmap-zone-note" class="cmap-zone-banner" hidden><strong>The shaded regions are NWAC forecast zones, used only to group nearby stations. They are not an avalanche forecast, danger rating or any product of NWAC.</strong> For avalanche forecasts and conditions go to <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">nwac.us</a>.</p>
 <p class="cmap-legend">
     <span><span class="cmap-dot cmap-dot--ok"></span>SNOTEL station</span>
     <span><span class="cmap-dot cmap-dot--ok cmap-dot--diamond"></span>NWAC station</span>
