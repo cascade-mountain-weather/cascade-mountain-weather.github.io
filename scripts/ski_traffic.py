@@ -1,7 +1,8 @@
 """Typical weekend-morning drive times from each starting area to each ski-tool zone, from the Google Maps Routes API.
 
     python scripts/ski_traffic.py --count            # how many requests a run would make, no calls
-    python scripts/ski_traffic.py --day sat          # Saturday morning, 04:30-09:30 local every 30 minutes
+    python scripts/ski_traffic.py --day sat          # (run it once a day until it says 0 left: the demo key allows about 100 requests a day)
+    # Saturday morning, 05:30, 06:00, 06:30, 07:00 and 07:30 local (13 origins x 12 zones x 5 = 780 requests)
     python scripts/ski_traffic.py --day sun
 
 The key is read from the GOOGLE_MAPS_KEY environment variable or from data/traffic/.google_key (git-ignored). Never commit it.
@@ -43,7 +44,7 @@ ORIGINS = {
 }
 SKIP_ZONES = {"whistler"}      # out of the country and out of the weekend-drive range
 FIRST_DATE = {"sat": "2027-01-16", "sun": "2027-01-17"}     # mid-winter weekend; the API gives the typical value for that weekday and time
-SLOTS = [(h, m) for h in range(4, 10) for m in (0, 30) if (h, m) >= (4, 30) and (h, m) <= (9, 30)]
+SLOTS = [(5, 30), (6, 0), (6, 30), (7, 0), (7, 30)]      # the departure times the tool offers; --slots overrides
 
 
 def key():
@@ -68,7 +69,7 @@ def request(k, o, d, when_utc):
 
 
 def apply_drive_hours():
-    """Replace the hand-estimated drive_hours and origins in destinations.yml with the typical Saturday 07:00 times (hours, one decimal)."""
+    """Replace the hand-estimated drive_hours and origins in destinations.yml with the typical Saturday 07:00 times (hours, one decimal). The other leave times are read by ski_features.py from typical_sat.json."""
     import re
     res = json.loads((OUT_DIR / "typical_sat.json").read_text())
     text = DEST.read_text(encoding="utf-8")
@@ -98,7 +99,7 @@ def apply_drive_hours():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--day", choices=["sat", "sun"], default="sat")
-    ap.add_argument("--slots", help='comma-separated departure times to use instead of the whole morning, e.g. "07:00" (the drive-time table)')
+    ap.add_argument("--slots", help='comma-separated departure times to use instead of the five defaults, e.g. "07:00"')
     ap.add_argument("--apply", action="store_true", help="write the 07:00 times into data/ski/destinations.yml (origins and drive_hours), then stop")
     ap.add_argument("--count", action="store_true", help="print the number of requests and stop")
     ap.add_argument("--limit", type=int, help="stop after this many new requests (to test)")

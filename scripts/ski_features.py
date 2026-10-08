@@ -120,6 +120,26 @@ def add_risk(zones, curves):
             d["road_risk"] = 0.9 if d["gate_hold"] else d["delay_risk"]
 
 
+TRAFFIC = ROOT / "data" / "traffic" / "typical_sat.json"
+LEAVE_TIMES = ["05:30", "06:00", "06:30", "07:00", "07:30"]      # the departure times scripts/ski_traffic.py pulls
+
+
+def drive_by_time(cfg):
+    """{zone id: {origin: {"HH:MM": hours}}} and the leave times, from the Google typical Saturday-morning times (scripts/ski_traffic.py).
+    Only complete origin x time sets are kept; the page falls back to drive_hours (the 07:00 figure) for the rest."""
+    if not TRAFFIC.exists():
+        return {}, []
+    res = json.loads(TRAFFIC.read_text())
+    times = LEAVE_TIMES
+    out = {}
+    for z in cfg["zones"]:
+        for o in cfg["origins"]:
+            row = {t: round(res[f"{o}|{z['id']}|{t}"]["min"] / 60, 2) for t in times if f"{o}|{z['id']}|{t}" in res}
+            if len(row) == len(times):
+                out.setdefault(z["id"], {})[o] = row
+    return out, times
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mock", action="store_true")
@@ -134,6 +154,7 @@ def main():
     curves = json.loads(CURVE.read_text(encoding="utf-8"))
     start = datetime.now(timezone.utc).date() + timedelta(days=1)
     zones = []
+    by_time, leave_times = drive_by_time(cfg)
     bases = base_depths(cfg) if a.real else {}
     for z in cfg["zones"]:
         e = elev[z["id"]]
@@ -141,7 +162,7 @@ def main():
             "id": z["id"], "name": z["name"], "modes": z["modes"], "nwac_zone": z["nwac_zone"],
             "top_ft": z["top_ft"], "access_ft": e["winter_access"], "forecast_ft": e["forecast_point"],
             "pass": z["pass"], "url": z.get("url"), "grooming_url": z.get("grooming_url"),
-            "drive_hours": z["drive_hours"], "road_risk": z.get("road_risk"),
+            "drive_hours": z["drive_hours"], "drive_by_time": by_time.get(z["id"], {}), "road_risk": z.get("road_risk"),
             "access_points": [{"id": p["id"], "name": p["name"], "type": p["type"], "modes": p["modes"], "ft": e.get("ap:" + p["id"])} for p in z["access_points"]],
             **bases.get(z["id"], {}),
             "days": real_days(z["id"], extract) if a.real else mock_days(z, e, start, curves),
@@ -150,7 +171,7 @@ def main():
     out = {"mock": not a.real, "risk_source": curves["source"], "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
            "note": "Sample numbers to build and test the scorer. Not a forecast." if not a.real else "Beta: NBM forecast, not yet checked against what happened.",
            "forecast": ({"model": extract["model"], "cycle_utc": extract["cycle_utc"], "generated_utc": extract["generated_utc"], "notes": extract["notes"]} if a.real else None),
-           "origins": {k: v["name"] for k, v in cfg["origins"].items()}, "zones": zones}
+           "origins": {k: v["name"] for k, v in cfg["origins"].items()}, "leave_times": leave_times if by_time else [], "zones": zones}
     Path(a.out).write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print("wrote", a.out, len(zones), "zones")
 

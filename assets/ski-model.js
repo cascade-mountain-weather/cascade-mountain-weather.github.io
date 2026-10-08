@@ -28,7 +28,7 @@
     const WET = { ok: 'Fine with wet', prefer: 'Prefer dry', dry: 'Keep me dry' };
     const WET_LIMIT = 0.1;          // inches of liquid that gets you wet: the "Keep me dry" cutoff
     let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)
-    const S = { mode: 'resort', day: 0, origin: 'seattle', wet: 'prefer', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
+    const S = { mode: 'resort', day: 0, origin: 'seattle', leave: '07:00', wet: 'prefer', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
 
     // Liquid (in) that reaches you as rain or wet snow during the ski window. Rain share: 50% when the snow level is at the middle of
     // your skiing range, ramping over +/-1,000 ft. Wet-snow share: highest at 34 F, zero by 29 and 39 F (the NBM temperature is the
@@ -43,7 +43,8 @@
 
     function score(z, d, S) {
         const why = [];
-        const drive = (z.drive_hours || {})[S.origin];
+        const timed = ((z.drive_by_time || {})[S.origin] || {})[S.leave];     // typical drive at your leave time, when we have it
+        const drive = timed != null ? timed : (z.drive_hours || {})[S.origin];
         const lowest = Math.max(S.minElev, z.access_ft || 0);
         const vert = z.top_ft - lowest;
         if (!z.modes.includes(S.mode)) why.push(`Not set up for ${MODES[S.mode].toLowerCase()} here`);
@@ -110,6 +111,11 @@
         return null;
     }
 
+    function clock(t) {
+        const [h, m] = t.split(':').map(Number);
+        return `${h}:${String(m).padStart(2, '0')} am`;
+    }
+
     function cycleLabel(iso) {
         const d = new Date(iso);
         return `run of ${WD[d.getUTCDay()]} ${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${String(d.getUTCHours()).padStart(2, '0')}Z`;
@@ -155,6 +161,7 @@
                 <div class="sk-group"><span class="sk-label">Day</span>${chips(data.zones[0].days.map((d, i) => [i, dayLabel(d.date)]), S.day, 'day')}</div>
                 <div class="sk-group"><label class="sk-label" for="sk-origin">Starting from</label>
                     <select id="sk-origin" class="sk-select">${Object.entries(data.origins).map(([k, v]) => `<option value="${k}"${k === S.origin ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></div>
+                ${(data.leave_times || []).length ? `<div class="sk-group"><span class="sk-label">Leaving at</span>${chips(data.leave_times.map(t => [t, clock(t)]), S.leave, 'leave')}</div>` : ''}
                 <div class="sk-group"><label class="sk-label" for="sk-drive">Longest drive: <b>${S.maxDrive} h</b></label><input id="sk-drive" type="range" min="1" max="6" step="0.5" value="${S.maxDrive}"></div>
                 <div class="sk-group"><label class="sk-label" for="sk-elev">Lowest elevation you will ski: <b>${S.minElev.toLocaleString()} ft</b></label><input id="sk-elev" type="range" min="1500" max="6500" step="250" value="${S.minElev}"></div>
             </div>
