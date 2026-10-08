@@ -5,7 +5,13 @@
     <div class="mg-controls">
         <label>Ski area <select id="mg-site" aria-label="Ski area"></select></label>
         <div id="mg-models" class="mg-models"></div>
+        <div id="mg-units" class="mg-models" role="radiogroup" aria-label="Units">
+            <label class="mg-chip"><input type="radio" name="mg-units" value="us" checked>&deg;F, mph, in</label>
+            <label class="mg-chip"><input type="radio" name="mg-units" value="metric">&deg;C, km/h, mm</label>
+        </div>
+        <button type="button" id="mg-reset" class="mg-chip" hidden>Reset zoom</button>
     </div>
+    <p class="mg-hint">Drag across the chart to zoom in on a time window.</p>
     <div id="mg-chart" class="mg-chart"><noscript>The point forecast needs JavaScript.</noscript>Loading&hellip;<div id="mg-tip" class="mg-tip" hidden></div></div>
     <p class="mg-meta" id="mg-meta"></p>
     <p class="mg-meta" id="mg-grid"></p>

@@ -22,3 +22,8 @@
 .mg-th { display: none; }
 .mg-meta { margin: 0.4rem 0 0; font-size: 0.82rem; color: #64748b; }
 @media (max-width: 600px) { .mg-card { margin: 1rem 0; padding: 1rem; border-radius: 0; } }
+.mg-chip[hidden], .mg-tip[hidden] { display: none; }
+button.mg-chip { background: #fff; color: #1e3c72; font: inherit; font-weight: 600; font-size: 0.9rem; }
+.mg-hint { margin: 0 0 0.3rem; font-size: 0.82rem; color: #64748b; }
+.mg-svg { user-select: none; -webkit-user-select: none; }
+.mg-hit { cursor: crosshair; }
