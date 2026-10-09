@@ -97,8 +97,11 @@ def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "wind_mph", "precip_i
 def nbm_series(cycle, hours, grid):
     def one(f):
         H = nbm.herbie_for(cycle, f)
-        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:nan|:WIND:10 m above ground:{f} hour fcst:nan"
-                           rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:nan)")
+        # The inventory line ends ":nan:nan" in some Herbie versions and just ":" in others (the plume scripts' `fcst:$` only
+        # matches the second); the optional group takes both, and `$` still keeps out the "ens std dev" and probability lines.
+        e = r"(nan:nan)?$"
+        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:{e}|:WIND:10 m above ground:{f} hour fcst:{e}"
+                           rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:{e})")
         print(f"  nbm F{f:02d} {sorted(v)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
                 "wind_mph": v.get("si10", nan(grid)) * MPS_TO_MPH, "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
@@ -175,6 +178,9 @@ def main():
         fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
         ser = fn(cycle, args.hours, grid)
         arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
+        if not np.isfinite(arr["temp_f"]).any():
+            print(f"{model}: no values came back (every fetch failed), left out of the file", file=sys.stderr)
+            continue
         times = [f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}" for f in range(1, args.hours + 1)]
         out["models"][model] = {
             "label": LABELS[model], "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "time_utc": times,

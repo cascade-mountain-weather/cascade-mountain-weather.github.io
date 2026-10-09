@@ -1,0 +1,72 @@
+name: Update Daily Data
+
+# One job for the small once-a-day files that need only pip packages:
+#   collect_climate_indices.py -> assets/data/climate_indices.json   ONI and PDO
+#   tele_now.py                -> assets/data/tele_now.json          current PNA and MJO
+#   outlook_links.py           -> assets/data/outlook_links.json     ECMWF outlook chart links
+#   collect_normals.py         -> assets/data/normals.json           percent of normal per area
+# A step that fails does not stop the others; the job still ends red at the end so a failure is visible.
+
+on:
+  schedule:
+    - cron: "20 15 * * *" # ~8:20 am Pacific, after SNOTEL's overnight load and the CPC/NOAA daily updates
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-daily-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas numpy pyyaml
+
+      - name: Collect the ONI and PDO
+        id: climate
+        continue-on-error: true
+        run: python scripts/collect_climate_indices.py
+
+      - name: Collect the current PNA and MJO
+        id: tele
+        continue-on-error: true
+        run: python scripts/tele_now.py
+
+      - name: Resolve the ECMWF outlook charts
+        id: outlook
+        continue-on-error: true
+        run: python scripts/outlook_links.py
+
+      - name: Compute percent-of-normal for each area
+        id: normals
+        continue-on-error: true
+        run: python scripts/collect_normals.py
+
+      - name: Commit and push updated data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/climate_indices.json assets/data/tele_now.json assets/data/outlook_links.json assets/data/normals.json
+          git commit -m "Update daily data [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Fail the job if any collect step failed
+        if: steps.climate.outcome == 'failure' || steps.tele.outcome == 'failure' || steps.outlook.outcome == 'failure' || steps.normals.outcome == 'failure'
+        run: |
+          echo "climate: ${{ steps.climate.outcome }}, tele: ${{ steps.tele.outcome }}, outlook: ${{ steps.outlook.outcome }}, normals: ${{ steps.normals.outcome }}"
+          exit 1

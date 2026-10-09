@@ -1,0 +1,72 @@
+name: Update Model Forecast Data
+
+# One job for the three Herbie-based forecast files (they share the slow conda + ecCodes setup and the same 6-hour cadence):
+#   nbm_plume.py -> assets/data/nbm_plumes.json      NBM snowfall and precipitation plumes
+#   hires_plume.py -> assets/data/hires_plumes.json  HRRR and HRDPS plumes
+#   meteograms.py -> assets/data/meteograms.json     home-page point forecast (NBM, HRRR, HRDPS)
+# Each script takes the newest complete cycle of its model, so one run time serves all of them.
+# A step that fails does not stop the others; the job still ends red at the end so a failure is visible.
+
+on:
+  schedule:
+    - cron: "40 5,11,17,23 * * *" # ~4.5 h after the NBM long cycles (01, 07, 13, 19Z) and ~5.5 h after the 00, 06, 12, 18Z cycles (HRDPS needs ~4-5 h)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-model-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python with ecCodes (Herbie reads GRIB2)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.11"
+          channels: conda-forge
+          channel-priority: strict
+          miniforge-version: latest
+          activate-environment: models
+
+      - name: Install dependencies
+        run: mamba install -y -n models herbie-data cfgrib eccodes xarray pandas numpy pyyaml
+
+      - name: Build NBM plumes
+        id: nbm
+        continue-on-error: true
+        run: python scripts/nbm_plume.py
+
+      - name: Build HRRR and HRDPS plumes
+        id: hires
+        continue-on-error: true
+        run: python scripts/hires_plume.py
+
+      - name: Build point forecast meteograms
+        id: meteograms
+        continue-on-error: true
+        run: python scripts/meteograms.py
+
+      - name: Commit and push updated data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/nbm_plumes.json assets/data/hires_plumes.json assets/data/meteograms.json
+          git commit -m "Update model forecast data [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Fail the job if any build step failed
+        if: steps.nbm.outcome == 'failure' || steps.hires.outcome == 'failure' || steps.meteograms.outcome == 'failure'
+        run: |
+          echo "nbm: ${{ steps.nbm.outcome }}, hires: ${{ steps.hires.outcome }}, meteograms: ${{ steps.meteograms.outcome }}"
+          exit 1

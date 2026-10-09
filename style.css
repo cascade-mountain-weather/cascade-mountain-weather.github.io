@@ -1243,11 +1243,25 @@ nav a,
 }
 
 .satellite-stage {
+    position: relative;
     width: 100%;
     background: #0f172a;
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid #cbd5e1;
+}
+
+.satellite-stamp {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.78);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    pointer-events: none;
 }
 
 #satellite-frame {
