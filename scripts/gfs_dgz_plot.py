@@ -10,8 +10,13 @@ from matplotlib.colors import LinearSegmentedColormap
 
 # Inputs ######################################################################
 
-# Get current UTC time and add 24 hours
-future_time = datetime.now(timezone.utc) + timedelta(hours=24)
+# Valid time: 12Z two days after the most recent 12Z cycle (a 48-hour forecast from the 12Z run). The workflow runs once a day
+# after the 12Z GFS is posted; a manual run at another time still plots 12Z + 48 h of the newest 12Z date.
+now = datetime.now(timezone.utc)
+cycle_12z = now.replace(hour=12, minute=0, second=0, microsecond=0)
+if cycle_12z > now:
+    cycle_12z -= timedelta(days=1)
+future_time = cycle_12z + timedelta(hours=48)
 year = future_time.year
 month = future_time.month
 day = future_time.day
@@ -116,4 +121,4 @@ cbar.ax.tick_params(labelsize=8)
 ax.set_title('Dendrite Growth (Average -ω*RH in -20°C < T < -10°C Layer)\n'+title+'GFS Initialized '+ncss.metadata.time_span['begin'][0:10]+' '+ncss.metadata.time_span['begin'][11:13]+'z, Valid '+str(valid)[0:13]+'z',fontsize=8)
 ax.text(lon[-2,-2],lat[-2,-2],'Plotting code from:\nGitHub: SamBrandtMeteo',fontsize=4,ha='right',va='bottom')
 
-plt.savefig('assets/images/gfs_dgz_F24.png',dpi=300,bbox_inches='tight')
+plt.savefig('assets/images/gfs_dgz_F48.png',dpi=300,bbox_inches='tight')

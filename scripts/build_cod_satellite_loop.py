@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -123,10 +124,18 @@ def main() -> None:
 
     soup = BeautifulSoup(html_response.text, "html.parser")
 
-    map_overlay_url = None
-    map_overlay = soup.find("img", {"class": "overlay", "id": "map"})
-    if map_overlay and map_overlay.get("data-url"):
-        map_overlay_url = map_overlay["data-url"]
+    # Static overlays (highways, interstates, state and county lines) are the layers named in the page URL's `checked=` list
+    # other than radar, e.g. checked=radar-ushw-usint-map. They are drawn in the order listed, so the last one is on top.
+    checked = parse_qs(urlparse(args.url).query).get("checked", [""])[0].split("-")
+    overlay_urls: list[tuple[str, str]] = []
+    for layer in checked:
+        if not layer or layer == "radar":
+            continue
+        tag = soup.find("img", {"class": "overlay", "id": layer})
+        if tag and tag.get("data-url") and tag["data-url"] != "#":
+            overlay_urls.append((layer, tag["data-url"]))
+        else:
+            print(f"warning: overlay '{layer}' is in the URL but not on the page; skipped")
 
     product_frames: list[ProductFrame] = []
     for img in soup.find_all("img"):
@@ -184,7 +193,7 @@ def main() -> None:
         pad_count = target_frames - len(selected_products)
         selected_products = [selected_products[0]] * pad_count + selected_products
 
-    map_img = fetch_image(session, map_overlay_url) if map_overlay_url else None
+    overlay_imgs = [(name, fetch_image(session, url)) for name, url in overlay_urls]
 
     gif_images: list[Image.Image] = []
     manifest_frames = []
@@ -197,8 +206,10 @@ def main() -> None:
             radar_img = fetch_image(session, radar.url)
             base.alpha_composite(radar_img)
 
-        if map_img:
-            base.alpha_composite(map_img)
+        for _, overlay_img in overlay_imgs:
+            if overlay_img.size != base.size:
+                overlay_img = overlay_img.resize(base.size, Image.LANCZOS)
+            base.alpha_composite(overlay_img)
 
         if args.max_width and base.width > args.max_width:
             new_height = int(base.height * (args.max_width / base.width))
