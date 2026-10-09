@@ -1,12 +1,10 @@
 {
- "generated_utc": "2026-10-09T00:17:37Z",
+ "generated_utc": "2026-10-09T08:56:15Z",
  "sources": {
   "NWAC": "Synoptic Data API",
   "SNOTEL": "NRCS AWDB"
  },
- "errors": [
-  "AWDB: 500 Server Error: Internal Server Error for url: https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?stationTriplets=1012%3AWA%3ASNTL%2C1338%3AWA%3ASNTL%2C352%3AWA%3ASNTL%2C507%3AWA%3ASNTL%2C642%3AWA%3ASNTL%2C672%3AWA%3ASNTL%2C679%3AWA%3ASNTL%2C711%3AWA%3ASNTL%2C734%3AWA%3ASNTL%2C788%3AWA%3ASNTL%2C791%3AWA%3ASNTL%2C804%3AWA%3ASNTL%2C841%3AWA%3ASNTL%2C863%3AWA%3ASNTL%2C974%3AWA%3ASNTL%2C998%3AWA%3ASNTL&elements=SNWD%2CWTEQ%2CPREC%2CTOBS%2CRHUM%2CWSPDV%2CWSPDX&duration=HOURLY&beginDate=2026-10-04&endDate=2026-10-10"
- ],
+ "errors": [],
  "areas": [
   {
    "id": "hurricane-ridge",
@@ -24,8 +22,8 @@
      "label": "Hurricane Hill - Mount Olympus"
     }
    ],
-   "lat": 47.9704,
-   "lon": -123.49933,
+   "lat": 47.95763,
+   "lon": -123.46264,
    "stations": [
     {
      "id": "HUR53",
@@ -35,19 +33,47 @@
      "lat": 47.9704,
      "lon": -123.49933,
      "elev_ft": 5250,
-     "obs_time": "2026-10-08T23:00:00Z",
-     "temp_f": 62.2,
-     "rh": 35.0,
-     "dewpoint_f": 33.8,
-     "wind_mph": 2.8,
-     "gust_mph": 7.5,
-     "snow_depth_in": 0.9,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 47.0,
+     "rh": 63.0,
+     "dewpoint_f": 35.0,
+     "wind_mph": 3.7,
+     "gust_mph": 9.3,
+     "snow_depth_in": 1.4,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.0,
-     "depth_change_24h_in": -0.24,
-     "depth_change_72h_in": -0.16,
+     "depth_change_24h_in": 0.19,
+     "depth_change_72h_in": -0.32,
      "swe_change_72h_in": null,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
+     }
+    },
+    {
+     "id": "974:WA:SNTL",
+     "label": "Waterhole",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 47.94485,
+     "lon": -123.42594,
+     "elev_ft": 5010,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 45.3,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": 2.2,
+     "gust_mph": null,
+     "snow_depth_in": 1,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": 0.0,
      "trust": {
       "ok": false,
       "reasons": [
@@ -61,7 +87,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -0.2 in (unverified)"
+     "detail": "depth +0.0 in, SWE +0.00 in (unverified)"
     },
     {
      "key": "precip_72h",
@@ -73,19 +99,19 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "62\u00b0F at Hurricane Ridge"
+     "detail": "47\u00b0F at Hurricane Ridge"
     },
     {
      "key": "humidity",
      "label": "High humidity",
      "status": "no",
-     "detail": "35% RH"
+     "detail": "63% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 28.4\u00b0F apart"
+     "detail": "temp and dew point 12.0\u00b0F apart"
     }
    ]
   },
@@ -105,9 +131,35 @@
      "label": "Mount Shuksan"
     }
    ],
-   "lat": 48.85804,
-   "lon": -121.67753,
+   "lat": 48.85847,
+   "lon": -121.598,
    "stations": [
+    {
+     "id": "998:WA:SNTL",
+     "label": "Easy Pass",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 48.85933,
+     "lon": -121.43895,
+     "elev_ft": 5280,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 45.7,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": null,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    },
     {
      "id": "MTB50",
      "label": "Pan Dome",
@@ -116,12 +168,12 @@
      "lat": 48.85305,
      "lon": -121.6772,
      "elev_ft": 5020,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 56.8,
-     "rh": 53.0,
-     "dewpoint_f": 39.9,
-     "wind_mph": 13.7,
-     "gust_mph": 19.8,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 41.9,
+     "rh": 92.0,
+     "dewpoint_f": 39.7,
+     "wind_mph": 18.0,
+     "gust_mph": 24.7,
      "snow_depth_in": null,
      "swe_in": null,
      "precip_24h_in": null,
@@ -142,18 +194,18 @@
      "lat": 48.86302,
      "lon": -121.67785,
      "elev_ft": 4210,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 60.6,
-     "rh": 51.0,
-     "dewpoint_f": 42.4,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 45.2,
+     "rh": 84.0,
+     "dewpoint_f": 40.5,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 6.7,
+     "snow_depth_in": 5.9,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.0,
-     "depth_change_24h_in": -0.16,
-     "depth_change_72h_in": -0.36,
+     "depth_change_24h_in": -0.07,
+     "depth_change_72h_in": -0.55,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
@@ -168,7 +220,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -0.4 in (unverified)"
+     "detail": "depth +0.0 in"
     },
     {
      "key": "precip_72h",
@@ -180,19 +232,19 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "61\u00b0F at Heather Meadows"
+     "detail": "45\u00b0F at Heather Meadows"
     },
     {
      "key": "humidity",
      "label": "High humidity",
      "status": "no",
-     "detail": "51% RH"
+     "detail": "84% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 18.2\u00b0F apart"
+     "detail": "temp and dew point 4.7\u00b0F apart"
     }
    ]
   },
@@ -206,8 +258,8 @@
    "page": "/tools/model-tools-precipitation.html#area=washington",
    "note": null,
    "webcams": [],
-   "lat": 48.52953,
-   "lon": -120.65249,
+   "lat": 48.5259,
+   "lon": -120.68026,
    "stations": [
     {
      "id": "WAP67",
@@ -217,12 +269,12 @@
      "lat": 48.53328,
      "lon": -120.64973,
      "elev_ft": 6680,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 59.1,
-     "rh": 35.0,
-     "dewpoint_f": 31.2,
-     "wind_mph": 8.1,
-     "gust_mph": 12.7,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 47.5,
+     "rh": 56.0,
+     "dewpoint_f": 32.5,
+     "wind_mph": 14.7,
+     "gust_mph": 21.0,
      "snow_depth_in": null,
      "swe_in": null,
      "precip_24h_in": null,
@@ -243,24 +295,50 @@
      "lat": 48.52578,
      "lon": -120.65525,
      "elev_ft": 5450,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 61.2,
-     "rh": 31.0,
-     "dewpoint_f": 30.3,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 40.3,
+     "rh": 72.0,
+     "dewpoint_f": 31.9,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 1.9,
+     "snow_depth_in": 2.1,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.0,
-     "depth_change_24h_in": 0.17,
-     "depth_change_72h_in": 1.15,
+     "depth_change_24h_in": -1.13,
+     "depth_change_72h_in": 0.51,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
       "reasons": [
        "Snow depth reported in the off-season, may be sensor error"
       ]
+     }
+    },
+    {
+     "id": "711:WA:SNTL",
+     "label": "Rainy Pass",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 48.51865,
+     "lon": -120.7358,
+     "elev_ft": 4880,
+     "obs_time": "2026-10-09T09:00:00Z",
+     "temp_f": 45.7,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": 0.1,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
      }
     }
    ],
@@ -269,31 +347,31 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth +1.1 in (unverified)"
+     "detail": "depth +0.0 in, SWE +0.00 in"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "no",
-     "detail": "0.00 in (0.00 in in 24 h) (unverified)"
+     "detail": "0.00 in (0.00 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "61\u00b0F at Washington Pass Base"
+     "detail": "40\u00b0F at Washington Pass Base"
     },
     {
      "key": "humidity",
      "label": "High humidity",
      "status": "no",
-     "detail": "31% RH"
+     "detail": "72% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 30.9\u00b0F apart"
+     "detail": "temp and dew point 8.4\u00b0F apart"
     }
    ]
   },
@@ -318,24 +396,22 @@
      "lat": 48.59728,
      "lon": -120.43743,
      "elev_ft": 2170,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 72.0,
-     "rh": 29.0,
-     "dewpoint_f": 38.0,
-     "wind_mph": 0.9,
-     "gust_mph": 3.4,
-     "snow_depth_in": 0.1,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 45.1,
+     "rh": 69.0,
+     "dewpoint_f": 35.3,
+     "wind_mph": 0.6,
+     "gust_mph": 1.9,
+     "snow_depth_in": 0.0,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.01,
-     "depth_change_24h_in": -0.13,
-     "depth_change_72h_in": 0.09,
+     "depth_change_24h_in": 0.0,
+     "depth_change_72h_in": 0.0,
      "swe_change_72h_in": null,
      "trust": {
-      "ok": false,
-      "reasons": [
-       "Snow depth reported in the off-season, may be sensor error"
-      ]
+      "ok": true,
+      "reasons": []
      }
     }
    ],
@@ -344,31 +420,31 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth +0.1 in (unverified)"
+     "detail": "depth +0.0 in"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "no",
-     "detail": "0.01 in (0.00 in in 24 h) (unverified)"
+     "detail": "0.01 in (0.00 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "72\u00b0F at Mazama"
+     "detail": "45\u00b0F at Mazama"
     },
     {
      "key": "humidity",
      "label": "High humidity",
      "status": "no",
-     "detail": "29% RH"
+     "detail": "69% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 34.0\u00b0F apart"
+     "detail": "temp and dew point 9.8\u00b0F apart"
     }
    ]
   },
@@ -393,8 +469,8 @@
      "label": "Dirtyface Peak - Natapoc Ridge"
     }
    ],
-   "lat": 47.73602,
-   "lon": -121.10445,
+   "lat": 47.73803,
+   "lon": -121.10214,
    "stations": [
     {
      "id": "STS52",
@@ -404,10 +480,10 @@
      "lat": 47.734,
      "lon": -121.1081,
      "elev_ft": 5250,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 59.5,
-     "rh": 44.0,
-     "dewpoint_f": 37.6,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 48.6,
+     "rh": 69.0,
+     "dewpoint_f": 38.6,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": null,
@@ -430,12 +506,12 @@
      "lat": 47.73163,
      "lon": -121.0853,
      "elev_ft": 5180,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 61.2,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 49.2,
      "rh": null,
      "dewpoint_f": null,
-     "wind_mph": 4.8,
-     "gust_mph": 14.0,
+     "wind_mph": 4.7,
+     "gust_mph": 12.9,
      "snow_depth_in": null,
      "swe_in": null,
      "precip_24h_in": null,
@@ -456,10 +532,10 @@
      "lat": 47.73758,
      "lon": -121.10732,
      "elev_ft": 4800,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 61.6,
-     "rh": 42.0,
-     "dewpoint_f": 38.2,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 50.9,
+     "rh": 64.0,
+     "dewpoint_f": 39.1,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": null,
@@ -482,24 +558,50 @@
      "lat": 47.74085,
      "lon": -121.11708,
      "elev_ft": 4790,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 59.5,
-     "rh": 49.0,
-     "dewpoint_f": 40.4,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 47.8,
+     "rh": 81.0,
+     "dewpoint_f": 42.0,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 1.4,
+     "snow_depth_in": 1.5,
      "swe_in": null,
      "precip_24h_in": null,
      "precip_72h_in": null,
-     "depth_change_24h_in": 0.23,
-     "depth_change_72h_in": -0.32,
+     "depth_change_24h_in": 0.08,
+     "depth_change_72h_in": -0.35,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
       "reasons": [
        "Snow depth reported in the off-season, may be sensor error"
       ]
+     }
+    },
+    {
+     "id": "791:WA:SNTL",
+     "label": "Stevens Pass",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 47.74607,
+     "lon": -121.09288,
+     "elev_ft": 3940,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 44.4,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": null,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
      }
     }
    ],
@@ -520,19 +622,92 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "62\u00b0F at Brooks"
+     "detail": "51\u00b0F at Brooks"
     },
     {
      "key": "humidity",
      "label": "High humidity",
      "status": "no",
-     "detail": "42% RH"
+     "detail": "64% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 23.4\u00b0F apart"
+     "detail": "temp and dew point 11.8\u00b0F apart"
+    }
+   ]
+  },
+  {
+   "id": "leavenworth-icicle",
+   "name": "Leavenworth / Icicle Creek",
+   "basin": "17020011",
+   "basins": [
+    "17020011"
+   ],
+   "page": null,
+   "note": null,
+   "webcams": [],
+   "lat": 47.59404,
+   "lon": -120.88255,
+   "stations": [
+    {
+     "id": "1338:WA:SNTL",
+     "label": "Icicle Creek",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 47.59404,
+     "lon": -120.88255,
+     "elev_ft": 4550,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 52.3,
+     "rh": 47.0,
+     "dewpoint_f": 32.7,
+     "wind_mph": 2.5,
+     "gust_mph": 7.3,
+     "snow_depth_in": 0,
+     "swe_in": 0.1,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": -1,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth -1.0 in, SWE +0.00 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "52\u00b0F at Icicle Creek"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "no",
+     "detail": "47% RH"
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "no",
+     "detail": "temp and dew point 19.6\u00b0F apart"
     }
    ]
   },
@@ -553,9 +728,35 @@
      "label": "US 97 Blewett Pass Summit"
     }
    ],
-   "lat": 47.33476,
-   "lon": -120.57743,
+   "lat": 47.34257,
+   "lon": -120.62851,
    "stations": [
+    {
+     "id": "352:WA:SNTL",
+     "label": "Blewett Pass",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 47.35037,
+     "lon": -120.6796,
+     "elev_ft": 4240,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 54.0,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    },
     {
      "id": "BLT41",
      "label": "Blewett Pass",
@@ -580,7 +781,7 @@
      "trust": {
       "ok": false,
       "reasons": [
-       "No report in 25 h"
+       "No report in 33 h"
       ]
      }
     }
@@ -589,8 +790,262 @@
     {
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth +0.0 in, SWE +0.00 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "54\u00b0F at Blewett Pass"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
      "status": "unknown",
      "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "mission-ridge",
+   "name": "Mission Ridge",
+   "basin": "17020011",
+   "basins": [
+    "17020011",
+    "17030001"
+   ],
+   "page": null,
+   "note": null,
+   "webcams": [],
+   "lat": 47.28421,
+   "lon": -120.42893,
+   "stations": [
+    {
+     "id": "507:WA:SNTL",
+     "label": "Grouse Camp",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 47.28107,
+     "lon": -120.48771,
+     "elev_ft": 5390,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 53.2,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 2,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 2,
+     "depth_change_72h_in": 2,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
+     }
+    },
+    {
+     "id": "841:WA:SNTL",
+     "label": "Upper Wheeler",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 47.28734,
+     "lon": -120.37015,
+     "elev_ft": 4330,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 56.5,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth +0.0 in, SWE +0.00 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "53\u00b0F at Grouse Camp"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "unknown",
+     "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "salmon-la-sac",
+   "name": "Salmon La Sac",
+   "basin": "17030001",
+   "basins": [
+    "17030001"
+   ],
+   "page": null,
+   "note": null,
+   "webcams": [
+    {
+     "type": "windy",
+     "id": "1667840569",
+     "label": "Ronald (north-west)"
+    }
+   ],
+   "lat": 47.38485,
+   "lon": -121.06323,
+   "stations": [
+    {
+     "id": "734:WA:SNTL",
+     "label": "Sasse Ridge",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 47.38485,
+     "lon": -121.06323,
+     "elev_ft": 4340,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 54.7,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": null,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "SWE +0.00 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "55\u00b0F at Sasse Ridge"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "unknown",
+     "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "snoqualmie-east",
+   "name": "Snoqualmie East",
+   "basin": "17110013",
+   "basins": [
+    "17110013"
+   ],
+   "page": "/tools/model-tools-precipitation.html#area=snoqualmie",
+   "note": null,
+   "webcams": [],
+   "lat": 47.27427,
+   "lon": -121.34162,
+   "stations": [
+    {
+     "id": "788:WA:SNTL",
+     "label": "Stampede Pass",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 47.27427,
+     "lon": -121.34162,
+     "elev_ft": 3850,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 49.1,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": null,
+     "swe_in": 0.1,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "SWE +0.00 in"
     },
     {
      "key": "precip_72h",
@@ -601,8 +1056,92 @@
     {
      "key": "temp",
      "label": "Below freezing",
+     "status": "no",
+     "detail": "49\u00b0F at Stampede Pass"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
      "status": "unknown",
      "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "snoqualmie-west",
+   "name": "Snoqualmie West",
+   "basin": "17110010",
+   "basins": [
+    "17110010"
+   ],
+   "page": "/tools/model-tools-precipitation.html#area=snoqualmie",
+   "note": null,
+   "webcams": [
+    {
+     "type": "youtube",
+     "id": "w4Sno8NIjmU",
+     "label": "Summit Central (top)"
+    },
+    {
+     "type": "windy",
+     "id": "1346275207",
+     "label": "I-90 at Snoqualmie Summit"
+    }
+   ],
+   "lat": 47.37406,
+   "lon": -121.44213,
+   "stations": [
+    {
+     "id": "672:WA:SNTL",
+     "label": "Olallie Meadows",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 47.37406,
+     "lon": -121.44213,
+     "elev_ft": 4010,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 52.0,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth +0.0 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "52\u00b0F at Olallie Meadows"
     },
     {
      "key": "humidity",
@@ -645,10 +1184,10 @@
      "lat": 47.43882,
      "lon": -121.44262,
      "elev_ft": 5470,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 59.2,
-     "rh": 43.0,
-     "dewpoint_f": 36.6,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 49.0,
+     "rh": 61.0,
+     "dewpoint_f": 36.0,
      "wind_mph": 0.0,
      "gust_mph": 0.0,
      "snow_depth_in": null,
@@ -671,18 +1210,18 @@
      "lat": 47.43474,
      "lon": -121.43357,
      "elev_ft": 4350,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 63.5,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 51.7,
      "rh": 0.0,
-     "dewpoint_f": -49.4,
+     "dewpoint_f": -59.5,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 9.6,
+     "snow_depth_in": 10.0,
      "swe_in": null,
      "precip_24h_in": null,
      "precip_72h_in": null,
-     "depth_change_24h_in": -0.04,
-     "depth_change_72h_in": -0.43,
+     "depth_change_24h_in": 0.07,
+     "depth_change_72h_in": -0.16,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
@@ -699,18 +1238,18 @@
      "lat": 47.44407,
      "lon": -121.42485,
      "elev_ft": 3100,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 56.5,
-     "rh": 74.0,
-     "dewpoint_f": 48.3,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 46.7,
+     "rh": 93.0,
+     "dewpoint_f": 44.9,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 3.8,
+     "snow_depth_in": 4.6,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.0,
-     "depth_change_24h_in": -0.4,
-     "depth_change_72h_in": 0.15,
+     "depth_change_24h_in": 0.2,
+     "depth_change_72h_in": 0.51,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
@@ -725,7 +1264,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth +0.1 in (unverified)"
+     "detail": "depth +0.5 in (unverified)"
     },
     {
      "key": "precip_72h",
@@ -737,7 +1276,7 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "64\u00b0F at Alpental Mid-Mountain"
+     "detail": "52\u00b0F at Alpental Mid-Mountain"
     },
     {
      "key": "humidity",
@@ -749,7 +1288,7 @@
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "no",
-     "detail": "temp and dew point 112.9\u00b0F apart"
+     "detail": "temp and dew point 111.2\u00b0F apart"
     }
    ]
   },
@@ -763,8 +1302,8 @@
    "page": "/tools/model-tools-precipitation.html#area=crystal",
    "note": null,
    "webcams": [],
-   "lat": 46.93258,
-   "lon": -121.49196,
+   "lat": 46.92723,
+   "lon": -121.49011,
    "stations": [
     {
      "id": "CMT69",
@@ -774,12 +1313,12 @@
      "lat": 46.93505,
      "lon": -121.50043,
      "elev_ft": 6830,
-     "obs_time": "2026-10-09T00:00:00Z",
+     "obs_time": "2026-10-09T08:00:00Z",
      "temp_f": -40.0,
      "rh": 42.0,
      "dewpoint_f": 23.7,
-     "wind_mph": 6.4,
-     "gust_mph": 9.9,
+     "wind_mph": 13.6,
+     "gust_mph": 26.1,
      "snow_depth_in": null,
      "swe_in": null,
      "precip_24h_in": null,
@@ -802,22 +1341,24 @@
      "lat": 46.93943,
      "lon": -121.49433,
      "elev_ft": 6230,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 56.5,
-     "rh": 53.0,
-     "dewpoint_f": 39.6,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 50.3,
+     "rh": 26.0,
+     "dewpoint_f": 16.2,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 0.0,
+     "snow_depth_in": 3.0,
      "swe_in": null,
      "precip_24h_in": null,
      "precip_72h_in": null,
-     "depth_change_24h_in": -1.53,
-     "depth_change_72h_in": -1.54,
+     "depth_change_24h_in": 1.71,
+     "depth_change_72h_in": 0.73,
      "swe_change_72h_in": null,
      "trust": {
-      "ok": true,
-      "reasons": []
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
      }
     },
     {
@@ -828,24 +1369,50 @@
      "lat": 46.92534,
      "lon": -121.49732,
      "elev_ft": 5940,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 57.3,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 52.8,
      "rh": null,
      "dewpoint_f": null,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 2.9,
+     "snow_depth_in": 2.5,
      "swe_in": null,
      "precip_24h_in": null,
      "precip_72h_in": null,
-     "depth_change_24h_in": 0.12,
-     "depth_change_72h_in": 0.2,
+     "depth_change_24h_in": -0.04,
+     "depth_change_72h_in": 0.12,
      "swe_change_72h_in": null,
      "trust": {
       "ok": false,
       "reasons": [
        "Snow depth reported in the off-season, may be sensor error"
       ]
+     }
+    },
+    {
+     "id": "642:WA:SNTL",
+     "label": "Morse Lake",
+     "network": "SNOTEL",
+     "primary": false,
+     "lat": 46.90585,
+     "lon": -121.4827,
+     "elev_ft": 5400,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 44.2,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": 0.0,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": -1,
+     "swe_change_72h_in": 0.0,
+     "trust": {
+      "ok": true,
+      "reasons": []
      }
     },
     {
@@ -856,18 +1423,387 @@
      "lat": 46.9305,
      "lon": -121.47578,
      "elev_ft": 4540,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 58.2,
-     "rh": 69.0,
-     "dewpoint_f": 47.9,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 43.1,
+     "rh": 82.0,
+     "dewpoint_f": 38.0,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": 0.0,
      "swe_in": null,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.0,
-     "depth_change_24h_in": 0.0,
-     "depth_change_72h_in": 0.0,
+     "depth_change_24h_in": -0.7,
+     "depth_change_72h_in": -0.17,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth -0.2 in, SWE +0.00 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "50\u00b0F at Green Valley"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "no",
+     "detail": "26% RH"
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "no",
+     "detail": "temp and dew point 34.1\u00b0F apart"
+    }
+   ]
+  },
+  {
+   "id": "paradise",
+   "name": "Paradise - Mt. Rainier",
+   "basin": "17110015",
+   "basins": [
+    "17110015"
+   ],
+   "page": "/tools/model-tools-precipitation.html#area=paradise",
+   "note": null,
+   "webcams": [
+    {
+     "type": "windy",
+     "id": "1384985408",
+     "label": "Henry M. Jackson Visitor Center"
+    }
+   ],
+   "lat": 46.80143,
+   "lon": -121.74104,
+   "stations": [
+    {
+     "id": "MU101",
+     "label": "Camp Muir",
+     "network": "NWAC",
+     "primary": false,
+     "lat": 46.83542,
+     "lon": -121.73305,
+     "elev_ft": 10110,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 48.9,
+     "rh": 10.0,
+     "dewpoint_f": -5.3,
+     "wind_mph": 0.0,
+     "gust_mph": 0.0,
+     "snow_depth_in": null,
+     "swe_in": null,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    },
+    {
+     "id": "PVC54",
+     "label": "Paradise",
+     "network": "NWAC",
+     "primary": false,
+     "lat": 46.78622,
+     "lon": -121.7424,
+     "elev_ft": 5400,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 46.3,
+     "rh": 87.0,
+     "dewpoint_f": 42.7,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 1.1,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": -0.23,
+     "depth_change_72h_in": -0.04,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
+     }
+    },
+    {
+     "id": "679:WA:SNTL",
+     "label": "Paradise",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 46.78266,
+     "lon": -121.74767,
+     "elev_ft": 5150,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 46.4,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 1,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 1,
+     "depth_change_72h_in": 1,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth +1.0 in (unverified)"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h) (unverified)"
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "46\u00b0F at Paradise"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "unknown",
+     "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "mt-st-helens",
+   "name": "Mt. St. Helens",
+   "basin": "17080002",
+   "basins": [
+    "17080002"
+   ],
+   "page": "/tools/mt-st-helens.html",
+   "note": null,
+   "webcams": [],
+   "lat": 46.1638,
+   "lon": -122.18402,
+   "stations": [
+    {
+     "id": "1012:WA:SNTL",
+     "label": "Swift Creek",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 46.1638,
+     "lon": -122.18402,
+     "elev_ft": 4440,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 57.0,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": null,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    }
+   ],
+   "checklist": [
+    {
+     "key": "snow_72h",
+     "label": "Snow in the last 72 h",
+     "status": "no",
+     "detail": "depth +0.0 in"
+    },
+    {
+     "key": "precip_72h",
+     "label": "Precipitation in the last 72 h",
+     "status": "unknown",
+     "detail": null
+    },
+    {
+     "key": "temp",
+     "label": "Below freezing",
+     "status": "no",
+     "detail": "57\u00b0F at Swift Creek"
+    },
+    {
+     "key": "humidity",
+     "label": "High humidity",
+     "status": "unknown",
+     "detail": null
+    },
+    {
+     "key": "visibility",
+     "label": "Possible low visibility (fog/cloud)",
+     "status": "unknown",
+     "detail": null
+    }
+   ]
+  },
+  {
+   "id": "white-pass",
+   "name": "White Pass",
+   "basin": "17080004",
+   "basins": [
+    "17080004"
+   ],
+   "page": "/tools/model-tools-precipitation.html#area=white",
+   "note": null,
+   "webcams": [
+    {
+     "type": "windy",
+     "id": "1459260236",
+     "label": "US 12 at White Pass Summit"
+    }
+   ],
+   "lat": 46.63074,
+   "lon": -121.3871,
+   "stations": [
+    {
+     "id": "WPS60",
+     "label": "Pigtail Peak",
+     "network": "NWAC",
+     "primary": false,
+     "lat": 46.624,
+     "lon": -121.388,
+     "elev_ft": 5970,
+     "obs_time": null,
+     "temp_f": null,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": 31.1,
+     "gust_mph": 39.5,
+     "snow_depth_in": null,
+     "swe_in": null,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "No recent data"
+      ]
+     }
+    },
+    {
+     "id": "WPS58",
+     "label": "White Pass Upper",
+     "network": "NWAC",
+     "primary": false,
+     "lat": 46.62077,
+     "lon": -121.38737,
+     "elev_ft": 5800,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 50.2,
+     "rh": 49.0,
+     "dewpoint_f": 31.8,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 3.6,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 1.34,
+     "depth_change_72h_in": -3.42,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": false,
+      "reasons": [
+       "Snow depth reported in the off-season, may be sensor error"
+      ]
+     }
+    },
+    {
+     "id": "WPS45",
+     "label": "White Pass Base",
+     "network": "NWAC",
+     "primary": false,
+     "lat": 46.63678,
+     "lon": -121.3915,
+     "elev_ft": 4500,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 47.3,
+     "rh": 97.0,
+     "dewpoint_f": 46.5,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": null,
+     "swe_in": null,
+     "precip_24h_in": null,
+     "precip_72h_in": null,
+     "depth_change_24h_in": null,
+     "depth_change_72h_in": null,
+     "swe_change_72h_in": null,
+     "trust": {
+      "ok": true,
+      "reasons": []
+     }
+    },
+    {
+     "id": "863:WA:SNTL",
+     "label": "White Pass E.S.",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 46.64142,
+     "lon": -121.38153,
+     "elev_ft": 4440,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 48.0,
+     "rh": null,
+     "dewpoint_f": null,
+     "wind_mph": null,
+     "gust_mph": null,
+     "snow_depth_in": 0,
+     "swe_in": null,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": 0,
      "swe_change_72h_in": null,
      "trust": {
       "ok": true,
@@ -892,228 +1828,61 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "56\u00b0F at Green Valley"
+     "detail": "48\u00b0F at White Pass E.S."
     },
     {
      "key": "humidity",
      "label": "High humidity",
-     "status": "no",
-     "detail": "53% RH"
+     "status": "unknown",
+     "detail": null
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
-     "status": "no",
-     "detail": "temp and dew point 16.9\u00b0F apart"
+     "status": "unknown",
+     "detail": null
     }
    ]
   },
   {
-   "id": "paradise",
-   "name": "Paradise - Mt. Rainier",
-   "basin": "17110015",
+   "id": "mt-adams",
+   "name": "Mt. Adams",
+   "basin": "17080002",
    "basins": [
-    "17110015"
+    "17080002"
    ],
-   "page": "/tools/model-tools-precipitation.html#area=paradise",
-   "note": null,
-   "webcams": [
-    {
-     "type": "windy",
-     "id": "1384985408",
-     "label": "Henry M. Jackson Visitor Center"
-    }
-   ],
-   "lat": 46.81082,
-   "lon": -121.73773,
+   "page": "/tools/mt-adams.html",
+   "note": "No stations sit near Mt. Adams. These are approximate conditions from Surprise Lakes SNOTEL, southwest of the mountain.",
+   "webcams": [],
+   "lat": 46.09497,
+   "lon": -121.76345,
    "stations": [
     {
-     "id": "MU101",
-     "label": "Camp Muir",
-     "network": "NWAC",
-     "primary": false,
-     "lat": 46.83542,
-     "lon": -121.73305,
-     "elev_ft": 10110,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 45.8,
-     "rh": 58.0,
-     "dewpoint_f": 31.6,
-     "wind_mph": 0.0,
-     "gust_mph": 0.0,
-     "snow_depth_in": null,
-     "swe_in": null,
-     "precip_24h_in": null,
-     "precip_72h_in": null,
-     "depth_change_24h_in": null,
-     "depth_change_72h_in": null,
-     "swe_change_72h_in": null,
-     "trust": {
-      "ok": true,
-      "reasons": []
-     }
-    },
-    {
-     "id": "PVC54",
-     "label": "Paradise",
-     "network": "NWAC",
-     "primary": false,
-     "lat": 46.78622,
-     "lon": -121.7424,
-     "elev_ft": 5400,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 61.9,
-     "rh": 59.0,
-     "dewpoint_f": 47.3,
-     "wind_mph": null,
-     "gust_mph": null,
-     "snow_depth_in": 1.9,
-     "swe_in": null,
-     "precip_24h_in": 0.0,
-     "precip_72h_in": 0.0,
-     "depth_change_24h_in": -0.4,
-     "depth_change_72h_in": 0.55,
-     "swe_change_72h_in": null,
-     "trust": {
-      "ok": false,
-      "reasons": [
-       "Snow depth reported in the off-season, may be sensor error"
-      ]
-     }
-    }
-   ],
-   "checklist": [
-    {
-     "key": "snow_72h",
-     "label": "Snow in the last 72 h",
-     "status": "no",
-     "detail": "depth +0.6 in (unverified)"
-    },
-    {
-     "key": "precip_72h",
-     "label": "Precipitation in the last 72 h",
-     "status": "no",
-     "detail": "0.00 in (0.00 in in 24 h) (unverified)"
-    },
-    {
-     "key": "temp",
-     "label": "Below freezing",
-     "status": "no",
-     "detail": "46\u00b0F at Camp Muir"
-    },
-    {
-     "key": "humidity",
-     "label": "High humidity",
-     "status": "no",
-     "detail": "58% RH"
-    },
-    {
-     "key": "visibility",
-     "label": "Possible low visibility (fog/cloud)",
-     "status": "no",
-     "detail": "temp and dew point 14.2\u00b0F apart"
-    }
-   ]
-  },
-  {
-   "id": "white-pass",
-   "name": "White Pass",
-   "basin": "17080004",
-   "basins": [
-    "17080004"
-   ],
-   "page": "/tools/model-tools-precipitation.html#area=white",
-   "note": null,
-   "webcams": [
-    {
-     "type": "windy",
-     "id": "1459260236",
-     "label": "US 12 at White Pass Summit"
-    }
-   ],
-   "lat": 46.62718,
-   "lon": -121.38896,
-   "stations": [
-    {
-     "id": "WPS60",
-     "label": "Pigtail Peak",
-     "network": "NWAC",
-     "primary": false,
-     "lat": 46.624,
-     "lon": -121.388,
-     "elev_ft": 5970,
-     "obs_time": null,
-     "temp_f": null,
+     "id": "804:WA:SNTL",
+     "label": "Surprise Lakes",
+     "network": "SNOTEL",
+     "primary": true,
+     "lat": 46.09497,
+     "lon": -121.76345,
+     "elev_ft": 4280,
+     "obs_time": "2026-10-09T08:00:00Z",
+     "temp_f": 49.1,
      "rh": null,
      "dewpoint_f": null,
-     "wind_mph": 13.5,
-     "gust_mph": 20.5,
-     "snow_depth_in": null,
-     "swe_in": null,
-     "precip_24h_in": null,
-     "precip_72h_in": null,
-     "depth_change_24h_in": null,
-     "depth_change_72h_in": null,
-     "swe_change_72h_in": null,
-     "trust": {
-      "ok": false,
-      "reasons": [
-       "No recent data"
-      ]
-     }
-    },
-    {
-     "id": "WPS58",
-     "label": "White Pass Upper",
-     "network": "NWAC",
-     "primary": false,
-     "lat": 46.62077,
-     "lon": -121.38737,
-     "elev_ft": 5800,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 61.4,
-     "rh": 42.0,
-     "dewpoint_f": 37.7,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 1.5,
-     "swe_in": null,
-     "precip_24h_in": 0.0,
-     "precip_72h_in": 0.0,
-     "depth_change_24h_in": 0.32,
-     "depth_change_72h_in": -4.52,
-     "swe_change_72h_in": null,
+     "snow_depth_in": 4,
+     "swe_in": 3.5,
+     "precip_24h_in": 0.1,
+     "precip_72h_in": 0.2,
+     "depth_change_24h_in": 1,
+     "depth_change_72h_in": 1,
+     "swe_change_72h_in": 0.1,
      "trust": {
       "ok": false,
       "reasons": [
        "Snow depth reported in the off-season, may be sensor error"
       ]
-     }
-    },
-    {
-     "id": "WPS45",
-     "label": "White Pass Base",
-     "network": "NWAC",
-     "primary": false,
-     "lat": 46.63678,
-     "lon": -121.3915,
-     "elev_ft": 4500,
-     "obs_time": "2026-10-09T00:00:00Z",
-     "temp_f": 68.2,
-     "rh": 39.0,
-     "dewpoint_f": 42.4,
-     "wind_mph": null,
-     "gust_mph": null,
-     "snow_depth_in": null,
-     "swe_in": null,
-     "precip_24h_in": null,
-     "precip_72h_in": null,
-     "depth_change_24h_in": null,
-     "depth_change_72h_in": null,
-     "swe_change_72h_in": null,
-     "trust": {
-      "ok": true,
-      "reasons": []
      }
     }
    ],
@@ -1122,31 +1891,31 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -4.5 in (unverified)"
+     "detail": "depth +1.0 in, SWE +0.10 in (unverified)"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
-     "status": "no",
-     "detail": "0.00 in (0.00 in in 24 h) (unverified)"
+     "status": "yes",
+     "detail": "0.20 in (0.10 in in 24 h) (unverified)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "61\u00b0F at White Pass Upper"
+     "detail": "49\u00b0F at Surprise Lakes"
     },
     {
      "key": "humidity",
      "label": "High humidity",
-     "status": "no",
-     "detail": "42% RH"
+     "status": "unknown",
+     "detail": null
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
-     "status": "no",
-     "detail": "temp and dew point 23.7\u00b0F apart"
+     "status": "unknown",
+     "detail": null
     }
    ]
   }
