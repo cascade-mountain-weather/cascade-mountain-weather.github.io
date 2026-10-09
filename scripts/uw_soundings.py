@@ -10,7 +10,8 @@ Each frame (one per 3 forecast hours) embeds a plain-text table of the model pro
 from the model's surface level up. A header line gives the station id, lat/lon, elevation and valid time.
 
 Derived per frame (numpy only; the melting model is shared with scripts/collect_radiosonde_history.py):
-  freezing level, wet-bulb-zero level and melting-model snow level (all MSL, ft),
+  freezing level and snow level (the 0 C wet-bulb level; below-surface levels are extended at 6.5 C/km and flagged), all MSL, ft;
+  the older melting-model snow level is kept as melt_snow_level_ft,
   dendritic growth zone: thickness of the layer between -12 and -18 C, and the part of it that is near
   saturation (T - Td <= 2 C, a humidity proxy: the DGZ only makes snow where it is moist),
   strongest low-level inversion (lowest 3 km above the station): base height and temperature rise,
@@ -31,7 +32,7 @@ import numpy as np
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from collect_radiosonde_history import compute_melting_layer  # noqa: E402
+from collect_radiosonde_history import _relative_humidity_pct, _wet_bulb_stull, compute_melting_layer  # noqa: E402
 
 BASE = "https://a.atmos.washington.edu/mm5rt/rt/showsounding_d4.cgi"
 HEADERS = {"User-Agent": "cascade-mountain-weather.github.io forecast-sounding research (dlhogan@uw.edu)"}
@@ -108,18 +109,52 @@ def _es(t_c):
     return 6.112 * np.exp(17.62 * t_c / (243.12 + t_c))
 
 
+LAPSE_C_PER_KM = 6.5   # ICAO standard-atmosphere lapse rate; only used to carry a level below the model surface
+
+
+def first_zero_height(z, v):
+    """Height (m MSL) where v first reaches 0 C going up from the lowest level (linear between levels); None if it never does.
+    A profile that starts at or below 0 returns its lowest height."""
+    idx = np.flatnonzero(v <= 0.0)
+    if idx.size == 0:
+        return None
+    i = int(idx[0])
+    if i == 0:
+        return float(z[0])
+    return float(z[i - 1] + (z[i] - z[i - 1]) * v[i - 1] / (v[i - 1] - v[i]))
+
+
+def profile_levels(z, t, td):
+    """Freezing level (0 C air temperature) and snow level (0 C wet-bulb temperature), in feet MSL, from one profile.
+
+    When the surface is already at or below 0 C the level is below the ground: it is then extended below the surface at the
+    standard lapse rate (6.5 C/km) and flagged `*_below_surface`, so the page can say "below surface". `wet_bulb_zero_ft` is the
+    same number as `snow_level_ft` (kept so older readers still work)."""
+    ok = np.isfinite(z) & np.isfinite(t) & np.isfinite(td)
+    z, t, td = z[ok], t[ok], td[ok]
+    out = {}
+    if z.size < 2:
+        return {"freezing_level_ft": None, "snow_level_ft": None, "wet_bulb_zero_ft": None, "freezing_below_surface": False, "snow_below_surface": False}
+    tw = _wet_bulb_stull(t, _relative_humidity_pct(t, td))
+    for name, flag, v in (("freezing_level_ft", "freezing_below_surface", t), ("snow_level_ft", "snow_below_surface", tw)):
+        lvl = first_zero_height(z, v)
+        below = lvl is not None and v[0] <= 0.0
+        if below:
+            lvl = float(z[0]) + 1000.0 * float(v[0]) / LAPSE_C_PER_KM
+        out[name] = None if lvl is None else round(lvl * M_TO_FT)
+        out[flag] = bool(below)
+    out["wet_bulb_zero_ft"] = out["snow_level_ft"]
+    return out
+
+
 def derive(meta, c):
     """Snow-relevant diagnostics from one profile (heights are MSL in the data; levels reported in feet MSL)."""
     p, t, td, z = c["PRES"], c["TMPC"], c["DWPC"], c["HGTM"]
     elev = z[0]
     out = {"surface_ft": round(elev * M_TO_FT), "surface_t_c": round(float(t[0]), 1), "surface_p_hpa": round(float(p[0]), 1)}
-    melt = compute_melting_layer(z, t, td)   # heights above the lowest level (AGL)
-    for key, name in (("freezing_level_m", "freezing_level_ft"), ("wet_bulb_zero_m", "wet_bulb_zero_ft"), ("snow_level_m", "snow_level_ft")):
-        out[name] = None if melt[key] is None else round((melt[key] + elev) * M_TO_FT)
-    if not np.any(t <= 0.0):
-        out["freezing_level_ft"] = None   # whole profile above freezing
-    elif t[0] <= 0.0:
-        out["freezing_level_ft"] = round(elev * M_TO_FT)   # at or below freezing at the surface (station is above it)
+    out.update(profile_levels(z, t, td))
+    melt = compute_melting_layer(z, t, td)    # the older melting-model snow level (heights AGL), kept for comparison only
+    out["melt_snow_level_ft"] = None if melt["snow_level_m"] is None else round((melt["snow_level_m"] + elev) * M_TO_FT)
 
     # dendritic growth zone: -12 to -18 C
     zi = np.linspace(z[0], z[-1], 2000)
