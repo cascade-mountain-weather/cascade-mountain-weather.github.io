@@ -49,6 +49,25 @@ header h1 {
     margin-bottom: 0;
 }
 
+/* Site name in words, then the logo, then the tagline */
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-name {
+    font-size: 2.1rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: right;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+}
+
+.header-name span {
+    display: block;
+}
+
 .header-home-link {
     display: block;
     color: inherit;
@@ -117,6 +136,10 @@ header h1 {
         width: clamp(80px, 24vw, 105px);
     }
 
+    .header-name {
+        font-size: 1.8rem;
+    }
+
     .tagline {
         font-size: 1rem;
     }
@@ -137,7 +160,7 @@ header h1 {
         width: clamp(78px, 28vw, 110px);
     }
 
-    /* Narrow phones: logo above the text again */
+    /* Narrow phones: logo above the text again, with the name in one line under it (the menu and coffee buttons sit in the top corners) */
     .header-full {
         flex-direction: column;
         gap: 0.35rem;
@@ -145,6 +168,25 @@ header h1 {
 
     .header-full .tagline {
         text-align: center;
+    }
+
+    .header-brand {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .header-brand .cmw-header-main-logo {
+        order: -1;
+        width: clamp(78px, 24vw, 100px);
+    }
+
+    .header-name {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .header-name span {
+        display: inline;
     }
 }
 

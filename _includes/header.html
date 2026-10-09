@@ -1,6 +1,6 @@
 <header class="header-full">
     <a href="{{ '/index.html' | relative_url }}" class="header-home-link" aria-label="Cascade Mountain Weather home">
-        <h1>Cascade Mountain Weather</h1>
+        <h1 class="header-brand"><span class="header-name"><span>Cascade</span> <span>Mountain</span> <span>Weather</span></span><img class="cmw-header-main-logo" src="{{ '/assets/images/cmw_logo.png' | relative_url }}" alt="" width="115" height="115" decoding="async"></h1>
     </a>
     <p class="tagline">{% if site.tagline_lines %}{% for line in site.tagline_lines %}<span>{{ line }}</span> {% endfor %}{% else %}{{ site.tagline }}{% endif %}</p>
     {% if page.coffee_button %}
