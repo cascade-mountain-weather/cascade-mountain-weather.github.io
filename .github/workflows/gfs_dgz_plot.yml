@@ -2,7 +2,7 @@ name: Update GFS Plot
 
 on:
   schedule:
-    - cron: "0 * * * *" # Every hour
+    - cron: "30 19 * * *" # once a day, ~7.5 h after the 12Z GFS run starts (UCAR THREDDS "latest" was still on the 06Z run at 17:20Z on Oct 9); the plot is the 48-hour forecast from that run
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/images/gfs_dgz_F24.png
+          git add assets/images/gfs_dgz_F48.png
           git commit -m "Update GFS plot"
           git push
         env:
