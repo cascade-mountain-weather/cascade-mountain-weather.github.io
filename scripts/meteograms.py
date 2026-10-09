@@ -97,11 +97,15 @@ def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_m
 def nbm_series(cycle, hours, grid):
     def one(f):
         H = nbm.herbie_for(cycle, f)
-        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:nan|:WIND:10 m above ground:{f} hour fcst:nan"
-                           rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:nan)")
+        # The inventory line ends ":nan:nan" in some Herbie versions and just ":" in others (the plume scripts' `fcst:$` only
+        # matches the second, which is what the Actions runner has); the optional group takes both, and `$` keeps out the
+        # "ens std dev" and probability lines.
+        e = r"(nan:nan)?$"
+        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:{e}|:WIND:10 m above ground:{f} hour fcst:{e}"
+                           rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:{e})")
         # dew point and wind direction in their own request: if the NBM names them differently they stay empty
         # instead of taking temperature, wind and precipitation down with them
-        x = multi(H, grid, rf"(:DPT:2 m above ground:{f} hour fcst:nan|:WDIR:10 m above ground:{f} hour fcst:nan)", tries=1)
+        x = multi(H, grid, rf"(:DPT:2 m above ground:{f} hour fcst:{e}|:WDIR:10 m above ground:{f} hour fcst:{e})", tries=1)
         print(f"  nbm F{f:02d} {sorted(v)} {sorted(x)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
                 "dewpoint_f": k_to_f(x.get("d2m", nan(grid))), "wind_dir": x.get("wdir10", nan(grid)),

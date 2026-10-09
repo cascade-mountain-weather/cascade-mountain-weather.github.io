@@ -2,18 +2,19 @@
 layout: page
 disclaimer: true
 title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
-description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every 2 hours. Play, pause, and scrub through recent frames."
+description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated about every 3 hours. Play, pause, and scrub through recent frames."
 keywords: "GOES satellite loop, Pacific Northwest radar, Washington satellite imagery, PNW weather loop"
 og_title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
-og_description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every 2 hours."
+og_description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated about every 3 hours."
 ---
 <section id="satellite-looper" class="satellite-looper">
     <h2>GOES + Radar Looper</h2>
     <p class="satellite-subtitle">
-        Integrated GOES true color and radar loop for the Pacific Northwest. Updated every 2 hours.
+        Integrated GOES true color and radar loop for the Pacific Northwest. Updated about every 3 hours.
     </p>
     <div class="satellite-stage">
         <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
+        <span id="satellite-stamp" class="satellite-stamp" aria-live="off"></span>
     </div>
     <div class="satellite-controls">
         <button id="satellite-prev" type="button" aria-label="Previous frame">Prev</button>
@@ -34,6 +35,7 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
         const frameEl = document.getElementById('satellite-frame');
         const statusEl = document.getElementById('satellite-status');
         const timingEl = document.getElementById('satellite-timing');
+        const stampEl = document.getElementById('satellite-stamp');
         const scrubberEl = document.getElementById('satellite-scrubber');
         const prevEl = document.getElementById('satellite-prev');
         const nextEl = document.getElementById('satellite-next');
@@ -59,8 +61,22 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
             }
         }
 
+        // The time of the frame on screen: Pacific time first, UTC after it (the models and soundings are in UTC).
+        function frameTimeText(dt) {
+            if (!dt || Number.isNaN(dt.getTime())) {
+                return '';
+            }
+            const pac = dt.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+            const utc = dt.toLocaleString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hour12: false });
+            return `${pac} (${utc} UTC)`;
+        }
+
         function setStatusForFrame() {
-            statusEl.textContent = `Frame ${currentFrame + 1} of ${frames.length}`;
+            const text = frameTimeText(frames[currentFrame].time);
+            statusEl.textContent = `Frame ${currentFrame + 1} of ${frames.length}` + (text ? ` · ${text}` : '');
+            if (stampEl) {
+                stampEl.textContent = text;
+            }
         }
 
         function renderFrame(index) {
@@ -173,6 +189,7 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
                     return {
                         src: `{{ '/assets/images/satellite/frames/' | relative_url }}${f.file}?v=${version}`,
                         durationMs: Number(f.duration_ms || 0),
+                        time: f.timestamp_utc ? new Date(f.timestamp_utc) : null,
                     };
                 });
 
@@ -180,13 +197,6 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
                 renderFrame(0);
                 preloadFrames(1, 3);
                 setTimingTextFromManifest(manifest);
-
-                if (manifest.updated_utc) {
-                    const updatedDate = new Date(manifest.updated_utc);
-                    if (!Number.isNaN(updatedDate.getTime())) {
-                        statusEl.textContent = `Frame 1 of ${frames.length}. Updated ${updatedDate.toLocaleString()}`;
-                    }
-                }
 
             } catch (err) {
                 frames = [{ src: fallbackStaticPath, durationMs: 1000 }];
