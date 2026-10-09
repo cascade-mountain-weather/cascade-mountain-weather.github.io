@@ -245,3 +245,6 @@ data/teleconnections/results/run.log
 
 # Google Maps API key for scripts/ski_traffic.py (never commit)
 data/traffic/.google_key
+
+# ERA5 downloads for the synoptic regime analysis (scripts/era5_fetch.py)
+data/era5/
