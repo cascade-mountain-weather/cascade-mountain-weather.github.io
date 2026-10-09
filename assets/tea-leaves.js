@@ -104,10 +104,13 @@
 
         function inputsSummary(W) {
             if (W.id === 'own') return 'The values you set below, applied to every day of the period. This is for trying a number you saw in an ensemble member or a different forecast.';
-            const mj = W.mjos, known = mj.length;
-            const counts = {}; mj.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
-            const mjTxt = known ? Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map(p => `${p === '0' ? 'weak' : 'phase ' + p} on ${counts[p]} day${counts[p] > 1 ? 's' : ''}`).join(', ') : 'none yet';
-            return `<strong>What went in (${range(W)}):</strong> PNA ${W.pna == null ? 'no data' : signed(W.pna, 1) + ' (' + pnaWord(W.pna) + ')'}${W.spread ? ' &plusmn;' + W.spread.toFixed(1) + ' among forecast members' : ''}; ENSO ${signed(oni, 1)} (${ensoWord(oni)})${heldTxt('ONI') ? ', counted as +1.4 because few winters were that extreme' : ''}; PDO ${signed(pdo, 1)}; MJO phase ${J.lag} days earlier: ${mjTxt} (known for ${known} of ${W.nDays} days${known < W.nDays ? ', and the MJO is left out of the days we have no value for' : ''}).`;
+            const known = W.mjos.length, last = NOW && NOW.mjo && NOW.mjo.series.length ? NOW.mjo.series[NOW.mjo.series.length - 1].date : null;
+            const when = W.id === 'w1' ? 'the next 7 days' : 'days 8 to 14', missing = W.nDays - known;
+            const mjTxt = `The MJO phase used here is taken from ${J.lag} days before a given day because its effect on PNW snow is delayed about 1 week. `
+                + (last ? `The most recent MJO value is from ${md(new Date(last + 'T00:00:00Z'))}, so for ${when} the phase is known for ${known} of ${W.nDays} days. ` : '')
+                + (missing === 0 ? '' : known === 0 ? 'None of these days has an MJO input yet, so the prediction is made from the PNA, ENSO and PDO alone.'
+                    : `The other ${missing} days have no MJO input yet, so for those days the prediction is made from the PNA, ENSO and PDO alone.`);
+            return `<strong>What went in (${range(W)}):</strong> PNA ${W.pna == null ? 'no data' : signed(W.pna, 1) + ' (' + pnaWord(W.pna) + ')'}${W.spread ? ' &plusmn;' + W.spread.toFixed(1) + ' among forecast members' : ''}; ENSO ${signed(oni, 1)} (${ensoWord(oni)})${heldTxt('ONI') ? ', counted as +1.4 because few winters were that extreme' : ''}; PDO ${signed(pdo, 1)}. ${mjTxt}`;
         }
 
         function render() {
