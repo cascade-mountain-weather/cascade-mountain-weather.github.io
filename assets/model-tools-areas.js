@@ -419,8 +419,8 @@
                 };
             },
             info: a => ({
-                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone, the layer between -12 and -18&deg;C where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the melting-model snow level.`,
-                how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer (red and green lines together) inside the purple band is when fluffy dendrites form. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
+                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone, the layer between -12 and -18&deg;C where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the snow level, the height where the wet-bulb temperature reaches 0&deg;C. When the surface is already below freezing, the level is below the ground and the label says so.`,
+                how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer (red and green lines together) inside the purple band supports the formation of fluffy dendrites. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             }),
         },
@@ -438,8 +438,8 @@
                 };
             },
             info: {
-                what: 'The freezing level (blue), the melting-model snow level (orange) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
-                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. A thick purple band over a snow level below your elevation is the setup for light snow, if the sounding shows the layer is saturated. One model run is one scenario.',
+                what: 'The freezing level (blue), the snow level (orange; the height where the wet-bulb temperature reaches 0&deg;C) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
+                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Hollow dots are levels below the sounding point&rsquo;s ground, extended downward at 6.5&deg;C per km. A thick purple band over a snow level below your elevation is the setup for light snow, if the sounding shows the layer is saturated. One model run is one scenario.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             },
         },

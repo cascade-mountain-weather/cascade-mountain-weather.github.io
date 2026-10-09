@@ -14,7 +14,13 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
     </p>
     <div class="satellite-stage">
         <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
+        <svg id="satellite-overlay" class="satellite-overlay" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true"></svg>
         <span id="satellite-stamp" class="satellite-stamp" aria-live="off"></span>
+    </div>
+    <div class="satellite-layers">
+        <label><input type="checkbox" id="satellite-zones" checked> NWAC forecast zones</label>
+        <label><input type="checkbox" id="satellite-areas" checked> Our forecast areas</label>
+        <label><input type="checkbox" id="satellite-labels"> Names</label>
     </div>
     <div class="satellite-controls">
         <button id="satellite-prev" type="button" aria-label="Previous frame">Prev</button>
@@ -237,5 +243,82 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
         });
 
         initSatelliteLooper();
+
+        // Zones and forecast areas drawn over the frame. The COD image is an equirectangular map (longitude and latitude on straight,
+        // evenly spaced axes, longitude compressed by cos 48.4N): the constants below were fitted to its coastline and state
+        // lines (median miss about 3 px of 1600, roughly 2 to 3 km), so they are good for markers and regions, not for surveying.
+        const overlayEl = document.getElementById('satellite-overlay');
+        const NS = 'http://www.w3.org/2000/svg';
+        const LON0 = -129.0123, PX_PER_LON = 93.2366, LAT0 = 50.1673, PX_PER_LAT = 140.5239;
+        const px = function (lon, lat) { return [(lon - LON0) * PX_PER_LON, (LAT0 - lat) * PX_PER_LAT]; };
+        const layers = { zones: null, areas: null };
+
+        function svgEl(tag, attrs, text) {
+            const e = document.createElementNS(NS, tag);
+            Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+            if (text != null) { e.textContent = text; }
+            return e;
+        }
+
+        function ringPath(ring) {
+            return ring.map(function (c, i) { const p = px(c[0], c[1]); return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('') + 'Z';
+        }
+
+        function drawZones(geo) {
+            const g = svgEl('g', { id: 'sat-zones' });
+            (geo.features || []).forEach(function (f) {
+                const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+                polys.forEach(function (poly) {
+                    g.appendChild(svgEl('path', { d: poly.map(ringPath).join(''), fill: 'rgba(255,255,255,0.07)', stroke: '#ffffff', 'stroke-width': 2, 'stroke-dasharray': '7 4', 'fill-rule': 'evenodd' }));
+                });
+                const ring = polys[0][0];
+                const cx = ring.reduce(function (a, c) { return a + c[0]; }, 0) / ring.length, cy = ring.reduce(function (a, c) { return a + c[1]; }, 0) / ring.length;
+                const c = px(cx, cy);
+                g.appendChild(svgEl('text', { x: c[0], y: c[1], 'text-anchor': 'middle', class: 'sat-label sat-zone-label' }, f.properties.zone));
+            });
+            overlayEl.appendChild(g);
+            layers.zones = g;
+        }
+
+        function drawAreas(live) {
+            const g = svgEl('g', { id: 'sat-areas' });
+            (live.areas || []).forEach(function (a) {
+                if (a.lat == null || a.lon == null) { return; }
+                const p = px(a.lon, a.lat);
+                const dot = svgEl('circle', { cx: p[0], cy: p[1], r: 6, fill: '#f59e0b', stroke: '#0f172a', 'stroke-width': 2 });
+                dot.appendChild(svgEl('title', {}, a.name));
+                g.appendChild(dot);
+                g.appendChild(svgEl('text', { x: p[0] + 9, y: p[1] + 5, class: 'sat-label sat-area-label' }, a.name));
+            });
+            overlayEl.appendChild(g);
+            layers.areas = g;
+        }
+
+        function applyLayerToggles() {
+            const z = document.getElementById('satellite-zones'), a = document.getElementById('satellite-areas'), n = document.getElementById('satellite-labels');
+            if (layers.zones) { layers.zones.style.display = z.checked ? '' : 'none'; }
+            if (layers.areas) { layers.areas.style.display = a.checked ? '' : 'none'; }
+            overlayEl.classList.toggle('show-names', n.checked);
+        }
+
+        async function initOverlay() {
+            const base = `{{ '/assets/data/' | relative_url }}`;
+            try {
+                const [geo, live] = await Promise.all([
+                    fetch(base + 'nwac_zones.geojson').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+                    fetch(base + 'live_conditions.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+                ]);
+                if (geo) { drawZones(geo); }
+                if (live) { drawAreas(live); }
+                applyLayerToggles();
+            } catch (err) {
+                /* the loop works without the overlay */
+            }
+        }
+
+        ['satellite-zones', 'satellite-areas', 'satellite-labels'].forEach(function (id) {
+            document.getElementById(id).addEventListener('change', applyLayerToggles);
+        });
+        initOverlay();
     })();
 </script>

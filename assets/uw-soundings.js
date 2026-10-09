@@ -78,14 +78,16 @@
         }
         g += `<polyline points="${pts(f.td, f.p)}" fill="none" stroke="${C.td}" stroke-width="2.6" stroke-linejoin="round"/>`;
         g += `<polyline points="${pts(f.t, f.p)}" fill="none" stroke="${C.t}" stroke-width="2.8" stroke-linejoin="round"/>`;
-        // freezing level and snow level
-        const marks = [['freezing level', f.freezing_level_ft, C.frz], ['snow level', f.snow_level_ft, C.snow]];
-        marks.forEach(([label, ft, col]) => {
+        // freezing level and snow level (0 C wet bulb). A level below the model surface is drawn on the ground line and says so.
+        const marks = [['freezing level', f.freezing_level_ft, C.frz, f.freezing_below_surface], ['snow level (0&#176;C wet bulb)', f.snow_level_ft, C.snow, f.snow_below_surface]];
+        let lastY = -99;
+        marks.forEach(([label, ft, col, below]) => {
             const p = ft == null ? null : pAtZ(f, ft / FT);
             if (p == null) return;
-            const y = yOf(p);
+            const y = yOf(p), ty = Math.abs(y - lastY) < 17 ? y + 16 : y - 5;   // a second label that would collide goes under its line
+            lastY = y;
             g += `<line x1="${X0}" y1="${y}" x2="${X0 + PW}" y2="${y}" stroke="${col}" stroke-width="1.6" stroke-dasharray="7 4"/>`;
-            g += `<text x="${X0 + PW - 6}" y="${y - 5}" text-anchor="end" font-size="13" font-weight="700" fill="${col}" ${halo}>${label} ${fmtFt(ft)}</text>`;
+            g += `<text x="${X0 + PW - 6}" y="${ty}" text-anchor="end" font-size="13" font-weight="700" fill="${col}" ${halo}>${label} ${below ? 'below surface (~' + fmtFt(ft) + ')' : fmtFt(ft)}</text>`;
         });
 
         // axes: pressure on the left, height on the right, temperature along the bottom
@@ -113,7 +115,7 @@
             <line x1="${X0}" y1="${H - 36}" x2="${X0 + 22}" y2="${H - 36}" stroke="${C.t}" stroke-width="3"/><text x="${X0 + 28}" y="${H - 32}">temperature</text>
             <line x1="${X0 + 108}" y1="${H - 36}" x2="${X0 + 130}" y2="${H - 36}" stroke="${C.td}" stroke-width="3"/><text x="${X0 + 136}" y="${H - 32}">dew point</text>
             <text x="${X0}" y="${H - 16}" fill="${C.muted}">Dendritic growth zone (-12 to -18 &#176;C): ${dgz}.</text>
-            <text x="${X0}" y="${H - 2}" fill="${C.muted}">Snow level is the melting-model (wet bulb) level, not the freezing level.</text></g>`;
+            <text x="${X0}" y="${H - 2}" fill="${C.muted}">Snow level is where the wet-bulb temperature reaches 0&#176;C. A level below the surface is extended at 6.5&#176;C/km.</text></g>`;
         return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="system-ui,Segoe UI,Arial,sans-serif" role="img" aria-label="Skew-T sounding"><rect width="${W}" height="${H}" fill="#fff"/>
             ${head}<clipPath id="pa"><rect x="${X0}" y="${Y0}" width="${PW}" height="${PH}"/></clipPath><g clip-path="url(#pa)">${g}</g>
             <rect x="${X0}" y="${Y0}" width="${PW}" height="${PH}" fill="none" stroke="#94a3b8"/>${ax}${legend}</svg>`;
@@ -126,7 +128,7 @@
         const fr = site.frames, t0 = Date.parse(fr[0].valid_utc), t1 = Date.parse(fr[fr.length - 1].valid_utc);
         const LW = 760, LH = 500, left = 66, right = 20, aTop = 70, aH = 340;
         const pw = LW - left - right, x = ms => left + pw * (ms - t0) / (t1 - t0);
-        const lo0 = Math.min(site.elevation_ft, ...fr.map(f => f.snow_level_ft).filter(v => v != null)), hi0 = Math.max(...fr.map(f => Math.max(f.freezing_level_ft || 0, f.dgz_top_ft || 0)));
+        const lo0 = Math.min(site.elevation_ft, ...fr.map(f => f.snow_level_ft).filter(v => v != null), ...fr.map(f => f.freezing_level_ft).filter(v => v != null)), hi0 = Math.max(...fr.map(f => Math.max(f.freezing_level_ft || 0, f.dgz_top_ft || 0)));
         const step = niceStep(hi0 - lo0 + 1000), yLo = Math.max(0, Math.floor((lo0 - 600) / step) * step), yHi = Math.ceil((hi0 + 400) / step) * step;
         const ya = v => aTop + aH * (1 - (v - yLo) / (yHi - yLo));
         let s = '';
@@ -151,26 +153,27 @@
         };
         band.forEach((i, k) => { if (k && i !== band[k - 1] + 1) flush(); seg.push(i); });
         flush();
-        const line = (key, col, w) => {
+        const line = (key, col, w, flag) => {
             let d = '', pen = false;
             fr.forEach(f => {
                 if (f[key] == null) { pen = false; return; }
                 d += `${pen ? 'L' : 'M'}${x(Date.parse(f.valid_utc)).toFixed(1)},${ya(f[key]).toFixed(1)}`; pen = true;
             });
             return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>` +
-                fr.map(f => (f[key] == null ? '' : `<circle cx="${x(Date.parse(f.valid_utc)).toFixed(1)}" cy="${ya(f[key]).toFixed(1)}" r="2.6" fill="${col}"/>`)).join('');
+                fr.map(f => (f[key] == null ? '' : `<circle cx="${x(Date.parse(f.valid_utc)).toFixed(1)}" cy="${ya(f[key]).toFixed(1)}" r="2.8" fill="${f[flag] ? '#fff' : col}" stroke="${col}" stroke-width="1.4"/>`)).join('');
         };
         s += `<line x1="${left}" y1="${ya(site.elevation_ft)}" x2="${left + pw}" y2="${ya(site.elevation_ft)}" stroke="#78716c" stroke-dasharray="3 4"/>`;
         s += `<text x="${left + pw - 4}" y="${ya(site.elevation_ft) - 5}" text-anchor="end" font-size="12" fill="#78716c" ${halo}>sounding point ${fmtFt(site.elevation_ft)}</text>`;
-        s += line('freezing_level_ft', C.frz, 2.6) + line('snow_level_ft', C.snow, 2.6);
+        s += line('freezing_level_ft', C.frz, 2.6, 'freezing_below_surface') + line('snow_level_ft', C.snow, 2.6, 'snow_below_surface');
         const init = initDate(site).getTime();
         const head = `<text x="${left}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(',WA', ''))}: freezing level, snow level and dendritic growth zone</text>
             <text x="${left}" y="44" font-size="14" fill="${C.text}">UW WRF forecast, run ${zStr(init)} ${PAC_D.format(init)}, every 3 hours. Times are Pacific.</text>`;
         const lg = `<g font-size="12" fill="${C.text}">
             <line x1="${left}" y1="${aTop - 10}" x2="${left + 22}" y2="${aTop - 10}" stroke="${C.frz}" stroke-width="3"/><text x="${left + 28}" y="${aTop - 6}">freezing level (0&#176;C)</text>
-            <line x1="${left + 170}" y1="${aTop - 10}" x2="${left + 192}" y2="${aTop - 10}" stroke="${C.snow}" stroke-width="3"/><text x="${left + 198}" y="${aTop - 6}">snow level</text>
-            <rect x="${left + 285}" y="${aTop - 16}" width="22" height="12" fill="${C.dgz}" opacity=".25"/><text x="${left + 313}" y="${aTop - 6}">dendritic growth zone (-12 to -18&#176;C)</text></g>
-            <text x="${left}" y="${aTop + aH + 52}" font-size="12" fill="${C.muted}">Heights are feet above sea level. Snow level is the melting-model (wet bulb) level.</text>`;
+            <line x1="${left + 170}" y1="${aTop - 10}" x2="${left + 192}" y2="${aTop - 10}" stroke="${C.snow}" stroke-width="3"/><text x="${left + 198}" y="${aTop - 6}">snow level (0&#176;C wet bulb)</text>
+            <rect x="${left + 362}" y="${aTop - 16}" width="22" height="12" fill="${C.dgz}" opacity=".25"/><text x="${left + 390}" y="${aTop - 6}">dendritic growth zone (-12 to -18&#176;C)</text></g>
+            <text x="${left}" y="${aTop + aH + 52}" font-size="12" fill="${C.muted}">Heights are feet above sea level. Snow level is the 0&#176;C wet-bulb level.</text>
+            <text x="${left}" y="${aTop + aH + 68}" font-size="12" fill="${C.muted}">Hollow dots: the level is below the model surface (extended below ground at 6.5&#176;C/km).</text>`;
         return `<svg xmlns="http://www.w3.org/2000/svg" width="${LW}" height="${LH}" viewBox="0 0 ${LW} ${LH}" font-family="system-ui,Segoe UI,Arial,sans-serif" role="img" aria-label="Freezing level, snow level and dendritic growth zone over time"><rect width="${LW}" height="${LH}" fill="#fff"/>
             ${head}${lg}${s}<rect x="${left}" y="${aTop}" width="${pw}" height="${aH}" fill="none" stroke="#94a3b8"/>${axis}</svg>`;
     }

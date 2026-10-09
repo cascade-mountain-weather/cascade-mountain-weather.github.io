@@ -1,0 +1,39 @@
+name: Build NWAC Zone Outlines
+
+# One-off (run by hand): fetches the NWAC forecast-zone outlines used as map backdrops. Names and outlines only,
+# no danger ratings. Re-run only if NWAC changes its zones.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-zones:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Build zone outlines
+        run: python scripts/build_nwac_zones.py
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/nwac_zones.geojson
+          git commit -m "Update NWAC zone outlines [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

@@ -16,6 +16,7 @@
     const allEl = document.getElementById('conditions-all');
     const dataUrl = mapEl.dataset.src;
     const basinsUrl = mapEl.dataset.basins;
+    const zonesUrl = mapEl.dataset.zones;
     const base = mapEl.dataset.base || '';
 
     function setStatus(text, isWarning) {
@@ -150,13 +151,14 @@
 
     // Popup content for one or several areas sharing a watershed. With more than
     // one, each area gets a tab so every region in the basin stays reachable.
-    function popupContent(areas) {
-        if (areas.length === 1) return `<div class="cmap-popup-body">${areaBody(areas[0], 'div')}</div>`;
+    const zoneNote = zone => zone ? `<p class="cmap-zone-note">Shaded: the <strong>${esc(zone)}</strong> NWAC forecast zone, shown only to group nearby stations. <strong>This is not an NWAC forecast.</strong> For avalanche forecasts go to <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">nwac.us</a>.</p>` : '';
+    function popupContent(areas, zone) {
+        if (areas.length === 1) return `<div class="cmap-popup-body">${areaBody(areas[0], 'div')}${zoneNote(zone)}</div>`;
         const tabs = areas.map((a, i) =>
             `<button type="button" class="cmap-tab" role="tab" aria-selected="${i === 0}" data-tab="${i}">${esc(areaLabel(a.name))}</button>`).join('');
         const panels = areas.map((a, i) =>
             `<div class="cmap-panel" role="tabpanel" data-panel="${i}"${i ? ' hidden' : ''}>${areaBody(a, 'div')}</div>`).join('');
-        return `<div class="cmap-popup-body"><div class="cmap-tabs" role="tablist">${tabs}</div>${panels}</div>`;
+        return `<div class="cmap-popup-body"><div class="cmap-tabs" role="tablist">${tabs}</div>${panels}${zoneNote(zone)}</div>`;
     }
 
     // Delegated so it works however Leaflet builds the popup DOM.
@@ -213,7 +215,21 @@
         if (b) openCam(b.dataset.type, b.dataset.id, b.dataset.label);
     });
 
-    function build(data, basins) {
+    // point-in-polygon (ray casting) for one ring, and for a GeoJSON Polygon/MultiPolygon
+    function inRing(x, y, ring) {
+        let c = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const [xi, yi] = ring[i], [xj, yj] = ring[j];
+            if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+        }
+        return c;
+    }
+    function inGeom(lon, lat, g) {
+        const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+        return polys.some(p => inRing(lon, lat, p[0]) && !p.slice(1).some(h => inRing(lon, lat, h)));
+    }
+
+    function build(data, basins, zones) {
         const map = L.map(mapEl, {
             scrollWheelZoom: false,
             dragging: true,   // one finger moves the map on phones too; the map is capped in height so there is page above and below it to scroll with
@@ -225,38 +241,62 @@
         }).addTo(map);
 
         const popupWidth = Math.min(400, window.innerWidth - 60);
-        const areasByBasin = new Map();
-        data.areas.forEach(a => {
-            (a.basins || [a.basin]).forEach(code => {
-                if (!areasByBasin.has(code)) areasByBasin.set(code, []);
-                areasByBasin.get(code).push(a);
+        // Group areas by the shaded region they belong to: an NWAC forecast zone (the zone that holds most of the
+        // area's stations) when the zone outlines are available, otherwise the USGS watershed the area lists.
+        const regions = zones || basins;
+        const keyOf = zones ? f => f.properties.zone : f => f.properties.huc8;
+        const nameOf = zones ? f => f.properties.zone : f => f.properties.name;
+        const areasByKey = new Map();
+        const zoneOfArea = new Map();
+        if (zones) {
+            const near = (lon, lat) => {           // fall back to the nearest zone vertex for a point outside every outline
+                let best = null, bd = Infinity;
+                zones.features.forEach(f => { const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+                    polys.forEach(p => p[0].forEach(([x, y]) => { const d = (x - lon) ** 2 + (y - lat) ** 2; if (d < bd) { bd = d; best = f; } })); });
+                return best;
+            };
+            data.areas.forEach(a => {
+                const votes = new Map();
+                a.stations.forEach(s => { const f = zones.features.find(z => inGeom(s.lon, s.lat, z.geometry)) || near(s.lon, s.lat);
+                    if (f) votes.set(f.properties.zone, (votes.get(f.properties.zone) || 0) + 1); });
+                const top = [...votes.entries()].sort((x, y) => y[1] - x[1])[0];
+                if (top) { zoneOfArea.set(a, top[0]); if (!areasByKey.has(top[0])) areasByKey.set(top[0], []); areasByKey.get(top[0]).push(a); }
             });
-        });
+        } else {
+            data.areas.forEach(a => {
+                (a.basins || [a.basin]).forEach(code => {
+                    if (!areasByKey.has(code)) areasByKey.set(code, []);
+                    areasByKey.get(code).push(a);
+                });
+            });
+        }
 
-        const openAt = (latlng, areas, preferred) => {
+        const openAt = (latlng, areas, preferred, zone) => {
             const ordered = preferred ? [preferred, ...areas.filter(a => a !== preferred)] : areas;
             // Cap the popup at about half the map so there is always map left to drag or tap to close;
             // anything taller scrolls inside the popup.
             const popup = L.popup({
                 maxWidth: popupWidth, minWidth: Math.min(300, popupWidth), className: 'cmap-popup', autoPanPadding: [12, 12],
                 maxHeight: Math.max(180, Math.round(map.getSize().y * 0.5)),
-            }).setLatLng(latlng).setContent(popupContent(ordered));
+            }).setLatLng(latlng).setContent(popupContent(ordered, zone));
             openPopupRef = popup;
             popup.openOn(map);
         };
 
         const base = { color: '#1e3c72', weight: 1.5, fillColor: '#2a5298', fillOpacity: 0.15 };
-        const layer = L.geoJSON(basins, {
-            filter: f => areasByBasin.has(f.properties.huc8),
+        const layer = L.geoJSON(regions, {
+            filter: f => areasByKey.has(keyOf(f)),
             style: () => base,
             onEachFeature: (f, lyr) => {
-                const areas = areasByBasin.get(f.properties.huc8);
-                lyr.bindTooltip(f.properties.name, { sticky: true, direction: 'top', className: 'cmap-basin-tip' });
+                const areas = areasByKey.get(keyOf(f)), zone = zones ? keyOf(f) : null;
+                lyr.bindTooltip(zones ? `${esc(nameOf(f))} NWAC forecast zone (boundary only, not a forecast)` : nameOf(f), { sticky: true, direction: 'top', className: 'cmap-basin-tip' });
                 lyr.on('mouseover', () => { lyr.setStyle({ weight: 3, fillOpacity: 0.35 }); });
                 lyr.on('mouseout', () => lyr.setStyle(base));
-                lyr.on('click', e => { openAt(e.latlng, areas); });
+                lyr.on('click', e => { openAt(e.latlng, areas, null, zone); });
             },
         }).addTo(map);
+        const zoneNoteEl = document.getElementById('cmap-zone-note');
+        if (zoneNoteEl) zoneNoteEl.hidden = !zones;
 
         // Station dots go on top of the basins; clicking one opens its own area first.
         data.areas.forEach(area => area.stations.forEach(s => {
@@ -271,7 +311,7 @@
                 bubblingMouseEvents: false, keyboard: false,
             }).addTo(map);
             dot.bindTooltip(`${esc(s.label)}${s.elev_ft ? ` (${s.elev_ft.toLocaleString()}')` : ''}`, { direction: 'top', offset: [0, -8] });
-            dot.on('click', () => openAt(L.latLng(s.lat, s.lon), areasByBasin.get(area.basin), area));
+            dot.on('click', () => { const z = zoneOfArea.get(area); openAt(L.latLng(s.lat, s.lon), zones ? areasByKey.get(z) : areasByKey.get(area.basin), area, zones ? z : null); });
         }));
 
         map.fitBounds(layer.getBounds(), { padding: [12, 12] });
@@ -285,8 +325,9 @@
 
     const getJson = url => fetch(url, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
 
-    Promise.all([getJson(dataUrl), getJson(basinsUrl)])
-        .then(([data, basins]) => {
+    // NWAC zone outlines are preferred; the watershed outlines are the fallback if that file is not there
+    Promise.all([getJson(dataUrl), getJson(basinsUrl), zonesUrl ? getJson(zonesUrl).catch(() => null) : null])
+        .then(([data, basins, zones]) => {
             const generated = new Date(data.generated_utc);
             const ageH = (Date.now() - generated.getTime()) / 3.6e6;
             setStatus(
@@ -294,7 +335,7 @@
                 'NWAC stations via Synoptic, SNOTEL via NRCS. An en dash means that station does not report the value.' +
                 (ageH > STALE_DATA_HOURS ? ' This data is more than 6 hours old, so it may be out of date.' : ''),
                 ageH > STALE_DATA_HOURS);
-            build(data, basins);
+            build(data, basins, zones);
             renderAll(data);
         })
         .catch(err => {

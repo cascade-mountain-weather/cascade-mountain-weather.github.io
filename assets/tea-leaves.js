@@ -104,10 +104,13 @@
 
         function inputsSummary(W) {
             if (W.id === 'own') return 'The values you set below, applied to every day of the period. This is for trying a number you saw in an ensemble member or a different forecast.';
-            const mj = W.mjos, known = mj.length;
-            const counts = {}; mj.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
-            const mjTxt = known ? Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map(p => `${p === '0' ? 'weak' : 'phase ' + p} on ${counts[p]} day${counts[p] > 1 ? 's' : ''}`).join(', ') : 'none yet';
-            return `<strong>What went in (${range(W)}):</strong> PNA ${W.pna == null ? 'no data' : signed(W.pna, 1) + ' (' + pnaWord(W.pna) + ')'}${W.spread ? ' &plusmn;' + W.spread.toFixed(1) + ' among forecast members' : ''}; ENSO ${signed(oni, 1)} (${ensoWord(oni)})${heldTxt('ONI') ? ', counted as +1.4 because few winters were that extreme' : ''}; PDO ${signed(pdo, 1)}; MJO phase ${J.lag} days earlier: ${mjTxt} (known for ${known} of ${W.nDays} days${known < W.nDays ? ', and the MJO is left out of the days we have no value for' : ''}).`;
+            const known = W.mjos.length, last = NOW && NOW.mjo && NOW.mjo.series.length ? NOW.mjo.series[NOW.mjo.series.length - 1].date : null;
+            const when = W.id === 'w1' ? 'the next 7 days' : 'days 8 to 14', missing = W.nDays - known;
+            const mjTxt = `The MJO phase used here is taken from ${J.lag} days before a given day because its effect on PNW snow is delayed about 1 week. `
+                + (last ? `The most recent MJO value is from ${md(new Date(last + 'T00:00:00Z'))}, so for ${when} the phase is known for ${known} of ${W.nDays} days. ` : '')
+                + (missing === 0 ? '' : known === 0 ? 'None of these days has an MJO input yet, so the prediction is made from the PNA, ENSO and PDO alone.'
+                    : `The other ${missing} days have no MJO input yet, so for those days the prediction is made from the PNA, ENSO and PDO alone.`);
+            return `<strong>What went in (${range(W)}):</strong> PNA ${W.pna == null ? 'no data' : signed(W.pna, 1) + ' (' + pnaWord(W.pna) + ')'}${W.spread ? ' &plusmn;' + W.spread.toFixed(1) + ' among forecast members' : ''}; ENSO ${signed(oni, 1)} (${ensoWord(oni)})${heldTxt('ONI') ? ', counted as +1.4 because few winters were that extreme' : ''}; PDO ${signed(pdo, 1)}. ${mjTxt}`;
         }
 
         function render() {
@@ -117,7 +120,7 @@
             const own = S.own;
             const offSeason = gen.getUTCMonth() >= 5 && gen.getUTCMonth() <= 9;      // June to October
             root.innerHTML = `<div class="tl">
-                ${offSeason ? '<p class="ci-note">The relationships here were measured from November through May. Outside the ski season they are only a rough guide, and the SNOTEL snow measures mean little with no snow on the ground, so treat these numbers as a preview of how the tool will read once the season starts.</p>' : ''}
+                ${offSeason ? '<p class="ci-note">The relationships here were measured from November through May. Outside the ski season they are only a rough guide, and the SNOTEL snow measures mean nothing with no snow on the ground, so treat these numbers as a preview of how the tool will read once the season starts.</p>' : ''}
                 ${hasFeed ? `<p class="ci-hint">Read automatically from the latest data (updated daily): the observed PNA and the GEFS PNA forecast (${esc(NOW.pna.gefs_init)} run, ${NOW.pna.gefs[0] ? NOW.pna.gefs[0].n : ''} members), the MJO index through ${esc(NOW.mjo.series[NOW.mjo.series.length - 1].date)}, and the latest ENSO and PDO. Select a row to see the detail, or choose your own values.</p>${overview}`
                     : '<p class="ci-note">The live data feed is not available right now, so this is set up with your own values.</p>'}
                 <div class="ol-chips tl-sel" role="radiogroup" aria-label="Period">${wins.map(w => `<button type="button" class="ol-chip" role="radio" aria-checked="${S.sel === w.id}" data-sel="${w.id}">${esc(w.label)}, ${range(w)}</button>`).join('')}

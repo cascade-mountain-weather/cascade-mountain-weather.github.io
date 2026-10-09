@@ -85,7 +85,7 @@ def nan(grid):
     return np.full(len(grid.sites), np.nan)
 
 
-def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "wind_mph", "precip_in")):
+def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_mph", "wind_dir", "precip_in")):
     """Run one_hour(f) for f = 1..hours (the first one alone so the grid binds, then in threads); -> {var: [arrays]}."""
     res = {1: one_hour(1)}
     with ThreadPoolExecutor(max_workers=WORKERS) as ex:
@@ -98,22 +98,34 @@ def nbm_series(cycle, hours, grid):
     def one(f):
         H = nbm.herbie_for(cycle, f)
         # The inventory line ends ":nan:nan" in some Herbie versions and just ":" in others (the plume scripts' `fcst:$` only
-        # matches the second); the optional group takes both, and `$` still keeps out the "ens std dev" and probability lines.
+        # matches the second, which is what the Actions runner has); the optional group takes both, and `$` keeps out the
+        # "ens std dev" and probability lines.
         e = r"(nan:nan)?$"
         v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:{e}|:WIND:10 m above ground:{f} hour fcst:{e}"
                            rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:{e})")
-        print(f"  nbm F{f:02d} {sorted(v)}")
+        # dew point and wind direction in their own request: if the NBM names them differently they stay empty
+        # instead of taking temperature, wind and precipitation down with them
+        x = multi(H, grid, rf"(:DPT:2 m above ground:{f} hour fcst:{e}|:WDIR:10 m above ground:{f} hour fcst:{e})", tries=1)
+        print(f"  nbm F{f:02d} {sorted(v)} {sorted(x)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
+                "dewpoint_f": k_to_f(x.get("d2m", nan(grid))), "wind_dir": x.get("wdir10", nan(grid)),
                 "wind_mph": v.get("si10", nan(grid)) * MPS_TO_MPH, "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
     return run_hours(one, hours, grid)
+
+
+def wind_from(u, v):
+    """Direction (degrees) the wind blows FROM, from its eastward and northward components."""
+    return (270 - np.degrees(np.arctan2(v, u))) % 360
 
 
 def hrrr_series(cycle, hours, grid):
     def one(f):
         H = Herbie(cycle, model="hrrr", product="sfc", fxx=f, verbose=False)
-        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:|:(UGRD|VGRD):10 m above ground:|:APCP:surface:{f - 1}-{f} hour acc fcst)")
+        v = multi(H, grid, rf"(:(TMP|RH|DPT):2 m above ground:|:(UGRD|VGRD):10 m above ground:|:APCP:surface:{f - 1}-{f} hour acc fcst)")
         print(f"  hrrr F{f:02d} {sorted(v)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
+                "dewpoint_f": k_to_f(v.get("d2m", nan(grid))),
+                "wind_dir": wind_from(v.get("u10", nan(grid)), v.get("v10", nan(grid))),
                 "wind_mph": np.hypot(v.get("u10", nan(grid)), v.get("v10", nan(grid))) * MPS_TO_MPH,
                 "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
     return run_hours(one, hours, grid)
@@ -138,11 +150,13 @@ def hrdps_field(cycle, var, level, fxx, grid):
 def hrdps_series(cycle, hours, grid):
     def one(f):
         r = {"temp_f": k_to_f(hrdps_field(cycle, "TMP", "AGL-2m", f, grid)), "rh": hrdps_field(cycle, "RH", "AGL-2m", f, grid),
+             "dewpoint_f": k_to_f(hrdps_field(cycle, "DPT", "AGL-2m", f, grid)),
+             "wind_dir": hrdps_field(cycle, "WDIR", "AGL-10m", f, grid),
              "wind_mph": hrdps_field(cycle, "WIND", "AGL-10m", f, grid) * MPS_TO_MPH,
              "cum_in": hrdps_field(cycle, "APCP", "Sfc", f, grid) * MM_TO_IN}      # accumulated since the run started
         print(f"  hrdps F{f:02d}")
         return r
-    res = run_hours(one, hours, grid, keys=("temp_f", "rh", "wind_mph", "cum_in"))
+    res = run_hours(one, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_dir", "wind_mph", "cum_in"))
     cum, prev, per_hour = res.pop("cum_in"), np.zeros(len(grid.sites)), []
     for c in cum:
         per_hour.append(np.maximum(c - prev, 0))
@@ -164,33 +178,48 @@ def main():
     cfg = yaml.safe_load(nbm.SITES_FILE.read_text(encoding="utf-8"))
     sites = [s for s in cfg["sites"] if not args.sites or s["name"] in args.sites]
     out = {"schema": 1, "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
-           "units": {"temp_f": "F, 2 m", "rh": "percent, 2 m", "wind_mph": "mph, 10 m", "precip_in": "inches of liquid per hour"},
+           "units": {"temp_f": "F, 2 m", "rh": "percent, 2 m", "dewpoint_f": "F, 2 m", "wind_mph": "mph, 10 m", "wind_dir": "degrees the wind blows FROM, 10 m", "precip_in": "inches of liquid per hour"},
            "notes": ["Model grid-cell values at the point nearest each ski area; not downscaled or corrected for elevation or terrain."],
            "sites": [{"name": s["name"], "lat": s["lat"], "lon": s["lon"]} for s in sites], "models": {}}
     t0 = time.time()
+    path = Path(args.out or OUT)
+    try:
+        previous = json.loads(path.read_text(encoding="utf-8")).get("models", {})
+    except Exception:
+        previous = {}
     for model in args.models:
         cycle = newest_nbm_cycle(args.hours) if model == "nbm" else hm.newest_cycle(model)
-        if cycle is None:
-            print(f"{model}: no usable cycle found, skipped", file=sys.stderr)
+        block = None
+        for attempt in range(3):                      # newest cycle first; if it has no data yet, try the one before
+            if cycle is None:
+                break
+            print(f"{model} cycle {cycle:%Y-%m-%d %H}Z")
+            grid = nbm.Grid(sites)
+            fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
+            ser = fn(cycle, args.hours, grid)
+            arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
+            if not np.isfinite(arr["temp_f"]).any():
+                print(f"{model}: cycle {cycle:%d %H}Z returned no data (not fully posted yet?)", file=sys.stderr)
+                cycle = (cycle - pd.Timedelta(hours=6)) if model == "nbm" else hm.newest_cycle(model, latest=cycle - pd.Timedelta(hours=1))
+                continue
+            times = [f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}" for f in range(1, args.hours + 1)]
+            block = {
+                "label": LABELS[model], "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "time_utc": times,
+                "sites": {s["name"]: {"grid_km": grid.km[k] if grid.km else None,
+                                      **{key: [rd(x, 2 if key == "precip_in" else 1) for x in a[:, k]] for key, a in arr.items()}}
+                          for k, s in enumerate(sites)},
+            }
+            break
+        if block is None and model in previous:
+            print(f"{model}: no fresh data, keeping the previous run ({previous[model].get('cycle_utc')})", file=sys.stderr)
+            block = previous[model]
+        if block is None:
+            print(f"{model}: no usable data, skipped", file=sys.stderr)
             continue
-        print(f"{model} cycle {cycle:%Y-%m-%d %H}Z")
-        grid = nbm.Grid(sites)
-        fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
-        ser = fn(cycle, args.hours, grid)
-        arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
-        if not np.isfinite(arr["temp_f"]).any():
-            print(f"{model}: no values came back (every fetch failed), left out of the file", file=sys.stderr)
-            continue
-        times = [f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}" for f in range(1, args.hours + 1)]
-        out["models"][model] = {
-            "label": LABELS[model], "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "time_utc": times,
-            "sites": {s["name"]: {"grid_km": grid.km[k] if grid.km else None,
-                                  **{key: [rd(x, 2 if key == "precip_in" else 1) for x in a[:, k]] for key, a in arr.items()}}
-                      for k, s in enumerate(sites)},
-        }
+        out["models"][model] = block
         print(f"{model} done ({time.time() - t0:.0f}s)")
-    Path(args.out or OUT).write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
-    print("wrote", args.out or OUT)
+    path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    print("wrote", path)
 
 
 if __name__ == "__main__":
