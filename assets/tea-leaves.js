@@ -120,7 +120,7 @@
             const own = S.own;
             const offSeason = gen.getUTCMonth() >= 5 && gen.getUTCMonth() <= 9;      // June to October
             root.innerHTML = `<div class="tl">
-                ${offSeason ? '<p class="ci-note">The relationships here were measured from November through May. Outside the ski season they are only a rough guide, and the SNOTEL snow measures mean little with no snow on the ground, so treat these numbers as a preview of how the tool will read once the season starts.</p>' : ''}
+                ${offSeason ? '<p class="ci-note">The relationships here were measured from November through May. Outside the ski season they are only a rough guide, and the SNOTEL snow measures mean nothing with no snow on the ground, so treat these numbers as a preview of how the tool will read once the season starts.</p>' : ''}
                 ${hasFeed ? `<p class="ci-hint">Read automatically from the latest data (updated daily): the observed PNA and the GEFS PNA forecast (${esc(NOW.pna.gefs_init)} run, ${NOW.pna.gefs[0] ? NOW.pna.gefs[0].n : ''} members), the MJO index through ${esc(NOW.mjo.series[NOW.mjo.series.length - 1].date)}, and the latest ENSO and PDO. Select a row to see the detail, or choose your own values.</p>${overview}`
                     : '<p class="ci-note">The live data feed is not available right now, so this is set up with your own values.</p>'}
                 <div class="ol-chips tl-sel" role="radiogroup" aria-label="Period">${wins.map(w => `<button type="button" class="ol-chip" role="radio" aria-checked="${S.sel === w.id}" data-sel="${w.id}">${esc(w.label)}, ${range(w)}</button>`).join('')}

@@ -2,7 +2,7 @@
 layout: page
 disclaimer: true
 title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
-description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with MetPy from observed radiosonde data. True snow level (not just freezing level), dendritic growth zone, and CAPE at a glance."
+description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered with MetPy from observed radiosonde data. True snow level (not just freezing level), dendritic growth zone, and CAPE at a glance."
 keywords: "skew-t, radiosonde, sounding, dendritic growth zone, freezing level, snow level, wet bulb zero, Quillayute, Salem, Spokane, Port Hardy, MetPy"
 og_title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
 og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, with a true snow-level estimate, rendered client-side from observed radiosonde data."
@@ -272,13 +272,14 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 <section class="radiosonde-hero">
     <h1>Radiosonde Skew-T</h1>
     <p>
-        Observed soundings for Quillayute, Salem, Spokane, and Port Hardy, rendered client-side with
+        Observed soundings for Quillayute, Salem, Spokane, and Port Hardy, rendered with
         <a href="https://unidata.github.io/MetPy/" target="_blank" rel="noopener">MetPy</a> from
         <a href="https://mesonet.agron.iastate.edu/json/raob.py" target="_blank" rel="noopener">IEM's RAOB data feed</a>.
-        Read more about reading a Skew-T <a href="https://www.weather.gov/source/zhu/ZHU_Training_Page/convective_parameters/skewt/skewtinfo.html" target="_blank" rel="noopener">here</a>.
         Skew-Ts are useful for eyeballing freezing level and temperature inversions, the dendritic growth
-        zone (DGZ), estimating snow level, wind shear, and convective potential. 
-        Click a site to see the most recent sounding for that location. Quillayte, Port Hardy, and Salem are launched
+        zone (DGZ), estimating snow level, wind shear, and convective potential. Read more about understanding a Skew-T <a href="https://www.weather.gov/source/zhu/ZHU_Training_Page/convective_parameters/skewt/skewtinfo.html" target="_blank" rel="noopener">here</a>.
+    </p>
+    <p>
+        Click a site to see the most recent sounding for that location. Give about 30 seconds for the chart to load. Quillayte, Port Hardy, and Salem are launched
         upwind of the Cascades, so they are often representative of what the Cascades will see.
         Hover the chart to read temperature, dew point, and parcel values at any level, in metric or imperial units.
     </p>

@@ -15,8 +15,8 @@
     // What each chart shows, in plain language. Written from the charts themselves and ECMWF's descriptions.
     const HOW = {
         extended: {
-            precip: 'Shading is how the week&rsquo;s total precipitation differs from the model&rsquo;s own median, in mm: browns drier, greens wetter. Contours show how spread out the ensemble members are: green means they agree, purple means they do not.',
-            temp: 'Shading is the weekly average temperature compared with the model&rsquo;s own median, in &deg;C: blues colder, reds warmer. Contours are the same ensemble-spread measure.',
+            precip: 'Shading is how the week&rsquo;s total precipitation differs from the model&rsquo;s climatological median, in mm: browns drier, greens wetter. Contours show how spread out the ensemble members are: green means they agree, purple means they do not.',
+            temp: 'Shading is the weekly average temperature compared with the model&rsquo;s climatological median, in &deg;C: blues colder, reds warmer. Contours are the same ensemble-spread measure.',
             z500: 'The weekly average height of the 500 hPa surface compared with normal. A ridge (higher than normal) tends to bring dry, mild weather to the Northwest; a trough (lower) tends to bring cooler, wetter weather.',
         },
         seasonal: {

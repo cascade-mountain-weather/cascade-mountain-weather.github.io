@@ -64,8 +64,8 @@
                 ? cw3eMap('ivt_map', 'GFS_25', 'NEPac', 6, range(12, 144, 6), 12)
                 : cw3eMap('ivt_map', 'ECMWF_HRes', 'NEPac', 12, range(12, 144, 6), 12),
             info: Object.assign({
-                what: 'Integrated vapor transport (IVT) is the total water vapor being carried through the air column, in kg/m/s. It is the standard way to spot atmospheric rivers: long, narrow corridors of IVT aimed at the coast. Values above about 250 mean an atmospheric river; above 500 is strong.',
-                how: 'Watch where the plume makes landfall as you step forward. A plume aimed at Washington, especially with high IVT (orange/red), means heavy mountain precipitation. Compare GFS and ECMWF: if they agree on timing and landfall latitude, confidence is higher.',
+                what: 'Integrated vapor transport (IVT) is the total water vapor being carried through the air column, in kg/m/s. It is the standard way to spot atmospheric rivers: long, narrow corridors of IVT aimed at the coast. Values above about 250 are indicative of atmospheric river conditions.',
+                how: 'Watch where the plume makes landfall as you step forward. A plume aimed at Washington, especially with high IVT (orange/red), likely means heavy mountain precipitation. Compare GFS and ECMWF: if they agree on timing and landfall latitude, confidence is higher.',
             }, SRC_CW3E),
         },
         temp850: {
@@ -77,7 +77,7 @@
                 : cw3eMap('850hpa_temperature_map', 'ECMWF_HRes', 'NEPac', 12, range(0, 240, 3), 0),
             info: Object.assign({
                 what: '850 hPa is about 5,000 feet, near pass level in the Cascades. This map shows the temperature there, a quick read on whether the air feeding a storm is cold enough for snow at pass elevations.',
-                how: 'A 0&deg;C line near or below the Cascade crest suggests snow levels around pass level; warmer than about +3&deg;C usually means rain at the passes. Compare models: a few degrees of disagreement here is the difference between rain and snow at the passes.',
+                how: 'A 0&deg;C line near or below the Cascade crest suggests snow levels may be around pass level. Compare models: a few degrees of disagreement here is the difference between rain and snow at the passes.',
             }, SRC_CW3E),
         },
         arlt: {
@@ -87,7 +87,7 @@
             build: m => ({ gefs: landfall('GEFS_50', 6), eps: landfall('ECMWF_ENS', 12), diff: landfall('ECMWF_ENS-GEFS_50', 12) })[m],
             info: Object.assign({
                 what: 'An ensemble forecast of atmospheric rivers reaching the West Coast: the probability that IVT exceeds 250 kg/m/s, by latitude along the coast and by time over the next 16 days. The third option shows how the European and American ensembles differ.',
-                how: 'Find the latitude band for Washington (about 46&ndash;49&deg;N) and read across for when the probability rises. High probability means most ensemble members bring an atmospheric river there at that time. In the difference view, strong colors mean the two ensembles disagree.',
+                how: 'In our region, storms originate in the Pacific and travel from the west towards the coast. Treat this plot like you are looking at storms approaching the West Coast. Find the latitude band for Washington (about 46&ndash;49&deg;N) and read across from right to left (time axis). Look for whenever the probability rises. High probability means most ensemble members bring an atmospheric river there at that time. In the difference view, strong colors mean the two ensembles disagree.',
             }, SRC_CW3E),
         },
         plume: {
@@ -117,7 +117,7 @@
             })[m],
             info: {
                 what: 'A four-panel synoptic overview from the University of Utah: 500 mb heights and vorticity, sea level pressure and precipitation, 700 mb temperature and humidity, and IVT. Choose the American GFS, the European HRES, or the European AI model (AIFS).',
-                how: 'Use it to see the large-scale pattern beyond the range of the other products on this page. Treat days 7&ndash;10 as a trend, not a forecast, and compare the AI model to the physics-based ones: agreement is a good sign.',
+                how: 'Use it to see the large-scale pattern beyond the range of the other products on this page. Treat the longer range forecast with greater caution, and compare the AI model to the physics-based ones: agreement is a good sign.',
                 source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH + '/',
             },
         },
