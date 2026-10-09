@@ -97,11 +97,14 @@ def run_hours(one_hour, hours, grid, keys=("temp_f", "rh", "dewpoint_f", "wind_m
 def nbm_series(cycle, hours, grid):
     def one(f):
         H = nbm.herbie_for(cycle, f)
-        v = multi(H, grid, rf"(:(TMP|RH|DPT):2 m above ground:{f} hour fcst:nan|:(WIND|WDIR):10 m above ground:{f} hour fcst:nan"
+        v = multi(H, grid, rf"(:(TMP|RH):2 m above ground:{f} hour fcst:nan|:WIND:10 m above ground:{f} hour fcst:nan"
                            rf"|:APCP:surface:{f - 1}-{f} hour acc fcst:nan)")
-        print(f"  nbm F{f:02d} {sorted(v)}")
+        # dew point and wind direction in their own request: if the NBM names them differently they stay empty
+        # instead of taking temperature, wind and precipitation down with them
+        x = multi(H, grid, rf"(:DPT:2 m above ground:{f} hour fcst:nan|:WDIR:10 m above ground:{f} hour fcst:nan)", tries=1)
+        print(f"  nbm F{f:02d} {sorted(v)} {sorted(x)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
-                "dewpoint_f": k_to_f(v.get("d2m", nan(grid))), "wind_dir": v.get("wdir10", nan(grid)),
+                "dewpoint_f": k_to_f(x.get("d2m", nan(grid))), "wind_dir": x.get("wdir10", nan(grid)),
                 "wind_mph": v.get("si10", nan(grid)) * MPS_TO_MPH, "precip_in": v.get("tp", nan(grid)) * MM_TO_IN}
     return run_hours(one, hours, grid)
 
@@ -175,26 +178,44 @@ def main():
            "notes": ["Model grid-cell values at the point nearest each ski area; not downscaled or corrected for elevation or terrain."],
            "sites": [{"name": s["name"], "lat": s["lat"], "lon": s["lon"]} for s in sites], "models": {}}
     t0 = time.time()
+    path = Path(args.out or OUT)
+    try:
+        previous = json.loads(path.read_text(encoding="utf-8")).get("models", {})
+    except Exception:
+        previous = {}
     for model in args.models:
         cycle = newest_nbm_cycle(args.hours) if model == "nbm" else hm.newest_cycle(model)
-        if cycle is None:
-            print(f"{model}: no usable cycle found, skipped", file=sys.stderr)
+        block = None
+        for attempt in range(3):                      # newest cycle first; if it has no data yet, try the one before
+            if cycle is None:
+                break
+            print(f"{model} cycle {cycle:%Y-%m-%d %H}Z")
+            grid = nbm.Grid(sites)
+            fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
+            ser = fn(cycle, args.hours, grid)
+            arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
+            if not np.isfinite(arr["temp_f"]).any():
+                print(f"{model}: cycle {cycle:%d %H}Z returned no data (not fully posted yet?)", file=sys.stderr)
+                cycle = (cycle - pd.Timedelta(hours=6)) if model == "nbm" else hm.newest_cycle(model, latest=cycle - pd.Timedelta(hours=1))
+                continue
+            times = [f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}" for f in range(1, args.hours + 1)]
+            block = {
+                "label": LABELS[model], "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "time_utc": times,
+                "sites": {s["name"]: {"grid_km": grid.km[k] if grid.km else None,
+                                      **{key: [rd(x, 2 if key == "precip_in" else 1) for x in a[:, k]] for key, a in arr.items()}}
+                          for k, s in enumerate(sites)},
+            }
+            break
+        if block is None and model in previous:
+            print(f"{model}: no fresh data, keeping the previous run ({previous[model].get('cycle_utc')})", file=sys.stderr)
+            block = previous[model]
+        if block is None:
+            print(f"{model}: no usable data, skipped", file=sys.stderr)
             continue
-        print(f"{model} cycle {cycle:%Y-%m-%d %H}Z")
-        grid = nbm.Grid(sites)
-        fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
-        ser = fn(cycle, args.hours, grid)
-        arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
-        times = [f"{cycle + pd.Timedelta(hours=f):%Y-%m-%dT%H:%MZ}" for f in range(1, args.hours + 1)]
-        out["models"][model] = {
-            "label": LABELS[model], "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "time_utc": times,
-            "sites": {s["name"]: {"grid_km": grid.km[k] if grid.km else None,
-                                  **{key: [rd(x, 2 if key == "precip_in" else 1) for x in a[:, k]] for key, a in arr.items()}}
-                      for k, s in enumerate(sites)},
-        }
+        out["models"][model] = block
         print(f"{model} done ({time.time() - t0:.0f}s)")
-    Path(args.out or OUT).write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
-    print("wrote", args.out or OUT)
+    path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    print("wrote", path)
 
 
 if __name__ == "__main__":
