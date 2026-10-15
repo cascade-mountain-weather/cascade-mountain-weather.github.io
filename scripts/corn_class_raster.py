@@ -10,6 +10,7 @@ One raster serves the 4000+, 5000+ and 6000+ ft layers: the cutoff is a filter o
 """
 import argparse
 import math
+from pathlib import Path
 
 import numpy as np
 import rasterio
@@ -18,7 +19,10 @@ from rasterio.windows import from_bounds
 
 BASE = "/vsicurl/https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/TIFF/current/{t}/USGS_13_{t}.tif"
 M_PER_FT = 0.3048
-BOX = (-122.7, 45.6, -119.8, 49.0)  # west, south, east, north (same Cascades box as corn_terrain_area.py)
+BOXES = {"cascades": (-122.7, 45.6, -119.8, 49.0),   # west, south, east, north (same Cascades box as corn_terrain_area.py)
+         "olympics": (-123.8, 47.3, -122.9, 48.1)}   # around The Brothers (47.654 N, 123.141 W) and Hurricane Ridge; adjustable
+BOX = BOXES["cascades"]
+CACHE = Path(__file__).resolve().parent.parent / "data" / "corn" / "cache"
 PER = 3600  # cells per degree
 
 BAND_FT = 500
@@ -28,9 +32,21 @@ N_SLOPE_BINS = len(SLOPE_EDGES) - 1  # non-flat bins that are forecast
 N_AZ = 8
 
 
-def load_dem():
-    """Int16 meters on a 1/3600 degree grid covering BOX (snapped outward to whole cells)."""
-    w, s, e, n = BOX
+def get_dem(name):
+    """The DEM for a named box, read once from USGS and cached as .npy (data/corn/cache, git-ignored)."""
+    f = CACHE / f"dem_{name}.npy"
+    if f.exists():
+        return np.load(f), tuple(np.load(CACHE / f"dem_{name}_origin.npy"))
+    dem, origin = load_dem(BOXES[name])
+    CACHE.mkdir(parents=True, exist_ok=True)
+    np.save(f, dem)
+    np.save(CACHE / f"dem_{name}_origin.npy", np.array(origin))
+    return dem, origin
+
+
+def load_dem(box=BOX):
+    """Int16 meters on a 1/3600 degree grid covering the box (snapped outward to whole cells)."""
+    w, s, e, n = box
     w0, e0, s0, n0 = math.floor(w), math.ceil(e), math.floor(s), math.ceil(n)
     dem = np.full(((n0 - s0) * PER, (e0 - w0) * PER), -32768, dtype=np.int16)
     with Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", GDAL_HTTP_MAX_RETRY="3"):
@@ -87,10 +103,11 @@ def classify(dem, north, min_ft, chunk=1500):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--box", choices=list(BOXES), default="cascades")
     ap.add_argument("--min-ft", type=int, default=5000)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
-    dem, (west, north) = load_dem()
+    dem, (west, north) = get_dem(args.box)
     print("dem", dem.shape)
     cls = classify(dem, north, args.min_ft)
     print("classes used:", len(np.unique(cls)) - 1, "cells:", int((cls > 0).sum()), "max id:", int(cls.max()))

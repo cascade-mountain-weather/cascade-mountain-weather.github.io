@@ -27,7 +27,7 @@ def main():
     regs = yaml.safe_load((ROOT / "data" / "corn" / "regions.yml").read_text(encoding="utf-8"))["regions"]
     plat = np.radians([r["lat"] for r in regs])
     plon = np.radians([r["lon"] for r in regs])
-    w, s, e, n = cc.BOX
+    w, s, e, n = cc.BOXES["cascades"]
     rows, cols = int(round((n - s) * cc.PER)), int(round((e - w) * cc.PER))
     lon = np.radians(w + (np.arange(cols) + 0.5) / cc.PER)
     out = np.zeros((rows, cols), dtype=np.uint8)

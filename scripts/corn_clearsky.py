@@ -20,6 +20,7 @@ Day indexing: a fixed non-leap reference year (REF_YEAR), so day-of-year arrays 
 by under a few hundredths of a degree between years.
 """
 import argparse
+import math
 from pathlib import Path
 
 import numpy as np
@@ -67,8 +68,28 @@ def tilted(h, slope_deg, aspect_deg):
     poa = pvlib.irradiance.get_total_irradiance(
         slope_deg, aspect_deg, h["zenith"], h["azimuth"], h["dni"], h["ghi"], h["dhi"], dni_extra=h["dni_extra"],
         albedo=ALBEDO_SURROUND, model="haydavies")
-    return poa.rename(columns={"poa_global": "total", "poa_direct": "direct", "poa_diffuse": "diffuse", "poa_ground_diffuse": "reflected"})[
+    return poa.rename(columns={"poa_global": "total", "poa_direct": "direct", "poa_sky_diffuse": "diffuse", "poa_ground_diffuse": "reflected"})[
         ["total", "direct", "diffuse", "reflected"]].fillna(0.0)
+
+
+def tilted_terrain(h, slope_deg, aspect_deg, vd, ct, horizon_deg, albedo=ALBEDO_SURROUND):
+    """Like `tilted`, but with terrain: direct sun is blocked when the sun is below the horizon in its direction (horizon_deg is the 16
+    horizon angles from data/corn/class_terrain_<box>.csv, 0 = north clockwise, linear in azimuth), sky diffuse is scaled by the share of
+    the sky the surface sees (vd over its unobstructed value (1 + cos slope)/2), and the reflected term is the terrain configuration
+    factor ct times `albedo` times the horizontal global irradiance (the surrounding terrain is assumed to receive what flat ground
+    does: an upper bound, since shaded terrain reflects less). Columns as `tilted`."""
+    base = tilted(h, slope_deg, aspect_deg)
+    hz = np.asarray(horizon_deg, dtype=float)
+    az = h["azimuth"].values
+    hs = np.interp(az, np.append(np.arange(16) * 22.5, 360.0), np.append(hz, hz[0]))
+    sun_up = (90.0 - h["zenith"].values) > hs
+    unobstructed = (1 + math.cos(math.radians(slope_deg))) / 2
+    out = pd.DataFrame(index=h.index)
+    out["direct"] = np.where(sun_up, base["direct"].values, 0.0)
+    out["diffuse"] = base["diffuse"].values * (vd / unobstructed)
+    out["reflected"] = ct * albedo * h["ghi"].values
+    out["total"] = out["direct"] + out["diffuse"] + out["reflected"]
+    return out[["total", "direct", "diffuse", "reflected"]]
 
 
 def daily_mj(series):
