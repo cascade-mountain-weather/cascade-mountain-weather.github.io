@@ -10,7 +10,7 @@ they are not in the 36-station teleconnection panel, whose stations all began by
 An OVER-PERFORMANCE day for a zone is a day when its SWE gain is at least OVER_IN (0.5 in of water, roughly 4 to 6 in of snow)
 above what the zone usually gets for the amount the other zones got: zone SWE minus RATIO x (mean of the other zones), where RATIO
 is the zone's least-squares ratio to the other-zone mean over days when the others got more than 0.05 in. UNDER-performance is the
-same with -0.5. A STORM day is a day when the mean over all zones is at least STORM_IN (0.25 in).
+same with -0.5. A STORM day is a day when the mean over all zones is at least STORM_IN (0.25 in), or STORM_IN_SPRING (0.10 in) in April and May.
 """
 import sys
 from pathlib import Path
@@ -26,6 +26,7 @@ import tele_fetch as tf  # noqa: E402
 ROOT = ta.ROOT
 OUT = ROOT / "data" / "storms"
 OVER_IN, STORM_IN, MIN_OTHERS_IN = 0.5, 0.25, 0.05
+STORM_IN_SPRING = 0.10                           # April-May: smaller storms count, spring snow is lighter
 FIRST_SEASON, LAST_SEASON = 1992, 2026          # a season is named for the year it ends in (Nov of the year before to May)
 # Baker and Hurricane Ridge: the one station with a long record (Easy Pass starts in 2008, and a station that appears part
 # way through would change the zone's usual level).
@@ -53,7 +54,7 @@ def build():
     zones = list(ZONE_STATIONS)
     A = df[zones].values
     df["all_mean"] = np.nanmean(A, axis=1)
-    df["storm"] = df["all_mean"] >= STORM_IN
+    df["storm"] = df["all_mean"] >= np.where(df.index.month.isin([4, 5]), STORM_IN_SPRING, STORM_IN)
     ratios = {}
     for k, z in enumerate(zones):
         others = np.nanmean(np.delete(A, k, axis=1), axis=1)
