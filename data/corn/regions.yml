@@ -63,12 +63,6 @@ regions:
     ski_zone: mission
     lat: 47.293
     lon: -120.4
-  - id: whistler
-    name: Whistler Blackcomb (BC)
-    ski_zone: whistler
-    lat: 50.116
-    lon: -122.957
-    outside_raster: true   # north of 49N, beyond the WA Cascades raster box; no terrain classes yet
   - id: glacier_peak
     name: Glacier Peak
     ski_zone: null

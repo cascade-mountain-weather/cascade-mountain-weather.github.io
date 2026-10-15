@@ -357,3 +357,7 @@ NOAA CPC teleconnection/outlook products (for the climate outlook + teleconnecti
 - PNA ensemble: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna_index_ensm.shtml
 - MJO: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml
 - ENSO: https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/enso.shtml
+
+### Corn regions status (Oct 14 2026)
+
+`data/corn/regions.yml` has 13 forcing regions: 12 ski zones (North Bend dropped as lowland, Whistler left out for now) plus Glacier Peak (48.077 N, -121.10 W). `scripts/corn_region_raster.py` assigns each cell of the Cascades raster to the nearest region point (first rule, to revisit): 0.24 MB PNG, regions claim 2.5% (Stevens) to 17.4% (White Pass, which also covers Mt. Adams) of the box. Hurricane Ridge is in the Olympics, outside the Cascades box, so it only claims eastern Puget Sound cells; the Olympics need their own class raster.
