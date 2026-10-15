@@ -8,8 +8,7 @@ follows SNOWPACK (github.com/snowpack-model/snowpack, Source/snowpack/snowpack: 
 Laws_sn.cc compSensibleHeatCoefficient / compLatentHeat, Meteo.cc RichardsonStability, MeteoIO Atmosphere.cc
 Konzelmann_emissivity); only the surface balance is borrowed, not the full profile solver.
 
-Parameters given by Danny (Oct 14 2026): albedo from 0.95 (fresh snow) down to a floor of 0.3 as a power-law decay, most of the
-drop in about a week (realistic floor 0.45-0.6); roughness length 0.25 mm (fresh) rising to 25 mm (old snow, sun cups), also a power law; conductivity of ice 2.2 W/m/K;
+Parameters given by Danny (Oct 14 2026): albedo from 0.95 (fresh snow) down to a floor of 0.55 (raised Oct 15), decaying 2% a day and up to 3% a day as melt-freeze cycles accumulate; roughness length 0.25 mm (fresh) rising to 25 mm (old snow, sun cups), also a power law; conductivity of ice 2.2 W/m/K;
 diffusion coefficient in air 22e-6 and in snow/ice 85e-6 (m2/s) (these two enter SNOWPACK's snow conductivity, which needs
 grain data we do not have; recorded here, not used yet).
 PLACEHOLDERS, NOT SOURCED (marked **(source)** in PLAN.md): the decay time scales and exponents (ALBEDO_TAU_DAYS, ROUGH_TAU_DAYS), the snow conductivity
@@ -29,11 +28,12 @@ KARMAN = 0.4
 EMISS_SNOW = 0.98
 CP_AIR, C_ICE, L_SUB, L_FUS, R_AIR, G = 1004.67, 2100.0, 2.838e6, 3.34e5, 287.0, 9.80665
 # Danny
-ALBEDO_MAX, ALBEDO_MIN = 0.95, 0.3
+ALBEDO_MAX, ALBEDO_MIN = 0.95, 0.55            # minimum raised from 0.3 to 0.55 (Danny, Oct 15); very dirty snow could go lower
 Z0_MIN, Z0_MAX = 0.25e-3, 25e-3
 K_ICE, D_AIR, D_SNOW = 2.2, 22e-6, 85e-6     # the last two are recorded, not used
 # placeholders (see docstring)
-ALBEDO_TAU_DAYS, ALBEDO_POWER = 2.0, 1.0      # power-law decay, most of the drop in about a week (Danny: roughly a week)
+ALBEDO_RATE0, ALBEDO_RATE_MAX, ALBEDO_CYCLES_FULL = 0.020, 0.030, 3.0   # fractional loss per day: 2% fresh, rising to 3% as melt-freeze cycles accumulate (Danny: 2-3%/day, faster as grains grow)
+MF_MELT_C, MF_FREEZE_C = -0.05, -1.0           # a melt-freeze cycle: surface at 0 C, then back below -1 C
 ROUGH_TAU_DAYS, ROUGH_POWER = 14.0, 1.0       # power-law approach to old-snow roughness; Danny: depends on conditions
 RHO_SNOW = 400.0
 W_IRR = 0.07
@@ -44,9 +44,19 @@ ZETA_MAX = 1.0
 DZ, NL, DT = 0.01, 30, 60.0
 
 
-def albedo(age_days):
-    """Power-law decay with age since the last snowfall: ALBEDO_MIN + (MAX - MIN) (1 + age/tau)^-p."""
-    return ALBEDO_MIN + (ALBEDO_MAX - ALBEDO_MIN) * (1 + max(age_days, 0.0) / ALBEDO_TAU_DAYS) ** -ALBEDO_POWER
+def albedo_rate(cycles):
+    """Fractional albedo loss per day: ALBEDO_RATE0 with no melt-freeze cycles, rising linearly to ALBEDO_RATE_MAX at ALBEDO_CYCLES_FULL cycles."""
+    return ALBEDO_RATE0 + (ALBEDO_RATE_MAX - ALBEDO_RATE0) * min(max(cycles, 0.0) / ALBEDO_CYCLES_FULL, 1.0)
+
+
+def albedo_step(alpha, cycles, dt_days):
+    """One time step of the albedo decay (floored at ALBEDO_MIN)."""
+    return max(ALBEDO_MIN, alpha * (1.0 - albedo_rate(cycles) * dt_days))
+
+
+def albedo(age_days, cycles=0.0):
+    """Albedo after `age_days` of constant-rate decay from ALBEDO_MAX (use albedo_step when the cycle count changes through time)."""
+    return max(ALBEDO_MIN, ALBEDO_MAX * (1.0 - albedo_rate(cycles)) ** max(age_days, 0.0))
 
 
 def z0(age_days):
@@ -111,6 +121,8 @@ class Column:
         self.T = np.full(NL, T0)
         self.w = np.full(NL, w0 * self.m)       # liquid water, kg/m2
         self.k = k_snow(rho)
+        self.cycles = 0                         # completed melt-freeze cycles (surface reached 0 C, then fell below MF_FREEZE_C)
+        self._melted = False
         self.t_deep = T_DEEP                    # temperature just below the column (K); the caller may update it
 
     def add_heat(self, i, E):
@@ -184,6 +196,11 @@ class Column:
         for i in range(NL):
             self.add_heat(i, (flux[i] - flux[i + 1]) * dt)
         self.drain()
+        if ts >= 273.15 + MF_MELT_C and into_top > 0:
+            self._melted = True
+        elif self._melted and ts < 273.15 + MF_FREEZE_C:
+            self.cycles += 1
+            self._melted = False
         return ts, into_top
 
     def thawed_cm(self):

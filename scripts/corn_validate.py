@@ -52,9 +52,30 @@ DAYS = [
          elev_ft=5500, slope=17.5, aspect=180, T=["PVC54", "MU101"], W="PVW54", SW=["PVW54", "MU101"], SNOTEL="679:WA:SNTL", region="paradise"),
     dict(id="paradise_jan17", date="2026-01-17", hhmm="12:00", good=False, place="Paradise area (way too warm)", lat=46.80, lon=-121.74,
          elev_ft=5500, slope=17.5, aspect=180, T=["PVC54", "MU101"], W="PVW54", SW=["PVW54", "MU101"], SNOTEL="679:WA:SNTL", region="paradise"),
+    # older days: forcing from HRRR (scripts/corn_hrrr.py), snow age from the nearest SNOTEL; slope and aspect are guesses from the route name
+    dict(id="helens_2022", date="2022-01-17", hhmm="12:30", good=True, place="Mt. St. Helens, Worm Flows", lat=46.20, lon=-122.18, elev_ft=5500,
+         slope=30, aspect=180, source="hrrr", SNOTEL="1012:WA:SNTL"),
+    dict(id="helens_2023", date="2023-03-22", hhmm="11:30", good=True, place="Mt. St. Helens, Worm Flows", lat=46.20, lon=-122.18, elev_ft=5500,
+         slope=30, aspect=180, source="hrrr", SNOTEL="1012:WA:SNTL"),
+    dict(id="adams_2023", date="2023-06-10", hhmm="11:30", good=True, place="Mt. Adams, Southwest Chutes", lat=46.17, lon=-121.52, elev_ft=6500,
+         slope=30, aspect=225, source="hrrr", SNOTEL="702:WA:SNTL"),
+    dict(id="crystal_2024", date="2024-04-14", hhmm="13:00", good=True, place="Crystal Mountain, northwest routes", lat=46.935, lon=-121.475, elev_ft=6200,
+         slope=30, aspect=315, source="hrrr", SNOTEL="642:WA:SNTL"),
+    dict(id="baker_2024", date="2024-06-29", hhmm="13:00", good=True, place="Mt. Baker, Coleman-Deming", lat=48.77, lon=-121.84, elev_ft=6000,
+         slope=17.5, aspect=225, source="hrrr", SNOTEL="1011:WA:SNTL"),
+    dict(id="baker_2025", date="2025-06-15", hhmm="12:00", good=True, place="Mt. Baker, Coleman-Deming, W/SW", lat=48.77, lon=-121.84, elev_ft=6000,
+         slope=17.5, aspect=247.5, source="hrrr", SNOTEL="1011:WA:SNTL"),
     dict(id="baker_ski", date="2026-02-05", hhmm="12:00", good=False, place="Mt. Baker ski area (thick ice crust after rain)", lat=48.86, lon=-121.67,
          elev_ft=4800, slope=17.5, aspect=180, T=["MTB42", "MTB50"], W="MTB50", SW=["MTB50", "KCFW1"], SNOTEL="909:WA:SNTL", region="baker"),
 ]
+def _nws_cold():
+    from matplotlib.colors import LinearSegmentedColormap
+    # cold-to-freezing ramp in the style of NWS temperature maps: purple, blue, cyan, then green at the melting point
+    stops = [(0.0, "#4a1a7a"), (0.25, "#2b4fb3"), (0.5, "#2f8fd8"), (0.75, "#7fd1e8"), (0.93, "#b9efd8"), (1.0, "#34b36a")]
+    return LinearSegmentedColormap.from_list("nws_cold", stops)
+
+
+NWS_COLD = _nws_cold()
 TERRAIN = ROOT / "data" / "corn" / "class_terrain_cascades.csv"
 
 
@@ -105,6 +126,28 @@ def dewpoint(T, RH):
     return b * g / (a - g)
 
 
+def forcing_hrrr(day, idx):
+    """HRRR version of forcing(): returns the same tuple plus the model's downward longwave (W/m2) on idx."""
+    f = CACHE / f"hrrr_{day['id']}_{day['date']}.pkl"
+    df = pd.read_pickle(f)
+    df.index = pd.DatetimeIndex(df.index).tz_localize("UTC")
+    hr = lambda s: s.reindex(idx.union(s.index)).interpolate(limit=7, limit_area="inside").reindex(idx).ffill().bfill()
+    elev = day["elev_ft"] * FT
+    orog = float(df["orog"].median())
+    dz = elev - orog
+    T = hr(df["t2m"]) - 273.15 - 0.0065 * dz          # standard lapse to the site elevation (placeholder; HRRR terrain is smoothed)
+    Td = hr(df["d2m"]) - 273.15 - 0.002 * dz
+    es = lambda t: 6.112 * np.exp(17.62 * t / (243.12 + t))
+    RH = np.clip(es(Td) / es(T), 0.05, 1.0)
+    W = np.hypot(hr(df["u10"]), hr(df["v10"])).clip(lower=0.3)
+    h = cs.horizontal(day["lat"], day["lon"], orog, times=idx)
+    kt = (hr(df["sdswrf"]) / h["ghi"].where(h["ghi"] > 80)).where(lambda x: (x >= 0) & (x <= 1.05))
+    kt = kt.where((90 - h["zenith"]) > 15).interpolate(limit_area=None).ffill().bfill()
+    print(f"   HRRR point terrain {orog / FT:.0f} ft (site {day['elev_ft']} ft): median midday kt {float(kt[(90 - h['zenith']) > 25].median()):.2f}")
+    cloud = (1 - kt / KT_CLEAR).clip(0, 1)
+    return (T + 273.15), RH, W, cloud, kt, T, hr(df["sdlwrf"])
+
+
 def forcing(day, idx):
     """Forcing on the half-hour index `idx` (UTC): air T (K), RH (0-1), wind (m/s) at the site; cloud fraction and kt."""
     d0 = pd.Timestamp(day["date"], tz="UTC") - pd.Timedelta(days=SPINUP_DAYS + 1)
@@ -148,7 +191,7 @@ def forcing(day, idx):
     print(f"   radiometer {used}: median midday kt {float(kt_f[(90 - cs.horizontal(smeta['lat'], smeta['lon'], smeta['elev_m'], times=idx)['zenith']) > 25].median()):.2f}")
     cloud = (1 - kt_f / KT_CLEAR).clip(0, 1)
     T, RH, W = (x.ffill().bfill() for x in (T, RH, W))
-    return (T + 273.15), RH, W, cloud, kt_f, T
+    return (T + 273.15), RH, W, cloud, kt_f, T, None
 
 
 def snow_age(day, idx):
@@ -176,24 +219,26 @@ def run(day):
     start = max(target - pd.Timedelta(days=SPINUP_DAYS), (last_snow + pd.Timedelta(days=1)).tz_localize("UTC")) + pd.Timedelta(hours=8)
     end = target + pd.Timedelta(days=1) + pd.Timedelta(hours=8)
     idx = pd.date_range(start + pd.Timedelta(minutes=15), end, freq="30min")
-    T, RH, W, cloud, kt, Tc = forcing(day, idx)
+    T, RH, W, cloud, kt, Tc, lw_override = (forcing_hrrr if day.get("source") == "hrrr" else forcing)(day, idx)
     hh = cs.horizontal(day["lat"], day["lon"], day["elev_ft"] * FT, times=idx)
     sw_cl = cs.tilted_terrain(hh, day["slope"], day["aspect"], row.vd, row.ct, row[hc].values)["total"]
     pressure = 101325 * (1 - 2.25577e-5 * day["elev_ft"] * FT) ** 5.25588
     age0 = (idx[0].tz_localize(None) - last_snow).total_seconds() / 86400
+    alpha = ce.albedo(age0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
     col = ce.Column(T0=min(float(np.nanmean(T.values[:48])), 273.15), w0=0.0)
     col.t_deep = col.T[-1]
-    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[])
+    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[])
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
-        sw_abs = (1 - ce.albedo(age)) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
+        sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
         col.t_deep += (min(T.values[n], 273.15) - col.t_deep) * (1800.0 / (DEEP_TAU_DAYS * 86400))   # deep snow follows a smoothed, capped air temperature
-        f = dict(sw_abs=sw_abs, lw_in=ce.lw_in(RH.values[n], T.values[n], cloud.values[n]), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
+        f = dict(sw_abs=sw_abs, lw_in=(float(lw_override.values[n]) if lw_override is not None else ce.lw_in(RH.values[n], T.values[n], cloud.values[n])), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
                  pressure=pressure, z0=ce.z0(age))
         for _ in range(int(30 * 60 / ce.DT)):
             ts, _q = col.step(f)
+        alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24)
         rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
-        rec["sw"].append(sw_abs); rec["ta"].append(T.values[n] - 273.15)
+        rec["sw"].append(sw_abs); rec["alb"].append(alpha); rec["ta"].append(T.values[n] - 273.15)
     res = {k: np.array(v) for k, v in rec.items() if k != "t"}
     res["t"] = pd.DatetimeIndex(rec["t"]).tz_localize(None) + local
     res["age0"], res["last_snow"], res["row"], res["sn"] = age0, last_snow, row, sn
@@ -224,12 +269,12 @@ def plot(day, res):
     cax = fig.add_subplot(gs[0, 1])
     plt.setp(a1.get_xticklabels(), visible=False)
     x = mdates_num(t)
-    pm = a1.pcolormesh(x, depth, Tm.T, cmap="coolwarm", vmin=-15, vmax=0, shading="nearest")
+    pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-15, vmax=0, shading="nearest")
     a1.contour(x, depth, w.T, levels=[ce.W_THAW], colors="k", linewidths=1.3)
     a1.set_ylim(depth[-1] + 0.5, 0)
     a1.set_ylabel("depth below the surface (cm)")
     cb = fig.colorbar(pm, cax=cax)
-    cb.set_label("snow temperature (C); red = at 0 C")
+    cb.set_label("snow temperature (C); green = at 0 C")
     a1.set_title(f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else 'bad day'}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}\n"
                  f"black line: liquid water begins (>= {100 * ce.W_THAW:.1f}% of mass).  Snow age at start {res['age0']:.1f} d.  Forcing: observed stations; shortwave scaled by measured cloud.", fontsize=10)
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
@@ -238,7 +283,7 @@ def plot(day, res):
         a.axvline(mdates_num([mark])[0], color="k", ls="--", lw=1)
         a.grid(alpha=0.2)
     a2.plot(x, res["ta"], color="#475569", label="air (lapse-adjusted)")
-    a2.plot(x, res["ts"], color="#dc2626", label="snow surface")
+    a2.plot(x, res["ts"], color="#1d4ed8", label="snow surface")
     a2.axhline(0, color="k", lw=0.6)
     a2.set_ylabel("temperature (C)")
     a3 = a2.twinx()
