@@ -216,7 +216,7 @@ Reading: 10 m is out for the hosted raster at every cutoff (even 6000+ is 43 M c
 
 **Class raster size test (Oct 7 2026):** `scripts/corn_class_raster.py --min-ft 5000` builds a 16-bit PNG of class ids over the WA Cascades at about 30 m: 16.5 M cells above 5000 ft, classes used: see rebuild below; first run **8.2 MB** with 3 slope bins, rebuilt with 4 slope bins (10-25, 25-35, 35-45, 45+): **8.5 MB** (500 ft bands x flat or slope bins x 8 aspect octants; the bands, slope edges and flat limit are placeholders, not sourced). The file is not committed. 4000+ ft has about 1.9x the cells, so roughly 15 MB if it scales (not measured); 6000+ would be smaller. Still to decide: serve the three cutoffs as one 4000+ raster (the cutoff is just a filter on the elevation band) rather than three files.
 
-**Slope bins (decided Oct 8 2026):** flat (placeholder limit 10 degrees, no aspect), 10-25, 25-35, 35-45, 45+ degrees, 8 aspect octants, 500 ft elevation bands. I read "flat plus edges at 25, 35 and 45" as adding 45 to the earlier 10/25/35 edges, so low-angle slopes keep their aspect; correct me if flat should mean everything under 25.
+**Slope bins (decided Oct 14 2026, replaces the Oct 8 reading):** flat = under 10 degrees (no aspect), shallow = 10-25, then 25-35 and 35-45, so four slope classes; 45 degrees and steeper is not forecast (class 0). 8 aspect octants for every class except flat, 500 ft elevation bands (placeholder). **One raster** serves all three cutoffs (4000+, 5000+, 6000+ ft are a filter on the elevation band). Measured with this scheme: the 4000+ ft raster is **14.8 MB** (29.2 M cells forecastable, 523 classes), as estimated. Not committed; still to check that it loads quickly on mobile, or consider tiling.
 
 ### Regional model and the click-to-rose view
 
@@ -252,6 +252,8 @@ NBM through Herbie (shared with the ski tool). Needs temperature, wind, dewpoint
 | 2025-06-15 | 12:00 | Mt. Baker, Coleman-Deming, W/SW aspect |
 | 2026-01-24 | ~13:00 | Lundin Peak, S-facing, near Snoqualmie Pass |
 | 2026-02-28 | ~12:00 | Muir Snowfield, Mt. Rainier, S-facing |
+
+Elevations: Danny says all of the good days were between 5,000 and 7,000 ft (no per-day value recorded).
 
 Bad days (negatives; Danny avoids skiing when he expects bad corn, so there are few):
 

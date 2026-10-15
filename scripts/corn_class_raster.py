@@ -4,8 +4,9 @@
 
 Reads the WA Cascades from USGS 3DEP 1/3 arc-second tiles (public S3, through the ~30 m overviews, 1/3600 degree cells),
 computes slope and aspect, and writes one 16-bit PNG whose value is the terrain class id (0 = below the cutoff or no data).
-Class = elevation band x (flat | slope bin x aspect octant). The band width, slope bins and flat limit are PLACEHOLDERS to
-tune (not sourced); this script exists to size the file, not to fix the classes.
+Class = elevation band x (flat | slope bin x aspect octant). Slope bins (decided with Danny, Oct 2026): flat under 10 degrees
+(no aspect), shallow 10-25, 25-35, 35-45; 45 degrees and steeper is not forecast (class 0). The band width is a PLACEHOLDER.
+One raster serves the 4000+, 5000+ and 6000+ ft layers: the cutoff is a filter on the elevation band.
 """
 import argparse
 import math
@@ -22,8 +23,8 @@ PER = 3600  # cells per degree
 
 BAND_FT = 500
 FLAT_DEG = 10
-SLOPE_EDGES = (FLAT_DEG, 25, 35, 45)  # bins: <10 flat, 10-25, 25-35, 35-45, >=45
-N_SLOPE_BINS = len(SLOPE_EDGES)  # non-flat bins
+SLOPE_EDGES = (FLAT_DEG, 25, 35, 45)  # bins: <10 flat, 10-25 shallow, 25-35, 35-45; >=45 not forecast
+N_SLOPE_BINS = len(SLOPE_EDGES) - 1  # non-flat bins that are forecast
 N_AZ = 8
 
 
@@ -73,9 +74,9 @@ def classify(dem, north, min_ft, chunk=1500):
         sl = slope[r - a:r - a + min(chunk, rows - r)]
         asp = asp[r - a:r - a + sl.shape[0]]
         zz = z[r - a:r - a + sl.shape[0]]
-        ok = np.isfinite(zz) & (zz >= min_m)
+        ok = np.isfinite(zz) & (zz >= min_m) & (np.nan_to_num(sl) < SLOPE_EDGES[-1])
         band = np.clip(((np.nan_to_num(zz) / M_PER_FT - min_ft) // BAND_FT).astype(np.int32), 0, None)
-        sbin = np.digitize(np.nan_to_num(sl), SLOPE_EDGES)  # 0 flat, 1..3
+        sbin = np.digitize(np.nan_to_num(sl), SLOPE_EDGES)  # 0 flat, 1..3, 4 = too steep
         octant = (((asp + 22.5) % 360) // 45).astype(np.int32)
         per_band = 1 + N_SLOPE_BINS * N_AZ
         within = np.where(sbin == 0, 0, 1 + (sbin - 1) * N_AZ + octant)
