@@ -1,0 +1,76 @@
+# Forcing regions for the corn model (PLAN.md, "Corn model: design"). Each region is one forecast point whose weather is
+# lapse-rate adjusted to every terrain class in the region. Regions with a ski_zone take their point from
+# data/ski/destinations.yml (forecast_point), so the two files must agree; glacier_peak is corn-only and is not a ski destination.
+# Region boundaries (which raster cell belongs to which region) are not defined yet.
+regions:
+  - id: snoqualmie
+    name: Snoqualmie Pass
+    ski_zone: snoqualmie
+    lat: 47.428
+    lon: -121.417
+  - id: stevens
+    name: Stevens Pass
+    ski_zone: stevens
+    lat: 47.745
+    lon: -121.089
+  - id: baker
+    name: Mt. Baker / Highway 542
+    ski_zone: baker
+    lat: 48.857
+    lon: -121.667
+  - id: crystal
+    name: Crystal Mountain / Chinook Pass
+    ski_zone: crystal
+    lat: 46.936
+    lon: -121.475
+  - id: paradise
+    name: Paradise (Mt. Rainier)
+    ski_zone: paradise
+    lat: 46.786
+    lon: -121.735
+  - id: white_pass
+    name: White Pass
+    ski_zone: white_pass
+    lat: 46.638
+    lon: -121.391
+  - id: blewett
+    name: Blewett Pass
+    ski_zone: blewett
+    lat: 47.35
+    lon: -120.58
+  - id: washington_pass
+    name: Washington Pass / Methow
+    ski_zone: washington_pass
+    lat: 48.524
+    lon: -120.646
+  - id: hurricane
+    name: Hurricane Ridge
+    ski_zone: hurricane
+    lat: 47.97
+    lon: -123.498
+  - id: st_helens
+    name: Mt. St. Helens
+    ski_zone: st_helens
+    lat: 46.2
+    lon: -122.19
+  - id: icicle
+    name: Leavenworth / Icicle Creek
+    ski_zone: icicle
+    lat: 47.59
+    lon: -120.88
+  - id: mission
+    name: Mission Ridge
+    ski_zone: mission
+    lat: 47.293
+    lon: -120.4
+  - id: whistler
+    name: Whistler Blackcomb (BC)
+    ski_zone: whistler
+    lat: 50.116
+    lon: -122.957
+    outside_raster: true   # north of 49N, beyond the WA Cascades raster box; no terrain classes yet
+  - id: glacier_peak
+    name: Glacier Peak
+    ski_zone: null
+    lat: 48.077   # Danny, Oct 14 2026
+    lon: -121.10
