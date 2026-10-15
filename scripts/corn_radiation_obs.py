@@ -7,7 +7,7 @@ Stations (Danny, Oct 14 2026): Alpental summit ALP55, Mt. Baker Pan Dome MTB50, 
 fail often (rime, snow on the dome, tilt), so `check` keeps only readings that pass ALL of: sun at least 10 degrees above the
 horizon; not above 1.05 x the clear-sky horizontal value at the station elevation; a clearness index (measured over clear-sky)
 for the window within the daily upper envelope; and no flat-lined or negative values. Day summaries use the midday median.
-Needs SYNOPTIC_TOKEN in the environment (never committed). Variable names and the units returned are printed on fetch, because
+Needs SYNOPTIC_TOKEN in the environment or in the git-ignored file .synoptic-token in the repo root (never committed). Variable names and the units returned are printed on fetch, because
 the station metadata decides them (solar_radiation is W/m2).
 """
 import argparse
@@ -31,8 +31,10 @@ MIN_SUN_ELEV, MAX_OVER_CLEAR = 10.0, 1.05
 
 def fetch(start, end):
     token = (os.environ.get("SYNOPTIC_TOKEN") or "").strip()
+    if not token and (ROOT / ".synoptic-token").exists():           # local file, git-ignored
+        token = (ROOT / ".synoptic-token").read_text(encoding="utf-8").strip()
     if not token:
-        raise SystemExit("SYNOPTIC_TOKEN is not set in this environment.")
+        raise SystemExit("SYNOPTIC_TOKEN is not set and .synoptic-token was not found.")
     OUT.mkdir(parents=True, exist_ok=True)
     s, e = pd.Timestamp(start), pd.Timestamp(end) + pd.Timedelta(days=1)
     r = requests.get(URL, params={"token": token, "stid": ",".join(STATIONS), "start": s.strftime("%Y%m%d%H%M"),
