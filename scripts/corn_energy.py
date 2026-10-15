@@ -2,17 +2,17 @@
 
     python scripts/corn_energy.py --synthetic        # two-day run on made-up forcing, to check behavior (not a forecast)
 
-The top 10 cm of snow in 1 cm layers: temperature and liquid water per layer (enthalpy bookkeeping), a bulk surface balance
+The top 30 cm of snow in 1 cm layers: temperature and liquid water per layer (enthalpy bookkeeping), a bulk surface balance
 solved for the surface temperature every minute, conduction between layers, melt and refreeze at 0 C. The surface balance
 follows SNOWPACK (github.com/snowpack-model/snowpack, Source/snowpack/snowpack: Snowpack.cc updateBoundHeatFluxes,
 Laws_sn.cc compSensibleHeatCoefficient / compLatentHeat, Meteo.cc RichardsonStability, MeteoIO Atmosphere.cc
 Konzelmann_emissivity); only the surface balance is borrowed, not the full profile solver.
 
-Parameters given by Danny (Oct 14 2026): albedo from 0.95 (fresh snow) down to a floor of 0.3 by a constant decay (realistic
-floor 0.45-0.6); roughness length 0.25 mm (fresh) rising to 25 mm (old snow, sun cups); conductivity of ice 2.2 W/m/K;
+Parameters given by Danny (Oct 14 2026): albedo from 0.95 (fresh snow) down to a floor of 0.3 as a power-law decay, most of the
+drop in about a week (realistic floor 0.45-0.6); roughness length 0.25 mm (fresh) rising to 25 mm (old snow, sun cups), also a power law; conductivity of ice 2.2 W/m/K;
 diffusion coefficient in air 22e-6 and in snow/ice 85e-6 (m2/s) (these two enter SNOWPACK's snow conductivity, which needs
 grain data we do not have; recorded here, not used yet).
-PLACEHOLDERS, NOT SOURCED (marked **(source)** in PLAN.md): ALBEDO_DECAY_PER_DAY, ROUGH_FULL_DAYS, the snow conductivity
+PLACEHOLDERS, NOT SOURCED (marked **(source)** in PLAN.md): the decay time scales and exponents (ALBEDO_TAU_DAYS, ROUGH_TAU_DAYS), the snow conductivity
 (density formula below), irreducible water fraction, thaw threshold, snow density, deep-snow temperature, reference heights, the stability cap ZETA_MAX.
 Not modelled: shortwave penetration into snow (all absorbed at the surface), terrain longwave from surrounding slopes, wind
 redistribution, vapor transport inside the snow, percolation beyond a one-way drain, and snowfall during the run.
@@ -33,24 +33,25 @@ ALBEDO_MAX, ALBEDO_MIN = 0.95, 0.3
 Z0_MIN, Z0_MAX = 0.25e-3, 25e-3
 K_ICE, D_AIR, D_SNOW = 2.2, 22e-6, 85e-6     # the last two are recorded, not used
 # placeholders (see docstring)
-ALBEDO_DECAY_PER_DAY = 0.02
-ROUGH_FULL_DAYS = 30.0
+ALBEDO_TAU_DAYS, ALBEDO_POWER = 2.0, 1.0      # power-law decay, most of the drop in about a week (Danny: roughly a week)
+ROUGH_TAU_DAYS, ROUGH_POWER = 14.0, 1.0       # power-law approach to old-snow roughness; Danny: depends on conditions
 RHO_SNOW = 400.0
 W_IRR = 0.07
 W_THAW = 0.005
 T_DEEP = 273.15
 Z_WIND, Z_TEMP = 10.0, 2.0
 ZETA_MAX = 1.0
-DZ, NL, DT = 0.01, 10, 60.0
+DZ, NL, DT = 0.01, 30, 60.0
 
 
 def albedo(age_days):
-    return max(ALBEDO_MIN, ALBEDO_MAX - ALBEDO_DECAY_PER_DAY * age_days)
+    """Power-law decay with age since the last snowfall: ALBEDO_MIN + (MAX - MIN) (1 + age/tau)^-p."""
+    return ALBEDO_MIN + (ALBEDO_MAX - ALBEDO_MIN) * (1 + max(age_days, 0.0) / ALBEDO_TAU_DAYS) ** -ALBEDO_POWER
 
 
 def z0(age_days):
-    f = min(max(age_days / ROUGH_FULL_DAYS, 0.0), 1.0)
-    return Z0_MIN * (Z0_MAX / Z0_MIN) ** f
+    """Roughness from 0.25 mm (fresh) toward 25 mm (old, sun cups), approaching it as a power law of age."""
+    return Z0_MAX - (Z0_MAX - Z0_MIN) * (1 + max(age_days, 0.0) / ROUGH_TAU_DAYS) ** -ROUGH_POWER
 
 
 def k_snow(rho):
