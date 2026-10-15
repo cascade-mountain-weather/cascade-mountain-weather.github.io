@@ -43,9 +43,9 @@ def window_times():
     return pd.date_range(t0, periods=len(SEASON_DAYS) * 48, freq=f"{STEP_MIN}min")
 
 
-def horizontal(lat, lon, elev_m, model="ineichen"):
+def horizontal(lat, lon, elev_m, model="ineichen", times=None):
     """Clear-sky GHI/DNI/DHI (W/m2) on the horizontal plus solar position, one row per window midpoint."""
-    times = window_times()
+    times = window_times() if times is None else times
     sp = pvlib.solarposition.get_solarposition(times, lat, lon, altitude=elev_m)
     pressure = pvlib.atmosphere.alt2pres(elev_m)
     if model == "ineichen":

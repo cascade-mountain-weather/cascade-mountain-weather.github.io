@@ -111,6 +111,7 @@ class Column:
         self.T = np.full(NL, T0)
         self.w = np.full(NL, w0 * self.m)       # liquid water, kg/m2
         self.k = k_snow(rho)
+        self.t_deep = T_DEEP                    # temperature just below the column (K); the caller may update it
 
     def add_heat(self, i, E):
         """E in J/m2 into layer i: warm, then melt (E>0); or refreeze liquid first, then cool (E<0)."""
@@ -132,13 +133,21 @@ class Column:
                 self.T[i] += E / cm
 
     def drain(self):
+        """Liquid above the irreducible fraction moves down one layer per call; entering a layer below 0 C it refreezes first, warming that
+        layer (the cold content meltwater has to satisfy before the wet front can advance). Water leaving the bottom is lost."""
         cap = W_IRR * self.m
         for i in range(NL):
             ex = self.w[i] - cap
-            if ex > 0:
-                self.w[i] = cap
-                if i + 1 < NL:
-                    self.w[i + 1] += ex
+            if ex <= 0:
+                continue
+            self.w[i] = cap
+            if i + 1 < NL:
+                j = i + 1
+                if self.T[j] < 273.15:
+                    frz = min(ex, C_ICE * self.m * (273.15 - self.T[j]) / L_FUS)
+                    self.T[j] += frz * L_FUS / (C_ICE * self.m)
+                    ex -= frz
+                self.w[j] += ex
 
     def step(self, f, dt=DT):
         """One substep. f: dict sw_abs (W/m2 already net of albedo), lw_in, ta, rh, vw, pressure, z0. Returns surface temperature and the
@@ -171,7 +180,7 @@ class Column:
         flux[0] = into_top
         for i in range(1, NL):
             flux[i] = self.k * (self.T[i - 1] - self.T[i]) / DZ
-        flux[NL] = self.k * (self.T[NL - 1] - T_DEEP) / DZ
+        flux[NL] = self.k * (self.T[NL - 1] - self.t_deep) / DZ
         for i in range(NL):
             self.add_heat(i, (flux[i] - flux[i + 1]) * dt)
         self.drain()
