@@ -89,13 +89,38 @@ def check(start, end):
         print(mid.groupby(mid.index.date).kt.median().round(2).to_string())
 
 
+def bias(start, end):
+    """Clear-sky bias: for every station and month, the clearness index (obs / clear-sky) of the readings that pass the screen, on the
+    clearest days (a day counts as clear when its midday median is in the top of that month), summarized by percentile."""
+    import pvlib
+    rows = []
+    for stid in STATIONS:
+        meta = eval((OUT / f"{stid}.meta.txt").read_text(encoding="utf-8"))
+        lat, lon, elev = float(meta["LATITUDE"]), float(meta["LONGITUDE"]), float(meta["ELEVATION"]) * 0.3048
+        df = pd.read_csv(OUT / f"{stid}.csv", parse_dates=["time"]).set_index("time").loc[start:end]
+        col = next(c for c in df.columns if c.startswith("solar_radiation"))
+        sp = pvlib.solarposition.get_solarposition(df.index, lat, lon, altitude=elev)
+        cl = pvlib.location.Location(lat, lon, altitude=elev).get_clearsky(df.index, model="ineichen")["ghi"]
+        d = pd.DataFrame({"obs": df[col], "clear": cl, "elev": sp["apparent_elevation"]})
+        d = d[(d.elev >= 15) & (d.obs >= 0) & (d.obs <= MAX_OVER_CLEAR * d.clear)]
+        d["kt"] = d.obs / d.clear
+        d["day"] = d.index.date
+        day = d.groupby("day").agg(kt=("kt", "median"), n=("kt", "size"), spread=("kt", lambda x: x.max() - x.min()))
+        day = day[(day.n >= 4)]
+        clear_days = day[(day.kt >= 0.8) & (day.spread < 0.25)]       # high median and steady through the day: no passing cloud
+        clear_days.index = pd.to_datetime(clear_days.index)
+        for m, g in clear_days.groupby(clear_days.index.month):
+            rows.append(dict(station=stid, month=m, clear_days=len(g), kt_median=g.kt.median(), kt_p10=g.kt.quantile(0.1), kt_p90=g.kt.quantile(0.9)))
+    print(pd.DataFrame(rows).round(2).to_string(index=False))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["fetch", "check"])
+    ap.add_argument("cmd", choices=["fetch", "check", "bias"])
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", required=True)
     a = ap.parse_args()
-    (fetch if a.cmd == "fetch" else check)(a.start, a.end)
+    {"fetch": fetch, "check": check, "bias": bias}[a.cmd](a.start, a.end)
 
 
 if __name__ == "__main__":
