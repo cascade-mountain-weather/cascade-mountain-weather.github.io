@@ -361,3 +361,16 @@ NOAA CPC teleconnection/outlook products (for the climate outlook + teleconnecti
 ### Corn regions status (Oct 14 2026)
 
 `data/corn/regions.yml` has 13 forcing regions: 12 ski zones (North Bend dropped as lowland, Whistler left out for now) plus Glacier Peak (48.077 N, -121.10 W). `scripts/corn_region_raster.py` assigns each cell of the Cascades raster to the nearest region point (first rule, to revisit): 0.24 MB PNG, regions claim 2.5% (Stevens) to 17.4% (White Pass, which also covers Mt. Adams) of the box. Hurricane Ridge is in the Olympics, outside the Cascades box, so it only claims eastern Puget Sound cells; the Olympics need their own class raster.
+
+### Surface energy balance: what we take from SNOWPACK (Oct 14 2026)
+
+Source: `Source/snowpack/snowpack/` in github.com/snowpack-model/snowpack (master), read Oct 14 2026: `Snowpack.cc` (`updateBoundHeatFluxes`, `neumannBoundaryConditions`, `getParameterizedAlbedo`), `Laws_sn.cc` (`compSensibleHeatCoefficient`, `compLatentHeat_Rh`, `compLWRadCoefficient`, `parameterizedSnowAlbedo`), `Meteo.cc` (`MicroMet`, `MOStability`, `RichardsonStability`), `Constants.h`, and MeteoIO `Atmosphere.cc` (`Brutsaert_emissivity`, `Konzelmann_emissivity`, `vaporSaturationPressure`). The tree is C++ with config-file defaults, so roughness length and the albedo choice are not in the code and must come from the SNOWPACK docs or ini defaults **(source, not yet read)**.
+
+Structure to copy (the surface boundary condition for the top snow element):
+- Sensible: `qs = rho_air * cp_air * C_h * (Tair - Tsurf)`, with `C_h = karman * u* / max(0.7, ln(z / z0) - psi_s)`; u* and psi from an iterated Monin-Obukhov loop (stable-side options include Holtslag-De Bruin, Stearns-Weidner; Paulson on the unstable side; a log-linear Richardson-number option is the simplest).
+- Latent: `ql = beta * (e_air - e_surface)`, `beta = C_h * 0.622 * Ls / (R_air * Tair)`, surface saturated (ice below 0 C, water at melt), `e_air = RH * e_sat(Tair)`, `e_sat` a Magnus-type form over ice or water.
+- Longwave: `lw_net = eps_snow * ea * sigma * Tair^4 - eps_snow * sigma * Tsurf^4`; the incoming term is treated as a convective-like term that linearizes in Tsurf so the solve is implicit. Clear-sky `ea`: Brutsaert (1.24 (e_mb/T)^(1/7)); cloud adjusted: Konzelmann (clear 0.23 + 0.484 (e/T)^(1/8), overcast 0.952, weight cloudiness^4).
+- Rain: `qr = rain_rate * c_water * (max(Tair, 0 C) - Tsurf)`.
+- Shortwave: absorbed = (1 - albedo) * iswr (our clear-sky engine, scaled for cloud); SNOWPACK's albedo is a regression on snow properties and weather, which we cannot supply, so albedo needs a simpler rule **(source)**.
+- Constants (`Constants.h`): sigma 5.67051e-8, emissivity of snow 0.98, karman 0.4, rho_air 1.1 (we should compute from pressure), cp_air 1004.67, Ls 2.838e6, Lv 2.504e6, Lf 3.34e5, c_water 4190, c_ice 2100, k_ice 2.2, rho_ice 917.
+- Iteration: SNOWPACK solves the temperature profile implicitly (finite elements) with a semi-explicit branch once liquid water and ice coexist at the surface (fluxes clamped at +-350 and +-250 W/m2 sensible/latent there). We do not need the whole profile: the top ~10 cm in a few layers, solving the surface balance for Tsurf each half hour, with melt when Tsurf would exceed 0 C.
