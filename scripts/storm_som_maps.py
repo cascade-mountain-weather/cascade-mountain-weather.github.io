@@ -29,7 +29,7 @@ COAST = cfeature.NaturalEarthFeature("physical", "coastline", "50m", edgecolor="
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--heights", action="store_true", help="also draw the mean 500 hPa height as thin grey lines")
+    ap.add_argument("--no-heights", action="store_true", help="leave the mean 500 hPa height lines off")
     args = ap.parse_args()
     seasons = ss.seasons_available()
     z_raw = ss.load_daily("z500", seasons) / ss.G
@@ -61,12 +61,12 @@ def main():
         ax.set_extent([-168, -110, 28, 62], crs=ccrs.PlateCarree())
         cf = ax.contourf(lon, lat, za[m].mean(0), levels=LEVELS_ANOM, cmap="RdBu_r", extend="both", transform=ccrs.PlateCarree())
         tm = tr[m].mean(0)
-        ct = ax.contour(lon, lat, tm, levels=[v for v in range(-30, 31, 3) if v != 0], colors="k", linewidths=0.8, linestyles=["--" if v < 0 else "-" for v in range(-30, 31, 3) if v != 0], transform=ccrs.PlateCarree(), zorder=4)
-        ax.clabel(ct, fmt="%d", fontsize=7, inline=True)
-        ax.contour(lon, lat, tm, levels=[0], colors="k", linewidths=2.0, linestyles="-", transform=ccrs.PlateCarree(), zorder=4)
-        if args.heights:
-            ch = ax.contour(lon, lat, zr[m].mean(0) / 10.0, levels=np.arange(480, 600, 6), colors="#475569", linewidths=0.6, transform=ccrs.PlateCarree(), zorder=3)
-            ax.clabel(ch, fmt="%d", fontsize=6, inline=True)
+        ct = ax.contour(lon, lat, tm, levels=[v for v in range(-30, 31, 3) if v != 0], colors="#dc2626", linewidths=0.9, linestyles=["--" if v < 0 else "-" for v in range(-30, 31, 3) if v != 0], transform=ccrs.PlateCarree(), zorder=4)
+        ax.clabel(ct, fmt="%d", fontsize=7, inline=True, colors="#b91c1c")
+        ax.contour(lon, lat, tm, levels=[0], colors="#dc2626", linewidths=2.2, linestyles="-", transform=ccrs.PlateCarree(), zorder=4)
+        if not args.no_heights:
+            ch = ax.contour(lon, lat, zr[m].mean(0) / 10.0, levels=np.arange(480, 600, 6), colors="k", linewidths=0.8, transform=ccrs.PlateCarree(), zorder=3)
+            ax.clabel(ch, fmt="%d", fontsize=7, inline=True)
         ax.add_feature(COAST, zorder=5)
         ax.add_feature(STATES, zorder=5)
         ax.add_feature(COUNTRIES, zorder=5)
@@ -74,9 +74,10 @@ def main():
         ax.plot([-121.7], [47.5], marker="*", color="#f59e0b", markeredgecolor="k", ms=12, transform=ccrs.PlateCarree(), zorder=10)
         ax.set_title(f"Node {n}: {m.sum()} storm days ({100 * m.mean():.0f}%)", fontsize=11)
     fig.subplots_adjust(hspace=0.12, wspace=0.04, top=0.93)
-    cb = fig.colorbar(cf, ax=axs, shrink=0.6, pad=0.02, label="Mean 500 hPa height anomaly on storm days (m); black lines: mean 850 hPa temperature (C), dashed below 0, heavy line = 0 C")
+    cb = fig.colorbar(cf, ax=axs, shrink=0.6, pad=0.02, label="Mean 500 hPa height anomaly on storm days (m)")
     cb.ax.tick_params(labelsize=9)
-    fig.suptitle(f"500 hPa height patterns of Washington storm days, 3x3 SOM ({seasons[0]}-{seasons[-1]}, ERA5)   star = Cascades", fontsize=13, y=0.97)
+    fig.suptitle(f"500 hPa height patterns of Washington storm days, 3x3 SOM ({seasons[0]}-{seasons[-1]}, ERA5)   star = Cascades", fontsize=13, y=0.985)
+    fig.text(0.5, 0.955, "black lines: mean 500 hPa height (dam)     red lines: mean 850 hPa temperature (C), every 3, dashed below 0, heavy line = 0 C", ha="center", fontsize=10.5)
     out = ss.FIG / "som_height_maps.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=120, bbox_inches="tight")
