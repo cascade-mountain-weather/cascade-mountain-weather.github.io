@@ -227,7 +227,7 @@ def run(day):
     alpha = ce.albedo(age0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
     col = ce.Column(T0=min(float(np.nanmean(T.values[:48])), 273.15), w0=0.0)
     col.t_deep = col.T[-1]
-    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[])
+    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lw=[], qs=[], ql=[], wind=[], rh=[])
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
@@ -237,6 +237,9 @@ def run(day):
         for _ in range(int(30 * 60 / ce.DT)):
             ts, _q = col.step(f)
         alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24)
+        a_, b_ = ce.exchange(f["ta"], ts, f["vw"], pressure, f["z0"])
+        rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
+        rec["qs"].append(a_ * (f["ta"] - ts)); rec["ql"].append(b_ * (f["rh"] * ce.e_sat(f["ta"]) - ce.e_sat(ts))); rec["wind"].append(f["vw"]); rec["rh"].append(f["rh"])
         rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
         rec["sw"].append(sw_abs); rec["alb"].append(alpha); rec["ta"].append(T.values[n] - 273.15)
     res = {k: np.array(v) for k, v in rec.items() if k != "t"}
@@ -325,6 +328,15 @@ def summarize(day, res):
                 air_at_report=round(float(res["ta"][i]), 1), wet_cm_at_report=contiguous_wet_cm(res["w"][i]), wet_cm_15h=contiguous_wet_cm(res["w"][at(15)]))
 
 
+def midday_budget(day, res):
+    t = res["t"]
+    d0 = pd.Timestamp(day["date"])
+    m = (t >= d0 + pd.Timedelta(hours=10.5)) & (t <= d0 + pd.Timedelta(hours=13.5))
+    g = lambda k: float(np.mean(np.asarray(res[k])[m]))
+    return (f"   10:30-13:30 mean: SW absorbed {g('sw'):4.0f}  LW net {g('lw'):4.0f}  sensible {g('qs'):4.0f}  latent {g('ql'):4.0f} W/m2   "
+            f"albedo {g('alb'):.2f}  wind {g('wind'):.1f} m/s  RH {100 * g('rh'):.0f}%  air {g('ta'):.1f} C  surface {g('ts'):.1f} C")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--day")
@@ -339,6 +351,7 @@ def main():
             print(d["id"], "failed:", repr(ex)[:200])
             continue
         print(d["id"], "->", plot(d, res), "last snow day", res["last_snow"].date())
+        print(midday_budget(d, res))
         rows.append(summarize(d, res))
     print(pd.DataFrame(rows).to_string(index=False))
 
