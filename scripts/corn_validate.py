@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "corn" / "validation"
 FIG = ROOT / "docs" / "corn"
 SPINUP_DAYS = 4
+RAIN_MIN_IN = 0.2          # a SNOTEL daily precipitation gain at least this large on a day with mean air temperature above 33 F is treated as rain (placeholder)
 SNOW_RESET_WTEQ_IN = 0.4   # daily SWE (or snowy precipitation) gain that resets the snow age: about 10 cm of snow at 10:1 (Danny, Oct 17; placeholder)
 KT_CLEAR = 0.95
 CORN_MIN_CM, CORN_MAX_CM = 2.0, 10.0   # corn window: thawed depth from the surface, from PLAN.md (corn target 2-10 cm)
@@ -52,7 +53,7 @@ DAYS = [
          elev_ft=5800, slope=30, aspect=180, T=["ALP55"], W="ALP55", SW=["ALP55", "STS54"], SNOTEL="672:WA:SNTL", region="snoqualmie"),
     dict(id="paradise_jan31", date="2026-01-31", hhmm="12:00", good=False, place="Paradise area (too much recent snow)", lat=46.80, lon=-121.74,
          elev_ft=5500, slope=17.5, aspect=180, T=["PVC54", "MU101"], W="PVW54", SW=["PVW54", "MU101"], SNOTEL="679:WA:SNTL", region="paradise"),
-    dict(id="paradise_jan17", date="2026-01-17", hhmm="12:00", good=False, place="Paradise area (way too warm)", lat=46.80, lon=-121.74,
+    dict(id="paradise_jan17", date="2026-01-17", hhmm="12:00", good=None, place="Paradise area (warm; fresh snow may have given proto-corn, not skied)", lat=46.80, lon=-121.74,
          elev_ft=5500, slope=17.5, aspect=180, T=["PVC54", "MU101"], W="PVW54", SW=["PVW54", "MU101"], SNOTEL="679:WA:SNTL", region="paradise"),
     # older days: forcing from HRRR (scripts/corn_hrrr.py), snow age from the nearest SNOTEL; slope and aspect are guesses from the route name
     dict(id="helens_2022", date="2022-01-17", hhmm="12:30", good=True, place="Mt. St. Helens, Worm Flows", lat=46.20, lon=-122.18, elev_ft=5500,
@@ -67,7 +68,7 @@ DAYS = [
          slope=17.5, aspect=225, source="hrrr", SNOTEL="1011:WA:SNTL"),
     dict(id="baker_2025", date="2025-06-15", hhmm="12:00", good=True, place="Mt. Baker, Coleman-Deming, W/SW", lat=48.77, lon=-121.84, elev_ft=7874,
          slope=17.5, aspect=247.5, source="hrrr", SNOTEL="1011:WA:SNTL"),
-    dict(id="baker_ski", date="2026-02-05", hhmm="12:00", good=False, place="Mt. Baker ski area (thick ice crust after rain)", lat=48.86, lon=-121.67,
+    dict(id="baker_ski", spinup=10, date="2026-02-05", hhmm="12:00", good=False, place="Mt. Baker ski area (thick ice crust after rain)", lat=48.86, lon=-121.67,
          elev_ft=4800, slope=17.5, aspect=180, T=["MTB42", "MTB50"], W="MTB50", SW=["MTB50", "KCFW1"], SNOTEL="909:WA:SNTL", region="baker"),
 ]
 def _nws_cold():
@@ -153,7 +154,7 @@ def forcing_hrrr(day, idx):
 
 def forcing(day, idx):
     """Forcing on the half-hour index `idx` (UTC): air T (K), RH (0-1), wind (m/s) at the site; cloud fraction and kt."""
-    d0 = pd.Timestamp(day["date"], tz="UTC") - pd.Timedelta(days=SPINUP_DAYS + 1)
+    d0 = pd.Timestamp(day["date"], tz="UTC") - pd.Timedelta(days=day.get("spinup", SPINUP_DAYS) + 1)
     d1 = pd.Timestamp(day["date"], tz="UTC") + pd.Timedelta(days=2)
     stids = sorted(set(day["T"] + [day["W"]] + day["SW"]))
     obs = synoptic(stids, d0, d1)
@@ -220,9 +221,11 @@ def run(day, lw_model="auto"):
     g = g.iloc[(g.elev_ft_mid - (band_lo + 250)).abs().argsort()[:1]]
     row = g.iloc[0]
     last_snow, sn = snow_age(day, None)
+    rain = (sn["PREC"].diff() >= RAIN_MIN_IN) & (sn["TAVG"] > 33.0) & (sn["WTEQ"].diff() < SNOW_RESET_WTEQ_IN)
+    rain_kg = (sn["PREC"].diff() * 25.4).where(rain, 0.0).fillna(0.0)          # kg/m2 per local day
     target = pd.Timestamp(day["date"], tz="UTC")
     local = pd.Timedelta(hours=-8)                               # PST for all the winter days run here
-    start = max(target - pd.Timedelta(days=SPINUP_DAYS), (last_snow + pd.Timedelta(days=1)).tz_localize("UTC")) + pd.Timedelta(hours=8)
+    start = max(target - pd.Timedelta(days=day.get("spinup", SPINUP_DAYS)), (last_snow + pd.Timedelta(days=1)).tz_localize("UTC")) + pd.Timedelta(hours=8)
     end = target + pd.Timedelta(days=1) + pd.Timedelta(hours=8)
     idx = pd.date_range(start + pd.Timedelta(minutes=15), end, freq="30min")
     T, RH, W, cloud, kt, Tc, lw_override = (forcing_hrrr if day.get("source") == "hrrr" else forcing)(day, idx)
@@ -244,10 +247,13 @@ def run(day, lw_model="auto"):
             return ce.lw_in_dilley(RH.values[n], T.values[n], cloud.values[n])
         return ce.lw_in(RH.values[n], T.values[n], cloud.values[n])
 
-    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lwin=[], lw=[], qs=[], ql=[], wind=[], rh=[])
+    rec = dict(t=[], rho=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lwin=[], lw=[], qs=[], ql=[], wind=[], rh=[])
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
+        rk = float(rain_kg.get(pd.Timestamp((t + local).date()), 0.0))
+        if rk > 0:
+            col.add_rain(rk / 48.0)                       # spread evenly over the local day (the daily total is all the gauge gives)
         f = dict(sw_abs=sw_abs, lw_in=lw_value(n), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
                  pressure=pressure, z0=ce.z0(age), rg=ce.grain_radius_mm(alpha, ce.albedo_floor(t.dayofyear)))
         for _ in range(int(30 * 60 / ce.DT)):
@@ -256,9 +262,10 @@ def run(day, lw_model="auto"):
         a_, b_ = ce.exchange(f["ta"], ts, f["vw"], pressure, f["z0"])
         rec["lwin"].append(lw_value(n)); rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
         rec["qs"].append(a_ * (f["ta"] - ts)); rec["ql"].append(b_ * (f["rh"] * ce.e_sat(f["ta"]) - ce.e_sat(ts))); rec["wind"].append(f["vw"]); rec["rh"].append(f["rh"])
-        rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
+        rec["rho"].append(col.rho.copy()); rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
         rec["sw"].append(sw_abs); rec["alb"].append(alpha); rec["ta"].append(T.values[n] - 273.15)
     res = {k: np.array(v) for k, v in rec.items() if k != "t"}
+    res["rain_kg"] = float(rain_kg.loc[start.tz_localize(None).normalize():target.tz_localize(None) + pd.Timedelta(days=1)].sum()) if len(rain_kg) else 0.0
     res["t"] = pd.DatetimeIndex(rec["t"]).tz_localize(None) + local
     res["age0"], res["last_snow"], res["row"], res["sn"] = age0, last_snow, row, sn
     return res
@@ -311,6 +318,8 @@ def plot(day, res):
             for j in range(st, st + nn):
                 kx.append(x[i] + (0.5 * dx if j % 2 else 0.0))
                 ky.append(depth[j])
+    if res["rho"].max() >= 600:
+        a1.contour(x, depth, res["rho"].T, levels=[600.0], colors="#7c2d12", linewidths=1.2, linestyles="--")
     if kx:
         a1.scatter(kx, ky, marker=kernel, s=70, c="#f6c90e", edgecolors="#b7860b", linewidths=0.5, zorder=5)
     a1.set_ylim(depth[-1] + 0.5, 0)
@@ -318,9 +327,9 @@ def plot(day, res):
     cb = fig.colorbar(pm, cax=cax)
     cb.set_label("snow temperature (C); green = at 0 C")
     import textwrap
-    head = f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else 'bad day'}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}"
+    head = f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else ('unlabeled' if day['good'] is None else 'bad day')}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}"
     note = (f"corn kernels: surface layer thawed (liquid water >= {100 * ce.W_THAW:.1f}% of mass) to a depth of {CORN_MIN_CM:.0f}-{CORN_MAX_CM:.0f} cm.  "
-            f"Snow age at start {res['age0']:.1f} d.")
+            f"Brown dashed line: refrozen crust (density 600+ kg/m3).  Snow age at start {res['age0']:.1f} d.  Rain applied: {res['rain_kg']:.0f} kg/m2.")
     a1.set_title(head + "\n" + textwrap.fill(note, 120), fontsize=9)
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
     mark = pd.Timestamp(day["date"]) + pd.Timedelta(hours=hh, minutes=mm)

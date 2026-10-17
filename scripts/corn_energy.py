@@ -90,11 +90,12 @@ def sw_absorption(i0, rho, rg_mm=RG_MM):
     is Ks = fb * 0.84 * sqrt(1000 k / (2 rg)) * rho / rho_ice (1/m), absorbed per layer i0_band * (1 - exp(-Ks dz)). Light left at the
     bottom of the column is added to the last layer (as SNOWPACK does for the bottom element)."""
     out = np.zeros(NL)
+    rho = np.broadcast_to(np.asarray(rho, dtype=float), (NL,))
     for k, pc, fb in zip(SWA_K, SWA_PC, SWA_FB):
         ks = fb * 0.84 * math.sqrt(1000.0 * k / (2.0 * rg_mm)) * rho / 917.0
         left = i0 * pc / 100.0
         for i in range(NL):
-            d = left * (1.0 - math.exp(-ks * DZ))
+            d = left * (1.0 - math.exp(-ks[i] * DZ))
             out[i] += d
             left -= d
         out[-1] += left
@@ -163,19 +164,37 @@ def exchange(ta, ts, vw, pressure, z0m):
     return ch * rho_a * CP_AIR, ch * 0.622 * L_SUB / (R_AIR * ta)
 
 
+MIN_ICE_FRAC = 0.5          # when the top layer's ice falls below this fraction of a fresh layer it is gone: the column settles up by one layer
+RHO_CRUST_MAX = 800.0        # refreezing meltwater or rain can densify a layer up to this (kg/m3); Danny: refrozen crust 700-800
+
+
 class Column:
+    """30 one-centimeter layers. Each layer has a total mass m (ice plus liquid, kg/m2, so its density is m / DZ), a temperature and a
+    liquid mass w. Meltwater or rain that refreezes in a colder layer adds ice mass there, so a refrozen layer gets denser (up to
+    RHO_CRUST_MAX) and conducts better."""
+
     def __init__(self, T0=273.15, w0=0.0, rho=RHO_SNOW):
-        self.m = rho * DZ                       # kg/m2 per layer (ice plus liquid)
+        self.m = np.full(NL, rho * DZ)
         self.T = np.full(NL, T0)
-        self.w = np.full(NL, w0 * self.m)       # liquid water, kg/m2
-        self.k = k_snow(rho)
+        self.w = w0 * self.m
         self.cycles = 0                         # completed melt-freeze cycles (surface reached 0 C, then fell below MF_FREEZE_C)
         self._melted = False
-        self.t_deep = T_DEEP                    # temperature just below the column (K); the caller may update it
+        self.t_deep = T_DEEP                    # temperature just below the column (K)
+
+    @property
+    def rho(self):
+        return self.m / DZ
+
+    def k_layers(self):
+        return k_snow(self.rho)
+
+    def add_rain(self, mass):
+        """Rain (kg/m2) onto the surface: it enters the top layer as liquid and drains and refreezes downward."""
+        self.w[0] += mass                       # liquid only; the mass is not kept in the layer, so it can drain and refreeze below as crust
 
     def add_heat(self, i, E):
         """E in J/m2 into layer i: warm, then melt (E>0); or refreeze liquid first, then cool (E<0)."""
-        cm = C_ICE * self.m
+        cm = C_ICE * self.m[i]
         if E > 0:
             if self.T[i] < 273.15:
                 need = cm * (273.15 - self.T[i])
@@ -183,7 +202,7 @@ class Column:
                     self.T[i] += E / cm
                     return
                 self.T[i], E = 273.15, E - need
-            self.w[i] = min(self.w[i] + E / L_FUS, self.m)
+            self.w[i] = min(self.w[i] + E / L_FUS, self.m[i])
         else:
             if self.w[i] > 0:
                 frz = min(self.w[i], -E / L_FUS)
@@ -193,29 +212,39 @@ class Column:
                 self.T[i] += E / cm
 
     def drain(self):
-        """Liquid above the irreducible fraction moves down one layer per call; entering a layer below 0 C it refreezes first, warming that
-        layer (the cold content meltwater has to satisfy before the wet front can advance). Water leaving the bottom is lost."""
-        cap = W_IRR * self.m
+        """Liquid above the irreducible fraction leaves a layer and moves down one layer per call. In the colder layer below it refreezes
+        first (adding ice mass up to RHO_CRUST_MAX and warming the layer), and what is left stays as liquid. Water leaving the bottom is lost."""
         for i in range(NL):
-            ex = self.w[i] - cap
+            ex = self.w[i] - W_IRR * self.m[i]
             if ex <= 0:
                 continue
-            self.w[i] = cap
+            self.w[i] -= ex                     # the layer keeps its mass (the surface does not lower in this column; melt from above is not tracked)
             if i + 1 < NL:
                 j = i + 1
                 if self.T[j] < 273.15:
-                    frz = min(ex, C_ICE * self.m * (273.15 - self.T[j]) / L_FUS)
-                    self.T[j] += frz * L_FUS / (C_ICE * self.m)
+                    room = max(RHO_CRUST_MAX * DZ - self.m[j], 0.0)
+                    frz = min(ex, C_ICE * self.m[j] * (273.15 - self.T[j]) / L_FUS, room)
+                    self.T[j] += frz * L_FUS / (C_ICE * self.m[j])
+                    self.m[j] += frz
                     ex -= frz
                 self.w[j] += ex
+
+    def settle(self):
+        """The snow surface lowers as the top layer melts away: when its ice is nearly gone, its remaining liquid joins the layer below, every
+        layer moves up one, and a new layer of the starting density at the lower-boundary temperature is added at the bottom."""
+        while self.m[0] - self.w[0] < MIN_ICE_FRAC * RHO_SNOW * DZ:
+            self.w[1] += self.w[0]
+            self.m[1] += self.w[0]
+            for a in (self.m, self.w, self.T):
+                a[:-1] = a[1:].copy()
+            self.m[-1], self.w[-1], self.T[-1] = RHO_SNOW * DZ, 0.0, self.t_deep
 
     def step(self, f, dt=DT):
         """One substep. f: dict sw_abs (W/m2 already net of albedo), lw_in, ta, rh, vw, pressure, z0. Returns surface temperature and the
         melt energy flux into the top layer."""
         ta = f["ta"]
-        h_coef_cache = {}
-
         sw_surface = 0.0 if PENETRATE else f["sw_abs"]
+        kk = self.k_layers()
 
         def terms(ts):
             a, b = exchange(ta, ts, f["vw"], f["pressure"], f["z0"])
@@ -224,7 +253,7 @@ class Column:
             return sw_surface + EMISS_SNOW * f["lw_in"] - EMISS_SNOW * SIGMA * ts ** 4 + qs + ql
 
         T1 = self.T[0]
-        g_cond = lambda ts: self.k * (ts - T1) / (DZ / 2)
+        g_cond = lambda ts: kk[0] * (ts - T1) / (DZ / 2)
         Q = lambda ts: terms(ts) - g_cond(ts)
         if Q(273.15) >= 0:                       # surface would exceed 0 C: hold at 0 C, all the net flux goes into the top layer
             ts, into_top = 273.15, terms(273.15)
@@ -240,10 +269,10 @@ class Column:
             into_top = g_cond(ts)
         flux = np.zeros(NL + 1)                  # flux[i] = heat into layer i from above (W/m2); flux[NL] = out of the bottom
         flux[0] = into_top
-        for i in range(1, NL):
-            flux[i] = self.k * (self.T[i - 1] - self.T[i]) / DZ
-        flux[NL] = self.k * (self.T[NL - 1] - self.t_deep) / DZ
-        swl = sw_absorption(f["sw_abs"], self.m / DZ, f.get("rg", RG_MM)) if PENETRATE else np.zeros(NL)
+        kint = 2 * kk[:-1] * kk[1:] / (kk[:-1] + kk[1:])          # harmonic mean conductivity between layers
+        flux[1:NL] = kint * (self.T[:-1] - self.T[1:]) / DZ
+        flux[NL] = kk[-1] * (self.T[NL - 1] - self.t_deep) / DZ
+        swl = sw_absorption(f["sw_abs"], self.rho, f.get("rg", RG_MM)) if PENETRATE else np.zeros(NL)
         for i in range(NL):
             self.add_heat(i, (flux[i] - flux[i + 1] + swl[i]) * dt)
         self.drain()
