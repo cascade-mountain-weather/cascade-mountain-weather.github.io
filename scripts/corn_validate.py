@@ -36,8 +36,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "corn" / "validation"
 FIG = ROOT / "docs" / "corn"
 SPINUP_DAYS = 4
-SNOW_RESET_CM = 10.0       # a snowfall that deepens the pack by at least this much in a day resets the snow age (Danny, Oct 17)
-SNOW_RESET_WTEQ_IN = 0.4   # fallback where the depth sensor is missing: about 10 cm at 10:1 (placeholder)
+SNOW_RESET_WTEQ_IN = 0.4   # daily SWE (or snowy precipitation) gain that resets the snow age: about 10 cm of snow at 10:1 (Danny, Oct 17; placeholder)
 KT_CLEAR = 0.95
 CORN_MIN_CM, CORN_MAX_CM = 2.0, 10.0   # corn window: thawed depth from the surface, from PLAN.md (corn target 2-10 cm)
 FT = 0.3048
@@ -200,9 +199,11 @@ def forcing(day, idx):
 
 def snow_age(day, idx):
     sn = snotel(day["SNOTEL"], pd.Timestamp(day["date"]) - pd.Timedelta(days=30), pd.Timestamp(day["date"]) + pd.Timedelta(days=1))
-    dep = sn["SNWD"].diff() * 2.54
-    snowy = sn.index[((dep >= SNOW_RESET_CM) | (sn["SNWD"].isna() & (sn["WTEQ"].diff() >= SNOW_RESET_WTEQ_IN))).fillna(False).values]
-    snowy = pd.Series(1, index=snowy)
+    # reset only on SWE gain, or on precipitation that fell as snow (daily mean air temperature at or below freezing); never on the
+    # depth sensor (settling and noise). Threshold: 0.4 in of water, about 10 cm of snow at 10:1 (placeholder, Danny: 10 cm "to start")
+    swe = sn["WTEQ"].diff() >= SNOW_RESET_WTEQ_IN
+    prec = (sn["PREC"].diff() >= SNOW_RESET_WTEQ_IN) & (sn["TAVG"] <= 33.0)
+    snowy = pd.Series(1, index=sn.index[(swe | prec).fillna(False).values])
     target = pd.Timestamp(day["date"])
     prior = snowy[snowy.index <= target]
     last = prior.index.max() if len(prior) else target - pd.Timedelta(days=30)
@@ -280,27 +281,28 @@ def plot(day, res):
     plt.setp(a1.get_xticklabels(), visible=False)
     x = mdates_num(t)
     pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-15, vmax=0, shading="nearest")
-    wet = (w >= ce.W_THAW)
-    thick = np.zeros(len(t))                       # contiguous thawed depth from the surface, cm
-    for i in range(len(t)):
-        thick[i] = contiguous_wet_cm(w[i])
+    thick = np.array([contiguous_wet_cm(w[i]) for i in range(len(t))])        # contiguous thawed depth from the surface, cm
     corn = (thick >= CORN_MIN_CM) & (thick <= CORN_MAX_CM)
-    deep = thick > CORN_MAX_CM
-    surf_wet = np.zeros_like(wet)
-    for i in range(len(t)):
-        n = int(round(thick[i] / (ce.DZ * 100)))
-        surf_wet[i, :n] = True
-    a1.contourf(x, depth, (surf_wet & corn[:, None]).T.astype(float), levels=[0.5, 1.5], colors="none", hatches=["////"])
-    a1.contourf(x, depth, (surf_wet & deep[:, None]).T.astype(float), levels=[0.5, 1.5], colors="none", hatches=["...."])
-    a1.contour(x, depth, wet.T.astype(float), levels=[0.5], colors="k", linewidths=1.0)
+    from matplotlib.path import Path as MPath
+    kernel = MPath.unit_circle()
+    kernel = MPath(kernel.vertices * np.array([0.55, 1.0]), kernel.codes)         # a tall oval: a corn kernel
+    dx = np.median(np.diff(x))
+    kx, ky = [], []
+    for i in range(0, len(t), 2):
+        if corn[i]:
+            for j in range(int(round(thick[i] / (ce.DZ * 100)))):
+                kx.append(x[i] + (0.5 * dx if j % 2 else 0.0))
+                ky.append(depth[j])
+    if kx:
+        a1.scatter(kx, ky, marker=kernel, s=70, c="#f6c90e", edgecolors="#b7860b", linewidths=0.5, zorder=5)
     a1.set_ylim(depth[-1] + 0.5, 0)
     a1.set_ylabel("depth below the surface (cm)")
     cb = fig.colorbar(pm, cax=cax)
     cb.set_label("snow temperature (C); green = at 0 C")
     import textwrap
     head = f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else 'bad day'}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}"
-    note = (f"black line: liquid water (>= {100 * ce.W_THAW:.1f}% of mass).  ////: thawed layer {CORN_MIN_CM:.0f}-{CORN_MAX_CM:.0f} cm deep from the surface (corn window).  "
-            f"....: thawed deeper than {CORN_MAX_CM:.0f} cm (slush).  Snow age at start {res['age0']:.1f} d.")
+    note = (f"corn kernels: surface layer thawed (liquid water >= {100 * ce.W_THAW:.1f}% of mass) to a depth of {CORN_MIN_CM:.0f}-{CORN_MAX_CM:.0f} cm.  "
+            f"Snow age at start {res['age0']:.1f} d.")
     a1.set_title(head + "\n" + textwrap.fill(note, 120), fontsize=9)
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
     mark = pd.Timestamp(day["date"]) + pd.Timedelta(hours=hh, minutes=mm)
