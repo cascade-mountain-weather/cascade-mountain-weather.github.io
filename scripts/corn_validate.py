@@ -39,6 +39,8 @@ SPINUP_DAYS = 4
 SNOW_DAY_IN = 0.2
 KT_CLEAR = 0.95
 FT = 0.3048
+LAPSE_T = 0.0098          # K/m: dry adiabatic, to move station or HRRR air temperature to the site elevation (Danny: good corn days are dry and sunny)
+LAPSE_TD = 0.0018         # K/m: dew point falls about 1.8 K/km in a rising unsaturated parcel (placeholder)
 
 # station roles: T = air temperature (list of (stid, elev ft), interpolated in elevation), W = wind, RH = humidity (same stations as T if
 # available), SW = radiometer for cloud, SNOTEL = (triplet) for snow age.
@@ -134,8 +136,8 @@ def forcing_hrrr(day, idx):
     elev = day["elev_ft"] * FT
     orog = float(df["orog"].median())
     dz = elev - orog
-    T = hr(df["t2m"]) - 273.15 - 0.0065 * dz          # standard lapse to the site elevation (placeholder; HRRR terrain is smoothed)
-    Td = hr(df["d2m"]) - 273.15 - 0.002 * dz
+    T = hr(df["t2m"]) - 273.15 - LAPSE_T * dz          # dry adiabatic lapse to the site elevation (HRRR terrain is smoothed)
+    Td = hr(df["d2m"]) - 273.15 - LAPSE_TD * dz
     es = lambda t: 6.112 * np.exp(17.62 * t / (243.12 + t))
     RH = np.clip(es(Td) / es(T), 0.05, 1.0)
     W = np.hypot(hr(df["u10"]), hr(df["v10"])).clip(lower=0.3)
@@ -144,7 +146,8 @@ def forcing_hrrr(day, idx):
     kt = kt.where((90 - h["zenith"]) > 15).interpolate(limit_area=None).ffill().bfill()
     print(f"   HRRR point terrain {orog / FT:.0f} ft (site {day['elev_ft']} ft): median midday kt {float(kt[(90 - h['zenith']) > 25].median()):.2f}")
     cloud = (1 - kt / KT_CLEAR).clip(0, 1)
-    return (T + 273.15), RH, W, cloud, kt, T, hr(df["sdlwrf"])
+    lw = hr(df["sdlwrf"]) * ((T + 273.15) / hr(df["t2m"])) ** 4        # scale the model longwave by the temperature change from the lapse correction
+    return (T + 273.15), RH, W, cloud, kt, T, lw
 
 
 def forcing(day, idx):
@@ -163,8 +166,8 @@ def forcing(day, idx):
         Ds.append((meta["elev_m"], dewpoint(T, RH)))
     if len(Ts) == 1:
         T, Td = Ts[0][1], Ds[0][1]
-        lapse = 0.0065 * (elev - Ts[0][0])             # no second station: standard lapse rate to the site (placeholder)
-        T, Td = T - lapse, Td - 0.002 * (elev - Ts[0][0])
+        lapse = LAPSE_T * (elev - Ts[0][0])             # no second station: dry adiabatic lapse to the site
+        T, Td = T - lapse, Td - LAPSE_TD * (elev - Ts[0][0])
     else:
         (e0, T0), (e1, T1) = sorted(Ts, key=lambda x: x[0])
         (_, D0), (_, D1) = sorted(Ds, key=lambda x: x[0])
@@ -223,7 +226,8 @@ def run(day):
     sw_cl = cs.tilted_terrain(hh, day["slope"], day["aspect"], row.vd, row.ct, row[hc].values)["total"]
     pressure = 101325 * (1 - 2.25577e-5 * day["elev_ft"] * FT) ** 5.25588
     age0 = (idx[0].tz_localize(None) - last_snow).total_seconds() / 86400
-    alpha = ce.albedo(age0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
+    doy0 = idx[0].dayofyear
+    alpha = ce.albedo(age0, 0.0, doy0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
     col = ce.Column(T0=min(float(np.nanmean(T.values[:48])), 273.15), w0=0.0)
     top0 = min(float(np.nanmean(T.values[:48])), 273.15)
     col.T = np.linspace(top0, 273.15, ce.NL)               # starts linear from the mean air temperature (capped at 0 C) to the 0 C lower boundary
@@ -236,7 +240,7 @@ def run(day):
                  pressure=pressure, z0=ce.z0(age))
         for _ in range(int(30 * 60 / ce.DT)):
             ts, _q = col.step(f)
-        alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24)
+        alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24, t.dayofyear)
         a_, b_ = ce.exchange(f["ta"], ts, f["vw"], pressure, f["z0"])
         rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
         rec["qs"].append(a_ * (f["ta"] - ts)); rec["ql"].append(b_ * (f["rh"] * ce.e_sat(f["ta"]) - ce.e_sat(ts))); rec["wind"].append(f["vw"]); rec["rh"].append(f["rh"])

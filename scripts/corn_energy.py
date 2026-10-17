@@ -34,6 +34,7 @@ Z0_MIN, Z0_MAX = 0.25e-3, 25e-3
 K_ICE, D_AIR, D_SNOW = 2.2, 22e-6, 85e-6     # the last two are recorded, not used
 # placeholders (see docstring)
 ALBEDO_RATE0, ALBEDO_RATE_MAX, ALBEDO_CYCLES_FULL = 0.020, 0.030, 3.0   # fractional loss per day: 2% fresh, rising to 3% as melt-freeze cycles accumulate (Danny: 2-3%/day, faster as grains grow)
+ALBEDO_MIN_SPRING, SPRING_START_DOY, SPRING_END_DOY = 0.45, 60, 152   # from Mar 1 the floor falls linearly to 0.45 by Jun 1 (dirtier spring snow; Danny: 'say, March'); the 0.45 and the end date are placeholders
 MF_MELT_C, MF_FREEZE_C = -0.05, -1.0           # a melt-freeze cycle: surface at 0 C, then back below -1 C
 ROUGH_TAU_DAYS, ROUGH_POWER = 14.0, 1.0       # power-law approach to old-snow roughness; Danny: depends on conditions
 RHO_SNOW = 400.0
@@ -56,14 +57,20 @@ def albedo_rate(cycles):
     return ALBEDO_RATE0 + (ALBEDO_RATE_MAX - ALBEDO_RATE0) * min(max(cycles, 0.0) / ALBEDO_CYCLES_FULL, 1.0)
 
 
-def albedo_step(alpha, cycles, dt_days):
-    """One time step of the albedo decay (floored at ALBEDO_MIN)."""
-    return max(ALBEDO_MIN, alpha * (1.0 - albedo_rate(cycles) * dt_days))
+def albedo_floor(doy):
+    """Minimum albedo for the day of year: ALBEDO_MIN through February, then falling to ALBEDO_MIN_SPRING by the end of May."""
+    f = min(max((doy - SPRING_START_DOY) / (SPRING_END_DOY - SPRING_START_DOY), 0.0), 1.0)
+    return ALBEDO_MIN + (ALBEDO_MIN_SPRING - ALBEDO_MIN) * f
 
 
-def albedo(age_days, cycles=0.0):
-    """Albedo after `age_days` of constant-rate decay from ALBEDO_MAX (use albedo_step when the cycle count changes through time)."""
-    return max(ALBEDO_MIN, ALBEDO_MAX * (1.0 - albedo_rate(cycles)) ** max(age_days, 0.0))
+def albedo_step(alpha, cycles, dt_days, doy=1):
+    """One time step of the albedo decay, floored at albedo_floor(doy)."""
+    return max(albedo_floor(doy), alpha * (1.0 - albedo_rate(cycles) * dt_days))
+
+
+def albedo(age_days, cycles=0.0, doy=1):
+    """Albedo after `age_days` of constant-rate decay from ALBEDO_MAX (use albedo_step when the cycle count or the date changes)."""
+    return max(albedo_floor(doy), ALBEDO_MAX * (1.0 - albedo_rate(cycles)) ** max(age_days, 0.0))
 
 
 def z0(age_days):
