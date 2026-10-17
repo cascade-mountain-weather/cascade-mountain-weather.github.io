@@ -1,47 +1,7 @@
 {
-  "updated": "2026-10-15T17:10:52.788173+00:00",
+  "updated": "2026-10-17T15:44:04.477023+00:00",
   "stations": {
     "UIL": [
-      {
-        "cycle": "202610100000",
-        "label": "2026-10-10 00Z",
-        "valid": "2026-10-10T00:00:00+00:00",
-        "freezing_level_m": 1660.0,
-        "wet_bulb_zero_m": 1255.0,
-        "snow_level_m": 595.0,
-        "total_melting_distance_m": 490.0,
-        "snow_level_saturated_m": 1075.0
-      },
-      {
-        "cycle": "202610101200",
-        "label": "2026-10-10 12Z",
-        "valid": "2026-10-10T12:00:00+00:00",
-        "freezing_level_m": 1575.0,
-        "wet_bulb_zero_m": 1035.0,
-        "snow_level_m": 550.0,
-        "total_melting_distance_m": 340.0,
-        "snow_level_saturated_m": 820.0
-      },
-      {
-        "cycle": "202610110000",
-        "label": "2026-10-11 00Z",
-        "valid": "2026-10-11T00:00:00+00:00",
-        "freezing_level_m": 1660.0,
-        "wet_bulb_zero_m": 1350.0,
-        "snow_level_m": 855.0,
-        "total_melting_distance_m": 330.0,
-        "snow_level_saturated_m": 1095.0
-      },
-      {
-        "cycle": "202610111200",
-        "label": "2026-10-11 12Z",
-        "valid": "2026-10-11T12:00:00+00:00",
-        "freezing_level_m": 2165.0,
-        "wet_bulb_zero_m": 1275.0,
-        "snow_level_m": 710.0,
-        "total_melting_distance_m": 380.0,
-        "snow_level_saturated_m": 1275.0
-      },
       {
         "cycle": "202610120000",
         "label": "2026-10-12 00Z",
@@ -121,49 +81,49 @@
         "snow_level_m": 1735.0,
         "total_melting_distance_m": 480.0,
         "snow_level_saturated_m": 3240.0
+      },
+      {
+        "cycle": "202610160000",
+        "label": "2026-10-16 00Z",
+        "valid": "2026-10-16T00:00:00+00:00",
+        "freezing_level_m": 4245.0,
+        "wet_bulb_zero_m": 2680.0,
+        "snow_level_m": 2255.0,
+        "total_melting_distance_m": 275.0,
+        "snow_level_saturated_m": 3640.0
+      },
+      {
+        "cycle": "202610161200",
+        "label": "2026-10-16 12Z",
+        "valid": "2026-10-16T12:00:00+00:00",
+        "freezing_level_m": 4040.0,
+        "wet_bulb_zero_m": 3175.0,
+        "snow_level_m": 2480.0,
+        "total_melting_distance_m": 425.0,
+        "snow_level_saturated_m": 3370.0
+      },
+      {
+        "cycle": "202610170000",
+        "label": "2026-10-17 00Z",
+        "valid": "2026-10-17T00:00:00+00:00",
+        "freezing_level_m": 3765.0,
+        "wet_bulb_zero_m": 2740.0,
+        "snow_level_m": 2050.0,
+        "total_melting_distance_m": 470.0,
+        "snow_level_saturated_m": 3140.0
+      },
+      {
+        "cycle": "202610171200",
+        "label": "2026-10-17 12Z",
+        "valid": "2026-10-17T12:00:00+00:00",
+        "freezing_level_m": 2300.0,
+        "wet_bulb_zero_m": 2015.0,
+        "snow_level_m": 1280.0,
+        "total_melting_distance_m": 520.0,
+        "snow_level_saturated_m": 1585.0
       }
     ],
     "SLE": [
-      {
-        "cycle": "202610100000",
-        "label": "2026-10-10 00Z",
-        "valid": "2026-10-10T00:00:00+00:00",
-        "freezing_level_m": 2315.0,
-        "wet_bulb_zero_m": 2210.0,
-        "snow_level_m": 1790.0,
-        "total_melting_distance_m": 240.0,
-        "snow_level_saturated_m": 1815.0
-      },
-      {
-        "cycle": "202610101200",
-        "label": "2026-10-10 12Z",
-        "valid": "2026-10-10T12:00:00+00:00",
-        "freezing_level_m": 1420.0,
-        "wet_bulb_zero_m": 1395.0,
-        "snow_level_m": 840.0,
-        "total_melting_distance_m": 355.0,
-        "snow_level_saturated_m": 895.0
-      },
-      {
-        "cycle": "202610110000",
-        "label": "2026-10-11 00Z",
-        "valid": "2026-10-11T00:00:00+00:00",
-        "freezing_level_m": 1565.0,
-        "wet_bulb_zero_m": 1385.0,
-        "snow_level_m": 835.0,
-        "total_melting_distance_m": 350.0,
-        "snow_level_saturated_m": 1050.0
-      },
-      {
-        "cycle": "202610111200",
-        "label": "2026-10-11 12Z",
-        "valid": "2026-10-11T12:00:00+00:00",
-        "freezing_level_m": 1745.0,
-        "wet_bulb_zero_m": 1270.0,
-        "snow_level_m": 740.0,
-        "total_melting_distance_m": 355.0,
-        "snow_level_saturated_m": 1140.0
-      },
       {
         "cycle": "202610120000",
         "label": "2026-10-12 00Z",
@@ -243,6 +203,46 @@
         "snow_level_m": 2145.0,
         "total_melting_distance_m": 485.0,
         "snow_level_saturated_m": 3410.0
+      },
+      {
+        "cycle": "202610160000",
+        "label": "2026-10-16 00Z",
+        "valid": "2026-10-16T00:00:00+00:00",
+        "freezing_level_m": 4600.0,
+        "wet_bulb_zero_m": 2795.0,
+        "snow_level_m": 2290.0,
+        "total_melting_distance_m": 330.0,
+        "snow_level_saturated_m": 4015.0
+      },
+      {
+        "cycle": "202610161200",
+        "label": "2026-10-16 12Z",
+        "valid": "2026-10-16T12:00:00+00:00",
+        "freezing_level_m": 4285.0,
+        "wet_bulb_zero_m": 3220.0,
+        "snow_level_m": 2440.0,
+        "total_melting_distance_m": 515.0,
+        "snow_level_saturated_m": 3760.0
+      },
+      {
+        "cycle": "202610170000",
+        "label": "2026-10-17 00Z",
+        "valid": "2026-10-17T00:00:00+00:00",
+        "freezing_level_m": 4350.0,
+        "wet_bulb_zero_m": 3195.0,
+        "snow_level_m": 2495.0,
+        "total_melting_distance_m": 505.0,
+        "snow_level_saturated_m": 3805.0
+      },
+      {
+        "cycle": "202610171200",
+        "label": "2026-10-17 12Z",
+        "valid": "2026-10-17T12:00:00+00:00",
+        "freezing_level_m": 3820.0,
+        "wet_bulb_zero_m": 2620.0,
+        "snow_level_m": 2025.0,
+        "total_melting_distance_m": 380.0,
+        "snow_level_saturated_m": 3225.0
       }
     ],
     "OTX": [],
