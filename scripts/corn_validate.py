@@ -264,14 +264,23 @@ def run(day, lw_model="auto"):
     return res
 
 
-def contiguous_wet_cm(w_frac):
+def wet_run(w_frac):
+    """(first wet layer, number of contiguous wet layers) counted from the surface, tolerating a frozen skin: if the top layer is not wet
+    but the next one is, the run starts at layer 1 (Danny: a surface only below freezing is not truly frozen). (0, 0) if neither is wet."""
+    start = 0 if w_frac[0] >= ce.W_THAW else (1 if len(w_frac) > 1 and w_frac[1] >= ce.W_THAW else None)
+    if start is None:
+        return 0, 0
     n = 0
-    for x in w_frac:
+    for x in w_frac[start:]:
         if x >= ce.W_THAW:
             n += 1
         else:
             break
-    return n * ce.DZ * 100
+    return start, n
+
+
+def contiguous_wet_cm(w_frac):
+    return wet_run(w_frac)[1] * ce.DZ * 100
 
 
 def plot(day, res):
@@ -298,7 +307,8 @@ def plot(day, res):
     kx, ky = [], []
     for i in range(0, len(t), 2):
         if corn[i]:
-            for j in range(int(round(thick[i] / (ce.DZ * 100)))):
+            st, nn = wet_run(w[i])
+            for j in range(st, st + nn):
                 kx.append(x[i] + (0.5 * dx if j % 2 else 0.0))
                 ky.append(depth[j])
     if kx:
