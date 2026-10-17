@@ -33,7 +33,7 @@ ALBEDO_MAX, ALBEDO_MIN = 0.95, 0.55            # minimum raised from 0.3 to 0.55
 Z0_MIN, Z0_MAX = 0.25e-3, 25e-3
 K_ICE, D_AIR, D_SNOW = 2.2, 22e-6, 85e-6     # the last two are recorded, not used
 # placeholders (see docstring)
-ALBEDO_RATE0, ALBEDO_RATE_MAX, ALBEDO_CYCLES_FULL = 0.020, 0.030, 3.0   # fractional loss per day: 2% fresh, rising to 3% as melt-freeze cycles accumulate (Danny: 2-3%/day, faster as grains grow)
+ALBEDO_RATE0, ALBEDO_RATE_MAX, ALBEDO_CYCLES_FULL = 0.030, 0.040, 3.0   # fractional loss per day: 3% fresh, rising to 4% as melt-freeze cycles accumulate (Danny, Oct 17: 2-3% was a little too slow; the new values are placeholders)
 ALBEDO_MIN_SPRING, SPRING_START_DOY, SPRING_END_DOY = 0.45, 60, 152   # from Mar 1 the floor falls linearly to 0.45 by Jun 1 (dirtier spring snow; Danny: 'say, March'); the 0.45 and the end date are placeholders
 MF_MELT_C, MF_FREEZE_C = -0.05, -1.0           # a melt-freeze cycle: surface at 0 C, then back below -1 C
 ROUGH_TAU_DAYS, ROUGH_POWER = 14.0, 1.0       # power-law approach to old-snow roughness; Danny: depends on conditions
@@ -47,7 +47,8 @@ DZ, NL, DT = 0.01, 30, 60.0
 SWA_K = (0.059, 0.180, 0.525, 4.75, 85.23)
 SWA_PC = (16.3, 16.8, 15.4, 31.0, 20.5)
 SWA_FB = (29.0, 15.0, 5.0, 9.0, 35.0)
-RG_MM = 1.0                  # optical grain radius, mm: PLACEHOLDER (SNOWPACK takes it from the grain model; coarse corn grains are larger)
+RG_MIN_MM, RG_MAX_MM = 1.0, 2.0   # optical grain radius (mm) grows from 1 to 2 with the albedo decay (Danny, Oct 17); SNOWPACK takes it from its grain model
+RG_MM = RG_MIN_MM
 PENETRATE = True
 T_DEEP = 273.15              # lower boundary of the 30 cm column: 0 C (Danny, Oct 17)
 
@@ -78,13 +79,19 @@ def z0(age_days):
     return Z0_MAX - (Z0_MAX - Z0_MIN) * (1 + max(age_days, 0.0) / ROUGH_TAU_DAYS) ** -ROUGH_POWER
 
 
-def sw_absorption(i0, rho):
+def grain_radius_mm(alpha, floor):
+    """Grain radius grown from RG_MIN_MM to RG_MAX_MM as the albedo falls from ALBEDO_MAX to its floor."""
+    f = (ALBEDO_MAX - alpha) / max(ALBEDO_MAX - floor, 1e-6)
+    return RG_MIN_MM + (RG_MAX_MM - RG_MIN_MM) * min(max(f, 0.0), 1.0)
+
+
+def sw_absorption(i0, rho, rg_mm=RG_MM):
     """Shortwave (W/m2) absorbed in each layer of the column from `i0` net at the surface, SNOWPACK MULTI_BAND: per band the extinction
     is Ks = fb * 0.84 * sqrt(1000 k / (2 rg)) * rho / rho_ice (1/m), absorbed per layer i0_band * (1 - exp(-Ks dz)). Light left at the
     bottom of the column is added to the last layer (as SNOWPACK does for the bottom element)."""
     out = np.zeros(NL)
     for k, pc, fb in zip(SWA_K, SWA_PC, SWA_FB):
-        ks = fb * 0.84 * math.sqrt(1000.0 * k / (2.0 * RG_MM)) * rho / 917.0
+        ks = fb * 0.84 * math.sqrt(1000.0 * k / (2.0 * rg_mm)) * rho / 917.0
         left = i0 * pc / 100.0
         for i in range(NL):
             d = left * (1.0 - math.exp(-ks * DZ))
@@ -225,7 +232,7 @@ class Column:
         for i in range(1, NL):
             flux[i] = self.k * (self.T[i - 1] - self.T[i]) / DZ
         flux[NL] = self.k * (self.T[NL - 1] - self.t_deep) / DZ
-        swl = sw_absorption(f["sw_abs"], self.m / DZ) if PENETRATE else np.zeros(NL)
+        swl = sw_absorption(f["sw_abs"], self.m / DZ, f.get("rg", RG_MM)) if PENETRATE else np.zeros(NL)
         for i in range(NL):
             self.add_heat(i, (flux[i] - flux[i + 1] + swl[i]) * dt)
         self.drain()

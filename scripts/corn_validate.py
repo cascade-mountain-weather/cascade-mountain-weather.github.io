@@ -36,8 +36,10 @@ ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "corn" / "validation"
 FIG = ROOT / "docs" / "corn"
 SPINUP_DAYS = 4
-SNOW_DAY_IN = 0.2
+SNOW_RESET_CM = 10.0       # a snowfall that deepens the pack by at least this much in a day resets the snow age (Danny, Oct 17)
+SNOW_RESET_WTEQ_IN = 0.4   # fallback where the depth sensor is missing: about 10 cm at 10:1 (placeholder)
 KT_CLEAR = 0.95
+CORN_MIN_CM, CORN_MAX_CM = 2.0, 10.0   # corn window: thawed depth from the surface, from PLAN.md (corn target 2-10 cm)
 FT = 0.3048
 LAPSE_T = 0.0098          # K/m: dry adiabatic, to move station or HRRR air temperature to the site elevation (Danny: good corn days are dry and sunny)
 LAPSE_TD = 0.0018         # K/m: dew point falls about 1.8 K/km in a rising unsaturated parcel (placeholder)
@@ -62,9 +64,9 @@ DAYS = [
          slope=30, aspect=225, source="hrrr", SNOTEL="702:WA:SNTL"),
     dict(id="crystal_2024", date="2024-04-14", hhmm="13:00", good=True, place="Crystal Mountain, northwest routes", lat=46.935, lon=-121.475, elev_ft=6200,
          slope=30, aspect=315, source="hrrr", SNOTEL="642:WA:SNTL"),
-    dict(id="baker_2024", date="2024-06-29", hhmm="13:00", good=True, place="Mt. Baker, Coleman-Deming", lat=48.77, lon=-121.84, elev_ft=6000,
+    dict(id="baker_2024", date="2024-06-29", hhmm="13:00", good=True, place="Mt. Baker, Coleman-Deming", lat=48.77, lon=-121.84, elev_ft=7874,
          slope=17.5, aspect=225, source="hrrr", SNOTEL="1011:WA:SNTL"),
-    dict(id="baker_2025", date="2025-06-15", hhmm="12:00", good=True, place="Mt. Baker, Coleman-Deming, W/SW", lat=48.77, lon=-121.84, elev_ft=6000,
+    dict(id="baker_2025", date="2025-06-15", hhmm="12:00", good=True, place="Mt. Baker, Coleman-Deming, W/SW", lat=48.77, lon=-121.84, elev_ft=7874,
          slope=17.5, aspect=247.5, source="hrrr", SNOTEL="1011:WA:SNTL"),
     dict(id="baker_ski", date="2026-02-05", hhmm="12:00", good=False, place="Mt. Baker ski area (thick ice crust after rain)", lat=48.86, lon=-121.67,
          elev_ft=4800, slope=17.5, aspect=180, T=["MTB42", "MTB50"], W="MTB50", SW=["MTB50", "KCFW1"], SNOTEL="909:WA:SNTL", region="baker"),
@@ -198,8 +200,9 @@ def forcing(day, idx):
 
 def snow_age(day, idx):
     sn = snotel(day["SNOTEL"], pd.Timestamp(day["date"]) - pd.Timedelta(days=30), pd.Timestamp(day["date"]) + pd.Timedelta(days=1))
-    gain = sn["WTEQ"].diff()
-    snowy = gain[gain >= SNOW_DAY_IN]
+    dep = sn["SNWD"].diff() * 2.54
+    snowy = sn.index[((dep >= SNOW_RESET_CM) | (sn["SNWD"].isna() & (sn["WTEQ"].diff() >= SNOW_RESET_WTEQ_IN))).fillna(False).values]
+    snowy = pd.Series(1, index=snowy)
     target = pd.Timestamp(day["date"])
     prior = snowy[snowy.index <= target]
     last = prior.index.max() if len(prior) else target - pd.Timedelta(days=30)
@@ -237,7 +240,7 @@ def run(day):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
         f = dict(sw_abs=sw_abs, lw_in=(float(lw_override.values[n]) if lw_override is not None else ce.lw_in(RH.values[n], T.values[n], cloud.values[n])), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
-                 pressure=pressure, z0=ce.z0(age))
+                 pressure=pressure, z0=ce.z0(age), rg=ce.grain_radius_mm(alpha, ce.albedo_floor(t.dayofyear)))
         for _ in range(int(30 * 60 / ce.DT)):
             ts, _q = col.step(f)
         alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24, t.dayofyear)
@@ -277,13 +280,28 @@ def plot(day, res):
     plt.setp(a1.get_xticklabels(), visible=False)
     x = mdates_num(t)
     pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-15, vmax=0, shading="nearest")
-    a1.contour(x, depth, w.T, levels=[ce.W_THAW], colors="k", linewidths=1.3)
+    wet = (w >= ce.W_THAW)
+    thick = np.zeros(len(t))                       # contiguous thawed depth from the surface, cm
+    for i in range(len(t)):
+        thick[i] = contiguous_wet_cm(w[i])
+    corn = (thick >= CORN_MIN_CM) & (thick <= CORN_MAX_CM)
+    deep = thick > CORN_MAX_CM
+    surf_wet = np.zeros_like(wet)
+    for i in range(len(t)):
+        n = int(round(thick[i] / (ce.DZ * 100)))
+        surf_wet[i, :n] = True
+    a1.contourf(x, depth, (surf_wet & corn[:, None]).T.astype(float), levels=[0.5, 1.5], colors="none", hatches=["////"])
+    a1.contourf(x, depth, (surf_wet & deep[:, None]).T.astype(float), levels=[0.5, 1.5], colors="none", hatches=["...."])
+    a1.contour(x, depth, wet.T.astype(float), levels=[0.5], colors="k", linewidths=1.0)
     a1.set_ylim(depth[-1] + 0.5, 0)
     a1.set_ylabel("depth below the surface (cm)")
     cb = fig.colorbar(pm, cax=cax)
     cb.set_label("snow temperature (C); green = at 0 C")
-    a1.set_title(f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else 'bad day'}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}\n"
-                 f"black line: liquid water begins (>= {100 * ce.W_THAW:.1f}% of mass).  Snow age at start {res['age0']:.1f} d.  Forcing: observed stations; shortwave scaled by measured cloud.", fontsize=10)
+    import textwrap
+    head = f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else 'bad day'}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}"
+    note = (f"black line: liquid water (>= {100 * ce.W_THAW:.1f}% of mass).  ////: thawed layer {CORN_MIN_CM:.0f}-{CORN_MAX_CM:.0f} cm deep from the surface (corn window).  "
+            f"....: thawed deeper than {CORN_MAX_CM:.0f} cm (slush).  Snow age at start {res['age0']:.1f} d.")
+    a1.set_title(head + "\n" + textwrap.fill(note, 120), fontsize=9)
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
     mark = pd.Timestamp(day["date"]) + pd.Timedelta(hours=hh, minutes=mm)
     for a in (a1, a2):
