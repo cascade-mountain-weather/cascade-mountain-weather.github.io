@@ -38,7 +38,6 @@ FIG = ROOT / "docs" / "corn"
 SPINUP_DAYS = 4
 SNOW_DAY_IN = 0.2
 KT_CLEAR = 0.95
-DEEP_TAU_DAYS = 3.0       # placeholder: the temperature under the 30 cm column relaxes to the air temperature (capped at 0 C) with this time scale
 FT = 0.3048
 
 # station roles: T = air temperature (list of (stid, elev ft), interpolated in elevation), W = wind, RH = humidity (same stations as T if
@@ -226,12 +225,13 @@ def run(day):
     age0 = (idx[0].tz_localize(None) - last_snow).total_seconds() / 86400
     alpha = ce.albedo(age0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
     col = ce.Column(T0=min(float(np.nanmean(T.values[:48])), 273.15), w0=0.0)
-    col.t_deep = col.T[-1]
+    top0 = min(float(np.nanmean(T.values[:48])), 273.15)
+    col.T = np.linspace(top0, 273.15, ce.NL)               # starts linear from the mean air temperature (capped at 0 C) to the 0 C lower boundary
+    col.t_deep = ce.T_DEEP
     rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lw=[], qs=[], ql=[], wind=[], rh=[])
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
-        col.t_deep += (min(T.values[n], 273.15) - col.t_deep) * (1800.0 / (DEEP_TAU_DAYS * 86400))   # deep snow follows a smoothed, capped air temperature
         f = dict(sw_abs=sw_abs, lw_in=(float(lw_override.values[n]) if lw_override is not None else ce.lw_in(RH.values[n], T.values[n], cloud.values[n])), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
                  pressure=pressure, z0=ce.z0(age))
         for _ in range(int(30 * 60 / ce.DT)):

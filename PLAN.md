@@ -415,3 +415,25 @@ What it is missing: in real terrain the surfaces a slope sees are other slopes. 
 Reading: the two good days refreeze hard (overnight air -3 to -6 C, crust 15 cm to the whole column) and thaw from late morning; the three bad days have warm nights (air +2.6 to +10 C) and a thin crust (2-5 cm) except Jan 17, where a clear night gives a 12 cm crust at +4.3 C air: the model refreezes where the day was "way too warm" (cloud at night is unknown: it is interpolated from daytime clearness, so a cloudy night would remove the crust; check Jan 17 night cloud against the MU101 and PVW54 radiation and the Paradise webcam/observations). The wet-depth metric does not separate good from bad, because every day thaws the full 30 cm; corn needs a better target (thaw rate, thaw depth timing, or the wet depth at the reported hour against a threshold) and the albedo at 4-6 days (0.49 with the placeholder decay) is probably too low for Muir in February.
 
 **Albedo revision (Danny, Oct 15 2026):** minimum raised to 0.55; the fractional loss per day is 2% with no melt-freeze cycles, rising linearly to 3% at 3 cycles (`ALBEDO_RATE0`, `ALBEDO_RATE_MAX`, `ALBEDO_CYCLES_FULL`; the cycle scale is a placeholder). A cycle is counted when the surface reaches 0 C and then falls below -1 C (`Column.cycles`). The albedo is integrated forward step by step in `corn_validate.py`. Heat-map colors changed to an NWS-style cold ramp (purple, blue, cyan, green at 0 C). First 2026 re-run with the higher albedo: Muir (good) now has a 30 cm crust at 06:00 and thaws only 1 cm by 12:00 and 4 cm by 15:00 (the 2-10 cm target), Paradise Jan 31 (new snow) 0 cm at noon, Baker Feb 5 (warm, rain crust) 30 cm wet, but Lundin Jan 24 (good) never reaches 0 C (dry air, RH about 20%, wind 3-8 m/s from the ridge station Alpental summit, so the latent and sensible losses balance the shortwave; a sheltered south slope probably sees much less wind) and Paradise Jan 17 (too warm) now has a 30 cm crust on a +4.3 C night, which the model gets wrong. HRRR forcing (`scripts/corn_hrrr.py`) is being fetched for the six 2022-2025 good days.
+
+### Shortwave penetration, 0 C lower boundary and all 11 days (Oct 17 2026)
+
+Danny: shortwave penetrates and should be extinct by about 10 cm (check against SNOWPACK); lower boundary 0 C. SNOWPACK (`Laws_sn.cc` `compShortWaveAbsorption`) has a multi-band scheme (five bands, extinction k = 0.059, 0.180, 0.525, 4.75, 85.23, spectral shares 16.3, 16.8, 15.4, 31.0, 20.5 %, fudge factors 29, 15, 5, 9, 35; per band Ks = fb x 0.84 x sqrt(1000 k / (2 rg)) x rho / rho_ice, rg the grain radius in mm) and a single-band one (extinction = rho/10 + 30 per m, about 70/m at 400 kg/m3, e-folding 1.4 cm; 99.9% absorbed by 10 cm). `scripts/corn_energy.py` now uses the multi-band scheme: with rg = 1 mm (placeholder, SNOWPACK reads it from its grain model) the bands e-fold at about 0.6 to 3.4 cm and the top band by 0.04 cm, so essentially nothing is left by 10 cm, consistent with Danny's value. The lower boundary is fixed at 0 C and the starting profile is linear from the mean air temperature (capped at 0 C) to 0 C.
+
+Results on all 11 days (HRRR forcing for 2022-2025, stations for 2026; site slope, aspect and elevation assumed; surface at 0 C is "never" when it stays below):
+
+| Day | Label | Snow age | Overnight min air | Crust 06:00 | Wet depth at report / 15:00 | Verdict |
+|---|---|---|---|---|---|---|
+| 2022-01-17 St. Helens | good | 4.8 d | +3.6 | 30 | 7 / 12 cm | fits |
+| 2023-03-22 St. Helens | good | 2.8 | -4.0 | 30 | 0 / 0 | misses (never thaws) |
+| 2023-06-10 Adams | good | 30.8 | +6.0 | 0 | 30 / 30 | too wet (slush, thaw from 06:15) |
+| 2024-04-14 Crystal | good | 1.9 | -0.0 | 30 | 0 / 2 | misses |
+| 2024-06-29 Baker | good | 14.9 | +5.2 | 1 | 30 / 30 | too wet |
+| 2025-06-15 Baker | good | 22.8 | +3.3 | 12 | 30 / 30 | too wet |
+| 2026-01-24 Lundin | good | 3.9 | -6.1 | 30 | 0 / 0 | misses |
+| 2026-02-28 Muir | good | 4.8 | -3.4 | 30 | 1 / 5 | fits |
+| 2026-01-31 Paradise | bad (new snow) | 2.8 | +2.6 | 2 | 0 / 0 | no corn, right answer |
+| 2026-01-17 Paradise | bad (warm) | 6.8 | +4.3 | 30 | 2 / 10 | wrong (gives corn on a +4 C night) |
+| 2026-02-05 Baker | bad (rain crust) | 8.8 | +10.1 | 5 | 30 / 30 | no corn, but for the wrong reason (no crust physics) |
+
+Pattern: winter and early-spring days are too cold (no thaw: albedo 0.86-0.92 at 2-5 days, net longwave about -50 to -90 W/m2 against about 50-110 W/m2 absorbed), June days are too warm (30 cm wet at the report hour, albedo down to 0.55-0.7, 300-400 W/m2 absorbed). A single fixed albedo-decay rule cannot serve both. Candidate causes, not yet tested: the albedo rule (an older, dirtier or coarse-grained snow surface in spring), the 30 deg slope and aspect guesses, cloud and longwave from HRRR, wind at 10 m versus a sheltered slope, rg = 1 mm, and the missing rain and new-snow processes. The wet-depth metric (liquid at least 0.5% of mass) saturates in June because the 30 cm column sits on a 0 C lower boundary; a thaw-rate or crust-erosion-time measure would be better.

@@ -13,7 +13,8 @@ diffusion coefficient in air 22e-6 and in snow/ice 85e-6 (m2/s) (these two enter
 grain data we do not have; recorded here, not used yet).
 PLACEHOLDERS, NOT SOURCED (marked **(source)** in PLAN.md): the decay time scales and exponents (ALBEDO_TAU_DAYS, ROUGH_TAU_DAYS), the snow conductivity
 (density formula below), irreducible water fraction, thaw threshold, snow density, deep-snow temperature, reference heights, the stability cap ZETA_MAX.
-Not modelled: shortwave penetration into snow (all absorbed at the surface), terrain longwave from surrounding slopes, wind
+Shortwave penetrates the snow (multi-band Beer-Lambert absorption as in SNOWPACK's SnLaws::compShortWaveAbsorption, MULTI_BAND, with its band
+extinction values, spectral shares and grain-size scaling; the grain radius RG_MM is a placeholder). Not modelled: terrain longwave from surrounding slopes, wind
 redistribution, vapor transport inside the snow, percolation beyond a one-way drain, and snowfall during the run.
 """
 import argparse
@@ -38,10 +39,16 @@ ROUGH_TAU_DAYS, ROUGH_POWER = 14.0, 1.0       # power-law approach to old-snow r
 RHO_SNOW = 400.0
 W_IRR = 0.07
 W_THAW = 0.005
-T_DEEP = 273.15
 Z_WIND, Z_TEMP = 10.0, 2.0
 ZETA_MAX = 1.0
 DZ, NL, DT = 0.01, 30, 60.0
+# SNOWPACK Laws_sn.cc (values in use since r140): mean ice extinction coefficient, share of the solar spectrum (%), and 'fudge Bohren' per band
+SWA_K = (0.059, 0.180, 0.525, 4.75, 85.23)
+SWA_PC = (16.3, 16.8, 15.4, 31.0, 20.5)
+SWA_FB = (29.0, 15.0, 5.0, 9.0, 35.0)
+RG_MM = 1.0                  # optical grain radius, mm: PLACEHOLDER (SNOWPACK takes it from the grain model; coarse corn grains are larger)
+PENETRATE = True
+T_DEEP = 273.15              # lower boundary of the 30 cm column: 0 C (Danny, Oct 17)
 
 
 def albedo_rate(cycles):
@@ -62,6 +69,22 @@ def albedo(age_days, cycles=0.0):
 def z0(age_days):
     """Roughness from 0.25 mm (fresh) toward 25 mm (old, sun cups), approaching it as a power law of age."""
     return Z0_MAX - (Z0_MAX - Z0_MIN) * (1 + max(age_days, 0.0) / ROUGH_TAU_DAYS) ** -ROUGH_POWER
+
+
+def sw_absorption(i0, rho):
+    """Shortwave (W/m2) absorbed in each layer of the column from `i0` net at the surface, SNOWPACK MULTI_BAND: per band the extinction
+    is Ks = fb * 0.84 * sqrt(1000 k / (2 rg)) * rho / rho_ice (1/m), absorbed per layer i0_band * (1 - exp(-Ks dz)). Light left at the
+    bottom of the column is added to the last layer (as SNOWPACK does for the bottom element)."""
+    out = np.zeros(NL)
+    for k, pc, fb in zip(SWA_K, SWA_PC, SWA_FB):
+        ks = fb * 0.84 * math.sqrt(1000.0 * k / (2.0 * RG_MM)) * rho / 917.0
+        left = i0 * pc / 100.0
+        for i in range(NL):
+            d = left * (1.0 - math.exp(-ks * DZ))
+            out[i] += d
+            left -= d
+        out[-1] += left
+    return out
 
 
 def k_snow(rho):
@@ -167,11 +190,13 @@ class Column:
         ta = f["ta"]
         h_coef_cache = {}
 
+        sw_surface = 0.0 if PENETRATE else f["sw_abs"]
+
         def terms(ts):
             a, b = exchange(ta, ts, f["vw"], f["pressure"], f["z0"])
             qs = a * (ta - ts)
             ql = b * (f["rh"] * e_sat(ta) - e_sat(ts))
-            return f["sw_abs"] + EMISS_SNOW * f["lw_in"] - EMISS_SNOW * SIGMA * ts ** 4 + qs + ql
+            return sw_surface + EMISS_SNOW * f["lw_in"] - EMISS_SNOW * SIGMA * ts ** 4 + qs + ql
 
         T1 = self.T[0]
         g_cond = lambda ts: self.k * (ts - T1) / (DZ / 2)
@@ -193,8 +218,9 @@ class Column:
         for i in range(1, NL):
             flux[i] = self.k * (self.T[i - 1] - self.T[i]) / DZ
         flux[NL] = self.k * (self.T[NL - 1] - self.t_deep) / DZ
+        swl = sw_absorption(f["sw_abs"], self.m / DZ) if PENETRATE else np.zeros(NL)
         for i in range(NL):
-            self.add_heat(i, (flux[i] - flux[i + 1]) * dt)
+            self.add_heat(i, (flux[i] - flux[i + 1] + swl[i]) * dt)
         self.drain()
         if ts >= 273.15 + MF_MELT_C and into_top > 0:
             self._melted = True
