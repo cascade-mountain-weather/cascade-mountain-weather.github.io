@@ -443,3 +443,22 @@ Pattern: winter and early-spring days are too cold (no thaw: albedo 0.86-0.92 at
 **Round 3 changes (Danny, Oct 17 2026):** albedo loss rate raised to 3% a day (fresh) rising to 4% with melt-freeze cycles (placeholders); snow age resets only on a daily snow-depth gain of at least 10 cm (SNOTEL SNWD; where the sensor is missing, a SWE gain of 0.4 in); Baker site moved to 2,400 m (7,874 ft) for both days; optical grain radius grows from 1 to 2 mm as albedo falls from 0.95 to its floor and feeds the shortwave penetration; heat-map shading marks a thawed layer of 2-10 cm from the surface (corn window, ////) and a thawed layer deeper than 10 cm (slush, ....), black line is liquid water of at least 0.5% of mass. Results (wet depth at the reported hour): Muir 4 cm, Lundin 16, St. Helens 2022 15, St. Helens 2023 30, Adams 30, Crystal 30, Baker 2024 30, Baker 2025 30; bad days Paradise Jan 31 0, Paradise Jan 17 4, Baker ski 30. With the 10 cm reset most snow ages are now 12-31 days, albedo sits at its floor on most days, and the model over-thaws instead of under-thawing; a thawed layer forms below a frozen skin because penetrating shortwave warms the subsurface first (surface stays about -1 C). Next: a better corn criterion than the wet-depth threshold, longwave checks (Danny's suspicion), and the albedo rule.
 
 **Correction (Danny, Oct 17 2026):** the snow-age reset uses only SWE gain, or precipitation that fell as snow (daily mean air temperature at or below 33 F), at least 0.4 in of water (about 10 cm of snow at 10:1, a placeholder); never snow depth. Rain does not reset it. The heat map now marks the corn window (surface layer thawed to 2-10 cm) with gold corn-kernel markers only. Re-run (wet depth at report / 15:00): Muir 3 / 11 cm, Lundin 15 / 27, St. Helens 2022 10 / 17, St. Helens 2023 0 / 0, Crystal 9 / 26, Adams, Baker x2 30 / 30; bad days Paradise Jan 31 0 / 9, Paradise Jan 17 3 / 15, Baker ski 30 / 30.
+
+### Longwave comparison and corn-window score (Oct 17 2026)
+
+Scoring (Danny): a good corn day lasts several hours and the window should surround the reported ski time. `corn_validate.py` now reports the corn window (surface layer thawed to 2-10 cm, 06:00-20:00 local) that overlaps the reported time +/- 1 h, its span and duration, and the longest window of the day. Longwave options (`--lw`, `--compare-lw`): Konzelmann (before), Dilley and O'Brien 1998 clear sky with the Unsworth-Monteith cloud blend (MeteoIO `Dilley_ilwr` / `Unsworth_ilwr`; now the default), and HRRR's downward longwave on the HRRR days. Mean incoming longwave night / midday (W/m2) differs by 10-30 between models; for the corn window it changes the span by 0.5 h at most, except Paradise Jan 31 (bad, new snow), where Konzelmann gives a false 3.5 h window and Dilley gives none.
+
+| Day | Label | Konzelmann: window at report | Dilley | HRRR |
+|---|---|---|---|---|
+| 2026-02-28 Muir | good | 3.5 h (11:15-14:15) | 4.0 h (11:15-14:45) | n/a |
+| 2022-01-17 St. Helens | good | 2.5 h | 3.0 h | 2.5 h |
+| 2024-04-14 Crystal | good | 2.5 h | 2.5 h | 2.0 h |
+| 2026-01-24 Lundin | good | none | none | n/a |
+| 2023-03-22 St. Helens | good | none | none | none |
+| 2023-06-10 Adams | good | none (slush) | none | none |
+| 2024-06-29, 2025-06-15 Baker | good | none (slush) | none | none |
+| 2026-01-31 Paradise | bad | 3.5 h (false) | none | n/a |
+| 2026-01-17 Paradise | bad | 2.5 h (false) | 3.0 h (false) | n/a |
+| 2026-02-05 Baker ski | bad | none | none | n/a |
+
+So the longwave choice is not the main lever. Three good days hit, five do not (two never thaw to 2 cm in a usable window, three saturate the 30 cm column in June), one bad day is a false positive on any model.

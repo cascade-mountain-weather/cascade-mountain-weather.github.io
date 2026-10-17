@@ -210,7 +210,7 @@ def snow_age(day, idx):
     return last, sn
 
 
-def run(day):
+def run(day, lw_model="auto"):
     terr = pd.read_csv(TERRAIN)
     hc = [c for c in terr.columns if c.startswith("h") and c[1:].isdigit()]
     sb = 1 if day["slope"] < 25 else (2 if day["slope"] < 35 else 3)
@@ -236,17 +236,25 @@ def run(day):
     top0 = min(float(np.nanmean(T.values[:48])), 273.15)
     col.T = np.linspace(top0, 273.15, ce.NL)               # starts linear from the mean air temperature (capped at 0 C) to the 0 C lower boundary
     col.t_deep = ce.T_DEEP
-    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lw=[], qs=[], ql=[], wind=[], rh=[])
+    def lw_value(n):
+        m = lw_model if lw_model != "auto" else "dilley"          # default: Dilley-O'Brien clear sky with the Unsworth-Monteith cloud blend (Danny, Oct 17)
+        if m == "hrrr" and lw_override is not None:
+            return float(lw_override.values[n])
+        if m == "dilley":
+            return ce.lw_in_dilley(RH.values[n], T.values[n], cloud.values[n])
+        return ce.lw_in(RH.values[n], T.values[n], cloud.values[n])
+
+    rec = dict(t=[], T=[], w=[], ts=[], sw=[], ta=[], alb=[], lwin=[], lw=[], qs=[], ql=[], wind=[], rh=[])
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
-        f = dict(sw_abs=sw_abs, lw_in=(float(lw_override.values[n]) if lw_override is not None else ce.lw_in(RH.values[n], T.values[n], cloud.values[n])), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
+        f = dict(sw_abs=sw_abs, lw_in=lw_value(n), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
                  pressure=pressure, z0=ce.z0(age), rg=ce.grain_radius_mm(alpha, ce.albedo_floor(t.dayofyear)))
         for _ in range(int(30 * 60 / ce.DT)):
             ts, _q = col.step(f)
         alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24, t.dayofyear)
         a_, b_ = ce.exchange(f["ta"], ts, f["vw"], pressure, f["z0"])
-        rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
+        rec["lwin"].append(lw_value(n)); rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
         rec["qs"].append(a_ * (f["ta"] - ts)); rec["ql"].append(b_ * (f["rh"] * ce.e_sat(f["ta"]) - ce.e_sat(ts))); rec["wind"].append(f["vw"]); rec["rh"].append(f["rh"])
         rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
         rec["sw"].append(sw_abs); rec["alb"].append(alpha); rec["ta"].append(T.values[n] - 273.15)
@@ -352,6 +360,35 @@ def summarize(day, res):
                 air_at_report=round(float(res["ta"][i]), 1), wet_cm_at_report=contiguous_wet_cm(res["w"][i]), wet_cm_15h=contiguous_wet_cm(res["w"][at(15)]))
 
 
+def corn_window(day, res):
+    """The corn window on the day: runs of time steps (06:00-20:00 local) whose surface layer is thawed to CORN_MIN_CM-CORN_MAX_CM.
+    Returns (hours of the run that overlaps the reported time +/- 1 h, its start-end clock text, longest run in hours)."""
+    t, w = res["t"], res["w"]
+    d0 = pd.Timestamp(day["date"])
+    hh, mm = (int(v) for v in day["hhmm"].split(":"))
+    rep = d0 + pd.Timedelta(hours=hh, minutes=mm)
+    ok = np.array([CORN_MIN_CM <= contiguous_wet_cm(w[i]) <= CORN_MAX_CM for i in range(len(t))])
+    inday = (t >= d0 + pd.Timedelta(hours=6)) & (t <= d0 + pd.Timedelta(hours=20))
+    ok = ok & np.asarray(inday)
+    runs, i = [], 0
+    while i < len(t):
+        if ok[i]:
+            j = i
+            while j + 1 < len(t) and ok[j + 1]:
+                j += 1
+            runs.append((i, j))
+            i = j + 1
+        else:
+            i += 1
+    hours = lambda r: (r[1] - r[0] + 1) * 0.5
+    longest = max([hours(r) for r in runs], default=0.0)
+    near = [r for r in runs if t[r[0]] <= rep + pd.Timedelta(hours=1) and t[r[1]] >= rep - pd.Timedelta(hours=1)]
+    if near:
+        r = max(near, key=hours)
+        return hours(r), f"{t[r[0]]:%H:%M}-{t[r[1]]:%H:%M}", longest
+    return 0.0, "-", longest
+
+
 def midday_budget(day, res):
     t = res["t"]
     d0 = pd.Timestamp(day["date"])
@@ -365,19 +402,34 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--day")
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--lw", choices=["auto", "konzelmann", "dilley", "hrrr"], default="auto")
+    ap.add_argument("--compare-lw", action="store_true", help="run every longwave model and print the longwave and corn window side by side")
     a = ap.parse_args()
-    todo = [d for d in DAYS if a.all or d["date"] == a.day]
+    todo = [d for d in DAYS if a.all or a.compare_lw or d["date"] == a.day]
     rows = []
     for d in todo:
-        try:
-            res = run(d)
-        except Exception as ex:
-            print(d["id"], "failed:", repr(ex)[:200])
-            continue
-        print(d["id"], "->", plot(d, res), "last snow day", res["last_snow"].date())
-        print(midday_budget(d, res))
-        rows.append(summarize(d, res))
-    print(pd.DataFrame(rows).to_string(index=False))
+        models = ["konzelmann", "dilley"] + (["hrrr"] if d.get("source") == "hrrr" else []) if a.compare_lw else [a.lw]
+        for m in models:
+            try:
+                res = run(d, m)
+            except Exception as ex:
+                print(d["id"], m, "failed:", repr(ex)[:200])
+                continue
+            if not a.compare_lw:
+                print(d["id"], "->", plot(d, res), "last snow day", res["last_snow"].date())
+                print(midday_budget(d, res))
+            row = summarize(d, res)
+            hrs, span, longest = corn_window(d, res)
+            t = res["t"]
+            d0 = pd.Timestamp(d["date"])
+            night = np.asarray((t >= d0 - pd.Timedelta(hours=6)) & (t <= d0 + pd.Timedelta(hours=6)))
+            mid = np.asarray((t >= d0 + pd.Timedelta(hours=10)) & (t <= d0 + pd.Timedelta(hours=14)))
+            row.update(lw=m, LWin_night=round(float(np.mean(np.asarray(res["lwin"])[night])), 0), LWin_midday=round(float(np.mean(np.asarray(res["lwin"])[mid])), 0),
+                       corn_h_at_report=hrs, corn_span=span, longest_corn_h=longest)
+            rows.append(row)
+    df = pd.DataFrame(rows)
+    cols = ["day", "id", "good", "lw", "LWin_night", "LWin_midday", "age_d", "crust_6am_cm", "corn_h_at_report", "corn_span", "longest_corn_h"]
+    print(df[cols].to_string(index=False))
 
 
 if __name__ == "__main__":

@@ -120,6 +120,17 @@ def lw_in(rh, ta, cloud):
     return ((1 - w) * eps_cs + w * 0.952) * SIGMA * ta ** 4
 
 
+def lw_in_dilley(rh, ta, cloud):
+    """Incoming longwave (W/m2): Dilley and O'Brien (1998) clear sky, 59.38 + 113.7 (T/273.16)^6 + 96.96 sqrt(w/25) with precipitable water
+    w = 4650 e0 / T (e0 in kPa, Prata 1996), as in MeteoIO Atmosphere::Dilley_ilwr, then the Unsworth and Monteith (1975) cloud blend
+    eps = (1 - 0.84 c) eps_clear + 0.84 c (MeteoIO Unsworth_ilwr)."""
+    e0 = rh * e_sat(ta) * 0.001
+    w = 4650.0 * e0 / ta
+    clear = 59.38 + 113.7 * (ta / 273.16) ** 6 + 96.96 * math.sqrt(w / 25.0)
+    eps_clear = min(clear / (SIGMA * ta ** 4), 1.0)
+    return ((1 - 0.84 * cloud) * eps_clear + 0.84 * cloud) * SIGMA * ta ** 4
+
+
 def exchange(ta, ts, vw, pressure, z0m):
     """Sensible (W/m2/K) and latent (W/m2/Pa) exchange coefficients, SNOWPACK's scheme: Monin-Obukhov iteration for u* and the
     scalar stability correction (Meteo.cc MicroMet and MOStability), then C_h (Laws_sn.cc compSensibleHeatCoefficient).
