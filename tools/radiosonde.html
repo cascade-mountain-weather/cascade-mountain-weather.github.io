@@ -146,15 +146,6 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         align-items: center;
         justify-content: center;
     }
-    #skewt-plot {
-        display: none;
-        width: 100%;
-        height: 560px;
-    }
-    #skewt-plot.is-visible { display: block; }
-    @media (max-width: 600px) {
-        #skewt-plot { height: 420px; }
-    }
     #skewt-output {
         display: none;
         max-width: 100%;
@@ -171,26 +162,6 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     }
     #plot-placeholder.is-visible { display: block; }
 
-    .radiosonde-detail-toggle {
-        margin-top: 0.75rem;
-        border: 1px solid #cbd5e1;
-        background: #f8fbff;
-        color: #1e3c72;
-        border-radius: 999px;
-        padding: 0.4rem 0.9rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-    }
-    .radiosonde-detail-toggle:hover { background: #e6eefc; }
-    #skewt-detail-image {
-        display: none;
-        max-width: 100%;
-        height: auto;
-        border-radius: 6px;
-        margin-top: 0.75rem;
-    }
-    #skewt-detail-image.is-visible { display: block; }
 
     #sounding-diagnostics { margin-top: 1.25rem; }
     #sounding-diagnostics h2 {
@@ -264,6 +235,13 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         height: 320px;
     }
     #history-plot.is-visible { display: block; }
+    .wrf-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; font-size: 0.85rem; margin: 0.5rem 0; }
+    .wrf-controls label { display: inline-flex; gap: 0.35rem; align-items: center; }
+    .wrf-controls .radiosonde-status { flex-basis: 100%; margin: 0; }
+    .wrf-skill-table { border-collapse: collapse; font-size: 0.85rem; margin: 0.75rem 0 1rem; }
+    .wrf-skill-table th, .wrf-skill-table td { padding: 0.3rem 0.8rem; text-align: right; border-bottom: 1px solid #e2e8f0; }
+    .wrf-skill-table th:first-child, .wrf-skill-table td:first-child { text-align: left; }
+    .wrf-skill-table tr.is-best td { background: #e6f4ea; font-weight: 700; }
     @media (max-width: 600px) {
         #history-plot { height: 260px; }
     }
@@ -281,7 +259,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     <p>
         Click a site to see the most recent sounding for that location. Give about 30 seconds for the chart to load. Quillayte, Port Hardy, and Salem are launched
         upwind of the Cascades, so they are often representative of what the Cascades will see.
-        Hover the chart to read temperature, dew point, and parcel values at any level, in metric or imperial units.
+        Click the chart to enlarge it and swipe or use the arrow keys to move between figures. The units toggle applies to the diagnostics below.
     </p>
 </section>
 
@@ -313,12 +291,9 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 
     <section class="radiosonde-plot" aria-label="Generated skew-T plot">
         <div class="radiosonde-plot-frame">
-            <div id="skewt-plot" role="img" aria-label="Interactive skew-T diagram"></div>
-            <img id="skewt-output" class="PlotFormat" src="" alt="MetPy skew-T plot" />
+            <img id="skewt-output" class="PlotFormat" src="" alt="MetPy skew-T analysis" />
             <div id="plot-placeholder" class="is-visible">Loading...</div>
         </div>
-        <button id="detail-toggle" type="button" class="radiosonde-detail-toggle" hidden>Show full analysis (hodograph, wind barbs, thermal advection)</button>
-        <img id="skewt-detail-image" class="PlotFormat" src="" alt="Full skew-T analysis with hodograph, wind barbs, and implied thermal advection" />
         <section id="sounding-diagnostics" aria-labelledby="diagnostics-title" hidden>
             <h2 id="diagnostics-title">Sounding Diagnostics</h2>
             <dl>
@@ -398,15 +373,56 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 <section class="radiosonde-history" aria-label="Snow level and freezing level history">
     <h2>Freezing Level &amp; Snow Level Trend</h2>
     <p class="radiosonde-status">
-        Recorded automatically every few hours from observed soundings (last 2 days shown by default --
-        drag to pan/zoom further back), so you can see how a level actually evolved versus what was forecast.
+        Recorded automatically every few hours from observed soundings (last 7 days shown;
+        drag to pan/zoom), so you can see how a level actually evolved versus what was forecast.
     </p>
+    <div id="wrf-controls" class="wrf-controls" hidden>
+        <label>Overlay UW WRF <select id="wrf-var">
+            <option value="freezing_level_ft">freezing level</option>
+            <option value="snow_level_ft">snow level (0&deg;C wet-bulb)</option>
+        </select></label>
+        <span>from the run issued
+            <label><input type="checkbox" name="wrf-lead" value="12"> 12 h</label>
+            <label><input type="checkbox" name="wrf-lead" value="24" checked> 24 h</label>
+            <label><input type="checkbox" name="wrf-lead" value="48" checked> 48 h</label>
+            <label><input type="checkbox" name="wrf-lead" value="72"> 72 h</label>
+            earlier</span>
+        <p class="radiosonde-status">Dashed lines are what WRF forecast, at that lead, for each launch time. Quillayute only. The WRF point is Olympex DOW, about 60&nbsp;km away, so some of the difference is location rather than model error.</p>
+    </div>
     <div id="history-plot"></div>
     <p id="history-empty" class="radiosonde-status" hidden>No recorded history yet for this station -- check back after the next automated update.</p>
 </section>
 
+<section id="wrf-skill" class="radiosonde-history" aria-label="UW WRF skill at Quillayute" hidden>
+    <h2>UW WRF vs. Quillayute Soundings &mdash; <span id="wrf-skill-season"></span> season</h2>
+    <p class="radiosonde-status">
+        Every WRF run is checked against the 00Z and 12Z launches it covers, by how far ahead it was issued
+        and by init time. Bias is WRF minus observed, and the lowest-RMSE row is highlighted. Early in the
+        season the sample is small, so read the numbers loosely.
+    </p>
+    <div class="wrf-controls">
+        <label>Variable <select id="skill-var">
+            <option value="freezing_level_ft">Freezing level</option>
+            <option value="snow_level_ft">Snow level (0&deg;C wet-bulb)</option>
+            <option value="t850_c">850 hPa temperature</option>
+        </select></label>
+        <label>Init <select id="skill-init">
+            <option value="all">00Z and 12Z</option>
+            <option value="00">00Z runs</option>
+            <option value="12">12Z runs</option>
+        </select></label>
+        <label>Weekly chart <select id="skill-metric">
+            <option value="rmse">RMSE</option>
+            <option value="bias">Bias</option>
+        </select></label>
+    </div>
+    <table id="wrf-skill-table" class="wrf-skill-table"></table>
+    <div id="wrf-skill-plot" style="width:100%;height:300px"></div>
+</section>
+
 <script>
     window.RADIOSONDE_HISTORY_URL = "{{ '/assets/data/radiosonde_history.json' | relative_url }}";
+    window.RADIOSONDE_WRF_URL = "{{ '/assets/data/wrf_uil.json' | relative_url }}";
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>

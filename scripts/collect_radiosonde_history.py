@@ -33,15 +33,15 @@ import requests
 
 IEM_RAOB_BASE = "https://mesonet.agron.iastate.edu/json/raob.py"
 HISTORY_PATH = Path("assets/data/radiosonde_history.json")
-RETENTION_DAYS = 6  # kept server-side; the page defaults its chart view to the last 2
+RETENTION_DAYS = 8  # kept server-side; the page defaults its chart view to the last 7
 
 # Mirrors the STATIONS list in assets/radiosonde.js, but expressed in
 # 12-hourly launch cycles (00Z/12Z) rather than the client tool's 6-hourly
 # walk-back steps, since actual radiosonde launches only happen twice a day.
 STATION_LOOKBACK_CYCLES = {
-    "UIL": 8,    # 4 days of 00Z/12Z launches
-    "SLE": 8,
-    "OTX": 8,
+    "UIL": 18,   # 9 days of 00Z/12Z launches (a bit over the retention)
+    "SLE": 18,
+    "OTX": 18,
     "CYZT": 28,  # ~14 days, to comfortably clear the observed 4-5 day feed lag
 }
 

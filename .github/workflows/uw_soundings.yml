@@ -35,6 +35,9 @@ jobs:
       - name: Fetch the newest complete run and derive snow diagnostics
         run: python scripts/uw_soundings.py --loc all --quiet --out assets/data/uw_soundings.json --profile-dir assets/data/uw_soundings --archive-dir data/cycles/uw_wrf
 
+      - name: Score WRF against the Quillayute radiosonde
+        run: python scripts/wrf_uil_verify.py
+
       - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,7 +45,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git add assets/data/uw_soundings.json assets/data/uw_soundings data/cycles/uw_wrf
+          git add assets/data/uw_soundings.json assets/data/uw_soundings data/cycles/uw_wrf assets/data/wrf_uil.json data/wrf_verification
           git commit -m "Update UW WRF soundings [skip ci]" || echo "No changes to commit"
           git pull --rebase origin main
           git push origin main

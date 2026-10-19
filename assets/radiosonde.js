@@ -14,20 +14,9 @@
 // because two of our four stations have real, permanent data-availability
 // quirks (see STATIONS below) that a fixed 3-day lookback would miss.
 //
-// The primary diagram is an interactive Plotly chart, not a static image.
-// MetPy still does all of the actual thermodynamics (dry/moist adiabats,
-// mixing lines, parcel lifts, LCL) via its normal matplotlib SkewT axes --
-// we just never rasterize that axes to a PNG for the main view. Instead we
-// read each MetPy-generated line/curve back out in its original (T, P) data
-// coordinates and run it through that same axes' `transData` (the object
-// that actually implements the skew + log-pressure projection) to get pixel
-// coordinates, which we hand to Plotly as plain x/y numbers with the axes
-// hidden and a locked aspect ratio. That reproduces MetPy's exact skew-T
-// geometry without having to reimplement the skew transform by hand, while
-// letting Plotly provide hover tooltips (temperature/dew point/parcel value
-// and parcel-vs-environment difference at any level) and pan/zoom. The full
-// composite image (hodograph, wind barbs, implied thermal advection) is
-// still rendered as a static PNG, available behind a "full analysis" toggle.
+// The diagram is the full MetPy composite (skew-T, hodograph, wind barbs,
+// implied thermal advection) rendered as a PNG, shown by default and opened
+// in the site lightbox on click. Plotly is only used for the history chart.
 
 const IEM_RAOB_BASE = 'https://mesonet.agron.iastate.edu/json/raob.py';
 const PYODIDE_VERSION = 'v0.26.4';
@@ -35,6 +24,7 @@ const SPC_BASE = 'https://www.spc.noaa.gov/exper/archive/events';
 // Set by an inline <script> in tools/radiosonde.html via Liquid, since this
 // file itself isn't processed by Jekyll. Falls back to the plain root path
 // (correct as long as the site's baseurl stays empty, per _config.yml).
+const WRF_URL = window.RADIOSONDE_WRF_URL || '/assets/data/wrf_uil.json';
 const HISTORY_URL = window.RADIOSONDE_HISTORY_URL || '/assets/data/radiosonde_history.json';
 
 // Unit conversions for hover text and diagnostics -- pressure is left in
@@ -99,6 +89,12 @@ const state = {
     activeRequest: 0,
     units: 'metric',       // 'metric' | 'imperial' -- affects hover text and the diagnostics table
     current: null,         // { stationId, cycle, result } for the plot currently on screen, for unit-toggle re-renders
+    wrfPromise: null,      // cached fetch of assets/data/wrf_uil.json (WRF-vs-Quillayute overlay + skill scores)
+    wrfVar: 'freezing_level_ft',
+    wrfLeads: [24, 48],
+    skillVar: 'freezing_level_ft',
+    skillInit: 'all',
+    skillMetric: 'rmse',
     historyPromise: null,  // cached fetch of the shared history JSON (all stations)
 };
 
@@ -114,11 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cycleLabel: document.getElementById('selected-cycle'),
         status: document.getElementById('sounding-status'),
         stationNote: document.getElementById('station-note'),
-        plotContainer: document.getElementById('skewt-plot'),
         output: document.getElementById('skewt-output'),
         placeholder: document.getElementById('plot-placeholder'),
-        detailToggle: document.getElementById('detail-toggle'),
-        detailImage: document.getElementById('skewt-detail-image'),
         diagnostics: document.getElementById('sounding-diagnostics'),
         meltingNote: document.getElementById('melting-note'),
         dataSource: document.getElementById('data-source-link'),
@@ -130,14 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!els.stationButtons || !els.output) return;
 
     renderStationButtons();
+    initWrfControls();
+    renderWrfSkill();
     els.older.addEventListener('click', () => stepCycle(-1));
     els.newer.addEventListener('click', () => stepCycle(1));
-    els.detailToggle.addEventListener('click', () => {
-        const showing = els.detailImage.classList.toggle('is-visible');
-        els.detailToggle.textContent = showing
-            ? 'Hide full analysis'
-            : 'Show full analysis (hodograph, wind barbs, thermal advection)';
-    });
     if (els.unitMetric && els.unitImperial) {
         els.unitMetric.addEventListener('click', () => setUnits('metric'));
         els.unitImperial.addEventListener('click', () => setUnits('imperial'));
@@ -173,6 +162,7 @@ function setUnits(units) {
         showPlot(state.current.stationId, state.current.cycle, state.current.result);
     }
     renderHistoryChart(state.station);
+    renderWrfSkill();
 }
 
 // Diagnostic info-icon popups (mirrors the showInfo/hideInfo pattern used
@@ -335,9 +325,6 @@ async function selectStation(stationId) {
     els.placeholder.classList.add('is-visible');
     els.placeholder.textContent = `Looking for the most recent ${stationId} sounding...`;
     els.output.classList.remove('is-visible');
-    els.plotContainer.classList.remove('is-visible');
-    els.detailImage.classList.remove('is-visible');
-    els.detailToggle.hidden = true;
     els.diagnostics.hidden = true;
 
     const requestId = ++state.activeRequest;
@@ -1321,9 +1308,6 @@ async function renderCycle(stationId, cycle, profile) {
     els.placeholder.textContent = `Rendering ${stationId} from ${cycle.label} with MetPy...`;
     els.placeholder.classList.add('is-visible');
     els.output.classList.remove('is-visible');
-    els.plotContainer.classList.remove('is-visible');
-    els.detailImage.classList.remove('is-visible');
-    els.detailToggle.hidden = true;
     els.diagnostics.hidden = true;
     setStatus('Loading MetPy in the browser (first plot takes longest)...');
 
@@ -1352,193 +1336,12 @@ async function renderCycle(stationId, cycle, profile) {
     }
 }
 
-// Turns one polyline of pixel coordinates (as produced by _transform_xy /
-// _segments_pixel in the Python above) into a low-key background Plotly
-// trace -- used for dry/moist adiabats and mixing lines.
-function backgroundLineTrace(line, color, opacity) {
-    return {
-        x: line.x, y: line.y, mode: 'lines',
-        line: { color, width: 1 }, opacity,
-        hoverinfo: 'skip', showlegend: false,
-    };
-}
-
-function gridLineTrace(x0, y0, x1, y1) {
-    return {
-        x: [x0, x1], y: [y0, y1], mode: 'lines',
-        line: { color: 'rgba(100,116,139,0.45)', width: 1, dash: 'dot' },
-        hoverinfo: 'skip', showlegend: false,
-    };
-}
-
-function buildSkewTraces(interactive, units) {
-    const isImperial = units === 'imperial';
-    const tempUnit = isImperial ? '°F' : '°C';
-    const heightUnit = isImperial ? 'ft' : 'm';
-    const speedUnit = isImperial ? 'mph' : 'kt';
-    const convTemp = c => (c == null ? null : (isImperial ? UNITS.cToF(c) : c));
-    const convDeltaTemp = c => (c == null ? null : (isImperial ? UNITS.cDeltaToF(c) : c));
-    const convHeight = m => (m == null ? null : (isImperial ? UNITS.mToFt(m) : m));
-    const convSpeed = kt => (kt == null ? null : (isImperial ? UNITS.ktToMph(kt) : kt));
-
-    const traces = [];
-    (interactive.dry_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#f4a261', 0.55)));
-    (interactive.moist_adiabats || []).forEach(line => traces.push(backgroundLineTrace(line, '#2a9d8f', 0.55)));
-    (interactive.mixing_lines || []).forEach(line => traces.push(backgroundLineTrace(line, '#94a3b8', 0.4)));
-
-    (interactive.isobars || []).forEach(bar => traces.push(gridLineTrace(bar.x0, bar.y, bar.x1, bar.y)));
-    (interactive.isotherms || []).forEach(iso => traces.push(gridLineTrace(iso.x0, iso.y0, iso.x1, iso.y1)));
-
-    const temp = interactive.temperature;
-    traces.push({
-        x: temp.x, y: temp.y, mode: 'lines', name: 'Temperature',
-        line: { color: '#d95f02', width: 2.5 },
-        customdata: temp.p.map((p, i) => [p, convTemp(temp.t[i]), convHeight(temp.h[i]), temp.wd[i], convSpeed(temp.ws[i])]),
-        hovertemplate: `%{customdata[0]:.0f} hPa (%{customdata[2]:.0f} ${heightUnit})<br>` +
-            `Temp: %{customdata[1]:.1f}${tempUnit}<br>Wind: %{customdata[3]:.0f}° @ %{customdata[4]:.0f} ${speedUnit}<extra>Temperature</extra>`,
-    });
-
-    const dew = interactive.dewpoint;
-    traces.push({
-        x: dew.x, y: dew.y, mode: 'lines', name: 'Dew point',
-        line: { color: '#1b9e77', width: 2.5 },
-        customdata: dew.p.map((p, i) => [p, convTemp(dew.td[i])]),
-        hovertemplate: `%{customdata[0]:.0f} hPa<br>Dew point: %{customdata[1]:.1f}${tempUnit}<extra>Dew point</extra>`,
-    });
-
-    if (interactive.surface_parcel) {
-        const sp = interactive.surface_parcel;
-        traces.push({
-            x: sp.x, y: sp.y, mode: 'lines', name: 'Surface parcel',
-            line: { color: '#7570b3', width: 2, dash: 'dash' },
-            customdata: sp.p.map((p, i) => [p, convTemp(sp.t[i]), convDeltaTemp(sp.diff[i])]),
-            hovertemplate: `%{customdata[0]:.0f} hPa<br>Parcel: %{customdata[1]:.1f}${tempUnit}<br>` +
-                `%{customdata[2]:+.1f}${tempUnit} vs. environment<extra>Surface parcel</extra>`,
-        });
-        if (sp.lcl) {
-            traces.push({
-                x: [sp.lcl.x], y: [sp.lcl.y], mode: 'markers', name: 'LCL',
-                marker: { color: '#7570b3', size: 8, symbol: 'circle' },
-                customdata: [[sp.lcl.p, convTemp(sp.lcl.t)]],
-                hovertemplate: `LCL: %{customdata[0]:.0f} hPa, %{customdata[1]:.1f}${tempUnit}<extra></extra>`,
-            });
-        }
-    }
-
-    if (interactive.mixed_parcel) {
-        const mp = interactive.mixed_parcel;
-        traces.push({
-            x: mp.x, y: mp.y, mode: 'lines', name: '100-hPa mixed parcel',
-            line: { color: '#7570b3', width: 1.5, dash: 'dot' },
-            customdata: mp.p.map((p, i) => [p, convTemp(mp.t[i])]),
-            hovertemplate: `%{customdata[0]:.0f} hPa<br>Mixed parcel: %{customdata[1]:.1f}${tempUnit}<extra>Mixed parcel</extra>`,
-        });
-    }
-
-    (interactive.reference_lines || []).forEach(line => {
-        const cd = [convHeight(line.height_m), line.p];
-        traces.push({
-            x: [line.x0, line.x1], y: [line.y, line.y], mode: 'lines', name: line.label,
-            line: { color: line.color, width: 2.2, dash: 'dash' },
-            customdata: [cd, cd],
-            hovertemplate: `${line.label}: %{customdata[0]:.0f} ${heightUnit} AGL (%{customdata[1]:.0f} hPa)<extra></extra>`,
-        });
-    });
-
-    return traces;
-}
-
-function buildSkewLayout(interactive, title) {
-    const shapes = [];
-    if (interactive.dgz_rect) {
-        const rect = interactive.dgz_rect;
-        shapes.push({
-            type: 'rect', xref: 'x', yref: 'y',
-            x0: rect.x0, x1: rect.x1, y0: rect.y0, y1: rect.y1,
-            fillcolor: '#56b4e9', opacity: 0.16, line: { width: 0 }, layer: 'below',
-        });
-    }
-
-    // Pin isobar labels to the left edge and isotherm labels to the bottom
-    // edge of the visible plot area (paper coordinates), rather than a
-    // fixed data position at the full grid's original -40 C / 1050 hPa
-    // corner. That fixed-position approach breaks as soon as the default
-    // view is zoomed in on the data (below) -- the labels would just fall
-    // outside the visible range and disappear -- and it also means labels
-    // stay put (and legible) if the user pans/zooms manually afterward.
-    const annotations = (interactive.isobars || []).map(bar => ({
-        xref: 'paper', x: 0, xanchor: 'left', xshift: 4,
-        yref: 'y', y: bar.y, yanchor: 'middle',
-        text: `${bar.p}`, showarrow: false, font: { size: 10, color: '#64748b' },
-    })).concat((interactive.isotherms || []).map(iso => ({
-        xref: 'x', x: iso.x0, xanchor: 'center',
-        yref: 'paper', y: 0, yanchor: 'bottom', yshift: 4,
-        text: `${iso.t}°`, showarrow: false, font: { size: 10, color: '#64748b' },
-    })));
-
-    const layout = {
-        title: { text: title, font: { size: 13 } },
-        margin: { l: 45, r: 20, t: 36, b: 30 },
-        xaxis: { visible: false, fixedrange: false },
-        yaxis: { visible: false, fixedrange: false, scaleanchor: 'x', scaleratio: 1 },
-        shapes,
-        annotations,
-        hovermode: 'closest',
-        showlegend: true,
-        legend: { orientation: 'h', y: -0.03, font: { size: 10 } },
-        plot_bgcolor: '#ffffff',
-        paper_bgcolor: '#ffffff',
-    };
-
-    // Default to a tight zoom on the actual profile data (computed in
-    // Python from the real data traces, not the background grid) instead
-    // of the full nominal grid extent. scaleanchor/scaleratio above still
-    // keeps a true 1:1 skew aspect -- Plotly just adds letterboxing on
-    // whichever axis needs it to match the container shape. A double-click
-    // (Plotly's native reset) or manual zoom-out still reaches the full grid.
-    if (interactive.default_view) {
-        const view = interactive.default_view;
-        layout.xaxis.range = [view.x0, view.x1];
-        layout.yaxis.range = [view.y0, view.y1];
-    }
-
-    return layout;
-}
-
-function renderInteractivePlot(stationId, cycle, interactive, units) {
-    const traces = buildSkewTraces(interactive, units);
-    const layout = buildSkewLayout(interactive, `${stationId} Observed Sounding — ${cycle.label}`);
-    const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] };
-    Plotly.react(els.plotContainer, traces, layout, config);
-}
-
 function showPlot(stationId, cycle, result) {
     state.current = { stationId, cycle, result };
     els.placeholder.classList.remove('is-visible');
-
-    if (result.interactive && window.Plotly) {
-        try {
-            renderInteractivePlot(stationId, cycle, result.interactive, state.units);
-            els.plotContainer.classList.add('is-visible');
-            els.output.classList.remove('is-visible');
-        } catch (error) {
-            console.error('Interactive skew-T rendering failed, falling back to static image:', error);
-            els.plotContainer.classList.remove('is-visible');
-            els.output.src = result.image;
-            els.output.alt = `MetPy skew-T plot for ${stationId} at ${cycle.label}`;
-            els.output.classList.add('is-visible');
-        }
-    } else {
-        els.plotContainer.classList.remove('is-visible');
-        els.output.src = result.image;
-        els.output.alt = `MetPy skew-T plot for ${stationId} at ${cycle.label}`;
-        els.output.classList.add('is-visible');
-    }
-
-    els.detailImage.src = result.image;
-    els.detailImage.classList.remove('is-visible');
-    els.detailToggle.hidden = false;
-    els.detailToggle.textContent = 'Show full analysis (hodograph, wind barbs, thermal advection)';
+    els.output.src = result.image;
+    els.output.alt = `MetPy skew-T analysis for ${stationId} at ${cycle.label} (skew-T, hodograph, wind barbs, thermal advection)`;
+    els.output.classList.add('is-visible');
 
     renderDiagnostics(result.diagnostics, state.units);
     setStatus(`Showing ${stationId} from ${cycle.label}.`);
@@ -1593,15 +1396,137 @@ function renderHistoryChart(stationId) {
 
         const traces = buildHistoryTraces(entries, state.units);
         const now = new Date();
-        const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const layout = {
             margin: { l: 55, r: 15, t: 10, b: 40 },
-            xaxis: { type: 'date', range: [twoDaysAgo.toISOString(), now.toISOString()] },
+            xaxis: { type: 'date', range: [weekAgo.toISOString(), now.toISOString()] },
             yaxis: { title: state.units === 'imperial' ? 'Feet AGL' : 'Meters AGL' },
             legend: { orientation: 'h', y: -0.2 },
             hovermode: 'closest',
         };
         Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false });
         els.historyPlot.classList.add('is-visible');
+        const controls = document.getElementById('wrf-controls');
+        if (controls) controls.hidden = stationId !== 'UIL';
+        if (stationId === 'UIL') {
+            loadWrf().then(wrf => {
+                if (!wrf || state.station !== 'UIL') return;
+                const wrfTraces = buildWrfTraces(wrf, state.units);
+                Plotly.react(els.historyPlot, traces.concat(wrfTraces), layout, { responsive: true, displaylogo: false });
+            });
+        }
+    });
+}
+
+
+// --- WRF overlay and skill scores (Quillayute only) -----------------------
+// assets/data/wrf_uil.json is written by scripts/wrf_uil_verify.py: the UW WRF
+// value for each observed 00Z/12Z launch time from the runs 12/24/48/72 h
+// earlier (overlay), and season-long bias/MAE/RMSE by lead and init time.
+// Levels there are feet MSL; the observed history above is AGL, so the
+// overlay subtracts the Quillayute station elevation.
+function loadWrf() {
+    if (!state.wrfPromise) {
+        state.wrfPromise = fetchJson(WRF_URL).catch(error => {
+            console.error('WRF verification fetch failed:', error);
+            return null;
+        });
+    }
+    return state.wrfPromise;
+}
+
+const LEAD_COLORS = { 12: '#7c3aed', 24: '#0d9488', 48: '#ca8a04', 72: '#64748b' };
+
+function wrfConvert(key, value, units, delta) {
+    if (value == null) return null;
+    if (key.endsWith('_ft')) return units === 'metric' ? value * 0.3048 : value;
+    if (key.endsWith('_c')) return units === 'imperial' ? (delta ? value * 1.8 : value * 1.8 + 32) : value;
+    return value;
+}
+
+function wrfUnitLabel(key, units) {
+    if (key.endsWith('_ft')) return units === 'metric' ? 'm' : 'ft';
+    if (key.endsWith('_c')) return units === 'imperial' ? '°F' : '°C';
+    return '';
+}
+
+function buildWrfTraces(wrf, units) {
+    const key = state.wrfVar;
+    const surface = wrf.uil_surface_ft || 0;
+    const label = wrf.variables[key].label;
+    const unit = wrfUnitLabel(key, units);
+    return state.wrfLeads.slice().sort((a, b) => a - b).map(lead => {
+        const rows = wrf.recent.filter(r => r.wrf[String(lead)] && r.wrf[String(lead)][key] != null);
+        return {
+            x: rows.map(r => r.valid),
+            y: rows.map(r => wrfConvert(key, r.wrf[String(lead)][key] - surface, units)),
+            mode: 'lines+markers', name: `WRF ${lead} h: ${label}`,
+            line: { color: LEAD_COLORS[lead] || '#475569', width: 2, dash: 'dash' }, marker: { size: 5, symbol: 'diamond' },
+            hovertemplate: `%{x|%b %d %HZ}<br>WRF ${lead} h ${label}: %{y:.0f} ${unit} AGL<extra></extra>`,
+        };
+    });
+}
+
+function initWrfControls() {
+    const varSel = document.getElementById('wrf-var');
+    if (varSel) varSel.addEventListener('change', () => { state.wrfVar = varSel.value; renderHistoryChart(state.station); });
+    document.querySelectorAll('input[name="wrf-lead"]').forEach(box => {
+        box.addEventListener('change', () => {
+            state.wrfLeads = Array.from(document.querySelectorAll('input[name="wrf-lead"]:checked')).map(b => Number(b.value));
+            renderHistoryChart(state.station);
+        });
+    });
+    [['skill-var', 'skillVar'], ['skill-init', 'skillInit'], ['skill-metric', 'skillMetric']].forEach(([id, prop]) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => { state[prop] = el.value; renderWrfSkill(); });
+    });
+}
+
+function renderWrfSkill() {
+    const section = document.getElementById('wrf-skill');
+    if (!section) return;
+    loadWrf().then(wrf => {
+        const seasons = wrf && wrf.metrics ? Object.keys(wrf.metrics).sort() : [];
+        if (!seasons.length) { section.hidden = true; return; }
+        section.hidden = false;
+        const season = seasons[seasons.length - 1];
+        const key = state.skillVar;
+        const units = state.units;
+        const unit = wrfUnitLabel(key, units);
+        const data = wrf.metrics[season];
+        document.getElementById('wrf-skill-season').textContent = season;
+
+        // Table: one row per lead for the chosen init time; lowest RMSE is highlighted.
+        const cells = data.overall[key].filter(c => c.init === state.skillInit);
+        const best = cells.length ? Math.min(...cells.map(c => c.rmse)) : null;
+        const digits = key.endsWith('_ft') ? 0 : 1;
+        const fmt = v => (v == null ? '&ndash;' : wrfConvert(key, v, units, true).toFixed(digits));
+        document.getElementById('wrf-skill-table').innerHTML =
+            `<thead><tr><th>Lead</th><th>n</th><th>Bias (${unit})</th><th>MAE (${unit})</th><th>RMSE (${unit})</th><th>r</th></tr></thead><tbody>` +
+            cells.map(c => `<tr${c.rmse === best ? ' class="is-best"' : ''}><td>${c.lead} h</td><td>${c.n}</td>` +
+                `<td>${fmt(c.bias)}</td><td>${fmt(c.mae)}</td><td>${fmt(c.rmse)}</td>` +
+                `<td>${c.r == null ? '&ndash;' : c.r.toFixed(2)}</td></tr>`).join('') + '</tbody>';
+
+        // Weekly chart of the chosen metric, one line per lead.
+        const metric = state.skillMetric;
+        const byLead = {};
+        data.weekly[key].forEach(w => { (byLead[w.lead] = byLead[w.lead] || []).push(w); });
+        const palette = ['#94a3b8', '#7c3aed', '#2563eb', '#0d9488', '#65a30d', '#ca8a04', '#dc2626'];
+        const traces = Object.keys(byLead).map((lead, i) => ({
+            x: byLead[lead].map(w => w.week),
+            y: byLead[lead].map(w => wrfConvert(key, w[metric], units, true)),
+            mode: 'lines+markers', name: `${lead} h`,
+            line: { color: palette[i % palette.length], width: 2 }, marker: { size: 5 },
+            hovertemplate: `Week of %{x|%b %d}<br>${lead} h ${metric.toUpperCase()}: %{y:.${digits}f} ${unit}<extra></extra>`,
+        }));
+        const plot = document.getElementById('wrf-skill-plot');
+        if (window.Plotly && plot) {
+            Plotly.react(plot, traces, {
+                margin: { l: 55, r: 15, t: 10, b: 40 },
+                xaxis: { type: 'date', title: 'Week starting' },
+                yaxis: { title: `${metric === 'rmse' ? 'RMSE' : 'Bias (WRF - observed)'} (${unit})`, zeroline: true },
+                legend: { orientation: 'h', y: -0.25 }, hovermode: 'closest',
+            }, { responsive: true, displaylogo: false });
+        }
     });
 }

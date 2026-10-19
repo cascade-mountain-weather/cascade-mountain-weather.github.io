@@ -112,7 +112,7 @@
             title: m => `${modelName(m)} Synoptic Panels`,
             build: m => ({
                 gfs: utah('gfs0p25', 'GFSSY_WS', 6),
-                hres: utah('hresext', 'HRESSY_WS', 12),
+                hres: utah('hres', 'HRESSY_WS', 12),
                 aifs: utah('aifs', 'AIFSSY_WS', 6),
             })[m],
             info: {
