@@ -41,6 +41,8 @@ SNOW_RESET_WTEQ_IN = 0.4   # daily SWE (or snowy precipitation) gain that resets
 KT_CLEAR = 0.95
 CORN_MIN_CM, CORN_MAX_CM = 2.0, 10.0   # corn window: thawed depth from the surface, from PLAN.md (corn target 2-10 cm)
 FT = 0.3048
+GRID_DZ = 0.005          # m: the heat map and the corn tests read the column on a 0.5 cm grid (60 rows over 30 cm)
+NG = 60
 LAPSE_T = 0.0098          # K/m: dry adiabatic, to move station or HRRR air temperature to the site elevation (Danny: good corn days are dry and sunny)
 LAPSE_TD = 0.0018         # K/m: dew point falls about 1.8 K/km in a rising unsaturated parcel (placeholder)
 
@@ -251,8 +253,8 @@ def run(day, lw_model="auto"):
     alpha = ce.albedo(age0, 0.0, doy0)                                  # decayed from fresh snow at the last snowfall, then stepped with the melt-freeze count
     col = ce.Column(T0=min(float(np.nanmean(T.values[:48])), 273.15), w0=0.0)
     top0 = min(float(np.nanmean(T.values[:48])), 273.15)
-    col.T = np.linspace(top0, 273.15, ce.NL)               # starts linear from the mean air temperature (capped at 0 C) to the 0 C lower boundary
     col.t_deep = ce.T_DEEP
+    col.set_linear_profile(top0)                           # starts linear from the mean air temperature (capped at 0 C) to the 0 C lower boundary
     def lw_value(n):
         m = lw_model if lw_model != "auto" else "dilley"          # default: Dilley-O'Brien clear sky with the Unsworth-Monteith cloud blend (Danny, Oct 17)
         if m == "hrrr" and lw_override is not None:
@@ -267,21 +269,22 @@ def run(day, lw_model="auto"):
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
         cr = day.get("crust")
         if cr and not cr.get("done") and (t + local).tz_localize(None) >= pd.Timestamp(cr["when"]):
-            for i in range(int(cr["depth_cm"][0]), int(cr["depth_cm"][1])):     # an observed refrozen layer put in by hand (ice crust)
-                col.m[i], col.w[i], col.T[i] = cr["rho"] * ce.DZ, 0.0, min(col.T[i], 273.15 - 3.0)
+            cen = col.centers() * 100
+            for i in np.where((cen >= cr["depth_cm"][0]) & (cen < cr["depth_cm"][1]))[0]:     # an observed refrozen layer put in by hand (ice crust)
+                col.m[i], col.w[i], col.T[i] = cr["rho"] * col.dz[i], 0.0, min(col.T[i], 273.15 - 3.0)
             cr["done"] = True
         rk = float(rain_kg.get(pd.Timestamp((t + local).date()), 0.0))
         if rk > 0:
             col.add_rain(rk / 48.0)                       # spread evenly over the local day (the daily total is all the gauge gives)
         f = dict(sw_abs=sw_abs, lw_in=lw_value(n), ta=T.values[n], rh=RH.values[n], vw=W.values[n],
                  pressure=pressure, z0=ce.z0(age), rg=ce.grain_radius_mm(alpha, ce.albedo_floor(t.dayofyear)))
-        for _ in range(int(30 * 60 / ce.DT)):
-            ts, _q = col.step(f)
+        ts, _q = col.advance(f, 1800.0)
         alpha = ce.albedo_step(alpha, col.cycles, 0.5 / 24, t.dayofyear)
         a_, b_ = ce.exchange(f["ta"], ts, f["vw"], pressure, f["z0"])
         rec["lwin"].append(lw_value(n)); rec["lw"].append(ce.EMISS_SNOW * f["lw_in"] - ce.EMISS_SNOW * ce.SIGMA * ts ** 4)
         rec["qs"].append(a_ * (f["ta"] - ts)); rec["ql"].append(b_ * (f["rh"] * ce.e_sat(f["ta"]) - ce.e_sat(ts))); rec["wind"].append(f["vw"]); rec["rh"].append(f["rh"])
-        rec["rho"].append(col.rho.copy()); rec["t"].append(t); rec["T"].append(col.T - 273.15); rec["w"].append(col.w / col.m); rec["ts"].append(ts - 273.15)
+        Tg, wg, rg_ = col.on_grid((np.arange(NG) + 0.5) * GRID_DZ)
+        rec["rho"].append(rg_); rec["t"].append(t); rec["T"].append(Tg - 273.15); rec["w"].append(wg); rec["ts"].append(ts - 273.15)
         rec["sw"].append(sw_abs); rec["alb"].append(alpha); rec["ta"].append(T.values[n] - 273.15)
     res = {k: np.array(v) for k, v in rec.items() if k != "t"}
     res["rain_kg"] = float(rain_kg.loc[start.tz_localize(None).normalize():target.tz_localize(None) + pd.Timedelta(days=1)].sum()) if len(rain_kg) else 0.0
@@ -311,7 +314,7 @@ def wet_run(w_frac, rho=None):
 
 
 def contiguous_wet_cm(w_frac, rho=None):
-    return wet_run(w_frac, rho)[1] * ce.DZ * 100
+    return wet_run(w_frac, rho)[1] * GRID_DZ * 100
 
 
 def plot(day, res):
@@ -320,7 +323,7 @@ def plot(day, res):
     import matplotlib.pyplot as plt
     FIG.mkdir(parents=True, exist_ok=True)
     t, Tm, w = res["t"], res["T"], res["w"]
-    depth = (np.arange(ce.NL) + 0.5) * ce.DZ * 100
+    depth = (np.arange(NG) + 0.5) * GRID_DZ * 100
     fig = plt.figure(figsize=(13, 7.5))
     gs = fig.add_gridspec(2, 2, height_ratios=[3, 1.3], width_ratios=[60, 1], hspace=0.08, wspace=0.12)
     a1 = fig.add_subplot(gs[0, 0])
@@ -328,7 +331,7 @@ def plot(day, res):
     cax = fig.add_subplot(gs[0, 1])
     plt.setp(a1.get_xticklabels(), visible=False)
     x = mdates_num(t)
-    pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-15, vmax=0, shading="nearest")
+    pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-5, vmax=0, shading="nearest")
     thick = np.array([contiguous_wet_cm(w[i], res["rho"][i]) for i in range(len(t))])        # contiguous thawed depth from the surface, cm
     corn = (thick >= CORN_MIN_CM) & (thick <= CORN_MAX_CM)
     from matplotlib.path import Path as MPath
@@ -392,9 +395,9 @@ def summarize(day, res):
     m6 = at(6)
     night = (t >= d0 - pd.Timedelta(hours=6)) & (t <= d0 + pd.Timedelta(hours=7))
     crust = 0
-    for k in range(ce.NL):
+    for k in range(NG):
         if res["T"][m6, k] < -1e-6 and res["w"][m6, k] == 0:
-            crust += 1
+            crust += 0.5
         else:
             break
     day_idx = np.where((t >= d0 + pd.Timedelta(hours=6)) & (t <= d0 + pd.Timedelta(hours=18)))[0]
