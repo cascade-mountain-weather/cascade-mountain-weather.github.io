@@ -324,14 +324,8 @@ class Column:
         def terms(ts):
             return sw_surface + EMISS_SNOW * f["lw_in"] - EMISS_SNOW * SIGMA * ts ** 4 + a * (ta - ts) + b * (ea - e_sat(ts))
 
-        T0, k0, h0 = self.T[0], kk[0], self.dz[0] / 2
-        g_cond = lambda ts: k0 * (ts - T0) / h0
-        Q = lambda ts: terms(ts) - g_cond(ts)
-        if Q(273.15) >= 0:                       # surface would exceed 0 C: hold at 0 C, all the net flux goes into the top layer
-            ts, into_top = 273.15, terms(273.15)
-        else:
-            ts = brentq(Q, 200.0, 273.15, xtol=1e-4)
-            into_top = g_cond(ts)
+        ts = self.T[0]                           # the 0.5 cm skin layer is the surface: its temperature is the surface temperature
+        into_top = terms(ts)                     # net surface flux (longwave, sensible, latent, and shortwave if not penetrating) into the skin layer
         dz = self.dz
         kint = (dz[:-1] + dz[1:]) / (dz[:-1] / kk[:-1] + dz[1:] / kk[1:])
         between = kint * (self.T[:-1] - self.T[1:]) / (0.5 * (dz[:-1] + dz[1:]))
