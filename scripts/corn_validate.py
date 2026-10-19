@@ -115,12 +115,26 @@ def synoptic(stids, start, end):
 
 
 def snotel(triplet, start, end):
-    r = requests.get("https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data", params=dict(
-        stationTriplets=triplet, elements="WTEQ,PREC,TAVG,SNWD", duration="DAILY", beginDate=str(start.date()), endDate=str(end.date())), timeout=60).json()
+    key = CACHE / f"snotel_{triplet.split(':')[0]}_{start:%Y%m%d}_{end:%Y%m%d}.pkl"
+    if key.exists():
+        return pd.read_pickle(key)
+    last = None
+    for attempt in range(4):                        # the AWDB service times out now and then
+        try:
+            r = requests.get("https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data", params=dict(
+                stationTriplets=triplet, elements="WTEQ,PREC,TAVG,SNWD", duration="DAILY", beginDate=str(start.date()), endDate=str(end.date())), timeout=90).json()
+            break
+        except Exception as ex:
+            last = ex
+    else:
+        raise last
     cols = {}
     for e in r[0]["data"]:
         cols[e["stationElement"]["elementCode"]] = pd.Series({pd.Timestamp(v["date"]): v.get("value") for v in e["values"]})
-    return pd.DataFrame(cols)
+    df = pd.DataFrame(cols)
+    CACHE.mkdir(parents=True, exist_ok=True)
+    df.to_pickle(key)
+    return df
 
 
 def dewpoint(T, RH):
@@ -251,6 +265,11 @@ def run(day, lw_model="auto"):
     for n, t in enumerate(idx):
         age = age0 + (t - idx[0]).total_seconds() / 86400
         sw_abs = (1 - alpha) * sw_cl.values[n] * (kt.values[n] if np.isfinite(kt.values[n]) else 1.0)
+        cr = day.get("crust")
+        if cr and not cr.get("done") and (t + local).tz_localize(None) >= pd.Timestamp(cr["when"]):
+            for i in range(int(cr["depth_cm"][0]), int(cr["depth_cm"][1])):     # an observed refrozen layer put in by hand (ice crust)
+                col.m[i], col.w[i], col.T[i] = cr["rho"] * ce.DZ, 0.0, min(col.T[i], 273.15 - 3.0)
+            cr["done"] = True
         rk = float(rain_kg.get(pd.Timestamp((t + local).date()), 0.0))
         if rk > 0:
             col.add_rain(rk / 48.0)                       # spread evenly over the local day (the daily total is all the gauge gives)
@@ -271,9 +290,14 @@ def run(day, lw_model="auto"):
     return res
 
 
-def wet_run(w_frac):
+CRUST_RHO = 600.0          # a top layer this dense is an ice crust, not corn, even at 0 C and wet
+
+
+def wet_run(w_frac, rho=None):
     """(first wet layer, number of contiguous wet layers) counted from the surface, tolerating a frozen skin: if the top layer is not wet
     but the next one is, the run starts at layer 1 (Danny: a surface only below freezing is not truly frozen). (0, 0) if neither is wet."""
+    if rho is not None and rho[0] >= CRUST_RHO:
+        return 0, 0
     start = 0 if w_frac[0] >= ce.W_THAW else (1 if len(w_frac) > 1 and w_frac[1] >= ce.W_THAW else None)
     if start is None:
         return 0, 0
@@ -286,8 +310,8 @@ def wet_run(w_frac):
     return start, n
 
 
-def contiguous_wet_cm(w_frac):
-    return wet_run(w_frac)[1] * ce.DZ * 100
+def contiguous_wet_cm(w_frac, rho=None):
+    return wet_run(w_frac, rho)[1] * ce.DZ * 100
 
 
 def plot(day, res):
@@ -305,7 +329,7 @@ def plot(day, res):
     plt.setp(a1.get_xticklabels(), visible=False)
     x = mdates_num(t)
     pm = a1.pcolormesh(x, depth, Tm.T, cmap=NWS_COLD, vmin=-15, vmax=0, shading="nearest")
-    thick = np.array([contiguous_wet_cm(w[i]) for i in range(len(t))])        # contiguous thawed depth from the surface, cm
+    thick = np.array([contiguous_wet_cm(w[i], res["rho"][i]) for i in range(len(t))])        # contiguous thawed depth from the surface, cm
     corn = (thick >= CORN_MIN_CM) & (thick <= CORN_MAX_CM)
     from matplotlib.path import Path as MPath
     kernel = MPath.unit_circle()
@@ -314,12 +338,13 @@ def plot(day, res):
     kx, ky = [], []
     for i in range(0, len(t), 2):
         if corn[i]:
-            st, nn = wet_run(w[i])
+            st, nn = wet_run(w[i], res["rho"][i])
             for j in range(st, st + nn):
                 kx.append(x[i] + (0.5 * dx if j % 2 else 0.0))
                 ky.append(depth[j])
     if res["rho"].max() >= 600:
-        a1.contour(x, depth, res["rho"].T, levels=[600.0], colors="#7c2d12", linewidths=1.2, linestyles="--")
+        a1.contourf(x, depth, (res["rho"].T >= 600.0).astype(float), levels=[0.5, 1.5], colors="none", hatches=["\\\\\\\\"])
+        a1.contour(x, depth, (res["rho"].T >= 600.0).astype(float), levels=[0.5], colors="#7c2d12", linewidths=1.0)
     if kx:
         a1.scatter(kx, ky, marker=kernel, s=70, c="#f6c90e", edgecolors="#b7860b", linewidths=0.5, zorder=5)
     a1.set_ylim(depth[-1] + 0.5, 0)
@@ -329,7 +354,7 @@ def plot(day, res):
     import textwrap
     head = f"{day['place']}  {day['date']}  ({'good corn' if day['good'] else ('unlabeled' if day['good'] is None else 'bad day')}; reported {day['hhmm']})   {day['elev_ft']} ft, {day['slope']} deg, aspect {day['aspect']}"
     note = (f"corn kernels: surface layer thawed (liquid water >= {100 * ce.W_THAW:.1f}% of mass) to a depth of {CORN_MIN_CM:.0f}-{CORN_MAX_CM:.0f} cm.  "
-            f"Brown dashed line: refrozen crust (density 600+ kg/m3).  Snow age at start {res['age0']:.1f} d.  Rain applied: {res['rain_kg']:.0f} kg/m2.")
+            f"Brown hatch: ice crust (density 600+ kg/m3).  Snow age at start {res['age0']:.1f} d.  Rain applied: {res['rain_kg']:.0f} kg/m2.")
     a1.set_title(head + "\n" + textwrap.fill(note, 120), fontsize=9)
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
     mark = pd.Timestamp(day["date"]) + pd.Timedelta(hours=hh, minutes=mm)
@@ -376,7 +401,7 @@ def summarize(day, res):
     reach = [j for j in day_idx if res["ts"][j] > -0.05]
     return dict(day=day["date"], id=day["id"], good=day["good"], age_d=round(res["age0"] + (i * 0.5 / 24), 1), night_min_air=round(float(res["ta"][night].min()), 1),
                 night_min_surf=round(float(res["ts"][night].min()), 1), crust_6am_cm=crust, surf_0C_at=(t[reach[0]].strftime("%H:%M") if reach else "never"),
-                air_at_report=round(float(res["ta"][i]), 1), wet_cm_at_report=contiguous_wet_cm(res["w"][i]), wet_cm_15h=contiguous_wet_cm(res["w"][at(15)]))
+                air_at_report=round(float(res["ta"][i]), 1), wet_cm_at_report=contiguous_wet_cm(res["w"][i], res["rho"][i]), wet_cm_15h=contiguous_wet_cm(res["w"][at(15)], res["rho"][at(15)]))
 
 
 def corn_window(day, res):
@@ -386,7 +411,7 @@ def corn_window(day, res):
     d0 = pd.Timestamp(day["date"])
     hh, mm = (int(v) for v in day["hhmm"].split(":"))
     rep = d0 + pd.Timedelta(hours=hh, minutes=mm)
-    ok = np.array([CORN_MIN_CM <= contiguous_wet_cm(w[i]) <= CORN_MAX_CM for i in range(len(t))])
+    ok = np.array([CORN_MIN_CM <= contiguous_wet_cm(w[i], res["rho"][i]) <= CORN_MAX_CM for i in range(len(t))])
     inday = (t >= d0 + pd.Timedelta(hours=6)) & (t <= d0 + pd.Timedelta(hours=20))
     ok = ok & np.asarray(inday)
     runs, i = [], 0
