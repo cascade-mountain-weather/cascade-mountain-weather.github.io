@@ -165,6 +165,8 @@ def exchange(ta, ts, vw, pressure, z0m):
 
 
 MIN_ICE_FRAC = 0.5          # when the top layer's ice falls below this fraction of a fresh layer it is gone: the column settles up by one layer
+TAU_WET_H = 24.0             # wet-snow densification time scale (h) toward the density target: PLACEHOLDER (see densify)
+RHO_WET, RHO_PER_CYCLE = 550.0, 100.0   # target density of continuously wet snow, and the extra per completed melt-freeze cycle of that layer: PLACEHOLDERS
 RHO_CRUST_MAX = 800.0        # refreezing meltwater or rain can densify a layer up to this (kg/m3); Danny: refrozen crust 700-800
 
 
@@ -179,6 +181,8 @@ class Column:
         self.w = w0 * self.m
         self.cycles = 0                         # completed melt-freeze cycles (surface reached 0 C, then fell below MF_FREEZE_C)
         self._melted = False
+        self.layer_cycles = np.zeros(NL)        # melt-freeze cycles each layer has been through (wet, then frozen)
+        self._wet = np.zeros(NL, dtype=bool)
         self.t_deep = T_DEEP                    # temperature just below the column (K)
 
     @property
@@ -229,6 +233,21 @@ class Column:
                     ex -= frz
                 self.w[j] += ex
 
+    def densify(self, dt):
+        """Wet-snow compaction. SNOWPACK's settling (viscous creep under the overburden plus a sintering term; its Kojima option is
+        eta = 8.64e6 exp(0.021 rho) Pa s) gives almost no compaction in the top 30 cm: 4e-5 per day at 400 kg/m3 (and its default viscosity
+        needs grain neck and sphericity data we do not carry), so melt-freeze crusts there come from water in SNOWPACK. This is an EMPIRICAL
+        replacement (placeholders): a layer that holds liquid water densifies toward RHO_WET + RHO_PER_CYCLE x (its completed melt-freeze
+        cycles), capped at RHO_CRUST_MAX, with time scale TAU_WET_H. Mass is added to the layer without being removed from below (the
+        column does not settle)."""
+        wet = self.w / self.m >= W_THAW
+        done = self._wet & ~wet & (self.T < 273.15 - 0.2)          # was wet, now frozen: one more cycle for the layer
+        self.layer_cycles[done] += 1
+        self._wet = np.where(wet, True, np.where(done, False, self._wet))
+        target = np.minimum(RHO_CRUST_MAX, RHO_WET + RHO_PER_CYCLE * self.layer_cycles) * DZ
+        grow = wet & (self.m < target)
+        self.m[grow] += (target[grow] - self.m[grow]) * (1.0 - math.exp(-dt / (TAU_WET_H * 3600.0)))
+
     def settle(self):
         """The snow surface lowers as the top layer melts away: when its ice is nearly gone, its remaining liquid joins the layer below, every
         layer moves up one, and a new layer of the starting density at the lower-boundary temperature is added at the bottom."""
@@ -276,6 +295,7 @@ class Column:
         for i in range(NL):
             self.add_heat(i, (flux[i] - flux[i + 1] + swl[i]) * dt)
         self.drain()
+        self.densify(dt)
         if ts >= 273.15 + MF_MELT_C and into_top > 0:
             self._melted = True
         elif self._melted and ts < 273.15 + MF_FREEZE_C:

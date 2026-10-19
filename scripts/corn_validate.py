@@ -290,14 +290,14 @@ def run(day, lw_model="auto"):
     return res
 
 
-CRUST_RHO = 600.0          # a top layer this dense is an ice crust, not corn, even at 0 C and wet
+CRUST_RHO = 600.0          # a dense top layer that is not thawed is an ice crust, not corn
 
 
 def wet_run(w_frac, rho=None):
     """(first wet layer, number of contiguous wet layers) counted from the surface, tolerating a frozen skin: if the top layer is not wet
     but the next one is, the run starts at layer 1 (Danny: a surface only below freezing is not truly frozen). (0, 0) if neither is wet."""
-    if rho is not None and rho[0] >= CRUST_RHO:
-        return 0, 0
+    if rho is not None and rho[0] >= CRUST_RHO and w_frac[0] < ce.W_THAW:
+        return 0, 0                    # a dense frozen top layer is an ice crust, not corn
     start = 0 if w_frac[0] >= ce.W_THAW else (1 if len(w_frac) > 1 and w_frac[1] >= ce.W_THAW else None)
     if start is None:
         return 0, 0
