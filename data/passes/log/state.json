@@ -1,7 +1,7 @@
 {
  "nps_roads": {
   "Carbon River Road to entrance": "CLOSED - There is NO public access to Carbon River & Mowich Lake from SR 165. The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route. WSDOT News Release, 4/22/25",
-  "Longmire to Paradise": "OPEN NOTE: The gate at Longmire may close for public safety at any time depending on weather/road conditions. Check Alerts for current status. Learn more about winter travel . Restrooms closed at Narada Falls. Restrooms available at Longmire or Paradise.",
+  "Longmire to Paradise": "OPEN - Check Alerts for the current daily status of the Longmire gate and other road updates. Regular nightly closures of the gate at Longmire to Paradise begin 10/29/2026 for the winter season. The Paradise Road is assessed each morning before the gate can reopen. Opening may be delayed, or the gat",
   "Mowich Lake Road": "CLOSED - There is NO public access to Carbon River & Mowich Lake from SR 165. The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route. WSDOT News Release, 4/22/25",
   "Nisqually Entrance to Longmire": "OPEN",
   "Paradise Valley Road One-way scenic route leaving Paradise connecting to Stevens": "CLOSED for the season.",
@@ -14,6 +14,28 @@
   "White River Road to Campground": "CLOSED for the season. NOTE: Summerland Trailhead is closed due to Fryingpan Creek Bridge construction through 2029. No pedestrians are allowed on White River Road through the closure zone past Fryingpan Creek Bridge . Bicyclists may travel the closed road but must follow all signage & instructions "
  },
  "open": {
+  "nps:3D10623B-6508-442D-B8E4-1EA41EDAD672": {
+   "category": "Park Closure",
+   "closed": true,
+   "first_seen_utc": "2026-10-29T19:45Z",
+   "key": "nps:3D10623B-6508-442D-B8E4-1EA41EDAD672",
+   "pass": "paradise",
+   "road": "",
+   "source": "nps",
+   "text": "Paradise Road Status: Open, tire chains required, gate closing at 3 p.m.. 10/29/2026: The road is open to Paradise. All vehicles, including 4WD and AWD, must carry tire chains and be ready to use them; today, tire chains are required to be used on all 2-wheel drive vehicles beginning 5 miles beyond Longmire and continuing up to Paradise. The gate will close to uphill travel at 3 p.m. and downhill travel at 4 p.m. to support public safety.",
+   "url": "https://www.nps.gov/mora/planyourvisit/winter-travel.htm "
+  },
+  "nps:6E34CD95-476A-4DAB-9377-3DE4542F53A4": {
+   "category": "Information",
+   "closed": false,
+   "first_seen_utc": "2026-10-29T19:45Z",
+   "key": "nps:6E34CD95-476A-4DAB-9377-3DE4542F53A4",
+   "pass": "paradise",
+   "road": "",
+   "source": "nps",
+   "text": "Winter Season Closures. The following regular winter season road closures are in place: Paradise Valley, Ricksecker Point, Stevens Canyon, White River, & Sunrise Roads. Closed roads may be open to bicycling when work is not underway on the road. Always check signs on closed road gates before proceeding.",
+   "url": "https://www.nps.gov/mora/planyourvisit/road-status.htm"
+  },
   "nps:73CE219E-D823-4452-A8C1-67869DC3CD1A": {
    "category": "Danger",
    "closed": false,
@@ -38,25 +60,19 @@
      "closed": false,
      "text": "WILDFIRE CLOSURES: Sunrise & northern trails. . Due to several active fires on the north side of the park, the following closures are in effect until further notice: Grand Park area & trails, Northern Loop Trail, Wonderland Trail from Carbon River Suspension Bridge to Frozen Lake, & associated backcountry campgrounds. White River & Sunrise Roads have closed for the winter season.",
      "utc": "2026-10-26T20:02Z"
+    },
+    {
+     "closed": false,
+     "text": "WILDFIRE CLOSURES: Sunrise & northern trails. White River open.. Due to several active fires on the north side of the park, the following closures are in effect until further notice: Grand Park area & trails, Northern Loop Trail, Wonderland Trail from Carbon River Suspension Bridge to Frozen Lake, & associated backcountry campgrounds. White River Road & WR Campground reopened along with White River/Sunrise Trails. Sunrise Rd CLOSED to vehicles; open for pedestrians/bicycling only.",
+     "utc": "2026-10-29T19:45Z"
     }
    ],
    "key": "nps:73CE219E-D823-4452-A8C1-67869DC3CD1A",
    "pass": "rainier",
    "road": "Grand Park 2 Fire Closure",
    "source": "nps",
-   "text": "WILDFIRE CLOSURES: Sunrise & northern trails. White River open.. Due to several active fires on the north side of the park, the following closures are in effect until further notice: Grand Park area & trails, Northern Loop Trail, Wonderland Trail from Carbon River Suspension Bridge to Frozen Lake, & associated backcountry campgrounds. White River Road & WR Campground reopened along with White River/Sunrise Trails. Sunrise Rd CLOSED to vehicles; open for pedestrians/bicycling only.",
+   "text": "WILDFIRE CLOSURES: Sunrise & northern trails. . Due to several active fires on the north side of the park, the following closures are in effect until further notice: Grand Park area & trails, Northern Loop Trail, Wonderland Trail from Carbon River Suspension Bridge to Frozen Lake, & associated backcountry campgrounds. White River & Sunrise Roads have closed for the winter season.",
    "url": "https://www.nps.gov/mora/learn/news/fire.htm"
-  },
-  "nps:A0418840-9080-4171-A0B3-EEAD9DB106EC": {
-   "category": "Information",
-   "closed": false,
-   "first_seen_utc": "2026-10-26T20:02Z",
-   "key": "nps:A0418840-9080-4171-A0B3-EEAD9DB106EC",
-   "pass": "rainier",
-   "road": "",
-   "source": "nps",
-   "text": "Your GPS May Be Wrong. There are five entrances to the park. GPS may take you to the wrong entrance or attempt to follow the most direct route, which could lead to closed gates. It can take hours to reroute to the correct entrance. Check directions & maps, not just your GPS.",
-   "url": "https://www.nps.gov/mora/planyourvisit/directions.htm"
   },
   "nps:CB5AE302-9DA5-48D9-81D9-4998F5807010": {
    "category": "Information",
@@ -122,24 +138,36 @@
      "closed": false,
      "text": "Fryingpan Creek Bridge Replacement Project: Traffic and Trail Impacts. Starting September 28, 2026, parking at the Summerland Trailhead will be unavailable on either side of Fryingpan Creek Bridge due to construction through 2029. Access to Summerland remains open via the Wonderland Trail with limited parking at White River Campground. Expect traffic delays of up to 30 minutes due to one-lane traffic on White River Road while it remains open for the season.",
      "utc": "2026-10-27T19:32Z"
+    },
+    {
+     "closed": false,
+     "text": "Fryingpan Creek Bridge Replacement Project: Traffic and Trail Impacts. Parking is closed at the Summerland Trailhead on either side of Fryingpan Creek Bridge due to construction through 2029. Access to Summerland remains open via the Wonderland Trail with limited parking at White River Campground. Expect traffic delays of up to 30 minutes due to one-lane traffic on White River Road while it remains open for the season.",
+     "utc": "2026-10-29T19:45Z"
     }
    ],
    "key": "nps:CB5AE302-9DA5-48D9-81D9-4998F5807010",
    "pass": "rainier",
    "road": "Fryingpan Creek Bridge Replacement Project",
    "source": "nps",
-   "text": "Fryingpan Creek Bridge Replacement Project: Traffic and Trail Impacts. Parking is closed at the Summerland Trailhead on either side of Fryingpan Creek Bridge due to construction through 2029. Access to Summerland remains open via the Wonderland Trail with limited parking at White River Campground. Expect traffic delays of up to 30 minutes due to one-lane traffic on White River Road while it remains open for the season.",
+   "text": "Fryingpan Creek Bridge Replacement Project: Trail Impacts. Summerland Trailhead is closed at Fryingpan Creek Bridge due to construction through 2029. No pedestrians are allowed on White River Road through the closure zone past Fryingpan Creek Bridge. Bicyclists may travel the closed road but must follow all signage & instructions from construction crews.",
    "url": "https://www.nps.gov/mora/planyourvisit/park-construction.htm/#fryingpan-creek-bridge"
   },
   "nps:DB1ECFED-518B-4A64-AADD-27F15142929E": {
    "category": "Information",
    "closed": false,
    "first_seen_utc": "2026-10-27T19:32Z",
+   "history": [
+    {
+     "closed": false,
+     "text": "Overnight closure of SR 706 on October 16; no access to Nisqually Entrance.. SR706 outside of the park will be fully CLOSED overnight from 9 pm Friday 10/16 until 6 am Saturday 10/17, for road repairs to replace a failing culvert. The closure will be from Kernahan Road East to the Nisqually Entrance. There will be NO ACCESS to the Nisqually Entrance during the closure. To reach Paradise during the closure plan to enter the park through the Stevens Canyon Entrance via SR123 on the east side of the park.",
+     "utc": "2026-10-29T19:45Z"
+    }
+   ],
    "key": "nps:DB1ECFED-518B-4A64-AADD-27F15142929E",
    "pass": "paradise",
    "road": "",
    "source": "nps",
-   "text": "Overnight closure of SR 706 on October 16; no access to Nisqually Entrance.. SR706 outside of the park will be fully CLOSED overnight from 9 pm Friday 10/16 until 6 am Saturday 10/17, for road repairs to replace a failing culvert. The closure will be from Kernahan Road East to the Nisqually Entrance. There will be NO ACCESS to the Nisqually Entrance during the closure. To reach Paradise during the closure plan to enter the park through the Stevens Canyon Entrance via SR123 on the east side of the park.",
+   "text": "Overnight closure of SR 706 on October 23; no access to Nisqually Entrance.. SR706 outside of the park will be fully CLOSED overnight from 9 pm Friday 10/23 until 6 am Saturday 10/24, for road repairs to replace a second failing culvert. The closure will be from Kernahan Road East to the Nisqually Entrance. There will be NO ACCESS to the Nisqually Entrance during the closure. To reach Paradise during the closure plan to enter/exit the park through the Stevens Canyon Entrance via SR123 on the east side of the park.",
    "url": "https://wsdot.wa.gov/about/news/2026/overnight-closure-sr-706-near-mount-rainier-national-park-friday-oct-16"
   },
   "nps:E5F3836C-7B40-4550-9650-4F50BF4CE491": {
@@ -179,20 +207,20 @@
    "text": "Eastbound milepost 95, 10 miles east of Cle Elum: Monday, Oct. 26 at 8 a.m. through Friday, Oct. 30 at 4:30 p.m. There will be a continuous 24/7 lane closure with a 12-ft width restriction for bridge work.",
    "type": "Maintenance"
   },
-  "wsdot:722525": {
-   "category": "Construction",
+  "wsdot:722646": {
+   "category": "Maintenance",
    "closed": false,
    "direction": "",
-   "first_seen_utc": "2026-10-28T19:44Z",
-   "key": "wsdot:722525",
-   "lat": 48.9076,
-   "lon": -121.7075,
+   "first_seen_utc": "2026-10-29T19:45Z",
+   "key": "wsdot:722646",
+   "lat": 48.8885,
+   "lon": -121.9276,
    "pass": "baker",
    "road": "SR 542",
    "source": "wsdot",
-   "source_modified": 1793202164540,
-   "text": "Eastbound & westbound traffic is alternating on SR 542 near Twin Lakes Rd (MP 46) due to roadwork.",
-   "type": "Construction"
+   "source_modified": 1793291576140,
+   "text": "Eastbound & westbound traffic is alternating on SR 542 at Welcome Rd (MP 34) due to maintenance.",
+   "type": "Maintenance"
   }
  }
 }
