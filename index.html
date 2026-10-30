@@ -16,6 +16,11 @@ pwa_meta: true
                 {% if latest %}
                 <h3><a href="{{ latest.url | relative_url }}">{{ latest.tagline | default: latest.title }}</a></h3>
                 <p class="post-date">Posted: {{ latest.date | date: "%B %-d, %Y" }}</p>
+                {% if latest.thumbnail %}
+                <a href="{{ latest.url | relative_url }}" class="post-thumb">
+                    <img src="{{ latest.thumbnail | relative_url }}" alt="{{ latest.thumbnail_alt | default: latest.title | escape }}" loading="lazy">
+                </a>
+                {% endif %}
                 <p class="post-summary">{{ latest.summary | default: latest.description }}</p>
                 <a href="{{ latest.url | relative_url }}" class="read-more">Read Full Forecast →</a>
                 <a href="{{ '/posts/archive.html' | relative_url }}" class="previous-link">Previous forecasts</a>

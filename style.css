@@ -418,6 +418,20 @@ h3 {
     margin: 0.5rem 0;
 }
 
+/* Small lead photo on the homepage card; the full-size one is on the post page */
+.post-thumb {
+    display: block;
+    width: 140px;
+    margin: 0.5rem 0;
+}
+
+.post-thumb img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+
 .post-summary {
     margin: 1rem 0;
     line-height: 1.8;
