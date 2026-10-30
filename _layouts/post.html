@@ -20,6 +20,13 @@
             </p>
         </header>
 
+        {% if page.thumbnail %}
+        <figure class="post-lead-photo">
+            <img class="PlotFormat" src="{{ page.thumbnail | relative_url }}" alt="{{ page.thumbnail_alt | default: page.title | escape }}">
+            {% if page.thumbnail_caption %}<figcaption><em>{{ page.thumbnail_caption }}</em></figcaption>{% endif %}
+        </figure>
+        {% endif %}
+
         <div class="post-content">
 {{ content }}
         </div>
