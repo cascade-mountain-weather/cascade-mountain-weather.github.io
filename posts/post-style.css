@@ -89,8 +89,8 @@
 
 .post-content {
     line-height: 1.8;
-    /* A readable column: about 75 characters a line, with space either side on wide screens */
-    max-width: 48rem;
+    /* Fills the card up to a readable cap (about 100 characters a line); phones just use the full width */
+    max-width: 64rem;
     margin: 0 auto;
 }
 
