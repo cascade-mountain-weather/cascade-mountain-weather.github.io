@@ -160,6 +160,8 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         padding: 3rem 1rem;
     }
     #plot-placeholder.is-visible { display: block; }
+    #plot-placeholder.is-visible::before { content: ''; display: block; width: 72px; height: 72px; margin: 0 auto 0.5rem; border-radius: 50%; background: url('{{ '/assets/images/snowflake-loader.gif' | relative_url }}') center / cover; }
+    @media (prefers-reduced-motion: reduce) { #plot-placeholder.is-visible::before { display: none; } }
 
 
     #sounding-diagnostics { margin-top: 1.25rem; }

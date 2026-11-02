@@ -251,6 +251,56 @@ zones:
     access_points:
       - {id: whistler_village, name: Whistler Village, type: resort_lot, lat: 50.116, lon: -122.957, modes: [resort, backcountry, nordic, hike, bike]}
     verify: [border crossing time, which is not in the free-flow drive time, and DEM coverage (the USGS service is US only)]
+  # Mt. Hood (Oregon), added Nov 2026. Coordinates, tops and drive times are hand estimates (first draft like the rest of this file):
+  # run scripts/ski_dem.py for the measured base elevations. No WSDOT/ODOT road model, so road reliability counts as full for now.
+  - id: hood_timberline
+    name: Timberline (Mt. Hood, OR)
+    modes: [resort, backcountry, hike, bike]
+    live_areas: [mt-hood]
+    nwac_zone: Mt Hood
+    forecast_point: {lat: 45.331, lon: -121.711}
+    winter_access: {name: Timberline Lodge lot, lat: 45.331, lon: -121.711}
+    top_ft: 8540
+    road_dependencies: []
+    pass: {type: resort_ticket}
+    snotel: []
+    url: https://www.timberlinelodge.com
+    drive_hours: {seattle: 4.5, tacoma: 4.1, bellingham: 6.2, olympia: 3.5, portland: 1.6}
+    access_points:
+      - {id: timberline_lot, name: Timberline Lodge lot, type: resort_lot, lat: 45.331, lon: -121.711, modes: [resort, backcountry, hike, bike]}
+    verify: [coordinates, top elevation, drive times, and the road (US 26 and OR 35 closures are not modeled yet)]
+  - id: hood_meadows
+    name: Mt. Hood Meadows (OR)
+    modes: [resort, backcountry, hike, bike]
+    live_areas: [mt-hood]
+    nwac_zone: Mt Hood
+    forecast_point: {lat: 45.331, lon: -121.665}
+    winter_access: {name: Mt. Hood Meadows lot, lat: 45.331, lon: -121.665}
+    top_ft: 7300
+    road_dependencies: []
+    pass: {type: resort_ticket}
+    snotel: []
+    url: https://www.skihood.com
+    drive_hours: {seattle: 4.6, tacoma: 4.2, bellingham: 6.3, olympia: 3.6, portland: 1.7}
+    access_points:
+      - {id: meadows_lot, name: Mt. Hood Meadows lot, type: resort_lot, lat: 45.331, lon: -121.665, modes: [resort, backcountry, hike, bike]}
+    verify: [coordinates, top elevation, drive times, and the road (OR 35 closures are not modeled yet)]
+  - id: hood_skibowl
+    name: Mt. Hood Skibowl (OR)
+    modes: [resort, hike, bike]
+    live_areas: [mt-hood]
+    nwac_zone: Mt Hood
+    forecast_point: {lat: 45.303, lon: -121.755}
+    winter_access: {name: Skibowl lot, lat: 45.303, lon: -121.755}
+    top_ft: 5026
+    road_dependencies: []
+    pass: {type: resort_ticket}
+    snotel: []
+    url: https://www.skibowl.com
+    drive_hours: {seattle: 4.4, tacoma: 4.0, bellingham: 6.1, olympia: 3.4, portland: 1.4}
+    access_points:
+      - {id: skibowl_lot, name: Skibowl lot, type: resort_lot, lat: 45.303, lon: -121.755, modes: [resort, hike, bike]}
+    verify: [coordinates, top elevation, drive times, and the road (US 26 closures are not modeled yet)]
   - id: north_bend
     name: North Bend (lowland trails)
     modes: [hike, bike]
