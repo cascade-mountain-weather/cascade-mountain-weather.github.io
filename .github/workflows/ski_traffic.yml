@@ -1,0 +1,55 @@
+name: Pull Ski Drive Times
+
+# Fills in data/traffic/typical_sat.json: Google Routes "typical Saturday morning" drive times from each starting area to each ski-tool zone
+# (scripts/ski_traffic.py). The key allows about 100 requests a day, and the full set is a few hundred more than that, so each run does up to 95
+# new requests and resumes from the file the next day. A run that finds nothing left to do makes no requests.
+# Needs the GOOGLE_MAPS_KEY repository secret (Settings > Secrets and variables > Actions). Never commit the key.
+# When the set is complete, apply it by hand: python scripts/ski_traffic.py --apply (see the note at the end of the script docs).
+
+on:
+  schedule:
+    - cron: "20 11 * * *" # once a day, about 4 am Pacific
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ski-traffic
+  cancel-in-progress: false
+
+jobs:
+  pull-drive-times:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: How many requests are left
+        run: python scripts/ski_traffic.py --count
+
+      - name: Pull the next batch of drive times
+        env:
+          GOOGLE_MAPS_KEY: ${{ secrets.GOOGLE_MAPS_KEY }}
+        run: python scripts/ski_traffic.py --day sat --limit 95
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add data/traffic/typical_sat.json
+          git commit -m "Update ski drive times [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

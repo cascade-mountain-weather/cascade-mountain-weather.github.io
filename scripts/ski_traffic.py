@@ -126,7 +126,7 @@ def main():
             dur, static, dist = request(k, ORIGINS[o], dests[z], when)
         except urllib.error.HTTPError as e:
             print("HTTP", e.code, e.read()[:300].decode(errors="replace"), file=sys.stderr)
-            if e.code in (403, 429):
+            if e.code in (400, 401, 403, 429):      # a bad or exhausted key fails every call: stop instead of trying all of them
                 break
             continue
         res[f"{o}|{z}|{h:02d}:{mi:02d}"] = {"min": round(dur / 60, 1), "free_min": round(static / 60, 1), "km": round(dist / 1000, 1)}
