@@ -143,6 +143,8 @@ areas:
     name: Crystal Mountain
     basin: "17110014"
     page: /tools/model-tools-precipitation.html#area=crystal
+    webcams:
+      - {type: iframe, id: "https://crystalmountainresort.roundshot.com/summit/", label: "Crystal Summit (Roundshot)"}
     stations:
       - {id: CMT69, network: NWAC, label: Crystal Summit}
       - {id: GRN62, network: NWAC, label: Green Valley, primary: true}

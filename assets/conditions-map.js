@@ -203,6 +203,11 @@
         if (type === 'youtube') {
             body.innerHTML = `<div class="cmap-video"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1"
                 title="${esc(label)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
+        } else if (type === 'iframe') {
+            // Generic embed (e.g. Roundshot panoramas); id is the full https URL.
+            const url = /^https:\/\//.test(id) ? id : '';
+            body.innerHTML = `<div class="cmap-video"><iframe src="${esc(url)}" title="${esc(label)}" allowfullscreen></iframe></div>
+                <p class="cmap-cam-note"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Open in a new tab &rarr;</a></p>`;
         } else {
             body.innerHTML = `<a name="windy-webcam-timelapse-player" data-id="${esc(id)}" data-play="day" data-loop="0" data-auto-play="0"
                 data-force-full-screen-on-overlay-play="0" data-interactive="1" href="https://windy.com/webcams/${esc(id)}"
