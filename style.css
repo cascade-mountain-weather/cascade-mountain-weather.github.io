@@ -1670,3 +1670,7 @@ nav a,
 
     summary, .previous-link { min-height: 36px; display: inline-flex; align-items: center; }
 }
+
+/* Growing-snowflake loading animation (assets/images/snowflake-loader.gif), from a time-lapse by Ken Libbrecht (snowcrystals.com). Use <span class="cmw-flake" aria-hidden="true"></span> beside a loading message. */
+.cmw-flake { display: inline-block; width: 72px; height: 72px; border-radius: 50%; background: url('assets/images/snowflake-loader.gif') center / cover; vertical-align: middle; }
+@media (prefers-reduced-motion: reduce) { .cmw-flake { display: none; } }

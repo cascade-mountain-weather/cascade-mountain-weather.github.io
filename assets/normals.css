@@ -58,6 +58,8 @@
 }
 
 .normals-empty, .normals-status { color: #64748b; font-size: 0.85rem; font-style: italic; }
+.normals-status[role="status"]::before { content: ''; display: block; width: 64px; height: 64px; margin: 0 auto 0.3rem; border-radius: 50%; background: url('images/snowflake-loader.gif') center / cover; }
+@media (prefers-reduced-motion: reduce) { .normals-status[role="status"]::before { display: none; } }
 .normals-foot { color: #64748b; font-size: 0.75rem; margin: 1rem 0 0; }
 
 @media (max-width: 900px) {
