@@ -37,7 +37,7 @@
 
     const PCT_CAP = 200;      // percent axis runs 0-200%, with the 100% marker centered
     // Temperature bars and colors saturate at +/-4 F or +/-2 C (whichever unit is selected)
-    const TEMP_CAP = { f: 4, c: 2 };
+    const TEMP_CAP = { f: 9, c: 5 };
     const IN_TO_CM = 2.54;
     // Choosing centimeters or °C makes metric stick: it is applied when switching variables and in the popup charts.
     let metric = false;
@@ -134,7 +134,7 @@
 
     function caption(variable, tf, unit) {
         if (variable === 'temp') {
-            return `Average temperature over the window minus the station’s 1991–2020 average for the same days. The center line is normal; bars and colors top out at ±${unit === 'c' ? '2°C' : '4°F'}.`;
+            return `Average temperature over the window minus the station’s 1991–2020 average for the same days. The center line is normal; bars and colors top out at ±${unit === 'c' ? '5°C' : '9°F'}.`;
         }
         if (variable === 'precip') {
             return unit === 'pct'
@@ -203,7 +203,7 @@
 
     function legend(variable, unit) {
         const stops = variable === 'temp' ? SCALE.slice().reverse() : SCALE;  // blue on the left for temperature
-        const t = unit === 'c' ? '2°C' : '4°F';
+        const t = unit === 'c' ? '5°C' : '9°F';
         const [l, mid, r] = variable === 'temp'
             ? [`Colder (−${t})`, 'Normal', `Warmer (+${t})`]
             : ['Dry (0%)', 'Normal', 'Wet (200%)'];

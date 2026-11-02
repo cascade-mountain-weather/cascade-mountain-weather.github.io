@@ -1,30 +1,24 @@
 // Radiosonde / Skew-T tool.
 //
-// Renders MetPy skew-T diagrams entirely in the browser via Pyodide (Python
-// compiled to WebAssembly) -- no server or scheduled job needed. Sounding
-// data comes from Iowa State's IEM RAOB JSON API. Technique and most of the
-// Python plotting code below are adapted from Clinton Alden's own tool at
-// https://github.com/clinton-alden/clinton-alden.github.io/blob/main/assets/radiosonde.js
-// (Clinton is a Cascade Mountain Weather co-founder; see PLAN.md).
+// Shows MetPy skew-T composites that scripts/radiosonde_skewt.py pre-renders
+// (workflow radiosonde_skewt.yml, a few hours after each 00Z/12Z launch) from
+// Iowa State's IEM RAOB feed. The page just reads assets/data/radiosonde/manifest.json
+// and swaps PNGs, so there is no in-browser Python to wait for. Plotly is only
+// used for the history chart.
 //
-// Unlike that CONUS-wide version, we only track 4 fixed stations, so instead
-// of bulk-preloading every recent cycle for every station, each station is
-// fetched lazily (only when selected) and we walk backward/forward in 6-hour
-// steps to find the nearest cycle that actually has data. This matters
-// because two of our four stations have real, permanent data-availability
-// quirks (see STATIONS below) that a fixed 3-day lookback would miss.
-//
-// The diagram is the full MetPy composite (skew-T, hodograph, wind barbs,
-// implied thermal advection) rendered as a PNG, shown by default and opened
-// in the site lightbox on click. Plotly is only used for the history chart.
+// We track 4 fixed stations. Two have permanent data-availability quirks (see
+// STATIONS below); the render script walks back to the newest cycles that
+// actually have data, so the manifest simply lists what exists, newest first.
 
 const IEM_RAOB_BASE = 'https://mesonet.agron.iastate.edu/json/raob.py';
-const PYODIDE_VERSION = 'v0.26.4';
 const SPC_BASE = 'https://www.spc.noaa.gov/exper/archive/events';
 // Set by an inline <script> in tools/radiosonde.html via Liquid, since this
 // file itself isn't processed by Jekyll. Falls back to the plain root path
 // (correct as long as the site's baseurl stays empty, per _config.yml).
 const WRF_URL = window.RADIOSONDE_WRF_URL || '/assets/data/wrf_uil.json';
+const MANIFEST_URL = window.RADIOSONDE_MANIFEST_URL || '/assets/data/radiosonde/manifest.json';
+const IMAGE_BASE = MANIFEST_URL.replace(/manifest\.json$/, '');
+const FORECAST_URL = window.RADIOSONDE_FORECAST_URL || '/assets/data/uw_soundings/dowlx.json';
 const HISTORY_URL = window.RADIOSONDE_HISTORY_URL || '/assets/data/radiosonde_history.json';
 
 // Unit conversions for hover text and diagnostics -- pressure is left in
@@ -47,7 +41,6 @@ const STATIONS = [
         lat: 47.95,
         lon: -124.56,
         country: 'US',
-        maxLookbackSteps: 12, // 3 days of 6-hourly cycles
         note: 'NWS sounding, launched 00Z & 12Z daily. Usually appears in this feed within a few hours.',
     },
     {
@@ -56,7 +49,6 @@ const STATIONS = [
         lat: 44.91,
         lon: -123.00,
         country: 'US',
-        maxLookbackSteps: 12,
         note: 'NWS sounding, launched 00Z & 12Z daily. Usually appears in this feed within a few hours.',
     },
     {
@@ -65,7 +57,6 @@ const STATIONS = [
         lat: 47.70,
         lon: -116.40,
         country: 'US',
-        maxLookbackSteps: 12,
         note: 'NWS sounding site, but KOTX has been absent from this near-real-time feed for an extended stretch -- a known upstream gap, not a bug in this tool.',
     },
     {
@@ -74,21 +65,17 @@ const STATIONS = [
         lat: 50.68,
         lon: -127.30,
         country: 'CA',
-        maxLookbackSteps: 48, // ~12 days, to comfortably clear the lag below
         note: 'Environment Canada sounding. This feed typically lags Canadian sites by 4-5 days, so the most recent available sounding here is usually about that old, not same-day.',
     },
 ];
 
 const state = {
-    pyodide: null,
-    pyReady: null,
-    cycleCache: new Map(), // `${station}|${timestamp}` -> profile rows array, or null if confirmed empty
-    plotCache: new Map(),  // `${station}|${timestamp}` -> { image, diagnostics, interactive }
     station: STATIONS[0].id,
-    displayedCycle: null,  // the cycle object currently shown
+    manifestPromise: null, // cached fetch of the pre-rendered manifest
+    cycles: [],            // manifest entries for the selected station, newest first
+    index: 0,              // position in `cycles` currently shown
     activeRequest: 0,
     units: 'metric',       // 'metric' | 'imperial' -- affects hover text and the diagnostics table
-    current: null,         // { stationId, cycle, result } for the plot currently on screen, for unit-toggle re-renders
     wrfPromise: null,      // cached fetch of assets/data/wrf_uil.json (WRF-vs-Quillayute overlay + skill scores)
     wrfVar: 'freezing_level_ft',
     wrfLeads: [24, 48],
@@ -96,6 +83,8 @@ const state = {
     skillInit: 'all',
     skillMetric: 'rmse',
     historyPromise: null,  // cached fetch of the shared history JSON (all stations)
+    forecastPromise: null, // cached fetch of the UW WRF sounding forecast at Olympex DOW (the Quillayute forecast)
+    historyWindow: 'around', // 'around' = 3 days back and 3 ahead, 'week', 'fortnight', 'all'
 };
 
 const els = {};
@@ -139,17 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Pyodide/MetPy bootstrap (~15-25s: downloading the WASM runtime, then
-    // micropip-installing pint/pooch/traitlets/xarray/metpy) previously
-    // didn't start until after the station's sounding data had already
-    // been found -- two independent, unrelated waits stacked sequentially
-    // for no reason. Kick it off immediately, in parallel with the station
-    // lookup below; loadMetPy() itself caches the in-flight promise, so
-    // renderCycle's later `await loadMetPy()` just picks up this same
-    // already-started (often already-finished) load instead of starting a
-    // second one.
-    loadMetPy().catch(error => console.error('MetPy preload failed:', error));
-
     selectStation(getStationRequestedInUrl() || state.station);
 });
 
@@ -158,9 +136,8 @@ function setUnits(units) {
     state.units = units;
     if (els.unitMetric) els.unitMetric.setAttribute('aria-pressed', String(units === 'metric'));
     if (els.unitImperial) els.unitImperial.setAttribute('aria-pressed', String(units === 'imperial'));
-    if (state.current) {
-        showPlot(state.current.stationId, state.current.cycle, state.current.result);
-    }
+    const shown = state.cycles[state.index];
+    if (shown) renderDiagnostics(shown.diagnostics, state.units);
     renderHistoryChart(state.station);
     renderWrfSkill();
 }
@@ -198,30 +175,10 @@ function pad(value) {
     return String(value).padStart(2, '0');
 }
 
-function makeCycle(date) {
-    const yyyy = date.getUTCFullYear();
-    const mm = pad(date.getUTCMonth() + 1);
-    const dd = pad(date.getUTCDate());
-    const hh = pad(date.getUTCHours());
-    return {
-        date,
-        timestamp: `${yyyy}${mm}${dd}${hh}00`,
-        label: `${yyyy}-${mm}-${dd} ${hh}Z`,
-        spcUrlStem: `${SPC_BASE}/${yyyy}${mm}${dd}/soundings/${String(yyyy).slice(2)}${mm}${dd}${hh}_SNDG`,
-    };
-}
-
-// Most recent synoptic hour (00/06/12/18Z) that has already happened.
-function latestCompletedCycle() {
-    const now = new Date();
-    const hour = Math.floor(now.getUTCHours() / 6) * 6;
-    const floored = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour));
-    return makeCycle(floored);
-}
-
-function stepCycleDate(cycle, deltaSteps) {
-    const next = new Date(cycle.date.getTime() + deltaSteps * 6 * 60 * 60 * 1000);
-    return makeCycle(next);
+// '202610301200' -> { timestamp, label, spcUrlStem } for the raw-data and SPC links.
+function cycleLinks(timestamp) {
+    const yyyy = timestamp.slice(0, 4), mm = timestamp.slice(4, 6), dd = timestamp.slice(6, 8), hh = timestamp.slice(8, 10);
+    return `${SPC_BASE}/${yyyy}${mm}${dd}/soundings/${yyyy.slice(2)}${mm}${dd}${hh}_SNDG`;
 }
 
 function setStatus(message) {
@@ -235,43 +192,15 @@ async function fetchJson(url) {
     return response.json();
 }
 
-// Fetch (and cache) the profile for one station at one cycle. Returns the
-// profile rows array, or null if that cycle has no data for this station.
-async function fetchStationCycle(stationId, cycle) {
-    const key = `${stationId}|${cycle.timestamp}`;
-    if (state.cycleCache.has(key)) return state.cycleCache.get(key);
-
-    let profile = null;
-    try {
-        const data = await fetchJson(`${IEM_RAOB_BASE}?ts=${cycle.timestamp}&station=${stationId}`);
-        const record = (data.profiles || [])[0];
-        if (record && Array.isArray(record.profile) && record.profile.length >= 6) {
-            profile = record.profile;
-        }
-    } catch (error) {
-        console.error(`Sounding fetch failed for ${stationId} at ${cycle.label}:`, error);
+function loadManifest() {
+    if (!state.manifestPromise) {
+        state.manifestPromise = fetchJson(MANIFEST_URL).catch(error => {
+            console.error('Skew-T manifest fetch failed:', error);
+            state.manifestPromise = null;
+            return null;
+        });
     }
-
-    state.cycleCache.set(key, profile);
-    return profile;
-}
-
-// Walk from `startCycle` in steps of `direction` (+1 = newer, -1 = older)
-// looking for the first cycle with data, up to maxSteps cycles away. Never
-// steps into the future.
-async function findAvailableCycle(stationId, startCycle, direction, maxSteps) {
-    const now = latestCompletedCycle();
-    let cycle = startCycle;
-    for (let i = 0; i <= maxSteps; i += 1) {
-        if (cycle.date > now.date) {
-            cycle = stepCycleDate(cycle, -1);
-            continue;
-        }
-        const profile = await fetchStationCycle(stationId, cycle);
-        if (profile) return { cycle, profile };
-        cycle = stepCycleDate(cycle, direction);
-    }
-    return null;
+    return state.manifestPromise;
 }
 
 const stationMarkers = new Map(); // station id -> Leaflet marker
@@ -321,936 +250,35 @@ async function selectStation(stationId) {
     renderHistoryChart(stationId);
     els.older.disabled = true;
     els.newer.disabled = true;
-    setStatus(`Looking for the most recent ${stationId} sounding...`);
+    setStatus(`Loading the most recent ${stationId} sounding...`);
     els.placeholder.classList.add('is-visible');
-    els.placeholder.textContent = `Looking for the most recent ${stationId} sounding...`;
+    els.placeholder.textContent = `Loading the most recent ${stationId} sounding...`;
     els.output.classList.remove('is-visible');
     els.diagnostics.hidden = true;
 
     const requestId = ++state.activeRequest;
-    const found = await findAvailableCycle(stationId, latestCompletedCycle(), -1, meta.maxLookbackSteps);
+    const manifest = await loadManifest();
     if (requestId !== state.activeRequest) return;
 
-    if (!found) {
-        const days = Math.round(meta.maxLookbackSteps / 4);
-        els.placeholder.textContent = `No ${stationId} sounding found in the last ${days} days.`;
+    state.cycles = (manifest && manifest.stations && manifest.stations[stationId]) || [];
+    state.index = 0;
+    if (!state.cycles.length) {
+        els.placeholder.textContent = manifest
+            ? `No recent ${stationId} sounding available.`
+            : 'Could not load the sounding images. Try reloading the page.';
         setStatus('Select another station.');
         els.cycleLabel.textContent = 'Cycle: unavailable';
         return;
     }
-
-    state.displayedCycle = found.cycle;
-    await renderCycle(stationId, found.cycle, found.profile);
+    showEntry();
 }
 
-async function stepCycle(direction) {
-    if (!state.displayedCycle) return;
-    const meta = getStationMeta(state.station);
-    els.older.disabled = true;
-    els.newer.disabled = true;
-    setStatus(direction < 0 ? 'Looking for an older sounding...' : 'Looking for a newer sounding...');
-
-    const requestId = ++state.activeRequest;
-    const start = stepCycleDate(state.displayedCycle, direction);
-    const found = await findAvailableCycle(state.station, start, direction, meta.maxLookbackSteps);
-    if (requestId !== state.activeRequest) return;
-
-    if (!found) {
-        setStatus(direction < 0 ? 'No older sounding found in range.' : 'Already at the most recent sounding.');
-        els.older.disabled = false;
-        els.newer.disabled = false;
-        return;
-    }
-
-    state.displayedCycle = found.cycle;
-    await renderCycle(state.station, found.cycle, found.profile);
-}
-
-async function loadMetPy() {
-    if (state.pyReady) return state.pyReady;
-    // If bootstrap fails partway (a transient CDN/network hiccup fetching
-    // Pyodide itself, a package, or the micropip installs), the promise
-    // below would otherwise stay cached in its rejected state for the rest
-    // of the page session -- every later station selection would just
-    // replay that same cached failure forever, which looks exactly like
-    // "every station is broken" even though the underlying problem may
-    // have only lasted a moment. Clear the cache on failure so the next
-    // attempt (e.g. picking another station, or the same one again) gets
-    // a genuine fresh try instead of an already-doomed one.
-    state.pyReady = (async () => {
-        const pyodide = await loadPyodide({
-            indexURL: `https://cdn.jsdelivr.net/pyodide/${PYODIDE_VERSION}/full/`,
-        });
-        await pyodide.loadPackage(['micropip', 'matplotlib', 'numpy', 'scipy', 'pandas', 'packaging', 'pyproj', 'lzma']);
-        await pyodide.runPythonAsync(`
-import micropip
-await micropip.install(["pint", "pooch", "traitlets", "xarray"])
-await micropip.install("metpy==1.6.3", deps=False)
-`);
-        await pyodide.runPythonAsync(`
-import base64
-import io
-import json
-
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-
-from metpy.plots import Hodograph, SkewT
-from metpy.units import units
-from metpy.calc import (
-    lcl,
-    mixed_layer_cape_cin,
-    mixed_parcel,
-    most_unstable_cape_cin,
-    most_unstable_parcel,
-    parcel_profile,
-    wind_components,
-)
-
-
-def parse_iem_profile(profile_json):
-    rows = []
-    for row in json.loads(profile_json):
-        p = row.get("pres")
-        h = row.get("hght")
-        t = row.get("tmpc")
-        td = row.get("dwpc")
-        wd = row.get("drct")
-        ws = row.get("sknt")
-        if p is None or t is None or td is None:
-            continue
-        rows.append((
-            float(p),
-            np.nan if h is None else float(h),
-            float(t),
-            float(td),
-            np.nan if wd is None else float(wd),
-            np.nan if ws is None else float(ws),
-        ))
-    if len(rows) < 6:
-        raise ValueError("Could not parse enough pressure-level rows from IEM RAOB JSON.")
-    arr = np.array(rows, dtype=float)
-    arr = arr[np.argsort(arr[:, 0])[::-1]]
-    _, unique_idx = np.unique(arr[:, 0], return_index=True)
-    return arr[np.sort(unique_idx)]
-
-
-def calculate_diagnostics(arr, p, t, td):
-    diagnostics = {
-        "mucape": None,
-        "mu_height": None,
-        "mlcape": None,
-        "advection": "Unavailable",
-        "dgz": "Unavailable",
-        "dgz_p_bottom": None,
-        "dgz_p_top": None,
-    }
-
-    def cape_value(calculation):
-        try:
-            value = calculation()
-            if isinstance(value, tuple):
-                value = value[0]
-            return int(round(max(0.0, float(value.to("J/kg").magnitude))))
-        except Exception:
-            return None
-
-    # Only MLCAPE and MUCAPE are surfaced in the UI: MLCAPE is the more
-    # conservative, generally-preferred severe-weather value (it reflects
-    # what the boundary layer as a whole is doing), while MUCAPE is the
-    # absolute ceiling on convective potential even when the most unstable
-    # air isn't at the surface. SBCAPE/DCAPE aren't shown, so they aren't
-    # computed here either.
-    diagnostics["mucape"] = cape_value(lambda: most_unstable_cape_cin(p, t, td))
-    diagnostics["mlcape"] = cape_value(lambda: mixed_layer_cape_cin(p, t, td))
-
-    try:
-        _, _, _, mu_index = most_unstable_parcel(p, t, td)
-        heights = arr[:, 1]
-        surface_height = heights[np.isfinite(heights)][0]
-        mu_height = heights[mu_index]
-        if np.isfinite(mu_height):
-            diagnostics["mu_height"] = int(round(max(0.0, mu_height - surface_height)))
-    except Exception:
-        pass
-
-    try:
-        wind_mask = np.isfinite(arr[:, 4]) & np.isfinite(arr[:, 5])
-        wind_p = arr[wind_mask, 0]
-        wind_u, wind_v = wind_components(
-            arr[wind_mask, 5] * units.knots,
-            arr[wind_mask, 4] * units.degrees,
-        )
-        surface_p = float(p[0].magnitude)
-        low = (wind_p <= surface_p) & (wind_p >= surface_p - 100)
-        middle = (wind_p < surface_p - 100) & (wind_p >= surface_p - 250)
-        if np.count_nonzero(low) and np.count_nonzero(middle):
-            def vector_direction(u_values, v_values):
-                mean_u = float(np.mean(u_values.magnitude))
-                mean_v = float(np.mean(v_values.magnitude))
-                return (np.degrees(np.arctan2(-mean_u, -mean_v)) + 360) % 360
-
-            low_direction = vector_direction(wind_u[low], wind_v[low])
-            middle_direction = vector_direction(wind_u[middle], wind_v[middle])
-            turning = (middle_direction - low_direction + 180) % 360 - 180
-            if turning >= 15:
-                diagnostics["advection"] = f"Warm advection implied (veering {turning:.0f} deg)"
-            elif turning <= -15:
-                diagnostics["advection"] = f"Cold advection implied (backing {abs(turning):.0f} deg)"
-            else:
-                diagnostics["advection"] = f"Little directional turning ({turning:+.0f} deg)"
-    except Exception:
-        pass
-
-    dgz_mask = (
-        (arr[:, 2] >= -18)
-        & (arr[:, 2] <= -12)
-        & np.isfinite(arr[:, 1])
-    )
-    if np.count_nonzero(dgz_mask) >= 2:
-        surface_height = arr[np.isfinite(arr[:, 1]), 1][0]
-        base = max(0.0, float(np.min(arr[dgz_mask, 1]) - surface_height))
-        top = max(base, float(np.max(arr[dgz_mask, 1]) - surface_height))
-        diagnostics["dgz"] = f"{base / 1000:.1f}-{top / 1000:.1f} km AGL"
-        diagnostics["dgz_p_bottom"] = float(np.max(arr[dgz_mask, 0]))
-        diagnostics["dgz_p_top"] = float(np.min(arr[dgz_mask, 0]))
-
-    return diagnostics
-
-
-def temperature_advection_profile(arr, latitude):
-    wind_mask = np.isfinite(arr[:, 4]) & np.isfinite(arr[:, 5])
-    if np.count_nonzero(wind_mask) < 6:
-        return np.array([]), np.array([]), np.array([]), np.array([])
-
-    wind_p = arr[wind_mask, 0]
-    wind_u, wind_v = wind_components(
-        arr[wind_mask, 5] * units.knots,
-        arr[wind_mask, 4] * units.degrees,
-    )
-    wind_u = wind_u.to("m/s").magnitude
-    wind_v = wind_v.to("m/s").magnitude
-
-    surface_level = np.floor(wind_p[0] / 50) * 50
-    bottom_level = max(100, np.ceil(wind_p[-1] / 50) * 50)
-    target_p = np.arange(surface_level, bottom_level - 1, -50)
-    if target_p.size < 4:
-        return np.array([]), np.array([]), np.array([]), np.array([])
-
-    log_wind_p = np.log(wind_p[::-1])
-    log_target_p = np.log(target_p)
-    u_interp = np.interp(log_target_p, log_wind_p, wind_u[::-1])
-    v_interp = np.interp(log_target_p, log_wind_p, wind_v[::-1])
-
-    du_dlnp = np.gradient(u_interp, log_target_p)
-    dv_dlnp = np.gradient(v_interp, log_target_p)
-    coriolis = 2 * 7.2921159e-5 * np.sin(np.radians(latitude))
-    dry_air_gas_constant = 287.05
-    advection = (
-        coriolis
-        / dry_air_gas_constant
-        * (u_interp * dv_dlnp - v_interp * du_dlnp)
-        * 3600
-    )
-
-    if advection.size >= 3:
-        advection = np.convolve(advection, np.ones(3) / 3, mode="same")
-    return target_p, advection, u_interp, v_interp
-
-
-def _mag(value):
-    return value.magnitude if hasattr(value, "magnitude") else value
-
-
-def _clean(value):
-    value = float(value)
-    if np.isnan(value) or np.isinf(value):
-        return None
-    return value
-
-
-def _clean_list(seq):
-    return [_clean(v) for v in np.asarray(_mag(seq), dtype=float)]
-
-
-def _transform_xy(transform, xs, ys):
-    # Runs a set of (x, y) data-space points (e.g. temperature-in-degC,
-    # pressure-in-hPa) through a matplotlib SkewT axes' transData, which is
-    # what actually implements the skew-T's skew + log-pressure projection.
-    # The result is plain pixel coordinates that reproduce MetPy's geometry
-    # without us having to hand-derive the skew transform ourselves.
-    pts = np.column_stack([
-        np.asarray(_mag(xs), dtype=float),
-        np.asarray(_mag(ys), dtype=float),
-    ])
-    finite = np.isfinite(pts).all(axis=1)
-    out_x = [None] * len(pts)
-    out_y = [None] * len(pts)
-    if np.any(finite):
-        transformed = transform.transform(pts[finite])
-        for idx, (px, py) in zip(np.nonzero(finite)[0], transformed):
-            out_x[int(idx)] = _clean(px)
-            out_y[int(idx)] = _clean(py)
-    return out_x, out_y
-
-
-def _segments_pixel(collection, transform):
-    lines = []
-    for seg in collection.get_segments():
-        xs, ys = _transform_xy(transform, seg[:, 0], seg[:, 1])
-        lines.append({"x": xs, "y": ys})
-    return lines
-
-
-# --- Snow level / melting-layer model -------------------------------------
-# Simplified Matsuo & Sasyo (1981) melting-rate model: below the height
-# where wet-bulb temperature (Tw) first exceeds 0 C, a falling ice sphere's
-# radius shrinks at a rate set by the balance of sensible heat transfer in
-# from the surrounding (positive-Tw) air against the latent heat needed to
-# melt it:
-#
-#     -dR/dt = (C_vent * K_eff * Tw) / (rho_s * L_f * R)      for Tw > 0, R > 0
-#              0                                              otherwise
-#
-# Note the 1/R term: heat conduction to a sphere in steady state scales
-# with its radius (not radius^2), so this term is required for the units
-# to work out to a rate of change of R at all (W/(m*K) * K / (kg/m^3 *
-# J/kg) alone reduces to m^2/s, not m/s) -- it's also what the underlying
-# Mason (1956) melting-sphere derivation that Matsuo & Sasyo build on
-# actually has. Leaving it out makes flakes melt roughly a thousand times
-# too slowly (tested against a synthetic sounding: a medium flake took
-# ~223 hours to melt without it, vs. ~10 minutes/~600 m of fall with it --
-# the latter matches the few-hundred-meter snow-level-below-wet-bulb-zero
-# gap forecasters typically see). It's included here on that basis.
-#
-# This tells us more than the plain 0 C freezing level (where the dry-bulb
-# temperature crosses 0 C): it estimates the "snow level" -- the altitude
-# where a representative ensemble of snowflakes has actually finished
-# melting into rain -- which is normally noticeably lower than both the
-# freezing level and the wet-bulb-zero height.
-_MELT_RHO_SNOW = 100.0          # kg/m^3, bulk density for a 10:1 snow:liquid ratio
-_MELT_LATENT_FUSION = 3.34e5    # J/kg, latent heat of fusion
-_MELT_K_EFF = 2.6e-2            # W/(m*K), combined conductive/diffusive proxy
-_MELT_GRID_STEP_M = 5.0         # m, vertical resolution of the integration grid
-_MELT_ENSEMBLE_DIAMETERS_MM = (1.5, 3.0, 5.0)  # small / medium / large snowflakes, mm
-_AIR_KINEMATIC_VISCOSITY = 1.4e-5  # m^2/s, air near 0 C -- for the Reynolds number below
-
-# A flat ventilation factor (C_vent=1.2) tuned to a flat 1 m/s fall speed
-# for every size badly under-melts for maritime PNW snow: larger, more
-# aggregated/rimed flakes both fall faster AND get more ventilation-
-# enhanced heat transfer than small pristine crystals, and the model's own
-# original spec offered exactly this as the more physical alternative
-# (C_vent = 1.0 + 0.23*Re^0.5) to the flat baseline. So each ensemble
-# member gets its own fall speed (increasing with size, representative of
-# aggregated/moderately rimed snow rather than a literature-precise fit)
-# and its own Reynolds-number-based ventilation coefficient. Tested
-# against a synthetic sounding shaped like a reported real case: this
-# takes the medium flake's melting distance from 925 m down to 540 m, and
-# turns a "never fully melts by the surface" dry-column result into a
-# snow level 465 m above the surface -- a meaningfully faster, more
-# PNW-appropriate melt than the flat-1.2 baseline, without melting
-# implausibly fast either.
-_MELT_FALL_SPEEDS_MS = (1.0, 1.5, 2.2)  # small / medium / large, m/s
-
-
-def _saturation_vapor_pressure_hpa(t_c):
-    # Magnus-Tetens approximation.
-    return 6.112 * np.exp(17.62 * t_c / (243.12 + t_c))
-
-
-def _relative_humidity_pct(t_c, td_c):
-    return 100.0 * _saturation_vapor_pressure_hpa(td_c) / _saturation_vapor_pressure_hpa(t_c)
-
-
-def _wet_bulb_stull(t_c, rh_pct):
-    # Stull, R., 2011: "Wet-Bulb Temperature from Relative Humidity and Air
-    # Temperature," J. Appl. Meteor. Climatol., 50, 2267-2269. An empirical
-    # fit (found via gene-expression programming, not a physical
-    # derivation) valid for 5-99% RH and -20 to 50 C, accurate to within
-    # about +-1 C (mean absolute error ~0.3 C) without needing to solve the
-    # psychrometric equation iteratively. We replaced a flat "Tw = T -
-    # (T-Td)/3" proxy with this: that fixed 1/3 fraction understates the
-    # true wet-bulb depression across the whole 0-20 C range relevant to a
-    # melting layer (checked against the linearized psychrometric equation
-    # -- the true (T-Tw)/(T-Td) ratio runs ~0.4-0.7 there, not 0.33), which
-    # would bias the wet-bulb-zero height too high. RH is clamped to
-    # Stull's validated range since this is an empirical fit, not a
-    # physical law -- extrapolating outside it isn't reliable. Note the
-    # arctangents are in radians (verified against Stull's own published
-    # T=20C/RH=50%->Tw=13.699C reference case), not degrees. Widened
-    # slightly past the documented 5-99% range at the saturated end
-    # (RH=100 is common and physically important for a cloudy/precipitating
-    # layer, and the formula stays smooth right up to it -- checked against
-    # a T=0/RH=100 case, which should give exactly Tw=0 and gives -0.13 C)
-    # so a fully saturated column's wet-bulb-zero comes out exactly equal
-    # to its freezing level, as it should by construction, rather than a
-    # clipping artifact leaving a small gap between them.
-    rh_pct = np.clip(rh_pct, 1.0, 100.0)
-    return (
-        t_c * np.arctan(0.151977 * (rh_pct + 8.313659) ** 0.5)
-        + np.arctan(t_c + rh_pct)
-        - np.arctan(rh_pct - 1.676331)
-        + 0.00391838 * rh_pct ** 1.5 * np.arctan(0.023101 * rh_pct)
-        - 4.686035
-    )
-
-
-def _build_tw_profile(arr):
-    """Shared prep for both the melting-layer and precip-type diagnostics:
-    dedupes/sorts by height, converts to AGL, interpolates onto a uniform
-    5-m grid, and computes Tw via Stull's formula. Returns None if the
-    profile doesn't support it, otherwise (grid_m, t_grid, tw_grid)."""
-    height_mask = np.isfinite(arr[:, 1])
-    if np.count_nonzero(height_mask) < 6:
-        return None
-
-    heights = arr[height_mask, 1]
-    temps = arr[height_mask, 2]
-    dewpoints = arr[height_mask, 3]
-    order = np.argsort(heights)
-    heights, temps, dewpoints = heights[order], temps[order], dewpoints[order]
-    _, unique_idx = np.unique(heights, return_index=True)
-    heights, temps, dewpoints = heights[unique_idx], temps[unique_idx], dewpoints[unique_idx]
-
-    heights_agl = heights - heights[0]
-    if heights_agl.size < 6 or heights_agl[-1] < 50:
-        return None
-
-    # Interpolate to a high-resolution grid for numerical stability, then
-    # compute wet-bulb temperature via Stull's (2011) empirical formula
-    # (see _wet_bulb_stull) rather than solving the psychrometric equation
-    # iteratively.
-    grid = np.arange(0.0, heights_agl[-1] + _MELT_GRID_STEP_M, _MELT_GRID_STEP_M)
-    t_grid = np.interp(grid, heights_agl, temps)
-    td_grid = np.interp(grid, heights_agl, dewpoints)
-    rh_grid = _relative_humidity_pct(t_grid, td_grid)
-    tw_grid = _wet_bulb_stull(t_grid, rh_grid)
-    return grid, t_grid, tw_grid
-
-
-def compute_melting_layer(arr):
-    """Estimate the freezing level, wet-bulb-zero height, and true snow
-    level from one sounding, using the melting model described above.
-
-    Heights are reported in meters AGL (above the sounding's lowest
-    reported level). Returns a dict of Nones (with an explanatory "note")
-    if the profile doesn't support the calculation -- e.g. an entirely
-    sub-freezing column, one with no sub-cloud melting layer at all, or a
-    "warm nose" profile (see below) that this surface-based model isn't
-    designed for.
-    """
-    result = {
-        "freezing_level_m": None,
-        "wet_bulb_zero_m": None,
-        "snow_level_m": None,
-        "total_melting_distance_m": None,
-        "note": None,
-    }
-
-    profile = _build_tw_profile(arr)
-    if profile is None:
-        result["note"] = "Not enough height data in this sounding to estimate a melting layer."
-        return result
-    grid, t_grid, tw_grid = profile
-
-    # This model assumes exactly one melting transition as you descend --
-    # snow up top, and it either fully melts by the surface or it doesn't.
-    # A "warm nose" profile (sub-freezing surface with a melting layer
-    # aloft, e.g. sleet or freezing rain setups) breaks that assumption:
-    # searching bottom-up for the first freezing crossing would just hit
-    # the already-sub-freezing surface and report a meaningless 0 m for
-    # everything. Detect that case explicitly rather than guess.
-    if t_grid[0] <= 0.0 and np.any(t_grid > 0.0):
-        result["note"] = (
-            "This sounding has a warm layer aloft over sub-freezing surface air (a 'warm nose') -- "
-            "sleet or freezing rain territory. This model assumes melting happens near the surface and "
-            "doesn't apply well here; see the Surface Precipitation Type diagnostic instead."
-        )
-        return result
-
-    # Freezing level: lowest AGL height (ascending from the surface) where
-    # the dry-bulb temperature is at or below 0 C.
-    if not np.any(t_grid <= 0.0):
-        result["note"] = "Entire profile is above freezing -- no freezing level found."
-        return result
-    freezing_idx = int(np.argmax(t_grid <= 0.0))
-    result["freezing_level_m"] = float(grid[freezing_idx])
-
-    # Wet-bulb zero: same logic using Tw. Since Tw <= T everywhere, this is
-    # always at or below the freezing level -- and it's where melting of a
-    # falling snowflake actually begins.
-    if not np.any(tw_grid <= 0.0):
-        result["note"] = "No sub-cloud melting layer found (dry air aloft keeps the wet-bulb temperature above 0 C)."
-        return result
-    wbz_idx = int(np.argmax(tw_grid <= 0.0))
-    result["wet_bulb_zero_m"] = float(grid[wbz_idx])
-
-    # Integrate a 3-size snowflake ensemble downward from the wet-bulb-zero
-    # height to the surface, shrinking each flake's radius per the melting
-    # equation above. Each ensemble member has its own fall speed, so it
-    # also has its own dt (= dz / that member's fall speed) and its own
-    # Reynolds-number-based ventilation coefficient.
-    diameters_m = np.array([d / 1000.0 for d in _MELT_ENSEMBLE_DIAMETERS_MM])
-    radii0 = diameters_m / 2.0
-    radii = radii0.copy()
-    total_volume0 = float(np.sum(radii0 ** 3))
-    fall_speed = np.array(_MELT_FALL_SPEEDS_MS)
-    dt = _MELT_GRID_STEP_M / fall_speed
-    reynolds = fall_speed * diameters_m / _AIR_KINEMATIC_VISCOSITY
-    c_vent = 1.0 + 0.23 * np.sqrt(reynolds)
-    melted_height = np.full(radii.shape, np.nan)
-    snow_level = None
-
-    for i in range(wbz_idx, -1, -1):
-        tw = max(0.0, float(tw_grid[i]))
-        if tw > 0.0:
-            safe_radii = np.maximum(radii, 1e-9)  # avoid divide-by-zero for already-melted flakes
-            rate = (c_vent * _MELT_K_EFF * tw) / (_MELT_RHO_SNOW * _MELT_LATENT_FUSION * safe_radii)
-            radii = np.maximum(0.0, radii - rate * dt)
-        newly_melted = np.isnan(melted_height) & (radii <= 1e-9)
-        melted_height[newly_melted] = grid[i]
-
-        # Mass (volume, at constant density) fraction melted so far, across
-        # the whole ensemble -- this is what "95% melted" is measured on,
-        # not a simple 1-of-3-flakes count.
-        melted_fraction = 1.0 - (np.sum(radii ** 3) / total_volume0)
-        if snow_level is None and melted_fraction >= 0.95:
-            snow_level = float(grid[i])
-        if np.all(radii <= 1e-9):
-            break
-
-    if snow_level is None:
-        snow_level = float(grid[0])
-        if wbz_idx > 0:
-            # There was a real melting layer above the surface (surface Tw
-            # > 0), and the ensemble still didn't finish melting by the
-            # time it reached the ground -- worth flagging explicitly.
-            result["note"] = (
-                "The snowflake ensemble was not fully melted by the surface in this model -- "
-                "snow may be reaching the ground despite above-freezing surface air."
-            )
-        # else: wbz_idx == 0 means the wet-bulb-zero is already at the
-        # surface (Tw <= 0 at ground level) -- melting never had any room
-        # to occur at all, which is just the normal, unremarkable outcome
-        # for a straightforward all-below-freezing snow profile. No note
-        # needed (and claiming "above-freezing surface air" here would be
-        # false, since the surface is at or below freezing by definition
-        # of reaching this branch with wbz_idx == 0).
-    result["snow_level_m"] = snow_level
-
-    medium_melted_height = melted_height[1]  # index 1 = medium (3.0 mm) flake
-    if np.isfinite(medium_melted_height):
-        result["total_melting_distance_m"] = float(result["wet_bulb_zero_m"] - medium_melted_height)
-    elif wbz_idx == 0:
-        # Same trivial case as above -- no melting layer existed at all, so
-        # of course the medium flake didn't melt either. Not worth a note.
-        result["total_melting_distance_m"] = 0.0
-    else:
-        result["total_melting_distance_m"] = float(result["wet_bulb_zero_m"] - grid[0])
-        extra_note = "The medium-size (3 mm) snowflake did not fully melt within this profile."
-        result["note"] = f"{result['note']} {extra_note}" if result["note"] else extra_note
-
-    return result
-
-
-def _agl_height_to_pressure(arr, height_agl):
-    # Translates one of compute_melting_layer's AGL heights back to a
-    # pressure level, so it can be drawn as a horizontal line on a
-    # pressure-coordinate skew-T.
-    if height_agl is None:
-        return None
-    mask = np.isfinite(arr[:, 1])
-    if np.count_nonzero(mask) < 2:
-        return None
-    heights = arr[mask, 1]
-    pressures = arr[mask, 0]
-    order = np.argsort(heights)
-    heights, pressures = heights[order], pressures[order]
-    heights_agl = heights - heights[0]
-    return float(np.interp(height_agl, heights_agl, pressures))
-
-
-def make_skewt(profile_json, station, cycle_label, station_latitude):
-    arr = parse_iem_profile(profile_json)
-    p = arr[:, 0] * units.hPa
-    t = arr[:, 2] * units.degC
-    td = arr[:, 3] * units.degC
-    diagnostics = calculate_diagnostics(arr, p, t, td)
-    melting = compute_melting_layer(arr)
-    diagnostics["freezing_level_m"] = melting["freezing_level_m"]
-    diagnostics["wet_bulb_zero_m"] = melting["wet_bulb_zero_m"]
-    diagnostics["snow_level_m"] = melting["snow_level_m"]
-    diagnostics["melting_note"] = melting["note"]
-
-    # This sounding's dewpoint profile is a snapshot at launch time -- if it
-    # was dry/non-precipitating, the sub-cloud air is drier (and the
-    # computed snow level lower) than it would be once precipitation has
-    # actually been falling for a while, since evaporative cooling from the
-    # falling hydrometeors saturates and cools that layer over time. As a
-    # sensitivity check, rerun the same model assuming a fully saturated
-    # column (Td = T everywhere, i.e. Tw = T) -- the limiting case of
-    # sustained precipitation having already conditioned the profile. This
-    # gives a second, generally higher snow-level estimate, and the gap
-    # between the two tells us how much this sounding's moisture (rather
-    # than its temperature) is driving the result.
-    arr_saturated = arr.copy()
-    arr_saturated[:, 3] = arr_saturated[:, 2]
-    melting_saturated = compute_melting_layer(arr_saturated)
-    diagnostics["snow_level_saturated_m"] = melting_saturated["snow_level_m"]
-
-    saturation_gap = None
-    if melting["snow_level_m"] is not None and melting_saturated["snow_level_m"] is not None:
-        saturation_gap = melting_saturated["snow_level_m"] - melting["snow_level_m"]
-    if saturation_gap is not None and saturation_gap >= 300:
-        gap_note = (
-            f"The air below the clouds looks quite dry here, which is why the Modeled snow level "
-            f"({int(round(saturation_gap))} m lower than the Saturated Column estimate) looks so low: "
-            "a falling snowflake in dry air loses moisture to its surroundings (sublimates) instead of "
-            "warming up and melting, so it survives much closer to the ground. Once it's actually been "
-            "snowing or raining for a while, that dry layer moistens up and the real snow level should "
-            "sit closer to the Saturated Column number instead."
-        )
-        diagnostics["melting_note"] = (
-            f"{diagnostics['melting_note']} {gap_note}" if diagnostics["melting_note"] else gap_note
-        )
-
-    advection_p, advection, grid_u, grid_v = temperature_advection_profile(
-        arr,
-        station_latitude,
-    )
-
-    fig = plt.figure(figsize=(10.5, 9), dpi=150)
-    skew = SkewT(fig, rotation=45, rect=(0.065, 0.055, 0.68, 0.91))
-
-    skew.plot(p, t, color="#d95f02", linewidth=2.0, label="Temperature")
-    skew.plot(p, td, color="#1b9e77", linewidth=2.0, label="Dew point")
-
-    surface_parcel_geo = None
-    try:
-        lcl_p, lcl_t = lcl(p[0], t[0], td[0])
-        prof = parcel_profile(p, t[0], td[0]).to("degC")
-        skew.plot(p, prof, color="#7570b3", linewidth=1.5, linestyle="--", label="Surface parcel")
-        skew.ax.plot(lcl_t, lcl_p, marker="o", color="#7570b3", markersize=5)
-        surface_parcel_geo = {
-            "p_raw": _mag(p),
-            "t_raw": _mag(prof),
-            "diff_raw": _mag(prof) - _mag(t),
-            "lcl_p_raw": _mag(lcl_p),
-            "lcl_t_raw": _mag(lcl_t.to("degC")),
-        }
-    except Exception:
-        pass
-
-    mixed_parcel_geo = None
-    try:
-        _, mixed_t, mixed_td = mixed_parcel(p, t, td, depth=100 * units.hPa)
-        mixed_prof = parcel_profile(p, mixed_t, mixed_td).to("degC")
-        skew.plot(
-            p, mixed_prof, color="#7570b3", linewidth=1.5, linestyle=":",
-            label="100-hPa mixed parcel",
-        )
-        mixed_parcel_geo = {"p_raw": _mag(p), "t_raw": _mag(mixed_prof)}
-    except Exception:
-        pass
-
-    skew.ax.set_ylim(1050, 150)
-    skew.ax.set_xlim(-40, 45)
-    dry_collection = skew.plot_dry_adiabats(alpha=0.35, linewidth=0.7)
-    moist_collection = skew.plot_moist_adiabats(alpha=0.35, linewidth=0.7)
-    mixing_collection = skew.plot_mixing_lines(alpha=0.25, linewidth=0.7)
-    if diagnostics["dgz_p_bottom"] is not None:
-        skew.ax.axhspan(
-            diagnostics["dgz_p_top"], diagnostics["dgz_p_bottom"],
-            color="#56b4e9", alpha=0.14, label="DGZ (-12 to -18 C)",
-        )
-    skew.ax.axvline(0, color="#444444", linewidth=1.0)
-
-    reference_specs = (
-        ("Freezing level", "#2563eb", melting["freezing_level_m"]),
-        ("Snow level (saturated column)", "#f9a8d4", melting_saturated["snow_level_m"]),
-        ("Snow level (modeled)", "#db2777", melting["snow_level_m"]),
-    )
-    for ref_label, ref_color, ref_height_agl in reference_specs:
-        ref_p = _agl_height_to_pressure(arr, ref_height_agl)
-        if ref_p is None:
-            continue
-        skew.ax.axhline(ref_p, color=ref_color, linewidth=1.3, linestyle="--", alpha=0.85, zorder=5)
-        skew.ax.text(
-            skew.ax.get_xlim()[0] + 1, ref_p, ref_label, color=ref_color,
-            fontsize=8, va="bottom", ha="left", fontweight="bold",
-        )
-
-    skew.ax.set_title(f"{station} Observed Sounding - {cycle_label}", loc="left", fontsize=13)
-    skew.ax.set_xlabel("Temperature (deg C)")
-    skew.ax.set_ylabel("Pressure (hPa)")
-    skew.ax.legend(loc="upper right", fontsize=9)
-
-    try:
-        hodo_mask = np.isfinite(arr[:, 1]) & np.isfinite(arr[:, 4]) & np.isfinite(arr[:, 5])
-        hodo_height = arr[hodo_mask, 1]
-        surface_height = hodo_height[0]
-        hodo_height = hodo_height - surface_height
-        hodo_u, hodo_v = wind_components(
-            arr[hodo_mask, 5] * units.knots,
-            arr[hodo_mask, 4] * units.degrees,
-        )
-        hodo_u = hodo_u.to("knots").magnitude
-        hodo_v = hodo_v.to("knots").magnitude
-        hodo_keep = (hodo_height >= 0) & (hodo_height <= 12000)
-        hodo_height = hodo_height[hodo_keep]
-        hodo_u = hodo_u[hodo_keep]
-        hodo_v = hodo_v[hodo_keep]
-        hodo_order = np.argsort(hodo_height)
-        hodo_height = hodo_height[hodo_order]
-        hodo_u = hodo_u[hodo_order]
-        hodo_v = hodo_v[hodo_order]
-
-        if hodo_height.size >= 4:
-            component_peak = np.nanpercentile(np.abs(np.concatenate((hodo_u, hodo_v))), 98)
-            component_range = max(40, int(np.ceil(component_peak / 20)) * 20)
-            hodo_ax = skew.ax.inset_axes([0.035, 0.755, 0.21, 0.21], zorder=10)
-            hodo_ax.set_facecolor((1, 1, 1, 0.92))
-            hodo = Hodograph(hodo_ax, component_range=component_range)
-            hodo.add_grid(increment=20, color="#64748b", linewidth=0.55, alpha=0.55)
-            hodo.plot_colormapped(hodo_u, hodo_v, hodo_height, cmap="turbo", linewidth=2.2)
-            for marker_km in (1, 3, 6, 9):
-                marker_height = marker_km * 1000
-                if marker_height > hodo_height[-1]:
-                    continue
-                marker_u = np.interp(marker_height, hodo_height, hodo_u)
-                marker_v = np.interp(marker_height, hodo_height, hodo_v)
-                hodo_ax.plot(marker_u, marker_v, marker="o", markersize=2.6, color="#111827")
-                hodo_ax.annotate(
-                    str(marker_km), (marker_u, marker_v), xytext=(3, 2),
-                    textcoords="offset points", fontsize=5, color="#111827",
-                )
-            hodo_ax.tick_params(labelsize=5, length=1.5, pad=1)
-            hodo_ax.set_title("Hodograph (kt)", fontsize=7, pad=1)
-            for spine in hodo_ax.spines.values():
-                spine.set_color("#475569")
-                spine.set_linewidth(0.8)
-    except Exception:
-        pass
-
-    fig.canvas.draw()
-
-    # Build the interactive-plot geometry by running MetPy's already-computed
-    # curves (dry/moist adiabats, mixing lines, the observed profile, parcel
-    # paths) through this axes' transData -- see _transform_xy for why.
-    transform = skew.ax.transData
-    xlim = skew.ax.get_xlim()
-    ylim = skew.ax.get_ylim()
-    bbox = skew.ax.get_window_extent()
-
-    interactive = {
-        "dry_adiabats": _segments_pixel(dry_collection, transform),
-        "moist_adiabats": _segments_pixel(moist_collection, transform),
-        "mixing_lines": _segments_pixel(mixing_collection, transform),
-        "frame": {
-            "x0": float(bbox.x0), "x1": float(bbox.x1),
-            "y0": float(bbox.y0), "y1": float(bbox.y1),
-        },
-    }
-
-    isobars = []
-    for level in (1000, 850, 700, 500, 400, 300, 250, 200, 150):
-        xs, ys = _transform_xy(transform, [xlim[0], xlim[1]], [level, level])
-        isobars.append({"p": level, "x0": xs[0], "x1": xs[1], "y": ys[0]})
-    interactive["isobars"] = isobars
-
-    isotherms = []
-    for temp_c in range(-40, 41, 10):
-        xs, ys = _transform_xy(transform, [temp_c, temp_c], [ylim[0], ylim[1]])
-        isotherms.append({"t": temp_c, "x0": xs[0], "y0": ys[0], "x1": xs[1], "y1": ys[1]})
-    interactive["isotherms"] = isotherms
-
-    # MetPy's dry/moist adiabat & mixing-line collections are already
-    # bounded to the axes' ylim (they're computed from p=linspace(*ylim)),
-    # and so is the static PNG (matplotlib clips drawing to the axes box
-    # automatically). But these next few traces are built straight from the
-    # observed profile/parcel arrays, which usually extend well above our
-    # 150 hPa display cutoff -- and since we hand Plotly raw pixel numbers
-    # with no axes of its own to clip to, an unmasked point above the
-    # cutoff would just push Plotly's autorange up past it, making the grid
-    # appear to stop at 150 hPa while the data lines keep going. So mask
-    # every one of them to the plotted pressure range first.
-    def _within_plot(pressures):
-        pressures = np.asarray(pressures, dtype=float)
-        return (pressures >= ylim[1]) & (pressures <= ylim[0])
-
-    plot_mask = _within_plot(arr[:, 0])
-
-    env_x, env_y = _transform_xy(transform, arr[plot_mask, 2], arr[plot_mask, 0])
-    interactive["temperature"] = {
-        "x": env_x, "y": env_y,
-        "p": _clean_list(arr[plot_mask, 0]), "t": _clean_list(arr[plot_mask, 2]),
-        "h": _clean_list(arr[plot_mask, 1]), "wd": _clean_list(arr[plot_mask, 4]), "ws": _clean_list(arr[plot_mask, 5]),
-    }
-
-    dew_x, dew_y = _transform_xy(transform, arr[plot_mask, 3], arr[plot_mask, 0])
-    interactive["dewpoint"] = {
-        "x": dew_x, "y": dew_y,
-        "p": _clean_list(arr[plot_mask, 0]), "td": _clean_list(arr[plot_mask, 3]),
-    }
-
-    interactive["surface_parcel"] = None
-    if surface_parcel_geo is not None:
-        parcel_mask = _within_plot(surface_parcel_geo["p_raw"])
-        px, py = _transform_xy(
-            transform, surface_parcel_geo["t_raw"][parcel_mask], surface_parcel_geo["p_raw"][parcel_mask],
-        )
-        lcl_x, lcl_y = _transform_xy(
-            transform, [surface_parcel_geo["lcl_t_raw"]], [surface_parcel_geo["lcl_p_raw"]],
-        )
-        interactive["surface_parcel"] = {
-            "x": px, "y": py,
-            "p": _clean_list(surface_parcel_geo["p_raw"][parcel_mask]),
-            "t": _clean_list(surface_parcel_geo["t_raw"][parcel_mask]),
-            "diff": _clean_list(surface_parcel_geo["diff_raw"][parcel_mask]),
-            "lcl": {
-                "x": lcl_x[0], "y": lcl_y[0],
-                "p": _clean(surface_parcel_geo["lcl_p_raw"]),
-                "t": _clean(surface_parcel_geo["lcl_t_raw"]),
-            },
-        }
-
-    interactive["mixed_parcel"] = None
-    if mixed_parcel_geo is not None:
-        mixed_mask = _within_plot(mixed_parcel_geo["p_raw"])
-        mx, my = _transform_xy(
-            transform, mixed_parcel_geo["t_raw"][mixed_mask], mixed_parcel_geo["p_raw"][mixed_mask],
-        )
-        interactive["mixed_parcel"] = {
-            "x": mx, "y": my,
-            "p": _clean_list(mixed_parcel_geo["p_raw"][mixed_mask]),
-            "t": _clean_list(mixed_parcel_geo["t_raw"][mixed_mask]),
-        }
-
-    interactive["dgz_rect"] = None
-    if diagnostics["dgz_p_bottom"] is not None:
-        _, y_bottom = _transform_xy(transform, [xlim[0]], [diagnostics["dgz_p_bottom"]])
-        _, y_top = _transform_xy(transform, [xlim[0]], [diagnostics["dgz_p_top"]])
-        interactive["dgz_rect"] = {
-            "x0": float(bbox.x0), "x1": float(bbox.x1),
-            "y0": y_bottom[0], "y1": y_top[0],
-        }
-
-    def _reference_line(label, color, height_agl):
-        p_level = _agl_height_to_pressure(arr, height_agl)
-        if p_level is None:
-            return None
-        xs, ys = _transform_xy(transform, [xlim[0], xlim[1]], [p_level, p_level])
-        return {
-            "label": label, "color": color, "p": _clean(p_level),
-            "height_m": _clean(height_agl), "x0": xs[0], "x1": xs[1], "y": ys[0],
-        }
-
-    interactive["reference_lines"] = [
-        line for line in (
-            _reference_line("Freezing level", "#2563eb", melting["freezing_level_m"]),
-            _reference_line("Snow level (saturated column)", "#f9a8d4", melting_saturated["snow_level_m"]),
-            _reference_line("Snow level (modeled)", "#db2777", melting["snow_level_m"]),
-        )
-        if line is not None
-    ]
-
-    # Default zoom: the background grid (isobars/isotherms/adiabats) always
-    # spans the full -40..45 C x 150..1050 hPa nominal chart, but any one
-    # sounding's actual data usually occupies a much narrower slice of
-    # that -- left on autorange, Plotly includes the full-width gridlines
-    # and shows mostly empty margin around the profile. So compute a tight
-    # bounding box around just the "real" data traces (already masked to
-    # the plotted pressure range above) and pad it modestly; the JS side
-    # uses this as the chart's initial view instead of the full grid. Users
-    # can still zoom/pan out to see the full grid -- this only sets where
-    # the chart opens.
-    data_x, data_y = [], []
-    data_x.extend(v for v in interactive["temperature"]["x"] if v is not None)
-    data_y.extend(v for v in interactive["temperature"]["y"] if v is not None)
-    data_x.extend(v for v in interactive["dewpoint"]["x"] if v is not None)
-    data_y.extend(v for v in interactive["dewpoint"]["y"] if v is not None)
-    for key in ("surface_parcel", "mixed_parcel"):
-        entry = interactive[key]
-        if entry:
-            data_x.extend(v for v in entry["x"] if v is not None)
-            data_y.extend(v for v in entry["y"] if v is not None)
-
-    interactive["default_view"] = None
-    if data_x and data_y:
-        x_min, x_max = min(data_x), max(data_x)
-        y_min, y_max = min(data_y), max(data_y)
-        x_pad = max((x_max - x_min) * 0.15, 20.0)
-        y_pad = max((y_max - y_min) * 0.08, 20.0)
-        interactive["default_view"] = {
-            "x0": x_min - x_pad, "x1": x_max + x_pad,
-            "y0": y_min - y_pad, "y1": y_max + y_pad,
-        }
-
-    skew_position = skew.ax.get_position()
-    barb_left = skew_position.x1 + 0.012
-    barb_width = 0.07
-    advection_left = barb_left + barb_width + 0.012
-    advection_width = max(0.11, 0.98 - advection_left)
-
-    barb_ax = fig.add_axes([barb_left, skew_position.y0, barb_width, skew_position.height], sharey=skew.ax)
-    barb_ax.set_xlim(0, 1)
-    barb_ax.set_ylim(1050, 150)
-    barb_ax.set_axis_off()
-    for guide_pressure in np.arange(100, 1001, 100):
-        barb_ax.axhline(guide_pressure, color="#94a3b8", linewidth=0.5, alpha=0.22)
-    barb_ax.barbs(
-        np.full(advection_p.shape, 0.5), advection_p,
-        grid_u * 1.943844, grid_v * 1.943844,
-        length=7.0, linewidth=1.05, pivot="middle",
-        sizes={"emptybarb": 0.18, "spacing": 0.22, "height": 0.45},
-    )
-
-    advection_ax = fig.add_axes([advection_left, skew_position.y0, advection_width, skew_position.height], sharey=skew.ax)
-    advection_ax.axvline(0, color="#475569", linewidth=0.8)
-    if advection.size:
-        advection_ax.plot(advection, advection_p, color="#334155", linewidth=1.0)
-        advection_ax.fill_betweenx(
-            advection_p, 0, advection, where=advection >= 0,
-            color="#dc2626", alpha=0.72, interpolate=True,
-        )
-        advection_ax.fill_betweenx(
-            advection_p, 0, advection, where=advection < 0,
-            color="#2563eb", alpha=0.72, interpolate=True,
-        )
-        limit = max(0.1, float(np.nanpercentile(np.abs(advection), 95)) * 1.25)
-        advection_ax.set_xlim(-limit, limit)
-    else:
-        advection_ax.text(
-            0.5, 0.5, "Unavailable", transform=advection_ax.transAxes,
-            ha="center", va="center", fontsize=9, color="#64748b",
-        )
-    advection_ax.set_ylim(1050, 150)
-    advection_ax.tick_params(axis="y", labelleft=False, left=False)
-    advection_ax.tick_params(axis="x", labelsize=8)
-    advection_ax.grid(axis="y", alpha=0.2)
-    advection_ax.set_title("Implied Temp\\nAdvection", fontsize=11)
-    advection_ax.set_xlabel("°C/hr", fontsize=9)
-
-    out = io.BytesIO()
-    fig.savefig(out, format="png", bbox_inches="tight", pad_inches=0.02, facecolor="white")
-    plt.close(fig)
-    diagnostics.pop("dgz_p_bottom", None)
-    diagnostics.pop("dgz_p_top", None)
-    return json.dumps({
-        "image": "data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii"),
-        "diagnostics": diagnostics,
-        "interactive": interactive,
-    })
-`);
-        state.pyodide = pyodide;
-        return pyodide;
-    })().catch(error => {
-        state.pyReady = null;
-        throw error;
-    });
-    return state.pyReady;
+// Older = further down the newest-first list.
+function stepCycle(direction) {
+    const next = state.index - direction;
+    if (next < 0 || next >= state.cycles.length) return;
+    state.index = next;
+    showEntry();
 }
 
 function formatHeightValue(m, units) {
@@ -1287,66 +315,29 @@ function renderDiagnostics(values, units) {
     }
 }
 
-async function renderCycle(stationId, cycle, profile) {
-    const requestId = state.activeRequest;
-    els.cycleLabel.textContent = `Cycle: ${cycle.label}`;
-    els.dataSource.href = `${IEM_RAOB_BASE}?ts=${cycle.timestamp}&station=${stationId}`;
+function showEntry() {
+    const entry = state.cycles[state.index];
+    const stationId = state.station;
     const meta = getStationMeta(stationId);
+    els.cycleLabel.textContent = `Cycle: ${entry.label}`;
+    els.dataSource.href = `${IEM_RAOB_BASE}?ts=${entry.cycle}&station=${stationId}`;
     if (meta.country === 'US') {
-        els.spcSource.href = `${cycle.spcUrlStem}/${stationId}.gif`;
+        els.spcSource.href = `${cycleLinks(entry.cycle)}/${stationId}.gif`;
         els.spcSource.hidden = false;
     } else {
         els.spcSource.hidden = true;
     }
 
-    const plotKey = `${stationId}|${cycle.timestamp}`;
-    if (state.plotCache.has(plotKey)) {
-        showPlot(stationId, cycle, state.plotCache.get(plotKey));
-        return;
-    }
-
-    els.placeholder.textContent = `Rendering ${stationId} from ${cycle.label} with MetPy...`;
-    els.placeholder.classList.add('is-visible');
-    els.output.classList.remove('is-visible');
-    els.diagnostics.hidden = true;
-    setStatus('Loading MetPy in the browser (first plot takes longest)...');
-
-    try {
-        const pyodide = await loadMetPy();
-        if (requestId !== state.activeRequest) return;
-        setStatus('Plotting with MetPy...');
-        pyodide.globals.set('profile_json', JSON.stringify(profile));
-        pyodide.globals.set('station_id', stationId);
-        pyodide.globals.set('cycle_label', cycle.label);
-        pyodide.globals.set('station_latitude', meta.lat);
-        const resultJson = await pyodide.runPythonAsync(
-            'make_skewt(profile_json, station_id, cycle_label, station_latitude)'
-        );
-        if (requestId !== state.activeRequest) return;
-        const result = JSON.parse(resultJson);
-        state.plotCache.set(plotKey, result);
-        showPlot(stationId, cycle, result);
-    } catch (error) {
-        console.error('Skew-T rendering failed:', error);
-        els.placeholder.textContent = `Plot rendering failed for ${stationId}.`;
-        setStatus('Something went wrong loading MetPy or plotting this sounding -- selecting the station again will retry.');
-    } finally {
-        els.older.disabled = false;
-        els.newer.disabled = false;
-    }
-}
-
-function showPlot(stationId, cycle, result) {
-    state.current = { stationId, cycle, result };
-    els.placeholder.classList.remove('is-visible');
-    els.output.src = result.image;
-    els.output.alt = `MetPy skew-T analysis for ${stationId} at ${cycle.label} (skew-T, hodograph, wind barbs, thermal advection)`;
+    els.older.disabled = state.index >= state.cycles.length - 1;
+    els.newer.disabled = state.index <= 0;
+    els.output.alt = `MetPy skew-T analysis for ${stationId} at ${entry.label} (skew-T, hodograph, wind barbs, thermal advection)`;
+    els.output.src = IMAGE_BASE + entry.image;
+    // the previous image stays visible until the new one has loaded, so stepping through cycles does not flash
     els.output.classList.add('is-visible');
+    els.placeholder.classList.remove('is-visible');
 
-    renderDiagnostics(result.diagnostics, state.units);
-    setStatus(`Showing ${stationId} from ${cycle.label}.`);
-    els.older.disabled = false;
-    els.newer.disabled = false;
+    renderDiagnostics(entry.diagnostics, state.units);
+    setStatus(`Showing ${stationId} from ${entry.label}.`);
 }
 
 // --- History trend chart (freezing level / wet-bulb zero / snow level) ----
@@ -1383,9 +374,45 @@ function buildHistoryTraces(entries, units) {
     }));
 }
 
+// Window choices: days back and days ahead of now ('all' leaves the axis to the data)
+const HISTORY_WINDOWS = { around: [3, 3], week: [7, 1], fortnight: [14, 1], all: null };
+
+function loadForecast() {
+    if (!state.forecastPromise) {
+        state.forecastPromise = fetchJson(FORECAST_URL).catch(error => {
+            console.error('UW WRF forecast fetch failed:', error);
+            return null;
+        });
+    }
+    return state.forecastPromise;
+}
+
+// Latest UW WRF run at the Quillayute point (assets/data/uw_soundings/dowlx.json, every 3 h for 72 h, feet MSL),
+// shown after "now" like the CW3E freezing-level verification chart. Subtracting the station height keeps it
+// in AGL like the soundings.
+function buildForecastTraces(fc, wrf, units) {
+    const surface = wrf.uil_surface_ft || 0;
+    const frames = (fc.frames || []).filter(f => f.valid_utc && Date.parse(f.valid_utc) >= Date.now() - 3 * 3600e3);   // the part still ahead of us
+    const x = frames.map(f => f.valid_utc);
+    const unit = wrfUnitLabel('level_ft', units);
+    const init = String(fc.init_utc || '');
+    const initLabel = init.length === 10 ? `${init.slice(0, 4)}-${init.slice(4, 6)}-${init.slice(6, 8)} ${init.slice(8)}Z` : 'latest';
+    return [
+        ['freezing_level_ft', 'Forecast freezing level', '#0f172a', 'solid', 3.5],
+        ['snow_level_ft', 'Forecast snow level (0\u00b0C wet-bulb)', '#db2777', 'dot', 2.5],
+    ].map(([key, name, color, dash, width]) => ({
+        x, y: frames.map(f => (f[key] == null ? null : wrfConvert('level_ft', Math.max(0, f[key] - surface), units))),
+        mode: 'lines', name: `${name} (UW WRF ${initLabel} run)`,
+        line: { color, width, dash },
+        hovertemplate: `%{x|%a %b %d %HZ}<br>${name}: %{y:.0f} ${unit} AGL<extra></extra>`,
+    }));
+}
+
 function renderHistoryChart(stationId) {
     if (!els.historyPlot || !window.Plotly) return;
-    loadHistory().then(data => {
+    const isUil = stationId === 'UIL';
+    Promise.all([loadHistory(), isUil ? loadWrf() : null, isUil ? loadForecast() : null]).then(([data, wrf, fc]) => {
+        if (state.station !== stationId) return;
         const entries = data && data.stations && data.stations[stationId];
         if (!entries || !entries.length) {
             els.historyPlot.classList.remove('is-visible');
@@ -1393,28 +420,51 @@ function renderHistoryChart(stationId) {
             return;
         }
         if (els.historyEmpty) els.historyEmpty.hidden = true;
+        const controls = document.getElementById('wrf-controls');
+        if (controls) controls.hidden = !isUil;
 
-        const traces = buildHistoryTraces(entries, state.units);
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const units = state.units;
+        const traces = buildHistoryTraces(entries, units)
+            .concat(isUil && wrf ? buildWrfTraces(wrf, units) : [])
+            .concat(isUil && wrf && fc ? buildForecastTraces(fc, wrf, units) : []);
+        const hasForecast = isUil && wrf && fc && (fc.frames || []).length > 0;
+
+        // x range: days back and ahead of now
+        const now = Date.now(), day = 864e5;
+        let win = HISTORY_WINDOWS[state.historyWindow];
+        // nothing recorded inside the chosen window (the bot is behind, or this station's feed lags): show everything instead of an empty plot
+        const noteEl = document.getElementById('history-note');
+        const hasObs = win && entries.some(en => Date.parse(en.valid) >= now - win[0] * day);
+        if (win && !hasObs) win = null;
+        if (noteEl) { noteEl.hidden = !(HISTORY_WINDOWS[state.historyWindow] && !hasObs); noteEl.textContent = 'No soundings were recorded in this window for this station, so everything recorded is shown.'; }
+        const xRange = win ? [new Date(now - win[0] * day).toISOString(), new Date(now + win[1] * day).toISOString()] : null;
+        const nowIso = new Date(now).toISOString();
+        // y range from what is in view, so the metres/feet axes can share one scale
+        const lo = xRange ? Date.parse(xRange[0]) : -Infinity, hi = xRange ? Date.parse(xRange[1]) : Infinity;
+        let ymax = 0;
+        traces.forEach(tr => tr.x.forEach((xv, i) => { const t = Date.parse(xv), v = tr.y[i]; if (t >= lo && t <= hi && v != null && v > ymax) ymax = v; }));
+        ymax = Math.max(ymax * 1.1, units === 'imperial' ? 3000 : 1000);
+        const toOther = v => (units === 'imperial' ? v / 3.28084 : v * 3.28084);
+
+        // an invisible point on the second axis so the other unit's scale is drawn
+        traces.push({ x: [nowIso], y: [null], yaxis: 'y2', mode: 'markers', showlegend: false, hoverinfo: 'skip' });
+
         const layout = {
-            margin: { l: 55, r: 15, t: 10, b: 40 },
-            xaxis: { type: 'date', range: [weekAgo.toISOString(), now.toISOString()] },
-            yaxis: { title: state.units === 'imperial' ? 'Feet AGL' : 'Meters AGL' },
+            margin: { l: 58, r: 66, t: 34, b: 40 },
+            xaxis: Object.assign({ type: 'date', tickformat: '%b %d', gridcolor: '#e2e8f0' }, xRange ? { range: xRange } : {}),
+            yaxis: { title: units === 'imperial' ? 'Feet above ground' : 'Meters above ground', range: [0, ymax], gridcolor: '#e2e8f0', tickformat: ',.0f' },
+            yaxis2: { title: units === 'imperial' ? 'Meters' : 'Feet', overlaying: 'y', side: 'right', range: [0, toOther(ymax)], showgrid: false, tickformat: ',.0f' },
             legend: { orientation: 'h', y: -0.2 },
             hovermode: 'closest',
+            shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: nowIso, x1: nowIso, y0: 0, y1: 1, line: { color: '#0f172a', width: 2 } }],
+            annotations: [
+                { xref: 'x', yref: 'paper', x: nowIso, y: 1.02, xanchor: 'right', yanchor: 'bottom', text: '\u25c0 Observed (soundings)', showarrow: false, font: { size: 12, color: '#334155' } },
+                { xref: 'x', yref: 'paper', x: nowIso, y: 1.02, xanchor: 'left', yanchor: 'bottom', text: hasForecast ? 'Forecast (UW WRF) \u25b6' : 'Forecast: Quillayute only \u25b6', showarrow: false, font: { size: 12, color: '#334155' } },
+            ],
         };
-        Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false });
+        // visible first: Plotly sizes itself from the container, and a display:none one falls back to 700px wide
         els.historyPlot.classList.add('is-visible');
-        const controls = document.getElementById('wrf-controls');
-        if (controls) controls.hidden = stationId !== 'UIL';
-        if (stationId === 'UIL') {
-            loadWrf().then(wrf => {
-                if (!wrf || state.station !== 'UIL') return;
-                const wrfTraces = buildWrfTraces(wrf, state.units);
-                Plotly.react(els.historyPlot, traces.concat(wrfTraces), layout, { responsive: true, displaylogo: false });
-            });
-        }
+        Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false });
     });
 }
 
@@ -1468,6 +518,8 @@ function buildWrfTraces(wrf, units) {
 }
 
 function initWrfControls() {
+    const winSel = document.getElementById('history-window');
+    if (winSel) winSel.addEventListener('change', () => { state.historyWindow = winSel.value; renderHistoryChart(state.station); });
     const varSel = document.getElementById('wrf-var');
     if (varSel) varSel.addEventListener('change', () => { state.wrfVar = varSel.value; renderHistoryChart(state.station); });
     document.querySelectorAll('input[name="wrf-lead"]').forEach(box => {

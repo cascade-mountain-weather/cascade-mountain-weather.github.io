@@ -1,0 +1,64 @@
+name: Sub-seasonal update
+
+# Wednesdays (the day the figures refresh) with a Thursday catch-up for a late post:
+#  1. save this week's weather-regime figures for outlooks/subseasonal.html
+#  2. look for a new CW3E subseasonal outlook post; if there is one, open an issue (GitHub emails you)
+on:
+  schedule:
+    - cron: "30 19 * * 3,4"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  s2s:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Save the weather-regime figures
+        run: python scripts/fetch_subseasonal.py
+
+      - name: Check for a new CW3E subseasonal outlook
+        id: s2s
+        run: python scripts/check_s2s_update.py
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/subseasonal data/s2s
+          git commit -m "Update sub-seasonal figures [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Open an issue for a new outlook
+        if: steps.s2s.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          POST_TITLE: ${{ steps.s2s.outputs.title }}
+          POST_LINK: ${{ steps.s2s.outputs.link }}
+          POST_DATE: ${{ steps.s2s.outputs.published }}
+        run: |
+          gh label create s2s-update --color 1e3c72 --description "New CW3E subseasonal outlook" 2>/dev/null || true
+          gh issue create --label s2s-update \
+            --title "New S2S outlook: ${POST_TITLE}" \
+            --body "CW3E posted a new subseasonal outlook (${POST_DATE}): ${POST_LINK}
+
+          The weather-regime figures on the sub-seasonal page were refreshed by this run. Write up the summary for the page if you want one."

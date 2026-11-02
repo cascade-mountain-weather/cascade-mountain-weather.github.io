@@ -16,7 +16,7 @@
         return Array.from({ length: n }, (_, i) => new Date(base - i * step));
     }
 
-    const CW3E = 'https://cw3e.ucsd.edu/images';
+    const CW3E = 'https://cw3e-sites.ucsd.edu/images';
     const UTAH = 'https://weather.utah.edu';
     const CW3E_HOME = 'https://cw3e.ucsd.edu/';
     const SRC_CW3E = { source: 'CW3E, UC San Diego', sourceUrl: CW3E_HOME };
@@ -26,6 +26,15 @@
         return {
             hours, probeHour, runs: runs(cycleH, 6), runExact: true,
             urlFor: (r, h) => `${CW3E}/${prod}/v1/${model}/${region}/${ymdh(r)}/1/${prod}__v1__${model}__${region}__${ymdh(r)}__1__F${pad(h, 3)}.png`,
+            fallbackUrl: CW3E_HOME,
+        };
+    }
+    // CW3E West-WRF maps carry the cold season in the path: /{prod}/{season}/{model}/{region}/{run}/1/{prod}__{season}__{model}__{region}__{run}__1__F###.png
+    const season = d => { const y = d.getUTCFullYear(), s = d.getUTCMonth() >= 6 ? y : y - 1; return `${s}-${s + 1}`; };
+    function wwrfMap(prod, model, region, cycleH, hours, probeHour) {
+        return {
+            hours, probeHour, runs: runs(cycleH, 6), runExact: true,
+            urlFor: (r, h) => `${CW3E}/${prod}/${season(r)}/${model}/${region}/${ymdh(r)}/1/${prod}__${season(r)}__${model}__${region}__${ymdh(r)}__1__F${pad(h, 3)}.png`,
             fallbackUrl: CW3E_HOME,
         };
     }
@@ -46,26 +55,40 @@
         };
     }
 
-    // Plume location for the ensemble AR outlook (latitude, longitude in degrees east)
-    const PLUME = { lat: '47.0', lon: '236.0' };
+    // Point for the ensemble AR plume (off the Washington coast) and how far out it looks: F240 is the 10-day version
+    const PLUME = { point: '47.0N_124.0W', hours: 240 };
 
     const MODELS = {
         gfs: 'GFS', ecmwf: 'ECMWF HRES', aifs: 'ECMWF AIFS (AI)', hres: 'ECMWF HRES',
         gefs: 'GEFS', eps: 'ECMWF ENS', diff: 'ECMWF ENS minus GEFS',
+        wwrf_ecmwf: 'West-WRF (ECMWF-driven)', wwrf_gfs: 'West-WRF (GFS-driven)',
+        wwrf_p500: 'West-WRF ensemble: IVT above 500', wwrf_p250: 'West-WRF ensemble: IVT above 250',
     };
     const modelName = m => MODELS[m];
+    // Side by side pairs a model with a sibling from the same family first (West-WRF with West-WRF, the global models together)
+    const family = m => (/^wwrf_p/.test(m) ? 'prob' : /^wwrf/.test(m) ? 'wwrf' : 'global');
+    const partners = (list, m) => list.filter(x => x !== m).sort((a, b) => (family(b) === family(m)) - (family(a) === family(m)));
 
     const PRODUCTS = {
         ivt: {
             label: 'Moisture (IVT)',
-            models: ['gfs', 'ecmwf'],
-            title: m => `${modelName(m)} Integrated Vapor Transport`,
-            build: m => m === 'gfs'
-                ? cw3eMap('ivt_map', 'GFS_25', 'NEPac', 6, range(12, 144, 6), 12)
-                : cw3eMap('ivt_map', 'ECMWF_HRes', 'NEPac', 12, range(12, 144, 6), 12),
-            info: Object.assign({
-                what: 'Integrated vapor transport (IVT) is the total water vapor being carried through the air column, in kg/m/s. It is the standard way to spot atmospheric rivers: long, narrow corridors of IVT aimed at the coast. Values above about 250 are indicative of atmospheric river conditions.',
-                how: 'Watch where the plume makes landfall as you step forward. A plume aimed at Washington, especially with high IVT (orange/red), likely means heavy mountain precipitation. Compare GFS and ECMWF: if they agree on timing and landfall latitude, confidence is higher.',
+            models: ['gfs', 'ecmwf', 'wwrf_gfs', 'wwrf_ecmwf', 'wwrf_p500', 'wwrf_p250'],
+            title: m => /^wwrf_p/.test(m) ? `West-WRF ensemble: probability that IVT is above ${m === 'wwrf_p250' ? 250 : 500} kg/m/s` : /^wwrf/.test(m) ? `${modelName(m)} integrated vapor transport and sea level pressure (9 km)` : `${modelName(m)} Integrated Vapor Transport`,
+            build: m => ({
+                gfs: () => cw3eMap('ivt_map', 'GFS_25', 'NEPac', 6, range(12, 240, 6), 12),
+                ecmwf: () => cw3eMap('ivt_map', 'ECMWF_HRes', 'NEPac', 12, range(12, 240, 6), 12),
+                wwrf_gfs: () => wwrfMap('ivt_map', 'WWRF_9km_GFS', 'NEPac', 12, range(0, 240, 6), 0),
+                wwrf_ecmwf: () => wwrfMap('ivt_map', 'WWRF_9km_ECMWF', 'NEPac', 12, range(0, 240, 3), 0),
+                wwrf_p500: () => wwrfMap('ivt500_probability_map', 'WWRF_9km_ENS', 'NEPac', 24, range(0, 168, 6), 0),
+                wwrf_p250: () => wwrfMap('ivt250_probability_map', 'WWRF_9km_ENS', 'NEPac', 24, range(0, 168, 6), 0),
+            })[m](),
+            info: m => /^wwrf_p/.test(m) ? Object.assign({
+                what: `The chance, from the West-WRF ensemble, that integrated vapor transport (IVT) is above ${m === 'wwrf_p250' ? '250 kg/m/s, a common threshold for an atmospheric river' : '500 kg/m/s, which marks a strong atmospheric river'}. It is issued once a day from the 00Z run and reaches 7 days. Pick the 500 or the 250 threshold.`,
+                how: 'High probabilities over or just upwind of Washington mean many ensemble members bring that much moisture there at that time. Low probabilities do not rule out moisture; they mean few members reach the threshold. The 500 map is the one to watch for heavy, flood-producing rain. Try Side by side to put it next to the model maps.',
+            }, SRC_CW3E) : Object.assign({
+                what: 'Integrated vapor transport (IVT) is the total water vapor being carried through the air column, in kg/m/s. It is the standard way to spot atmospheric rivers: long, narrow corridors of IVT aimed at the coast. Values above about 250 are indicative of atmospheric river conditions.'
+                    + (/^wwrf/.test(m) ? ' The West-WRF maps come from the regional model run by CW3E at 9 km grid spacing, driven by the ' + (m === 'wwrf_gfs' ? 'GFS' : 'ECMWF') + ', and add sea level pressure.' : ''),
+                how: 'Watch where the plume makes landfall as you step forward. A plume aimed at Washington, especially with high IVT (orange/red), likely means heavy mountain precipitation. Compare models: if they agree on timing and landfall latitude, confidence is higher. Try Side by side to play two at once.',
             }, SRC_CW3E),
         },
         temp850: {
@@ -81,6 +104,7 @@
             }, SRC_CW3E),
         },
         arlt: {
+            noCompare: true,
             label: 'AR landfall probability',
             models: ['gefs', 'eps', 'diff'],
             title: m => m === 'diff' ? 'AR landfall probability: ECMWF ENS minus GEFS' : `${modelName(m)} AR landfall probability`,
@@ -93,16 +117,14 @@
         plume: {
             label: 'AR outlook (ensemble)',
             models: ['gefs'],
-            title: () => 'Ensemble AR outlook: GEFS, ECMWF and West-WRF IVT plumes',
+            title: () => 'Ensemble AR outlook: GEFS and ECMWF IVT plumes, 10 days',
             build: () => ({
-                hours: [null], runs: null, runExact: false,
-                latestNote: 'Always the most recent run. The run time is printed on the figure, in Z (UTC).',
-                urlFor: () => `${CW3E}/wwrf/ensemble/IVTPlumes/GEFS_ECMWF_West-WRF_IVTPlume_7_coast_${PLUME.lat}_${PLUME.lon}.png?t=${Math.floor(Date.now() / 3600e3)}`,
-                extraImg: { url: `${CW3E}/gefs/images/Plume_maps/Plume_maps_coast_${PLUME.lat}_${PLUME.lon}.png?t=${Math.floor(Date.now() / 3600e3)}`, caption: 'Location of the point shown in the plume plot.' },
+                hours: [null], runs: runs(12, 6), runExact: true,
+                urlFor: r => `${CW3E}/ivt_ensembleplumes/v1/GEFS_50_ECMWF_ENS/${PLUME.point}/${ymdh(r)}/1/ivt_ensembleplumes__v1__GEFS_50_ECMWF_ENS__${PLUME.point}__${ymdh(r)}__1__F${PLUME.hours}.png`,
                 fallbackUrl: CW3E_HOME,
             }),
             info: Object.assign({
-                what: 'IVT plumes for a point on the coast off Washington from the GEFS, ECMWF and West-WRF ensembles together, so you can compare how strong and how well-timed an atmospheric river is across models. The small map shows the point being plotted.',
+                what: 'IVT plumes out to 10 days for a point on the coast off Washington (47.0N, 124.0W) from the GEFS and ECMWF ensembles together, so you can compare how strong and how well-timed an atmospheric river is across models.',
                 how: 'Each line is an ensemble member. Look for when the plumes peak and how far apart the models are. Tight bunching means high confidence in timing and strength.',
             }, SRC_CW3E),
         },
@@ -123,15 +145,29 @@
         },
     };
 
+    // Side by side needs a product with a time slider and a second model to pair with
+    const canCompare = st => { const p = PRODUCTS[st.product]; return !p.noCompare && p.models.length > 1 && p.build(p.models[0]).hours.length > 1; };
+    const modelsOf = st => PRODUCTS[st.product].models;
     CMWViewer.mount(document.getElementById('viewer'), {
         selectors: [
             { key: 'product', label: 'Product', options: Object.keys(PRODUCTS).map(k => ({ value: k, label: PRODUCTS[k].label })) },
-            { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models.map(m => ({ value: m, label: modelName(m) })) },
+            { key: 'model', label: 'Model', options: st => modelsOf(st).map(m => ({ value: m, label: modelName(m) })) },
+            { key: 'layout', label: 'Layout (testing)', options: st => canCompare(st) ? [{ value: 'single', label: 'One map' }, { value: 'compare', label: 'Side by side' }] : [{ value: 'single', label: '-' }] },
+            { key: 'vs', label: 'Compare with', options: st => st.layout === 'compare' && canCompare(st) ? partners(modelsOf(st), modelsOf(st).includes(st.model) ? st.model : modelsOf(st)[0]).map(m => ({ value: m, label: modelName(m) })) : [{ value: '-', label: '-' }] },
         ],
         resolve(st) {
             const p = PRODUCTS[st.product];
             const m = p.models.includes(st.model) ? st.model : p.models[0];
-            return Object.assign({ title: p.title(m), info: p.info }, p.build(m));
+            const info = typeof p.info === 'function' ? p.info(m) : p.info;
+            const view = Object.assign({ title: p.title(m), info }, p.build(m));
+            if (st.layout === 'compare' && canCompare(st)) {
+                const opts = partners(p.models, m), m2 = opts.includes(st.vs) ? st.vs : opts[0];
+                Object.assign(view, {
+                    title: `${p.title(m)} vs ${modelName(m2)}`,
+                    compare: [{ label: modelName(m), view: p.build(m) }, { label: modelName(m2), view: p.build(m2) }],
+                });
+            }
+            return view;
         },
     });
 }());

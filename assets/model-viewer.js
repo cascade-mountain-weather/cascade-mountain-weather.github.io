@@ -9,6 +9,10 @@
 // `runs` are candidate model runs, newest first; the viewer loads the first
 // frame of each until one works, so a missing newest run falls back to the
 // previous one. Single-image products use hours: [null].
+//
+// Side by side: a view may also carry `compare: [{label, view}, {label, view}]` (two ordinary views, each with its
+// own runs, hours and urlFor). The viewer then finds the newest run of each, keeps the forecast times both have a
+// frame for, and steps through them together, with the two maps next to each other (stacked on a narrow screen).
 (function () {
     'use strict';
 
@@ -80,6 +84,19 @@
                 <div class="mv-loading" hidden>Loading…</div>
                 <div class="mv-fail" hidden></div>
             </div>
+            <div class="mv-pairwrap mv-off">
+                <div class="mv-pair-tools" role="group" aria-label="Zoom both maps">
+                    <span>Zoom both:</span>
+                    <button type="button" class="mv-zbtn mv-pzin" aria-label="Zoom both in">+</button>
+                    <button type="button" class="mv-zbtn mv-pzout" aria-label="Zoom both out">&minus;</button>
+                    <button type="button" class="mv-zbtn mv-pzreset" aria-label="Fit both to width">Fit</button>
+                    <span class="mv-pair-tip">When zoomed, scroll or drag either map and the other follows.</span>
+                </div>
+                <div class="mv-pair">
+                    <figure class="mv-pair-fig"><figcaption></figcaption><div class="mv-pair-view"><img class="mv-pair-img" alt="" draggable="false" /></div></figure>
+                    <figure class="mv-pair-fig"><figcaption></figcaption><div class="mv-pair-view"><img class="mv-pair-img" alt="" draggable="false" /></div></figure>
+                </div>
+            </div>
             <p class="mv-hint">Zoom with the + and &minus; buttons, a pinch, Ctrl + scroll, or a double-click; &minus; also shrinks the figure below its default size. Drag to move around when zoomed.</p>
             <figure class="mv-extra" hidden><img class="mv-extra-img" alt="" /><figcaption></figcaption></figure>
             <details class="mv-info" open>
@@ -93,6 +110,7 @@
 
         const $ = sel => root.querySelector(sel);
         const selBox = $('.mv-selectors'), titleEl = $('.mv-title'), img = $('.mv-img');
+        const pairEl = $('.mv-pairwrap'), pairViews = [...root.querySelectorAll('.mv-pair-view')], pairImgs = [...root.querySelectorAll('.mv-pair-img')], pairCaps = [...root.querySelectorAll('.mv-pair-fig figcaption')];
         const loadingEl = $('.mv-loading'), failEl = $('.mv-fail');
         const controls = $('.mv-controls'), slider = $('.mv-slider'), daysEl = $('.mv-days');
         const playBtn = $('.mv-play'), speedBtn = $('.mv-speed'), timeEl = $('.mv-time');
@@ -111,7 +129,7 @@
                 if (opts.length < 2 && !s.alwaysShow) return;
                 const g = document.createElement('div');
                 g.className = 'mv-group';
-                g.innerHTML = `<span class="mv-label" id="mvl-${s.key}">${esc(s.label)}</span>`;
+                g.innerHTML = `<span class="mv-label" id="mvl-${s.key}">${esc(typeof s.label === 'function' ? s.label(state) : s.label)}</span>`;
                 const chips = document.createElement('div');
                 chips.className = s.select ? 'mv-select-wrap' : 'mv-chips';
                 chips.setAttribute('role', s.select ? 'group' : 'radiogroup');
@@ -157,7 +175,14 @@
         function renderTimes() {
             const h = view.hours[idx];
             const lines = [];
-            if (run && h != null) {
+            if (view.pair) {
+                const v = validTime(idx), P = view.pair;
+                lines.push(`<div class="mv-valid"><strong>${esc(pacific(v))}</strong><span class="mv-z">${esc(zulu(v))}</span></div>`);
+                lines.push(`<div class="mv-run">Side by side: ${P.common.length} forecast times have a map from both runs. Hours shown are each run&rsquo;s own forecast hour.</div>`);
+                P.sides.forEach((s, k) => {
+                    pairCaps[k].innerHTML = `<strong>${esc(s.label)}</strong> &middot; run ${esc(zulu(s.run))} &middot; F${pad(s.byValid.get(P.common[idx]), 3)}`;
+                });
+            } else if (run && h != null) {
                 const v = validTime(idx);
                 lines.push(`<div class="mv-valid"><strong>${esc(pacific(v))}</strong><span class="mv-z">${esc(zulu(v))}</span></div>`);
                 lines.push(`<div class="mv-run">Forecast hour F${pad(h, 3)} &middot; ${esc((view.runLabel || 'model run').toLowerCase())} ${esc(zulu(run))} (${esc(pacific(run))})${view.runExact ? '' : ' &mdash; estimated, the image file does not say which run it is'}</div>`);
@@ -169,6 +194,7 @@
                 const note = view.latestNote || 'Always the most recent run available. The image itself carries the run and valid times.';
                 lines.push(`<div class="mv-run">${esc(note)}</div>`);
             }
+            if (view.pairFailed) lines.push('<div class="mv-run">Side by side is not available right now (the two runs share no forecast times yet, or one is missing), so one model is shown.</div>');
             timeEl.innerHTML = lines.join('');
         }
 
@@ -204,33 +230,36 @@
             // step past frames already known to be missing
             for (let k = 0; k < n && missing.has(idx); k++) idx = (idx + dir + n) % n;
             slider.value = idx;
-            const url = view.urlFor(run, view.hours[idx]);
+            const P = view.pair;
+            const urls = P ? P.sides.map(s => s.view.urlFor(s.run, s.byValid.get(P.common[idx]))) : [view.urlFor(run, view.hours[idx])];
+            const targets = P ? pairImgs : [img];
             failEl.hidden = true;
-            img.classList.add('is-loading');
+            targets.forEach(x => x.classList.add('is-loading'));
             if (!opts.quiet) loadingEl.hidden = false;
-            const pre = new Image();
-            pre.onload = () => {
-                if (t !== token) return;
-                img.src = url;
-                img.alt = `${view.title}${view.hours[idx] != null ? ', forecast hour ' + view.hours[idx] : ''}`;
-                img.classList.remove('is-loading');
+            let left = urls.length, bad = false;
+            const ok = () => {
+                if (t !== token || bad || --left) return;
+                urls.forEach((u, k) => { targets[k].src = u; targets[k].classList.remove('is-loading'); });
+                if (P) pairImgs.forEach((x, k) => { x.alt = `${P.sides[k].label}, ${view.title}`; });
+                else img.alt = `${view.title}${view.hours[idx] != null ? ', forecast hour ' + view.hours[idx] : ''}`;
                 loadingEl.hidden = true;
                 renderTimes();
                 if (opts.then) opts.then();
             };
-            pre.onerror = () => {
-                if (t !== token) return;
+            const err = () => {
+                if (t !== token || bad) return;
+                bad = true;
                 // a frame the source does not have: remember it and move on to the next one
                 if (n > 1 && missing.size < n - 1) {
                     missing.add(idx);
                     return show(idx + dir, Object.assign({}, opts));
                 }
                 stop();
-                img.classList.remove('is-loading');
+                targets.forEach(x => x.classList.remove('is-loading'));
                 loadingEl.hidden = true;
                 fail();
             };
-            pre.src = url;
+            urls.forEach(u => { const pre = new Image(); pre.onload = ok; pre.onerror = err; pre.src = u; });
         }
 
         function fail() {
@@ -240,6 +269,7 @@
                 ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open the source page &rarr;</a></p>` : ''}`;
             failEl.hidden = false;
             img.removeAttribute('src');
+            pairImgs.forEach(x => x.removeAttribute('src'));
         }
 
         function play() {
@@ -273,10 +303,39 @@
                 <p>This page shows Pacific time first with the Z time beside it, and the day labels under the slider mark where each Pacific day begins. Clocks change on Nov&nbsp;1, 2026 (PDT to PST), which shifts the offset by an hour.</p>`;
         }
 
+        // Side by side: newest working run of each side, then the forecast times (run time plus hour) both have a frame for.
+        async function setupPair(sides) {
+            for (const s of sides) {
+                const v = s.view;
+                s.run = null;
+                for (const r of (v.runs || [])) {
+                    if (await probe(v.urlFor(r, v.probeHour != null ? v.probeHour : v.hours[0]))) { s.run = r; break; }
+                }
+                if (!s.run) return null;
+                s.byValid = new Map(v.hours.map(h => [s.run.getTime() + h * 3600e3, h]));
+            }
+            const common = [...sides[0].byValid.keys()].filter(k => sides[1].byValid.has(k)).sort((x, y) => x - y);
+            return common.length ? { sides, common } : null;
+        }
+
         async function load() {
             stop();
             view = cfg.resolve(state);
             missing.clear();
+            const tk = ++token;
+            if (view.compare) {
+                loadingEl.hidden = false;
+                const pair = await setupPair(view.compare);
+                if (tk !== token) return;
+                view = pair
+                    ? Object.assign({}, view, { pair, compare: null, hours: pair.common.map(k => (k - pair.common[0]) / 3600e3), runs: null, runExact: true })
+                    : Object.assign({}, view, { compare: null, pairFailed: true });
+            }
+            const showPair = !!view.pair;
+            setPairZoom(1);
+            stage.classList.toggle('mv-off', showPair);
+            pairEl.classList.toggle('mv-off', !showPair);
+            $('.mv-hint').classList.toggle('mv-off', showPair);
             titleEl.textContent = view.title;
             renderInfo();
             const extra = $('.mv-extra');
@@ -289,7 +348,7 @@
             const multi = view.hours.length > 1;
             controls.hidden = !multi;
             // one-panel figures can be held narrower (the page asks for it); zoom and full screen still work
-            const maxW = view.maxWidth || (!multi && cfg.singleMaxWidth);   // a view can cap its own width (the sounding)
+            const maxW = !showPair && (view.maxWidth || (!multi && cfg.singleMaxWidth));   // a view can cap its own width (the sounding)
             stage.style.maxWidth = maxW ? maxW + 'px' : '';
             stage.style.marginLeft = stage.style.marginRight = maxW ? 'auto' : '';
             slider.max = view.hours.length - 1;
@@ -298,8 +357,8 @@
             img.alt = view.title;
 
             // choose the newest candidate run whose first frame exists
-            run = null;
-            if (view.runs && view.runs.length) {
+            run = showPair ? new Date(view.pair.common[0]) : null;
+            if (!showPair && view.runs && view.runs.length) {
                 const t = ++token;
                 loadingEl.hidden = false;
                 for (const r of view.runs) {
@@ -424,6 +483,56 @@
         stage.addEventListener('pointerup', endPointer);
         stage.addEventListener('pointercancel', endPointer);
         window.addEventListener('resize', applyZoom);
+
+        // ---- side by side: both maps zoom together and scroll together ----
+        let PZ = 1, pairSync = false;
+        function setPairZoom(z) {
+            const v0 = pairViews[0];
+            const fx = v0.scrollWidth ? (v0.scrollLeft + v0.clientWidth / 2) / v0.scrollWidth : 0.5;
+            const fy = v0.scrollHeight ? (v0.scrollTop + v0.clientHeight / 2) / v0.scrollHeight : 0.5;
+            PZ = Math.min(6, Math.max(1, z));
+            pairImgs.forEach(im => { im.style.maxWidth = PZ > 1 ? 'none' : ''; im.style.setProperty('width', PZ * 100 + '%', 'important'); });
+            pairViews.forEach(v => {
+                v.classList.toggle('is-zoomed', PZ > 1);
+                v.style.maxHeight = PZ > 1 ? '75vh' : '';
+                v.scrollLeft = fx * v.scrollWidth - v.clientWidth / 2;
+                v.scrollTop = fy * v.scrollHeight - v.clientHeight / 2;
+            });
+        }
+        $('.mv-pzin').addEventListener('click', () => setPairZoom(PZ * 1.6));
+        $('.mv-pzout').addEventListener('click', () => setPairZoom(PZ / 1.6));
+        $('.mv-pzreset').addEventListener('click', () => setPairZoom(1));
+        pairViews.forEach((v, k) => {
+            const o = pairViews[1 - k];
+            v.addEventListener('scroll', () => {
+                if (pairSync) return;
+                pairSync = true;
+                const mx = v.scrollWidth - v.clientWidth, my = v.scrollHeight - v.clientHeight;
+                o.scrollLeft = mx > 0 ? v.scrollLeft / mx * (o.scrollWidth - o.clientWidth) : 0;
+                o.scrollTop = my > 0 ? v.scrollTop / my * (o.scrollHeight - o.clientHeight) : 0;
+                requestAnimationFrame(() => { pairSync = false; });
+            });
+            v.addEventListener('wheel', e => {
+                if (!(e.ctrlKey || e.metaKey)) return;
+                e.preventDefault();
+                setPairZoom(PZ * Math.exp(-e.deltaY * 0.01));
+            }, { passive: false });
+            v.addEventListener('dblclick', () => setPairZoom(PZ > 1 ? 1 : 2.5));
+            let drag = null;   // mouse drag to pan (touch scrolls natively)
+            v.addEventListener('pointerdown', e => {
+                if (e.pointerType !== 'mouse' || PZ <= 1) return;
+                drag = { x: e.clientX, y: e.clientY, l: v.scrollLeft, t: v.scrollTop };
+                try { v.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ }
+            });
+            v.addEventListener('pointermove', e => {
+                if (!drag) return;
+                v.scrollLeft = drag.l - (e.clientX - drag.x);
+                v.scrollTop = drag.t - (e.clientY - drag.y);
+            });
+            const end = () => { drag = null; };
+            v.addEventListener('pointerup', end);
+            v.addEventListener('pointercancel', end);
+        });
 
         // swipe on the image: left = next, right = previous (only when not zoomed; zoomed, a drag moves the image)
         let sx = null;

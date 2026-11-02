@@ -2,23 +2,30 @@
 layout: page
 title: "Sub-seasonal Outlooks | Cascade Mountain Weather"
 description: "Two to six week outlooks for the Pacific Northwest from the Climate Prediction Center, ECMWF and CW3E."
-disclaimer: true
-under_development: true
 ---
 <link rel="stylesheet" href="{{ '/assets/outlooks.css' | relative_url }}">
 <div class="lt-page">
 <section class="hero">
     <h1 class="PlotTitle">Sub-seasonal Outlooks</h1>
     <p>Roughly week 2 through week 6. Skill is low, so read these as shifts in the odds toward warmer or colder, wetter or drier than normal, not as a day-by-day forecast.</p>
+<nav class="ol-group ol-jump" aria-label="Jump to a section">
+    <span class="ol-label">Jump to</span>
+    <div class="ol-chips">
+        <a class="ol-chip" href="#ecmwf">ECMWF products</a>
+        <a class="ol-chip" href="#cpc">CPC products</a>
+        <a class="ol-chip" href="#cw3e">CW3E and IRI products</a>
+    </div>
+</nav>
 </section>
 
-<div class="lt-card">
+
+<div class="lt-card" id="ecmwf">
     <h2>ECMWF extended range (weekly averages)</h2>
     <p>The ECMWF ensemble run out to about six weeks, shown as weekly averages for the sub-seasonal range (weeks 2 to 6). Pick a week to compare precipitation, temperature and the 500 hPa pattern side by side, or pick a product to compare the weeks.</p>
     <div class="ol-mount" data-kind="extended"><p class="ol-run">Loading the ECMWF charts&hellip;</p></div>
 </div>
 
-<div class="lt-card">
+<div class="lt-card" id="cpc">
     <h2>Climate Prediction Center (NOAA)</h2>
     <p>The CPC 6&ndash;10 and 8&ndash;14 day outlooks show the probability of above or below normal temperature and precipitation. Colors show the favored category and how strongly, not how much.</p>
     <div class="lt-figs lt-figs--2">
@@ -26,14 +33,16 @@ under_development: true
         <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/predictions/610day/610prcp.new.gif" alt="CPC 6 to 10 day precipitation outlook"><figcaption>6&ndash;10 day precipitation outlook</figcaption></figure>
         <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/predictions/814day/814temp.new.gif" alt="CPC 8 to 14 day temperature outlook"><figcaption>8&ndash;14 day temperature outlook</figcaption></figure>
         <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/predictions/814day/814prcp.new.gif" alt="CPC 8 to 14 day precipitation outlook"><figcaption>8&ndash;14 day precipitation outlook</figcaption></figure>
+        <figure><img class="PlotFormat" loading="lazy" src="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.gefs.fcst.png" alt="GEFS ensemble PNA index forecast"><figcaption>GEFS ensemble PNA forecast: the observed index over the past months, then the forecast. A positive PNA favors a ridge over the West, a negative one a trough.</figcaption></figure>
     </div>
-    <p>Source: <a href="https://www.cpc.ncep.noaa.gov/products/predictions/610day/" target="_blank" rel="noopener noreferrer">NOAA Climate Prediction Center</a>. Also see the <a href="https://www.cpc.ncep.noaa.gov/products/predictions/WK34/" target="_blank" rel="noopener noreferrer">week 3&ndash;4 outlook</a>.</p>
+    <p>Source: <a href="https://www.cpc.ncep.noaa.gov/products/predictions/610day/" target="_blank" rel="noopener noreferrer">NOAA Climate Prediction Center</a>. PNA forecast: <a href="https://www.cpc.ncep.noaa.gov/products/precip/CWlink/pna/pna.shtml" target="_blank" rel="noopener noreferrer">CPC</a>. Also see the <a href="https://www.cpc.ncep.noaa.gov/products/predictions/WK34/" target="_blank" rel="noopener noreferrer">week 3&ndash;4 outlook</a>.</p>
 </div>
 
-<div class="lt-card">
-    <h2>CW3E (UC San Diego)</h2>
-    <p>CW3E sub-seasonal products start up for the cold season and will appear here: atmospheric river activity for weeks 2 to 4, an atmospheric river outlook for Seattle, and the West Coast weather regime forecast.</p>
-    <div class="ol-cw3e"></div>
+<div class="lt-card" id="cw3e">
+    <h2>Weather regimes (CW3E and IRI)</h2>
+    <p>Instead of forecasting each storm, regime forecasts ask which large-scale pattern, such as a Pacific trough or a West Coast ridge, is most likely over the coming weeks, and what each pattern usually means for Northwest precipitation and temperature. Updated every Wednesday.</p>
+    <div class="ol-regimes"><p class="ol-run">Loading the weather regime figures&hellip;</p></div>
+    <p>Sources: <a href="https://cw3e.ucsd.edu/" target="_blank" rel="noopener noreferrer">CW3E, UC San Diego</a> and <a href="https://iri.columbia.edu/" target="_blank" rel="noopener noreferrer">IRI, Columbia University</a>. CW3E also posts a weekly <a href="https://cw3e-sites.ucsd.edu/category/ss-outlooks/" target="_blank" rel="noopener noreferrer">subseasonal outlook write-up</a>.</p>
 </div>
 
 <div class="lt-card">

@@ -26,7 +26,7 @@
         urlFor: (r, h) => `https://weather.utah.edu/${ymd(r)}/images/models/${dir}/${prefix}_NW${ymdh(r)}F${pad(h, 3)}.png`,
         fallbackUrl: 'https://weather.utah.edu/',
     });
-    const CW3E = 'https://cw3e.ucsd.edu/images';
+    const CW3E = 'https://cw3e-sites.ucsd.edu/images';
 
     // wwrf: West-WRF meteogram panel code; utah: Utah ensemble point code;
     // basins: CW3E watershed freezing-level plots (HUC8 id).
@@ -40,6 +40,7 @@
         'blewett': { label: 'Blewett Pass', uw: 'lvwth', wwrf: 'US97', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }] },
         'crystal': { label: 'Crystal Mountain', uw: 'pvc55', wwrf: 'MRNP', utah: 'CMT', basins: [{ id: '17110014', label: 'Puyallup' }] },
         'paradise': { label: 'Paradise (Mt. Rainier)', uw: 'pvc55', wwrf: 'MRNP', utah: 'PVC54', basins: [{ id: '17110015', label: 'Nisqually' }] },
+        'mt-hood': { label: 'Mt. Hood (Timberline)', uw: 'heheb', utah: 'TIM59', basins: [{ id: '17070105', label: 'Hood River' }] },
         'white': { label: 'White Pass', uw: 'rimrk', wwrf: 'US12', utah: 'WPS45', basins: [{ id: '17080004', label: 'Upper Cowlitz' }] },
         'washington': { label: 'Washington Pass', uw: 'mtwpm', wwrf: 'WA20', utah: 'WAP55', basins: [{ id: '17020009', label: 'Lake Chelan (west side)' }, { id: '17020008', label: 'Methow (east side)' }] },
     };
@@ -48,7 +49,7 @@
     // ---- NBM snowfall plume, drawn as an SVG image so it behaves like the other figures ----
     const NBM_SITE = { 'mt-baker': 'Mt. Baker', stevens: 'Stevens Pass', snoqualmie: 'Snoqualmie Pass', blewett: 'Blewett Pass',
         crystal: 'Crystal', paradise: 'Paradise', white: 'White Pass', washington: 'Washington Pass',
-        hurricane: 'Hurricane Ridge', winthrop: 'Winthrop' };
+        hurricane: 'Hurricane Ridge', winthrop: 'Winthrop', 'mt-hood': 'Mt. Hood' };
     const PAC_H = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' });
     const PAC_D = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'numeric', day: 'numeric' });
     const num = (v, d) => (v == null ? '\u2013' : (+v).toFixed(d == null ? 1 : d));
@@ -243,6 +244,22 @@
         urlFor: (r, h) => `${CW3E}/snow_${w}h_map/${cw3eSeason(r)}/WWRF_3km_${model}/WCQPF/${ymdh(r)}/1/snow_${w}h_map__${cw3eSeason(r)}__WWRF_3km_${model}__WCQPF__${ymdh(r)}__1__F${pad(h, 3)}.png`,
         fallbackUrl: 'https://cw3e.ucsd.edu/',
     });
+    // /images/fzllevel_slp_10mwind_map/{season}/WWRF_3km_{GFS|ECMWF}/USWC2/{YYYYMMDDHH}/1/...__F{HHH}.png: every hour to 120 h for the ECMWF-driven run, every 6 h for the GFS-driven one
+    // The 9 km run covers the Northeast Pacific out 10 days: /images/fzllevel_slp_10mwind_map/{season}/WWRF_9km_{GFS|ECMWF}/NEPac/...
+    const cw3eFzl = (model, grid) => {
+        const g = grid === '9km' ? { res: '9km', region: 'NEPac', last: 240 } : { res: '3km', region: 'USWC2', last: 120 };
+        return {
+            hours: model === 'ECMWF' ? range(0, g.last, 3) : range(0, g.last, 6), probeHour: 0, runs: cw3eRuns(6), runExact: true,
+            urlFor: (r, h) => `${CW3E}/fzllevel_slp_10mwind_map/${cw3eSeason(r)}/WWRF_${g.res}_${model}/${g.region}/${ymdh(r)}/1/fzllevel_slp_10mwind_map__${cw3eSeason(r)}__WWRF_${g.res}_${model}__${g.region}__${ymdh(r)}__1__F${pad(h, 3)}.png`,
+            fallbackUrl: 'https://cw3e.ucsd.edu/',
+        };
+    };
+    // Storm-total snow plot for one point (West-WRF ensemble, 00Z run only, one image per run reaching 7 days)
+    const cw3eStorm = code => ({
+        hours: [null], runs: Array.from({ length: 4 }, (_, i) => new Date(Math.floor(Date.now() / 864e5) * 864e5 - i * 864e5)), runExact: true,
+        urlFor: r => `${CW3E}/snow_storm_total_meteogram/${cw3eSeason(r)}/WWRF_9km_ENS/${code}/${ymdh(r)}/1/snow_storm_total_meteogram__${cw3eSeason(r)}__WWRF_9km_ENS__${code}__${ymdh(r)}__1__F168.png`,
+        fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms',
+    });
     const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
     const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
 
@@ -251,9 +268,15 @@
         wwrf_snow: {
             needs: 'wwrf',
             label: 'Snow (West-WRF)',
-            title: a => `${a.label}: West-WRF ensemble accumulated snow`,
-            build: a => ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
-            info: {
+            title: (a, st) => `${a.label}: West-WRF ensemble ${st.sub === 'storm' ? 'storm-total' : 'accumulated'} snow`,
+            subLabel: 'Snowfall',
+            subs: { period: 'Forecast total', storm: 'Storm total' },
+            build: (a, st) => st.sub === 'storm' ? cw3eStorm(a.wwrf) : ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
+            info: st => st.sub === 'storm' ? {
+                what: 'Storm-total snowfall for this area from the West-WRF ensemble at CW3E, UC San Diego. The top-left panel is the spread of the ensemble members (box and whiskers, with the mean as a line), the lower-left panel is the chance of reaching each snowfall total, and the right panel shows every member (ECMWF-driven members on top, GFS-driven below). It is marked experimental by CW3E, runs from the 00Z cycle only, and reaches 7 days.',
+                how: 'Use it for how much a single storm could add up to, rather than the running total of the whole forecast period. Read the lower-left panel for odds (for example, the chance of at least 12 inches), and the member panel to see whether the models agree on when it falls. A wide spread means low confidence. Switch to Forecast total for the period accumulation.',
+                source: 'CW3E West-WRF ensemble meteograms', sourceUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms',
+            } : {
                 what: 'Accumulated snowfall for this area from the West-WRF ensemble, run by the Center for Western Weather and Water Extremes (CW3E) at UC San Diego. West-WRF is a 200-member ensemble at 9 km grid spacing, run October&ndash;March. It was built for high-intensity winter precipitation, especially atmospheric rivers, and recent studies show it performs better than the GEFS and as well or better than the ECMWF ensemble (<a href="https://journals.ametsoc.org/view/journals/mwre/153/8/MWR-D-24-0136.1.xml" target="_blank" rel="noopener noreferrer">Delle Monache et al. 2025</a>).',
                 how: ENSEMBLE_HOW,
                 source: 'CW3E West-WRF ensemble meteograms', sourceUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms',
@@ -351,7 +374,7 @@
             }, UW_SRC),
         },
         cw3e_snow: {
-            region: true, label: 'West-WRF 3 km snow (CW3E)',
+            region: true, compare: true, label: 'West-WRF 3 km snow (CW3E)',
             models: { GFS: 'GFS-driven', ECMWF: 'ECMWF-driven' },
             accums: { 6: '6 hours', 24: '24 hours', 48: '48 hours', 72: '72 hours' },
             title: (a, st) => `West-WRF 3 km snowfall, ${st.accum || 24}-hour accumulation (${st.model === 'ECMWF' ? 'ECMWF' : 'GFS'}-driven)`,
@@ -409,7 +432,7 @@
             page: 'level',
             needs: 'uw',
             label: 'UW WRF sounding',
-            title: a => `${a.label}: UW WRF forecast sounding (${soundings[a.uw].name.replace(',WA', '')}, ${Math.round(soundings[a.uw].elevation_ft).toLocaleString('en-US')} ft)`,
+            title: a => `${a.label}: UW WRF forecast sounding (${soundings[a.uw].name.replace(/,(WA|OR)$/, '')}, ${Math.round(soundings[a.uw].elevation_ft).toLocaleString('en-US')} ft)`,
             build: a => {
                 const site = soundings[a.uw];
                 return {
@@ -419,7 +442,7 @@
                 };
             },
             info: a => ({
-                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(',WA', '')}, the nearest UW sounding point to this area: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone, the layer between -12 and -18&deg;C where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the snow level, the height where the wet-bulb temperature reaches 0&deg;C. When the surface is already below freezing, the level is below the ground and the label says so.`,
+                what: `A forecast sounding from the University of Washington WRF model at ${soundings[a.uw].name.replace(/,(WA|OR)$/, '')}, the nearest UW sounding point to this area${a.uw === 'heheb' ? ' (about 27 miles south-southeast of Timberline, on the dry east side of Mt. Hood and roughly 3,000 ft lower, so read it as an analog for the freezing level and snow level, not a point forecast for the ski area; it comes from the 12 km UW WRF grid, since Oregon is outside the 4/3 km one)' : ''}: temperature (red) and dew point (green) up through the atmosphere, drawn on a skew-T. The blue line is 0&deg;C and the purple band is the dendritic growth zone, the layer between -12 and -18&deg;C where the best powder-making snow crystals grow. Dashed lines mark the freezing level and the snow level, the height where the wet-bulb temperature reaches 0&deg;C. When the surface is already below freezing, the level is below the ground and the label says so.`,
                 how: 'Press play to watch the column evolve every 3 hours. Where the red and green lines touch the air is saturated (cloud or precipitation). Snow reaches the ground when the temperature below the cloud stays near or under freezing; a snow level well above the sounding point means rain there. A saturated layer (red and green lines together) inside the purple band supports the formation of fluffy dendrites. Treat one model run as a single scenario, and check it against the NBM, HRRR and ensembles.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             }),
@@ -428,7 +451,7 @@
             page: 'level',
             needs: 'uw',
             label: 'UW WRF levels over time',
-            title: a => `${a.label}: UW WRF freezing level, snow level and dendritic growth zone (${soundings[a.uw].name.replace(',WA', '')})`,
+            title: a => `${a.label}: UW WRF freezing level, snow level and dendritic growth zone (${soundings[a.uw].name.replace(/,(WA|OR)$/, '')})`,
             build: a => {
                 const site = soundings[a.uw];
                 return {
@@ -437,10 +460,23 @@
                     fallbackUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
                 };
             },
-            info: {
-                what: 'The freezing level (blue), the snow level (orange; the height where the wet-bulb temperature reaches 0&deg;C) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point, every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
+            info: a => ({
+                what: 'The freezing level (blue), the snow level (orange; the height where the wet-bulb temperature reaches 0&deg;C) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point' + (a.uw === 'heheb' ? ' (Hehe Butte, about 27 miles south-southeast of Timberline, on the dry east side of Mt. Hood and roughly 3,000 ft lower, so treat it as an analog for the levels, not a point forecast for the ski area)' : '') + ', every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
                 how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Hollow dots are levels below the sounding point&rsquo;s ground, extended downward at 6.5&deg;C per km. A thick purple band over a snow level below your elevation is the setup for light snow, if the sounding shows the layer is saturated. One model run is one scenario.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
+            }),
+        },
+        cw3e_fzl: {
+            page: 'level', region: true, compare: true, label: 'West-WRF freezing level (CW3E)',
+            models: { ECMWF: 'ECMWF-driven', GFS: 'GFS-driven' },
+            subLabel: 'Grid',
+            subs: { '3km': 'US West Coast, 3 km (5 days)', '9km': 'Northeast Pacific, 9 km (10 days)' },
+            title: (a, st) => `West-WRF ${st.sub === '9km' ? '9 km' : '3 km'} freezing level, sea level pressure and 10 m wind (${st.model === 'GFS' ? 'GFS' : 'ECMWF'}-driven)`,
+            build: (a, st, model) => cw3eFzl(model || (st.model === 'GFS' ? 'GFS' : 'ECMWF'), st.sub),
+            info: {
+                what: 'Maps of the forecast freezing level, sea level pressure and 10 m wind from West-WRF, the regional model run by the Center for Western Weather and Water Extremes (CW3E) at UC San Diego. The 3 km grid covers the US West Coast out 5 days; the 9 km grid covers the Northeast Pacific out 10 days, so you can see the storms before they arrive. It is run twice a day, driven either by the ECMWF or by the GFS.',
+                how: 'Step through time and watch the freezing level over the Cascades: when it falls below pass level the precipitation turns to snow. Compare the ECMWF-driven and GFS-driven runs; where they agree on the timing of the drop, confidence is higher. Try Side by side to play both at once.',
+                source: 'CW3E West-WRF forecasts', sourceUrl: 'https://cw3e.ucsd.edu/',
             },
         },
         frz: {
@@ -468,7 +504,7 @@
     // The freezing-level page has only one kind, so its Type chip is hidden.
     const CATS = [{ value: 'precip', label: 'Precipitation Products' }, { value: 'cloud', label: 'Cloud Cover Products' }, { value: 'level', label: 'Levels' }];
     const catOf = p => p.cat || (pageOf(p) === 'level' ? 'level' : 'precip');
-    const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))));
+    const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && nbmData.sites[NBM_SITE[area]] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))));
     // Links made before the split (#product=uw_cloud or nbm_cloud) pick their type.
     (() => {
         const h = new URLSearchParams(location.hash.slice(1));
@@ -479,18 +515,28 @@
         CMWViewer.mount(document.getElementById('viewer'), {
             singleMaxWidth: 760,
             selectors: [
-                { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).filter(k => PAGE === 'precip' || !AREAS[k].region).map(k => ({ value: k, label: AREAS[k].label })) },
+                { key: 'area', label: 'Area', select: true, alwaysShow: true, options: Object.keys(AREAS).sort((x, y) => PAGE === 'level' ? !!AREAS[x].region - !!AREAS[y].region : 0).map(k => ({ value: k, label: AREAS[k].label })) },
                 { key: 'cat', label: 'Type', options: st => CATS.filter(c => productsFor(st.area).some(k => catOf(PRODUCTS[k]) === c.value)) },
                 { key: 'product', label: 'Product', options: st => productsFor(st.area).filter(k => catOf(PRODUCTS[k]) === st.cat).map(k => ({ value: k, label: PRODUCTS[k].label })) },
                 { key: 'basin', label: 'Watershed', options: st => st.product === 'frz' && AREAS[st.area].basins ? AREAS[st.area].basins.map(b => ({ value: b.id, label: b.label })) : [{ value: '-', label: '-' }] },
                 { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
+                { key: 'sub', label: st => PRODUCTS[st.product].subLabel || '', options: st => PRODUCTS[st.product].subs ? Object.keys(PRODUCTS[st.product].subs).map(m => ({ value: m, label: PRODUCTS[st.product].subs[m] })) : [{ value: '-', label: '-' }] },
                 { key: 'accum', label: 'Accumulation', options: st => PRODUCTS[st.product].accums ? Object.keys(PRODUCTS[st.product].accums).map(m => ({ value: m, label: PRODUCTS[st.product].accums[m] })) : [{ value: '-', label: '-' }] },
+                { key: 'layout', label: 'Layout (testing)', options: st => PRODUCTS[st.product].compare ? [{ value: 'single', label: 'One map' }, { value: 'compare', label: 'Side by side' }] : [{ value: 'single', label: '-' }] },
+                { key: 'vs', label: 'Compare with', options: st => { const p = PRODUCTS[st.product]; return p.compare && st.layout === 'compare' ? Object.keys(p.models).filter(m => m !== st.model).map(m => ({ value: m, label: p.models[m] })) : [{ value: '-', label: '-' }]; } },
             ],
             resolve(st) {
                 const a = AREAS[st.area], p = PRODUCTS[st.product];
-                const info = typeof p.info === 'function' ? p.info(st.product === 'uw_snd' ? a : st) : p.info;
-                return Object.assign({ hours: [null], runs: null, runExact: false, title: p.title(a, st), info,
+                const info = typeof p.info === 'function' ? p.info(st.product === 'uw_snd' || st.product === 'uw_lvl' ? a : st) : p.info;
+                const view = Object.assign({ hours: [null], runs: null, runExact: false, title: p.title(a, st), info,
                     latestNote: 'Always the most recent run. The run and valid times are printed on the figure, in Z (UTC).' }, p.build(a, st));
+                if (p.compare && st.layout === 'compare' && st.vs && st.vs !== '-' && st.vs !== st.model && view.hours.length > 1) {
+                    // one view per model; for the freezing-level maps the model key is also the build argument
+                    const ids = [st.model, st.vs];
+                    view.title = `${p.title(a, st).replace(/ \((?:GFS|ECMWF)-driven\)$/, '')}: ${p.models[st.model]} vs ${p.models[st.vs]}`;
+                    view.compare = ids.map(m => ({ label: p.models[m], view: p.build(a, Object.assign({}, st, { model: m }), m) }));
+                }
+                return view;
             },
         });
     };

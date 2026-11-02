@@ -5,6 +5,7 @@
 #                    depth but NOT SWE.
 # normals: false (optional, SNOTEL only) leaves the station out of the homepage season charts, e.g. a new station with no record.
 # resort (optional, SNOTEL only): nearest ski area, shown beside the station on the homepage season charts.
+# network: RAWS   -> a non-NWAC weather station that Synoptic carries (e.g. MTHO3); fetched the same way as NWAC.
 # network: SNOTEL -> fetched from NRCS AWDB by triplet (e.g. "791:WA:SNTL"). Reports
 #                    both snow depth and SWE. (Icicle Creek 1338 is new and only exists
 #                    in AWDB, so all SNOTEL goes through AWDB.)
@@ -64,7 +65,8 @@ areas:
     page: /tools/model-tools-precipitation.html#area=stevens
     webcams:
       - {type: windy, id: "1346275221", label: "US 2 at East Stevens Pass Summit"}
-      - {type: windy, id: "1793897716", label: "Dirtyface Peak - Natapoc Ridge"}
+      - {type: windy, id: "1793895621", label: "Cowboy Mountain"}
+      - {type: windy, id: "1637390803", label: "Skyline Express"}
     stations:
       - {id: STB48, network: NWAC, label: Brooks, primary: true}
       - {id: STS52, network: NWAC, label: Skyline}
@@ -154,6 +156,7 @@ areas:
     page: /tools/model-tools-precipitation.html#area=paradise
     webcams:
       - {type: windy, id: "1384985408", label: "Henry M. Jackson Visitor Center"}
+      - {type: windy, id: "1384985407", label: "Tatoosh Range"}
     stations:
       - {id: MU101, network: NWAC, label: Camp Muir}
       - {id: PVC54, network: NWAC, label: Paradise}
@@ -173,7 +176,7 @@ areas:
     webcams:
       - {type: windy, id: "1459260236", label: "US 12 at White Pass Summit"}
     stations:
-      - {id: WPS60, network: NWAC, label: Pigtail Peak}
+      - {id: "692:WA:SNTL", network: SNOTEL, label: Pigtail Peak}
       - {id: WPS58, network: NWAC, label: White Pass Upper}
       - {id: WPS45, network: NWAC, label: White Pass Base}
       - {id: "863:WA:SNTL", network: SNOTEL, label: White Pass E.S., resort: White Pass, primary: true}
@@ -182,6 +185,16 @@ areas:
     name: Mt. Adams
     basin: "17080002"
     page: /tools/mt-adams.html
-    note: No stations sit near Mt. Adams. These are approximate conditions from Surprise Lakes SNOTEL, southwest of the mountain.
+    note: Few stations sit near Mt. Adams. These are approximate conditions from Potato Hill and Surprise Lakes, west and southwest of the mountain.
     stations:
+      - {id: PTHW1, network: RAWS, label: Potato Hill}
       - {id: "804:WA:SNTL", network: SNOTEL, label: Surprise Lakes, resort: Mt. Adams, primary: true}
+
+  - id: mt-hood
+    name: Mt. Hood
+    basin: "17070105"
+    page: /tools/model-tools-precipitation.html#area=mt-hood
+    stations:
+      - {id: TIM70, network: NWAC, label: Timberline, primary: true}
+      - {id: MHM54, network: NWAC, label: Mt. Hood Meadows}
+      - {id: MTHO3, network: RAWS, label: Mt. Hood}

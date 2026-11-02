@@ -40,7 +40,8 @@ FOG_SPREAD_F = 3.0           # air temp minus dew point at or below this -> visi
 
 # Data-trust flags (caution only, the data is still shown)
 DEPTH_SWING_IN = 36.0        # depth range within 24h larger than this is suspect
-OFFSEASON_MONTHS = {7, 8, 9, 10}   # any snow depth reported now is flagged
+OFFSEASON_END = (10, 15)     # snow depth reported before Oct 15 is flagged unless water equivalent backs it up; from Oct 15 on it is never flagged for the season
+OFFSEASON_SWE_IN = 0.5       # SWE (own, or any SNOTEL in the area) at least this deep confirms real early-season snow
 DEPTH_VS_REF_IN = 24.0       # depth this far above every SNOTEL in the area is suspect
 
 now = datetime.now(timezone.utc)
@@ -222,6 +223,7 @@ def summarize(cfg, raw):
         p72 = summed(raw['precip_hourly'], 72)
 
     depth_window = [v for _, v in in_window(raw['depth'], 24)]
+    temps_24h = [v for _, v in in_window(raw['temp'], 24)]   # rolling 24 h (not the calendar day)
     return {
         'id': cfg['id'],
         'label': cfg.get('label') or raw['name'],
@@ -232,6 +234,8 @@ def summarize(cfg, raw):
         'elev_ft': round(raw['elev_ft']) if raw['elev_ft'] is not None else None,
         'obs_time': newest.strftime('%Y-%m-%dT%H:%M:%SZ') if newest else None,
         'temp_f': r(temp),
+        'temp_hi_24h_f': r(max(temps_24h)) if temps_24h else None,
+        'temp_lo_24h_f': r(min(temps_24h)) if temps_24h else None,
         'rh': r(rh, 0),
         'dewpoint_f': r(dew),
         'wind_mph': r(wind),
@@ -253,6 +257,7 @@ def apply_trust_flags(stations):
     """Add caution reasons. Never drops data, just marks it questionable."""
     refs = [s for s in stations if s['network'] == 'SNOTEL' and s['snow_depth_in'] is not None]
     ref_max_depth = max((s['snow_depth_in'] for s in refs), default=None)
+    ref_max_swe = max((s['swe_in'] for s in stations if s['network'] == 'SNOTEL' and s['swe_in'] is not None), default=0)
 
     for s in stations:
         reasons = []
@@ -271,7 +276,7 @@ def apply_trust_flags(stations):
         if depth is not None:
             if depth < 0:
                 reasons.append('Negative snow depth')
-            if now.month in OFFSEASON_MONTHS and depth > 0:
+            if (now.month, now.day) < OFFSEASON_END and now.month >= 7 and depth > 0 and max(s['swe_in'] or 0, ref_max_swe) < OFFSEASON_SWE_IN:
                 reasons.append('Snow depth reported in the off-season, may be sensor error')
             if s['_depth_range_24h'] is not None and s['_depth_range_24h'] > DEPTH_SWING_IN:
                 reasons.append(f'Snow depth swung {s["_depth_range_24h"]:.0f} in within 24 h')
@@ -362,7 +367,7 @@ def build_checklist(stations):
 def main():
     areas = yaml.safe_load(AREAS_FILE.read_text(encoding='utf-8'))['areas']
 
-    nwac_ids = sorted({s['id'] for a in areas for s in a['stations'] if s['network'] == 'NWAC'})
+    nwac_ids = sorted({s['id'] for a in areas for s in a['stations'] if s['network'] in ('NWAC', 'RAWS')})   # both come from Synoptic
     snotel_ids = sorted({s['id'] for a in areas for s in a['stations'] if s['network'] == 'SNOTEL'})
 
     raw = {}
@@ -406,7 +411,7 @@ def main():
 
     payload = {
         'generated_utc': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
-        'sources': {'NWAC': 'Synoptic Data API', 'SNOTEL': 'NRCS AWDB'},
+        'sources': {'NWAC': 'Synoptic Data API', 'RAWS': 'Synoptic Data API', 'SNOTEL': 'NRCS AWDB'},
         'errors': errors,
         'areas': out_areas,
     }

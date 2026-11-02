@@ -1,11 +1,10 @@
 ---
 layout: page
-disclaimer: true
 title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
 description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, rendered with MetPy from observed radiosonde data. True snow level (not just freezing level), dendritic growth zone, and CAPE at a glance."
 keywords: "skew-t, radiosonde, sounding, dendritic growth zone, freezing level, snow level, wet bulb zero, Quillayute, Salem, Spokane, Port Hardy, MetPy"
 og_title: "Radiosonde Skew-T Tool | Cascade Mountain Weather"
-og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, with a true snow-level estimate, rendered client-side from observed radiosonde data."
+og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and Port Hardy, with a true snow-level estimate, rendered from observed radiosonde data."
 ---
 <style>
     .radiosonde-hero {
@@ -257,7 +256,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         zone (DGZ), estimating snow level, wind shear, and convective potential. Read more about understanding a Skew-T <a href="https://www.weather.gov/source/zhu/ZHU_Training_Page/convective_parameters/skewt/skewtinfo.html" target="_blank" rel="noopener">here</a>.
     </p>
     <p>
-        Click a site to see the most recent sounding for that location. Give about 30 seconds for the chart to load. Quillayte, Port Hardy, and Salem are launched
+        Click a site to see the most recent sounding for that location. Quillayte, Port Hardy, and Salem are launched
         upwind of the Cascades, so they are often representative of what the Cascades will see.
         Click the chart to enlarge it and swipe or use the arrow keys to move between figures. The units toggle applies to the diagnostics below.
     </p>
@@ -373,9 +372,18 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 <section class="radiosonde-history" aria-label="Snow level and freezing level history">
     <h2>Freezing Level &amp; Snow Level Trend</h2>
     <p class="radiosonde-status">
-        Recorded automatically every few hours from observed soundings (last 7 days shown;
-        drag to pan/zoom), so you can see how a level actually evolved versus what was forecast.
+        Left of the black line is what the soundings observed over the last three days; right of it, at Quillayute,
+        is the latest UW WRF forecast for the next three. Every sounding is stored, so use the window menu to look further
+        back. Drag to pan or zoom.
     </p>
+    <div class="wrf-controls">
+        <label>Window <select id="history-window">
+            <option value="around">Past 3 days and next 3 days</option>
+            <option value="week">Past 7 days</option>
+            <option value="fortnight">Past 14 days</option>
+            <option value="all">Everything recorded</option>
+        </select></label>
+    </div>
     <div id="wrf-controls" class="wrf-controls" hidden>
         <label>Overlay UW WRF <select id="wrf-var">
             <option value="freezing_level_ft">freezing level</option>
@@ -389,6 +397,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
             earlier</span>
         <p class="radiosonde-status">Dashed lines are what WRF forecast, at that lead, for each launch time. Quillayute only. The WRF point is Olympex DOW, about 60&nbsp;km away, so some of the difference is location rather than model error.</p>
     </div>
+    <p id="history-note" class="radiosonde-status" hidden></p>
     <div id="history-plot"></div>
     <p id="history-empty" class="radiosonde-status" hidden>No recorded history yet for this station -- check back after the next automated update.</p>
 </section>
@@ -422,10 +431,11 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
 
 <script>
     window.RADIOSONDE_HISTORY_URL = "{{ '/assets/data/radiosonde_history.json' | relative_url }}";
+    window.RADIOSONDE_MANIFEST_URL = "{{ '/assets/data/radiosonde/manifest.json' | relative_url }}";
+    window.RADIOSONDE_FORECAST_URL = "{{ '/assets/data/uw_soundings/dowlx.json' | relative_url }}";
     window.RADIOSONDE_WRF_URL = "{{ '/assets/data/wrf_uil.json' | relative_url }}";
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.1/plotly.min.js" integrity="sha384-AFNp2MtSm5/oZbEs/J19F/Ah57MEiVsoed8nE3fq2Wnccdl1u/EkyJ9XKKU8rt7+" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js" integrity="sha384-i3R37b3tF+HWudsUf1VSEOY2YxwSNMqY8DQa9Z0O3xh+NkJ9o+yjcGyIi5huj+nB" crossorigin="anonymous"></script>
 <script src="{{ '/assets/radiosonde.js' | relative_url }}" defer></script>

@@ -101,3 +101,17 @@
 .mv-extra[hidden] { display: none; }
 .mv-extra img { display: block; width: 100%; max-width: 360px; height: auto; border: 1px solid #e2e8f0; border-radius: 10px; margin: 0 0 0.25rem; }
 .mv-extra figcaption { font-size: 0.8rem; color: #64748b; }
+
+/* side by side: two maps next to each other, stacked on a narrow screen */
+.mv-off { display: none !important; }
+.mv-pair-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0 0 0.5rem; font-size: 0.82rem; color: #475569; }
+.mv-pair-tip { color: #64748b; font-size: 0.78rem; }
+.mv-pair-view { overflow: auto; }
+.mv-pair-view.is-zoomed { cursor: grab; }
+.mv-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0 0 0.8rem; }
+.mv-pair-fig { margin: 0; min-width: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.mv-pair-fig figcaption { padding: 0.45rem 0.7rem; font-size: 0.82rem; color: #334155; background: #eef4fb; border-bottom: 1px solid #e2e8f0; }
+.mv-pair-img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 !important; transition: opacity 0.12s; }
+.mv-pair-img:not([src]) { display: none; }
+.mv-pair-img.is-loading { opacity: 0.55; }
+@media (max-width: 760px) { .mv-pair { grid-template-columns: 1fr; } }

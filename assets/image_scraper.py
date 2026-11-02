@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-CW3E_WESTWRF_SNOW_URL = "https://cw3e.ucsd.edu/images/wwrf/images/ensemble/West-WRF_3hrSnow_Meteogram_Panel_MRNP.png"
+CW3E_WESTWRF_SNOW_URL = "https://cw3e-sites.ucsd.edu/images/wwrf/images/ensemble/West-WRF_3hrSnow_Meteogram_Panel_MRNP.png"
 REQUEST_TIMEOUT = 10  # seconds
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds

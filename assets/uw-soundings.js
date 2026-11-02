@@ -109,7 +109,7 @@
         const lead = f.hour ? `+${f.hour} h` : 'analysis';
         const when = `${PAC_D.format(valid)}, ${PAC_T.format(valid)} (${zStr(valid)})`;
         const dgz = f.dgz_thickness_m ? `${Math.round(f.dgz_thickness_m * FT).toLocaleString('en-US')} ft thick, ${Math.round(f.dgz_saturated_m * FT).toLocaleString('en-US')} ft near saturation` : 'none in this profile';
-        const head = `<text x="${X0}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(',WA', ''))}: UW WRF forecast sounding</text>
+        const head = `<text x="${X0}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(/,(WA|OR)$/, ''))}: UW WRF forecast sounding</text>
             <text x="${X0}" y="44" font-size="14" fill="${C.text}">${when} &#183; ${lead} &#183; run ${zStr(init)} ${PAC_D.format(init)}</text>`;
         const legend = `<g font-size="12" fill="${C.text}">
             <line x1="${X0}" y1="${H - 36}" x2="${X0 + 22}" y2="${H - 36}" stroke="${C.t}" stroke-width="3"/><text x="${X0 + 28}" y="${H - 32}">temperature</text>
@@ -166,7 +166,7 @@
         s += `<text x="${left + pw - 4}" y="${ya(site.elevation_ft) - 5}" text-anchor="end" font-size="12" fill="#78716c" ${halo}>sounding point ${fmtFt(site.elevation_ft)}</text>`;
         s += line('freezing_level_ft', C.frz, 2.6, 'freezing_below_surface') + line('snow_level_ft', C.snow, 2.6, 'snow_below_surface');
         const init = initDate(site).getTime();
-        const head = `<text x="${left}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(',WA', ''))}: freezing level, snow level and dendritic growth zone</text>
+        const head = `<text x="${left}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(/,(WA|OR)$/, ''))}: freezing level, snow level and dendritic growth zone</text>
             <text x="${left}" y="44" font-size="14" fill="${C.text}">UW WRF forecast, run ${zStr(init)} ${PAC_D.format(init)}, every 3 hours. Times are Pacific.</text>`;
         const lg = `<g font-size="12" fill="${C.text}">
             <line x1="${left}" y1="${aTop - 10}" x2="${left + 22}" y2="${aTop - 10}" stroke="${C.frz}" stroke-width="3"/><text x="${left + 28}" y="${aTop - 6}">freezing level (0&#176;C)</text>

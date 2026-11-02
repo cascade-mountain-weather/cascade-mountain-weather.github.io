@@ -293,3 +293,12 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 .cmap-zone-banner { margin: 0.5rem 0 0; padding: 0.55rem 0.75rem; border-left: 4px solid #d97706; background: #fffbeb; color: #78350f; font-size: 0.82rem; line-height: 1.4; }
 .cmap-zone-banner[hidden] { display: none; }
 .cmap-zone-note { margin: 0.7rem 0 0; padding-top: 0.5rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; line-height: 1.35; color: #64748b; }
+
+/* Touch screens: station chips, camera buttons and the "nearby stations" toggles need room for a finger */
+@media (pointer: coarse) {
+    .cmap-pick, .cmap-cam { min-height: 36px; padding-top: 0.35rem; padding-bottom: 0.35rem; }
+    .cmap-card summary { min-height: 36px; display: flex; align-items: center; }
+}
+
+/* seven tiles in three columns: let the last one span the row */
+.cmap-tiles .cmap-tile:last-child:nth-child(3n+1) { grid-column: 1 / -1; }

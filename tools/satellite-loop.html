@@ -1,16 +1,15 @@
 ---
 layout: page
-disclaimer: true
 title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
-description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated about every 3 hours. Play, pause, and scrub through recent frames."
+description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every hour, with the last 24 hours of frames to play, pause and scrub through."
 keywords: "GOES satellite loop, Pacific Northwest radar, Washington satellite imagery, PNW weather loop"
 og_title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
-og_description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated about every 3 hours."
+og_description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every hour."
 ---
 <section id="satellite-looper" class="satellite-looper">
     <h2>GOES + Radar Looper</h2>
     <p class="satellite-subtitle">
-        Integrated GOES true color and radar loop for the Pacific Northwest. Updated about every 3 hours.
+        Integrated GOES true color and radar loop for the Pacific Northwest. Updated every hour; drag the slider to step back through the last 24 hours (frames are about 20 minutes apart).
     </p>
     <div class="satellite-stage">
         <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
@@ -176,32 +175,45 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
         async function initSatelliteLooper() {
             statusEl.textContent = 'Loading latest satellite loop...';
             timingEl.textContent = 'Reading frame timing...';
-            const manifestPath = `{{ '/assets/images/satellite/satellite_manifest.json' | relative_url }}?v=${Date.now()}`;
-            const fallbackStaticPath = `{{ '/assets/images/satellite/latest_frame.webp' | relative_url }}?v=${Date.now()}`;
+            const remoteBase = `{{ site.satellite_data_url }}`;                    // the satellite-data branch: the last 24 hours, rebuilt hourly
+            const localBase = `{{ '/assets/images/satellite' | relative_url }}`;  // older copy kept in the site itself
+            const fallbackStaticPath = `${localBase}/latest_frame.webp?v=${Date.now()}`;
+            const bust = Math.floor(Date.now() / 300000);                           // raw.githubusercontent.com caches for 5 minutes
+
+            async function loadManifest() {
+                if (remoteBase) {
+                    try {
+                        const r = await fetchWithTimeout(`${remoteBase}/manifest.json?v=${bust}`, 8000);
+                        if (r.ok) {
+                            const m = await r.json();
+                            if (m && Array.isArray(m.frames) && m.frames.length) {
+                                return { manifest: m, src: f => `${remoteBase}/${f.file}?v=${bust}` };
+                            }
+                        }
+                    } catch (e) { /* fall through to the copy in the site */ }
+                }
+                const r = await fetchWithTimeout(`${localBase}/satellite_manifest.json?v=${Date.now()}`, 8000);
+                if (!r.ok) { throw new Error('manifest unavailable'); }
+                const m = await r.json();
+                if (!m || !Array.isArray(m.frames) || !m.frames.length) { throw new Error('manifest has no frames'); }
+                const version = encodeURIComponent(m.updated_utc || Date.now());
+                return { manifest: m, src: f => `${localBase}/frames/${f.file}?v=${version}` };
+            }
 
             try {
-                const response = await fetchWithTimeout(manifestPath, 8000);
-                if (!response.ok) {
-                    throw new Error('manifest unavailable');
-                }
-                const manifest = await response.json();
-                if (!manifest || !Array.isArray(manifest.frames) || manifest.frames.length === 0) {
-                    throw new Error('manifest has no frames');
-                }
-
-                const version = encodeURIComponent(manifest.updated_utc || Date.now());
-
+                const loaded = await loadManifest();
+                const manifest = loaded.manifest;
                 frames = manifest.frames.map(function (f) {
                     return {
-                        src: `{{ '/assets/images/satellite/frames/' | relative_url }}${f.file}?v=${version}`,
+                        src: loaded.src(f),
                         durationMs: Number(f.duration_ms || 0),
                         time: f.timestamp_utc ? new Date(f.timestamp_utc) : null,
                     };
                 });
 
                 scrubberEl.max = String(frames.length - 1);
-                renderFrame(0);
-                preloadFrames(1, 3);
+                renderFrame(frames.length - 1);        // open on the newest frame
+                preloadFrames(Math.max(0, frames.length - 4), 4);
                 setTimingTextFromManifest(manifest);
 
             } catch (err) {
@@ -232,6 +244,7 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
             if (!frames.length) {
                 return;
             }
+            preloadFrames(0, frames.length);          // fetch the rest of the loop so it plays smoothly
             isPlaying = true;
             playEl.disabled = true;
             pauseEl.disabled = false;

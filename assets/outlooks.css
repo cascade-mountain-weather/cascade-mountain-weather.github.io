@@ -94,3 +94,12 @@
 .ts-leaflet { height: 440px; border: 1px solid #e2e8f0; border-radius: 6px; z-index: 0; }
 .ts-pin span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 700 11px/1 sans-serif; text-shadow: 0 0 2px rgba(0,0,0,.6); }
 @media (max-width: 600px) { .ts-leaflet { height: 340px; } }
+
+/* jump links at the top of the sub-seasonal page: same label and chip look as the pickers */
+.ol-jump { margin: 0.8rem 0 0; }
+.ol-jump .ol-chip { display: inline-flex; align-items: center; text-decoration: none; }
+.lt-card[id] { scroll-margin-top: 70px; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.ol-more { margin: 0.8rem 0 0.4rem; }
+.ol-more > summary { cursor: pointer; font-weight: 600; color: #1e3c72; min-height: 36px; display: flex; align-items: center; }

@@ -34,9 +34,9 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from collect_radiosonde_history import _relative_humidity_pct, _wet_bulb_stull, compute_melting_layer  # noqa: E402
 
-BASE = "https://a.atmos.washington.edu/mm5rt/rt/showsounding_d4.cgi"
+BASE = "https://a.atmos.washington.edu/mm5rt/rt/showsounding_{d}.cgi"
 HEADERS = {"User-Agent": "cascade-mountain-weather.github.io forecast-sounding research (dlhogan@uw.edu)"}
-SITES = {   # id: (name, lat/lon string as the page expects)
+SITES = {   # id: (name, lat/lon string as the page expects[, domain]); the domain is d4 (4/3 km, Washington) unless given
     "ksmp": ("Stampede Pass,WA", "47.28N,121.34W"),
     "pvc55": ("Paradise-Mt Rainier,WA", "46.79N,121.74W"),
     "rimrk": ("Rimrock Retreat,WA", "46.67N,121W"),            # White Pass
@@ -45,14 +45,15 @@ SITES = {   # id: (name, lat/lon string as the page expects)
     "discl": ("Diablo Powerhouse,WA", "48.72N,121.14W"),       # North Cascades
     "lvwth": ("Leavenworth,WA", "47.6N,120.67W"),
     "mtwpm": ("Methow Valley,WA", "48.42N,120.16W"),
+    "heheb": ("Hehe Butte,OR", "44.97N,121.49W", "d3"),         # Mt. Hood analog: Oregon is outside the 4/3 km domain, so this is the 12 km one
 }
 M_TO_FT = 3.28084
 G = 9.80665
 
 
 def page_url(init, hr, loc):
-    name, latlon = SITES[loc]
-    return (f"{BASE}?initmodel=GFS&yyyymmddhh={init}&reqhr={hr}&loc={loc}"
+    name, latlon, *dom = SITES[loc]
+    return (f"{BASE.format(d=dom[0] if dom else 'd4')}?initmodel=GFS&yyyymmddhh={init}&reqhr={hr}&loc={loc}"
             f"&locname={requests.utils.quote(name)}&latlon={latlon}")
 
 

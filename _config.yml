@@ -3,6 +3,7 @@ tagline: "Mountain Weather & Snow Forecasts for PNW Backcountry Enthusiasts"
 # The site header's tagline, in the lines it stacks beside the logo. "Mountain Weather" is left off here because the name
 # and the logo beside it already say it; `tagline` above is the full sentence for search engines and sharing.
 tagline_lines:
+  - "Mountain Weather &"
   - "Snow Forecasts for"
   - "PNW Backcountry Enthusiasts"
 description: >-
@@ -66,3 +67,6 @@ exclude:
 ski_model_name: "Type I Fun Finder"
 corn_model_name: "Corn Clock"
 analogs_name: "Reading the Tea Leaves"
+
+# Rolling satellite frames (last 24 hours), force-pushed hourly to this branch by update_satellite_loop.yml
+satellite_data_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/satellite-data"

@@ -90,21 +90,33 @@
         render();
     }
 
-    // CW3E products that start up in the cold season (about November). Tagged here so switching one on is a one-line change:
-    // set active: true (and fill in the address for the weather regime forecast once it exists). They are not loaded yet.
-    const CW3E = [
-        { id: 'ar_activity', title: 'ECMWF atmospheric river activity, weeks 2–4', weeks: [2, 3, 4], active: false, starts: 'November',
-            url: w => `https://cw3e.ucsd.edu/images/S&S/AROccurence/ECCC/ECCC_EP_AR_FCST_Week${w}.png` },
-        { id: 'ar_seattle', title: 'ECMWF atmospheric river activity and intensity for Seattle, weeks 2–4', weeks: [2, 3, 4], active: false, starts: 'November',
-            url: w => `https://cw3e.ucsd.edu/images/S&S/AROccurence/ECCC/barplots/ECCC_BarGraph_ARF_Seattle_Week${w}.png` },
-        { id: 'regimes', title: 'West Coast weather regime forecast and impacts', weeks: [], active: false, starts: 'November (date to confirm)', url: null },
+    // Weather regime figures: saved each Wednesday by scripts/fetch_subseasonal.py into assets/data/subseasonal/ (manifest.json lists them).
+    const REGIME_GROUPS = [
+        { title: 'Regime forecast (CFSv2, IRI)', ids: ['cfs_regimes'], more: ['wr_precip', 'wr_temp'], moreTitle: 'What each regime means: precipitation and temperature maps', how: {
+            cfs_regimes: 'Each column is a day being forecast and each row is how many days ahead the forecast was made. Colors show which of four large-scale patterns the 48-member CFSv2 ensemble favors (Pacific Ridge, Pacific Trough, Greenland High, West Coast Ridge); darker means more members agree. Read up a column to see how the forecast for one day changes as it gets closer. A Pacific Trough is the stormy, wetter pattern for the Northwest; a West Coast Ridge is the dry, mild one.',
+            wr_precip: 'What each regime tends to do to precipitation: the average departure from normal when that regime is in place (browns drier, greens wetter).',
+            wr_temp: 'The same for temperature: the average departure from normal when each regime is in place.' } },
+        { title: 'West Coast weather patterns (CW3E)', ids: ['wc_precip', 'wc_temp'], how: {
+            wc_precip: 'Each column is one of 16 weather regimes (WR1 to WR16). The small maps on top show the typical precipitation anomaly when that regime occurs, and the shading below is the NCEP ensemble probability of that regime in each week, so a dark block in a column means that regime is likely that week. Match the likely regimes to their maps to see whether the week leans wet or dry.',
+            wc_temp: 'The same weather regimes with the typical temperature anomaly on top and the weekly probability of each regime below.' } },
     ];
-    function mountCW3E(el) {
-        const live = CW3E.filter(p => p.active && p.url);
-        el.innerHTML = CW3E.map(p => `<div class="lt-planned"><h3>${esc(p.title)}<span class="ol-tag">${p.active ? 'live' : 'starts ' + esc(p.starts)}</span></h3>
-            <p>${p.active ? '' : 'CW3E starts this product in the cold season, so it is not shown yet. '}<a href="https://cw3e.ucsd.edu/" target="_blank" rel="noopener noreferrer">cw3e.ucsd.edu</a></p></div>`).join('');
-        // (live products would be drawn here as figures; none are active yet)
-        return live;
+    function mountRegimes(el) {
+        fetch(BASE + 'data/subseasonal/manifest.json', { cache: 'no-cache' })
+            .then(r => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+            .then(m => {
+                const byId = {}; (m.figures || []).forEach(f => { byId[f.id] = f; });
+                const upd = m.updated ? dt(m.updated.replace('Z', ':00Z')) : null;
+                const fig = (id, g) => {
+                    const f = byId[id];
+                    return `<figure class="ol-fig"><img class="PlotFormat" loading="lazy" src="${esc(BASE + 'data/subseasonal/' + f.file + '?v=' + (f.sha256 || '').slice(0, 8))}" alt="${esc(f.title)}">
+                        <figcaption><strong>${esc(f.title)}</strong> &middot; ${esc(f.source)}<span class="ol-how">${g.how[id] || ''}</span></figcaption></figure>`;
+                };
+                el.innerHTML = REGIME_GROUPS.map(g => `<h3>${esc(g.title)}</h3><div class="ol-figs" style="grid-template-columns:1fr">${g.ids.filter(id => byId[id]).map(id => fig(id, g)).join('')}</div>`
+                    + (g.more && g.more.some(id => byId[id]) ? `<details class="ol-more"><summary>${esc(g.moreTitle)}</summary><div class="ol-figs" style="grid-template-columns:1fr">${g.more.filter(id => byId[id]).map(id => fig(id, g)).join('')}</div></details>` : '')).join('')
+                    + `<p class="ol-credit">Figures are saved every Wednesday${upd ? ` (last checked ${md(upd)})` : ''}; the models behind them update on their own schedules, so the date printed on each figure is the one that counts. Click a figure to enlarge it.</p>`;
+                if (window.CMWLightbox) el.querySelectorAll('img.PlotFormat').forEach(i => window.CMWLightbox.bind(i));
+            })
+            .catch(() => { el.innerHTML = '<p class="ol-fail">The weather regime figures could not be loaded right now.</p>'; });
     }
 
     // Single ECMWF charts (the MJO forecast and the PNA outlook) dropped into an existing figure grid on the Teleconnections
@@ -121,7 +133,7 @@
         });
     }
 
-    document.querySelectorAll('.ol-cw3e').forEach(mountCW3E);
+    document.querySelectorAll('.ol-regimes').forEach(mountRegimes);
     const mounts = document.querySelectorAll('.ol-mount');
     const slots = document.querySelectorAll('[data-index]');
     if (!mounts.length && !slots.length) return;

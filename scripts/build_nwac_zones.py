@@ -76,7 +76,7 @@ def main():
             continue
         if p.get("center_id") and p["center_id"] != "NWAC":
             continue
-        if p.get("state") and p["state"] != "WA":     # the feed also covers Mt Hood (OR); the site covers Washington
+        if p.get("state") and p["state"] != "WA" and p["name"] != "Mt Hood":     # the site covers Washington, plus the Mt Hood zone (OR)
             continue
         g = simplify(geom)
         if g:

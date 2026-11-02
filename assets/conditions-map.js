@@ -56,12 +56,16 @@
                 <small>${esc(s.network)}</small></th>
             <td>${s.elev_ft === null ? DASH : s.elev_ft.toLocaleString() + "'"}</td>
             <td>${num(s.temp_f, 0, '°F')}</td>
+            <td>${hiLo(s)}</td>
             <td>${wind}</td>
             <td>${num(s.snow_depth_in, 1, ' in')}</td>
             <td>${num(s.swe_in, 1, ' in')}</td>
             <td>${num(s.precip_24h_in, 2, ' in')}</td>
         </tr>`;
     }
+
+    const hiLo = s => (s.temp_hi_24h_f == null && s.temp_lo_24h_f == null) ? DASH
+        : `${num(s.temp_hi_24h_f, 0, '°')} / ${num(s.temp_lo_24h_f, 0, '°')}`;
 
     // "Blewett Pass" -> "Blewett Pass Area" (names already ending in Area/Region are left alone).
     const areaLabel = name => /\b(area|region)$/i.test(name) ? name : `${name} Area`;
@@ -95,7 +99,7 @@
         const dewText = hasDew || hasRh ? `${hasDew ? num(h.dewpoint_f, 0, '°F') : DASH} (${hasRh ? num(h.rh, 0, '%') : DASH})` : DASH;
         const humid = (hasDew && h.temp_f !== null && h.temp_f !== undefined && h.temp_f - h.dewpoint_f <= 3) || (hasRh && h.rh >= 95);
         return `${pills}
-            <div class="cmap-tiles${h.trust.ok ? '' : ' cmap-tiles--flag'}">${tile('Temp', num(h.temp_f, 0, '°F'))}${tile('Dew pt (RH)', dewText, humid ? { cls: 'cmap-tile--humid', title: 'Near saturation: the temperature is within 3°F of the dew point, or RH is 95% or more. Fog or low cloud is possible.' } : {})}${tile('Wind', wind)}
+            <div class="cmap-tiles${h.trust.ok ? '' : ' cmap-tiles--flag'}">${tile('Temp', num(h.temp_f, 0, '°F'))}${tile('24h hi / lo', hiLo(h), { title: 'Highest and lowest temperature in the last 24 hours (rolling, not the calendar day)' })}${tile('Dew pt (RH)', dewText, humid ? { cls: 'cmap-tile--humid', title: 'Near saturation: the temperature is within 3°F of the dew point, or RH is 95% or more. Fog or low cloud is possible.' } : {})}${tile('Wind', wind)}
                 ${tile('Snow depth', num(h.snow_depth_in, 0, ' in'))}${tile('SWE', num(h.swe_in, 1, ' in'))}
                 ${tile('Precip 24h', num(h.precip_24h_in, 2, ' in'))}</div>
             <p class="cmap-from">${esc(h.label)}${h.elev_ft ? ` &middot; ${h.elev_ft.toLocaleString()}'` : ''} &middot; ${esc(h.network)} &middot; ${esc(obs)}</p>
@@ -126,7 +130,7 @@
             <details class="cmap-stations">
                 <summary>Nearby stations (${area.stations.length})${flagged.length ? ' <span class="cmap-warn">&#9888;</span>' : ''}</summary>
                 <div class="cmap-scroll"><table class="cmap-table">
-                    <thead><tr><th scope="col">Station</th><th scope="col">Elev</th><th scope="col">Temp</th>
+                    <thead><tr><th scope="col">Station</th><th scope="col">Elev</th><th scope="col">Temp</th><th scope="col" title="Highest and lowest temperature in the last 24 hours">24h hi / lo</th>
                         <th scope="col">Wind</th><th scope="col">Depth</th><th scope="col">SWE</th>
                         <th scope="col">Precip 24h</th></tr></thead>
                     <tbody>${area.stations.map(stationRow).join('')}</tbody>
@@ -300,8 +304,8 @@
 
         // Station dots go on top of the basins; clicking one opens its own area first.
         data.areas.forEach(area => area.stations.forEach(s => {
-            // SNOTEL stations are circles, NWAC stations are diamonds; grey means questionable or no recent data
-            const shape = s.network === 'NWAC' ? 'diamond' : 'circle';
+            // SNOTEL stations are circles, NWAC and other (RAWS) stations are diamonds; grey means questionable or no recent data
+            const shape = s.network !== 'SNOTEL' ? 'diamond' : 'circle';
             const dot = L.marker([s.lat, s.lon], {
                 icon: L.divIcon({
                     className: 'cmap-pin',

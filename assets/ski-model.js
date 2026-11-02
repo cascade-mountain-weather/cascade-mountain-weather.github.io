@@ -28,13 +28,13 @@
     const TOWN_DAY = "🧺 Go to the farmer's market, 🎿 wax your skis, 🧶 knit, or 🍞 make some sourdough.";
     const SHORT = { fresh: 'Snow', quality: 'Quality', wind: 'Wind', vis: 'Sun', vert: 'Vert', comfort: 'Temp', trail: 'Trail', dry: 'Dry', drive: 'Drive', road: 'Road' };
     const LOW = ['hike', 'bike'];            // the low-snow-day modes: no snow, no avalanche gates, no season gate
-    const COMFORT = { hike: [40, 65], bike: [50, 75] };      // comfortable temperature band, F (a first guess)
+    const COMFORT = { hike: [35, 75], bike: [45, 75] };      // comfortable temperature band, F (a first guess)
     const MAX_TRAIL_SNOW = 4;                // inches on the ground that rule a trail out
     const MAX_TRAIL_NEW = 2;                 // inches of forecast new snow that rule it out
     const STAY_IN_TOWN = 30;                 // best score below this: nothing looks good enough to drive for
     // Rough starting values, to be tuned: the snow on the ground a mode needs, and the months resorts are closed.
-    const MIN_BASE = { resort: 20, backcountry: 24, nordic: 12 };
-    const CLOSED_MONTHS = [5, 6, 7, 8, 9];          // 0-based: June to October
+    const MIN_BASE = { resort: 20, backcountry: 6, nordic: 12 };
+    const CLOSED_MONTHS = [5, 6, 7, 8];             // 0-based: June to September
     const WET = { ok: 'Fine with wet', prefer: 'Prefer dry', dry: 'Keep me dry' };
     const WET_LIMIT = 0.1;          // inches of liquid that gets you wet: the "Keep me dry" cutoff
     let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)

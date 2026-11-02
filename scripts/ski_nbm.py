@@ -1,6 +1,6 @@
 """Extract this week's NBM forecast at every ski-tool zone for the ski tool (needs Herbie: run in the cmw-herbie env).
 
-    python scripts/ski_nbm.py                       # next Friday, Saturday, Sunday, newest long cycle
+    python scripts/ski_nbm.py                       # today and the next two days (Pacific), newest long cycle
     python scripts/ski_nbm.py --first-day 2026-10-09 --days 3 --cycle "2026-10-07 19:00"
 
 Output: data/ski/nbm_extract.json (raw numbers per zone and local day); scripts/ski_features.py --real turns it into assets/data/ski_features.json.
@@ -67,7 +67,7 @@ def field(cycle, f, grid, search):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cycle", help='UTC cycle, e.g. "2026-10-07 19:00" (default: newest long cycle that reaches the last day)')
-    ap.add_argument("--first-day", help="first local date, YYYY-MM-DD (default: next Friday)")
+    ap.add_argument("--first-day", help="first local date, YYYY-MM-DD (default: today, Pacific)")
     ap.add_argument("--days", type=int, default=3)
     a = ap.parse_args()
 
@@ -75,7 +75,7 @@ def main():
     zones = cfg["zones"]
     sites = [{"name": z["id"], "lat": z["forecast_point"]["lat"], "lon": z["forecast_point"]["lon"]} for z in zones]
     today = datetime.now(PT).date()
-    first = datetime.strptime(a.first_day, "%Y-%m-%d").date() if a.first_day else today + timedelta(days=(4 - today.weekday()) % 7 or 7)
+    first = datetime.strptime(a.first_day, "%Y-%m-%d").date() if a.first_day else today
     days = [first + timedelta(days=k) for k in range(a.days)]
     wins = [local_day(d) for d in days]
     last_end = max(w[3] for w in wins)
@@ -84,6 +84,14 @@ def main():
         # newest long cycle that still has a real file at the last hour needed
         need = int((last_end - pd.Timestamp(datetime.now(timezone.utc)).tz_localize(None).floor("h")).total_seconds() // 3600) + 30
         cycle = pl.newest_long_cycle(max(need, 80))
+    if not a.first_day:
+        # a day whose 24 h snow window began before this cycle cannot be forecast whole (usually today): start at the first one that can,
+        # and keep the day count so the page always has a full set
+        while wins[0][2] < cycle:
+            first += timedelta(days=1)
+            days = [first + timedelta(days=k) for k in range(a.days)]
+            wins = [local_day(d) for d in days]
+            last_end = max(w[3] for w in wins)
     print(f"cycle {cycle:%Y-%m-%d %H}Z; days {days[0]} to {days[-1]}; last forecast hour F{int((last_end - cycle).total_seconds() // 3600)}")
     grid = nbm.Grid(sites)
     n = len(sites)

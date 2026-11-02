@@ -2,7 +2,6 @@
 layout: page
 title: "Ski Recommendation Model | Cascade Mountain Weather"
 description: "A model that recommends where and when to ski in the Washington Cascades from the forecast."
-disclaimer: true
 under_development: true
 ---
 <link rel="stylesheet" href="{{ '/assets/ski-model.css' | relative_url }}">
@@ -25,11 +24,6 @@ under_development: true
         <li><strong>Where the data come from (beta):</strong> the National Blend of Models for snow (24-hour median and range), snow-to-liquid ratio, snow level, wind, cloud and visibility at one point near each area, for the three days of the weekend. Pass delay chances come from seven winters of I-90 delays (<a href="https://wsdot.wa.gov/sites/default/files/2024-12/Snoqualmie-Winter-Operations-Study-December2024.pdf" target="_blank" rel="noopener noreferrer">WSDOT Snoqualmie Winter Operations Study</a>) applied to the other highway passes, and the Paradise road follows the National Park Service&rsquo;s winter opening rules. A bot also logs pass closures and the Paradise gate each morning so we can improve this. Not connected yet: NWAC avalanche forecasts (they start in late November, so backcountry mode is blocked until then) and live traffic. Drive times are estimates.</li>
         <li><strong>Checking itself:</strong> once real data flows, we will score its past picks against what was observed, the way the <a href="{{ '/evaluation.html' | relative_url }}">forecast evaluation</a> scores our snowfall ranges.</li>
     </ul>
-</div>
-
-<div class="lt-card">
-    <h2>Still to decide</h2>
-    <p>Which areas and parking spots belong in each mode (the list is a first draft), how to weigh each factor for powder, touring and resort days, and a corn mode for spring.</p>
 </div>
 </div>
 <script src="{{ '/assets/ski-model.js' | relative_url }}"></script>
