@@ -63,9 +63,14 @@ def request(k, o, d, when_utc):
     req = urllib.request.Request(URL, json.dumps(body).encode(), {
         "Content-Type": "application/json", "X-Goog-Api-Key": k,
         "X-Goog-FieldMask": "routes.duration,routes.staticDuration,routes.distanceMeters"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        rt = json.load(r)["routes"][0]
-    return int(rt["duration"].rstrip("s")), int(rt["staticDuration"].rstrip("s")), rt["distanceMeters"]
+    for attempt in range(2):
+        with urllib.request.urlopen(req, timeout=30) as r:
+            routes = json.load(r).get("routes")
+        if routes:
+            rt = routes[0]
+            return int(rt["duration"].rstrip("s")), int(rt["staticDuration"].rstrip("s")), rt["distanceMeters"]
+        time.sleep(1)       # an occasional empty reply (no "routes") for a pair that works on the next try
+    return None
 
 
 def apply_drive_hours():
@@ -117,13 +122,21 @@ def main():
     if a.count:
         return
     k = key()
-    n = 0
+    n = misses = 0
     for o, z, (h, mi) in todo:
         if a.limit is not None and n >= a.limit:
             break
         when = datetime(y, m, dd, h, mi, tzinfo=PT).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         try:
-            dur, static, dist = request(k, ORIGINS[o], dests[z], when)
+            got = request(k, ORIGINS[o], dests[z], when)
+            if got is None:
+                misses += 1
+                print(f"  no route returned for {o} -> {z} at {h:02d}:{mi:02d}, skipped", file=sys.stderr)
+                if misses >= 5:
+                    print("  five skipped pairs in one run, stopping", file=sys.stderr)
+                    break
+                continue
+            dur, static, dist = got
         except urllib.error.HTTPError as e:
             print("HTTP", e.code, e.read()[:300].decode(errors="replace"), file=sys.stderr)
             if e.code in (400, 401, 403, 429):      # a bad or exhausted key fails every call: stop instead of trying all of them
