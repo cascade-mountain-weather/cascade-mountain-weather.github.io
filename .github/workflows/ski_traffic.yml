@@ -43,6 +43,7 @@ jobs:
         run: python scripts/ski_traffic.py --day sat --limit 95
 
       - name: Commit and push
+        if: always() # keep the drive times already pulled even if the pull stopped early
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
