@@ -96,8 +96,11 @@
 @media (max-width: 600px) { .ts-leaflet { height: 340px; } }
 
 /* jump links at the top of the sub-seasonal page: same label and chip look as the pickers */
-.ol-jump { margin: 0.8rem 0 0; }
-.ol-jump .ol-chip { display: inline-flex; align-items: center; text-decoration: none; }
+/* a quiet inline row under the intro text: no box, never stacked over the header menus */
+.ol-jump { position: static; z-index: auto; align-self: stretch; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.7rem;
+    margin: 0.6rem 0 0.2rem; padding: 0.5rem 0 0; border-top: 1px solid #e2e8f0; }
+.ol-jump .ol-chips { gap: 0.3rem 0.5rem; }
+.ol-jump .ol-chip { display: inline-flex; align-items: center; text-decoration: none; min-height: 32px; padding: 0 0.7rem; font-size: 0.85rem; }
 .lt-card[id] { scroll-margin-top: 70px; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

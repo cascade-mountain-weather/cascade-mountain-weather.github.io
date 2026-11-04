@@ -10,6 +10,7 @@ Values are the model grid cell nearest the site, NOT downscaled or corrected for
 
   NBM    deterministic fields from the long-cycle (01/07/13/19Z) hourly files: TMP, RH, WIND (10 m), APCP (1 h).
   HRRR   TMP, RH, wind speed from UGRD/VGRD (10 m), APCP (1 h); the 00/06/12/18Z cycles run 48 hours.
+  RRFS   same messages as HRRR from the operational 3 km CONUS files (scripts/rrfs_ops.py); 00/06/12/18Z cycles used.
   HRDPS  TMP, RH, WIND (10 m), APCP accumulated from the start of the run (hourly values are differences); 48 hours.
 Forecast hours 1..48 only for now: beyond F48 the NBM files are 3-hourly and carry no 3-hour precipitation total.
 """
@@ -29,13 +30,14 @@ from herbie import Herbie
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hires_models as hm  # noqa: E402
 import nbm_snapshot as nbm  # noqa: E402
+import rrfs_ops  # noqa: E402,F401  (registers the operational RRFS template with Herbie)
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "data" / "meteograms.json"
 WORKERS = 4
 MPS_TO_MPH = 2.236936
 MM_TO_IN = 1 / 25.4
-LABELS = {"nbm": "NBM (NOAA blend, 2.5 km)", "hrrr": "HRRR (NOAA, 3 km)", "hrdps": "HRDPS (Environment Canada, 2.5 km)"}
+LABELS = {"nbm": "NBM (NOAA blend, 2.5 km)", "hrrr": "HRRR (NOAA, 3 km)", "rrfs": "RRFS (NOAA, 3 km)", "hrdps": "HRDPS (Environment Canada, 2.5 km)"}
 
 
 def k_to_f(k):
@@ -118,11 +120,15 @@ def wind_from(u, v):
     return (270 - np.degrees(np.arctan2(v, u))) % 360
 
 
-def hrrr_series(cycle, hours, grid):
+def hrrr_series(cycle, hours, grid, label="hrrr"):
+    """HRRR, and RRFS (label="rrfs"): the two share message names, so the same reader serves both."""
     def one(f):
-        H = Herbie(cycle, model="hrrr", product="sfc", fxx=f, verbose=False)
+        if label == "rrfs":
+            H = Herbie(cycle, model="rrfs_ops", product="2dfld", fxx=f, verbose=False)
+        else:
+            H = Herbie(cycle, model="hrrr", product="sfc", fxx=f, verbose=False)
         v = multi(H, grid, rf"(:(TMP|RH|DPT):2 m above ground:|:(UGRD|VGRD):10 m above ground:|:APCP:surface:{f - 1}-{f} hour acc fcst)")
-        print(f"  hrrr F{f:02d} {sorted(v)}")
+        print(f"  {label} F{f:02d} {sorted(v)}")
         return {"temp_f": k_to_f(v.get("t2m", nan(grid))), "rh": v.get("r2", nan(grid)),
                 "dewpoint_f": k_to_f(v.get("d2m", nan(grid))),
                 "wind_dir": wind_from(v.get("u10", nan(grid)), v.get("v10", nan(grid))),
@@ -168,7 +174,7 @@ def hrdps_series(cycle, hours, grid):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=int, default=48)
-    ap.add_argument("--models", nargs="+", default=["nbm", "hrrr", "hrdps"], choices=["nbm", "hrrr", "hrdps"])
+    ap.add_argument("--models", nargs="+", default=["nbm", "hrrr", "rrfs", "hrdps"], choices=["nbm", "hrrr", "rrfs", "hrdps"])
     ap.add_argument("--sites", nargs="+", help="site names to include (default: all ski areas in data/nbm/sites.yml)")
     ap.add_argument("--out", help="output path (default assets/data/meteograms.json)")
     args = ap.parse_args()
@@ -195,7 +201,8 @@ def main():
                 break
             print(f"{model} cycle {cycle:%Y-%m-%d %H}Z")
             grid = nbm.Grid(sites)
-            fn = {"nbm": nbm_series, "hrrr": hrrr_series, "hrdps": hrdps_series}[model]
+            fn = {"nbm": nbm_series, "hrrr": hrrr_series, "rrfs": lambda c, h, g: hrrr_series(c, h, g, "rrfs"),
+                  "hrdps": hrdps_series}[model]
             ser = fn(cycle, args.hours, grid)
             arr = {k: np.array(v) for k, v in ser.items()}           # hours x sites
             if not np.isfinite(arr["temp_f"]).any():

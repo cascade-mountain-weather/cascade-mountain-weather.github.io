@@ -11,7 +11,7 @@ import cartopy.io.shapereader as shp
 from shapely.geometry import box
 
 ROOT = Path(__file__).resolve().parent.parent
-BBOX = (-125.6, 45.3, -119.2, 50.0)          # lon min, lat min, lon max, lat max
+BBOX = (-125.6, 44.7, -119.2, 50.0)          # lon min, lat min, lon max, lat max
 KEEP = {"Washington", "Oregon", "British Columbia", "Idaho", "Montana", "Alberta"}
 TOL = 0.004
 

@@ -1,5 +1,5 @@
 // Model comparison heat table. Reads assets/data/meteograms.json (the home-page point forecast, written by
-// scripts/meteograms.py): models.{nbm,hrrr,hrdps}.{cycle_utc, time_utc[], sites.{name}.{temp_f, rh, wind_mph, precip_in,
+// scripts/meteograms.py): models.{nbm,hrrr,rrfs,hrdps}.{cycle_utc, time_utc[], sites.{name}.{temp_f, rh, wind_mph, precip_in,
 // and optionally dewpoint_f, wind_dir, gust_mph}}, hourly. Without dewpoint_f the dew point is computed from temperature and RH.
 // The palettes are approximations of the National Weather Service graphical forecast colors, not the
 // exact NWS tables; edit the stops below to tune them.
@@ -10,14 +10,14 @@
 
     // ---- palettes: [value, color] stops, blended linearly between stops ----
     const PAL = {
-        t: [[-30, '#5b1a8a'], [-10, '#8a3fc0'], [0, '#4a4fd6'], [10, '#3b7cf0'], [20, '#4fb3f2'], [32, '#b9e6fa'], [40, '#7fd6a0'],
-            [50, '#4fbf4a'], [60, '#c9e04a'], [70, '#f6d83a'], [80, '#f7a531'], [90, '#ee5a2a'], [100, '#c81d25'], [110, '#8c0f1a']],
+        t: [[-4, '#5b1a8a'], [4, '#8a3fc0'], [12, '#4a4fd6'], [20, '#3b7cf0'], [26, '#4fb3f2'], [32, '#b9e6fa'], [40, '#7fd6a0'],
+            [50, '#4fbf4a'], [60, '#c9e04a'], [68, '#f6d83a'], [77, '#f7a531'], [86, '#ee5a2a'], [95, '#c81d25']],   // -20 to 35 C
         td: [[0, '#7b4a1e'], [20, '#b88a4a'], [32, '#e6d29a'], [40, '#bfe0a0'], [50, '#7cc77c'], [60, '#3fae7a'], [65, '#25a0a8'], [70, '#2a7fd0'], [75, '#4b4fc4']],
         rh: [[0, '#8c5a2b'], [20, '#c8a063'], [40, '#e8dca0'], [60, '#a8d89a'], [80, '#4fb87a'], [100, '#1f8f6a']],
-        wind: [[0, '#ffffff'], [5, '#d6eefa'], [10, '#9ad3f2'], [15, '#5fb4ea'], [20, '#4fc58a'], [25, '#a6d94a'], [30, '#f0d83a'],
-            [40, '#f59a2e'], [50, '#e8402a'], [60, '#b0147c'], [80, '#6a1b9a']],
+        wind: [[0, '#ffffff'], [4, '#d6eefa'], [8, '#9ad3f2'], [12, '#5fb4ea'], [16, '#4fc58a'], [20, '#a6d94a'], [24, '#f0d83a'],
+            [27, '#f59a2e'], [30, '#e8402a']],
         pcp: [[0, '#ffffff'], [0.01, '#c7f0c7'], [0.05, '#8be08b'], [0.1, '#3fc03f'], [0.25, '#2f9fd8'], [0.5, '#1e5fd0'],
-            [0.75, '#5a3fc8'], [1, '#9b2fc4'], [1.5, '#e03aa0'], [2, '#e8402a']],
+            [0.75, '#5a3fc8'], [1, '#9b2fc4']],
     };
     const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
     function color(stops, v) {
@@ -48,7 +48,7 @@
     const state = { site: null, span: 48, step: 3, humid: 'td', units: store('mg-units') === 'metric' ? 'metric' : 'us' };
     let data = null;
     const F2C = v => (v - 32) * 5 / 9, MPH2MS = 0.44704, IN2MM = 25.4;
-    const SHORT = { nbm: 'NBM', hrrr: 'HRRR', hrdps: 'HRDPS' };
+    const SHORT = { nbm: 'NBM', hrrr: 'HRRR', rrfs: 'RRFS', hrdps: 'HRDPS' };
 
     // dew point (F) from temperature (F) and relative humidity (%) when the data file has no dew point (Magnus)
     function dewFrom(tF, rh) {
@@ -73,11 +73,38 @@
         });
     }
 
+    // Precipitation type is estimated, not a model output: the wet-bulb temperature (Stull 2011, from 2 m temperature and RH)
+    // averaged over the hours in a column that had precipitation. At or below 0.25 C snow, above 1 C rain, between is mixed (tight: our air is moist, so the wet-bulb gain over the air temperature is small).
+    const PTYPE = { snow: ['❄️', 'snow'], rain: ['🌧️', 'rain'], mix: ['🌧️❄️', 'rain/snow mix'] };
+    function wetBulbC(tF, rh) {
+        if (tF == null || rh == null) return null;
+        const t = F2C(tF), r = Math.min(Math.max(rh, 5), 99);
+        return t * Math.atan(0.151977 * Math.sqrt(r + 8.313659)) + Math.atan(t + r) - Math.atan(r - 1.676331)
+            + 0.00391838 * Math.pow(r, 1.5) * Math.atan(0.023101 * r) - 4.686035;
+    }
+    function ptypes(m, siteName, cols, step) {
+        const md = data.models[m], s = md.sites[siteName];
+        if (!s || !s.temp_f || !s.rh) return [];
+        const idx = new Map(md.time_utc.map((t, i) => [Date.parse(t), i]));
+        return cols.map(c => {
+            let sum = 0, n = 0;
+            for (let k = 0; k < step; k++) {
+                const j = idx.get(+c.d - k * 3600e3);
+                if (j == null || !(s.precip_in[j] >= 0.003)) continue;
+                const tw = wetBulbC(s.temp_f[j], s.rh[j]);
+                if (tw != null) { sum += tw; n++; }
+            }
+            if (!n) return null;
+            const tw = sum / n;
+            return tw <= 0.25 ? 'snow' : tw > 1 ? 'rain' : 'mix';
+        });
+    }
+
     const SECTIONS = [
         { key: 'temp', field: 'temp_f', title: () => state.units === 'us' ? 'Temperature (°F)' : 'Temperature (°C)' },
         { key: 'dew', field: () => state.humid === 'td' ? 'dewpoint_f' : 'rh', title: () => state.humid === 'td' ? (state.units === 'us' ? 'Dew point (°F)' : 'Dew point (°C)') : 'Relative humidity (%)' },
         { key: 'wind', field: 'wind_mph', title: () => state.units === 'us' ? 'Wind speed (mph) and direction' : 'Wind speed (m/s) and direction' },
-        { key: 'pcp', field: 'precip_in', title: () => (state.units === 'us' ? 'Precipitation (in' : 'Precipitation (mm') + ' per ' + (state.step === 1 ? 'hour)' : state.step + ' hours)') },
+        { key: 'pcp', field: 'precip_in', title: () => (state.units === 'us' ? 'Liquid precipitation (in' : 'Liquid precipitation (mm') + ' per ' + (state.step === 1 ? 'hour)' : state.step + ' hours)') },
     ];
     const palFor = s => ({ temp: PAL.t, dew: state.humid === 'td' ? PAL.td : PAL.rh, wind: PAL.wind, pcp: PAL.pcp })[s.key];
     // display value from the stored US value; colors always use the US value
@@ -116,12 +143,13 @@
             const field = typeof s.field === 'function' ? s.field() : s.field;
             const stops = palFor(s);
             const lo = stops[0][0], hi = stops[stops.length - 1][0];
-            const legend = `<span class="mt-legend"><span>${lo}</span><span class="mt-legend-bar" style="background:${gradient(stops)}"></span><span>${hi}${s.key === 'pcp' ? '+' : ''}</span><span>${s.key === 'temp' || (s.key === 'dew' && state.humid === 'td') ? '\u00b0F' : s.key === 'wind' ? 'mph' : s.key === 'pcp' ? 'in per 3 h' : '%'} scale</span></span>`;
+            const legend = `<span class="mt-legend"><span>${lo}</span><span class="mt-legend-bar" style="background:${gradient(stops)}"></span><span>${hi}${s.key === 'pcp' || s.key === 'wind' ? '+' : ''}</span><span>${s.key === 'temp' || (s.key === 'dew' && state.humid === 'td') ? '\u00b0F' : s.key === 'wind' ? 'mph' : s.key === 'pcp' ? 'in per 3 h' : '%'} scale</span></span>`;
             body += `<tr class="mt-section"><th class="mt-sec" colspan="${cols.length + 1}"><div class="mt-sec-in">${s.title()}${legend}</div></th></tr>${head()}`;
             ms.forEach(m => {
                 const vals = series(m, siteName, field, cols, step) || [];
                 const dirs = s.key === 'wind' ? (series(m, siteName, 'wind_dir', cols, step) || []) : [];
                 const gusts = s.key === 'wind' ? (series(m, siteName, 'gust_mph', cols, step) || []) : [];
+                const types = s.key === 'pcp' ? ptypes(m, siteName, cols, step) : [];
                 body += `<tr><th class="mt-name" title="${data.models[m].label}">${SHORT[m] || m}<small>${data.models[m].cycle_utc ? data.models[m].cycle_utc.slice(11, 13) + 'Z run' : ''}</small></th>`;
                 cols.forEach((c, i) => {
                     const v = vals[i], mid = isMid(c) ? ' mt-midnight' : '';
@@ -130,7 +158,9 @@
                     let txt = show(s, v);
                     if (s.key === 'pcp' && v < 0.005) txt = '';
                     if (s.key === 'wind' && dirs[i] != null) txt += `<span class="mt-arrow" style="transform:rotate(${(dirs[i] + 180) % 360}deg)">↑</span>`;
-                    const tip = `${SHORT[m] || m}, ${fFull.format(c.d)}: ${show(s, v)}${unitOf(s)}${s.key === 'wind' && dirs[i] != null ? ' from ' + Math.round(dirs[i]) + '°' : ''}`;
+                    const pt = s.key === 'pcp' && v >= 0.005 && types[i] ? PTYPE[types[i]] : null;
+                    if (pt) txt += `<span class="mt-ptype">${pt[0]}</span>`;
+                    const tip = `${SHORT[m] || m}, ${fFull.format(c.d)}: ${show(s, v)}${unitOf(s)}${s.key === 'wind' && dirs[i] != null ? ' from ' + Math.round(dirs[i]) + '°' : ''}${pt ? ', likely ' + pt[1] : ''}`;
                     body += `<td class="mt-cell${s.key === 'wind' ? ' mt-wind' : ''}${mid}" style="background:${css(col)};color:${ink(col)}" title="${tip}">${txt}</td>`;
                 });
                 body += '</tr>';
@@ -147,7 +177,7 @@
             ${ctl('Units', chips('units', [['us', '°F, mph, in'], ['metric', '°C, m/s, mm']], state.units))}
         </div>
         <div class="mt-scroll"><table class="mt-table">${body}</table></div>
-        <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction, so temperatures run warmer and snow lower than on the slopes. Wind arrows point the way the wind blows toward. Colors approximate the National Weather Service palettes. Times are Pacific. Updated ${fFull.format(gen)}.</p>`;
+        <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction, so temperatures run warmer and snow lower than on the slopes. Wind arrows point the way the wind blows toward. The ❄️ and 🌧️ in the precipitation rows are an estimate from the grid cell&rsquo;s wet-bulb temperature (snow at or below 0.25&deg;C, rain above 1&deg;C), not a model forecast, so at a warm grid cell it can say rain where the slopes get snow. The amounts are liquid water, not inches of snow; expect roughly 10 to 15 times that in snow depth where it falls as snow. Precipitation colors show the amount only. Colors approximate the National Weather Service palettes. Times are Pacific. Updated ${fFull.format(gen)}.</p>`;
         root.querySelector('#mt-site').addEventListener('change', e => { state.site = e.target.value; store('mg-site', state.site); render(); });
         const bind = (name, fn) => root.querySelectorAll(`[data-${name}]`).forEach(b => b.addEventListener('click', () => { fn(b.dataset[name]); render(); }));
         bind('span', v => { state.span = +v; });

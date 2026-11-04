@@ -1,16 +1,21 @@
-name: Update Live Conditions
+name: Update North Pacific SST Anomaly Maps
 
 on:
   schedule:
-    - cron: "10 */2 * * *" # every 2 hours, offset from the satellite loop at :00
+    - cron: "30 17 * * *" # daily; NCEI posts the previous day's OISST file by mid-morning Pacific
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: sst-anomaly
+  cancel-in-progress: false
+
 jobs:
-  update-live-conditions:
+  render-sst:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,21 +26,21 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install requests pyyaml
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests numpy xarray netCDF4 matplotlib
 
-      - name: Collect live station conditions
-        env:
-          SYNOPTIC_TOKEN: ${{ secrets.SYNOPTIC_TOKEN }}
-        run: python scripts/collect_live_conditions.py
+      - name: Render North Pacific SST anomaly maps
+        run: python scripts/sst_anomaly_maps.py
 
-      - name: Commit and push updated conditions
+      - name: Commit and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git add assets/data/live_conditions.json
-          git commit -m "Update live conditions [skip ci]" || echo "No changes to commit"
+          git add -A assets/data/sst
+          git commit -m "Update North Pacific SST anomaly maps [skip ci]" || echo "No changes to commit"
           git pull --rebase origin main
           git push origin main

@@ -1,0 +1,61 @@
+name: Update Observations
+
+# One hourly job for everything observed: station conditions, radiosonde skew-Ts and the radiosonde diagnostics history.
+# Soundings launch at ~23:15Z / 11:15Z and reach IEM roughly 45-90 minutes after 00Z/12Z, so an hourly pass picks a cycle up
+# soon after it appears. Each step skips what it already has, so most runs change nothing and commit nothing.
+# Port Hardy lags days and is picked up whenever it lands.
+on:
+  schedule:
+    - cron: "15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: observations
+  cancel-in-progress: false
+
+jobs:
+  observations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: scripts/requirements-skewt.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements-skewt.txt pyyaml
+
+      - name: Collect live station conditions
+        continue-on-error: true   # a Synoptic outage must not block the soundings
+        env:
+          SYNOPTIC_TOKEN: ${{ secrets.SYNOPTIC_TOKEN }}
+        run: python scripts/collect_live_conditions.py
+
+      - name: Render skew-T composites
+        run: python scripts/radiosonde_skewt.py
+
+      - name: Collect radiosonde diagnostics history
+        run: python scripts/collect_radiosonde_history.py
+
+      - name: Commit and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add assets/data/live_conditions.json assets/data/radiosonde assets/data/radiosonde_history.json
+          git commit -m "Update observations [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main

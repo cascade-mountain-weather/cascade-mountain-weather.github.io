@@ -3,7 +3,7 @@
 diagnostics from observed radiosonde soundings, for the trend chart on the
 Skew-T tool page (tools/radiosonde.html).
 
-Run on a schedule (see .github/workflows/radiosonde_history.yml). Every run
+Run on a schedule (see .github/workflows/observations.yml). Every run
 re-checks a recent window of launch cycles per station (idempotent -- a
 cycle that lands late in IEM's feed still gets picked up on the next pass)
 and merges any newly-available cycles into the stored history, then trims

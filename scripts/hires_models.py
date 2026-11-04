@@ -51,6 +51,9 @@ def available(model, cycle, fxx):
     try:
         if model == "hrrr":
             return len(Herbie(cycle, model="hrrr", product="sfc", fxx=fxx, verbose=False).inventory()) > 10
+        if model == "rrfs":
+            import rrfs_ops  # noqa: F401  (registers the template)
+            return len(Herbie(cycle, model="rrfs_ops", product="2dfld", fxx=fxx, verbose=False).inventory()) > 10
         H = Herbie(cycle, model="hrdps", product="continental", variable="APCP", level="Sfc", fxx=fxx, verbose=False)
         return H.grib is not None and H.grib_source is not None
     except Exception:
