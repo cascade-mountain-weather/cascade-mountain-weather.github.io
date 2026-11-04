@@ -20,33 +20,6 @@ under_development: true
     <div class="tl-mount"><p>Loading&hellip;</p></div>
 </div>
 
-<div class="lt-card" id="storm-patterns">
-    <h2>Storm patterns, and what the Euro has coming</h2>
-    <p>On the left: six upper-level patterns that Washington storm days fall into, found by clustering the position and depth of the lowest 500 hPa height anomaly (west of Anchorage's longitude is ignored) on 2,111 storm days from November 15 to April 30, 1992 to 2026 (ERA5). A storm day is one when the Cascades SNOTEL sites averaged at least a quarter inch of new water (a tenth in April). On the right: the ECMWF forecast for the next several days, plotted the same way over the same region, so you can eyeball which pattern it looks like. Shading is how unusual the 500 hPa height or the 850 hPa temperature is for the date; the star is the Cascades.</p>
-    <div class="ol-group">
-        <span class="ol-label" id="euro-model-label">Euro forecast</span>
-        <div class="ol-chips" role="radiogroup" aria-labelledby="euro-model-label" id="euro-model">
-            <button type="button" class="ol-chip" role="radio" aria-checked="true" data-model="det">Deterministic</button>
-            <button type="button" class="ol-chip" role="radio" aria-checked="false" data-model="eps">Ensemble mean</button>
-        </div>
-    </div>
-    <div class="lt-figs lt-figs--2">
-        <figure><img class="PlotFormat" loading="lazy" src="{{ '/assets/images/tea-leaves/regimes_height.png' | relative_url }}" alt="Six composite 500 hPa height patterns of Washington storm days, with height anomaly, 850 hPa temperature and moisture transport"><figcaption><strong>The six storm patterns</strong> &middot; mean 500 hPa height (black, dam), its anomaly in standard deviations (shading), 850 hPa temperature (red, heavy line is 0&nbsp;&deg;C) and moisture transport (green, IVT 250, 500 and 750&nbsp;kg/m/s).</figcaption></figure>
-        <figure><img class="PlotFormat euro-fig" data-kind="height_anom" loading="lazy" src="{{ '/assets/images/tea-leaves/euro_det_height_anom.png' | relative_url }}" alt="ECMWF forecast 500 hPa height anomaly for six days over the North Pacific and Pacific Northwest"><figcaption><strong>ECMWF forecast</strong> &middot; daily-mean 500 hPa height anomaly for days +1, 2, 3, 5, 7 and 9 of the latest open-data run. <span class="euro-note" data-model="det">Deterministic run (one forecast).</span><span class="euro-note" data-model="eps" hidden>Mean of the 50 ensemble members, with dots where at least 80% of them agree on the sign of the anomaly.</span> There is no moisture transport on these maps.</figcaption></figure>
-        <figure><img class="PlotFormat" loading="lazy" src="{{ '/assets/images/tea-leaves/regimes_t850_anom.png' | relative_url }}" alt="Six composite 850 hPa temperature anomaly maps of Washington storm days"><figcaption><strong>The six storm patterns</strong> &middot; 850 hPa temperature anomaly in kelvin; the dashed line is the 0&nbsp;&deg;C isotherm.</figcaption></figure>
-        <figure><img class="PlotFormat euro-fig" data-kind="t850_anom" loading="lazy" src="{{ '/assets/images/tea-leaves/euro_det_t850_anom.png' | relative_url }}" alt="ECMWF forecast 850 hPa temperature anomaly for six days over the North Pacific and Pacific Northwest"><figcaption><strong>ECMWF forecast</strong> &middot; daily-mean 850 hPa temperature anomaly for the same six days.</figcaption></figure>
-    </div>
-    <div class="lt-figs ol-narrow">
-        <figure><img class="PlotFormat" loading="lazy" src="{{ '/assets/images/tea-leaves/regimes_zones.png' | relative_url }}" alt="Which Cascades zones got more new snow than usual in each storm pattern"><figcaption><strong>Which zones do well in which pattern</strong> &middot; how much more often a zone beats its usual share of a storm (by at least half an inch of water) in each pattern than on storm days overall. 1 means no difference; a star means the range from resampling whole winters excludes 1.</figcaption></figure>
-    </div>
-    <ul>
-        <li><strong>Patterns 0 and 1</strong> (a deep low west or northwest of the Cascades, with moisture reaching the coast) both favor Hurricane Ridge; pattern 0 also favors Mt. Baker, and pattern 1 favors Washington Pass, Blewett, Stevens and Snoqualmie.</li>
-        <li><strong>Pattern 4</strong> (a cold, moderate low to the north at the Cascades' longitude) is the one that favors Paradise and White Pass.</li>
-        <li><strong>Pattern 3</strong> (the low well to the south, over California) is the one that shortchanges the northern zones.</li>
-        <li><strong>The limits:</strong> six groups are a simplification of a continuum of patterns. Refitting on resampled winters reproduces the grouping only moderately (adjusted Rand index of about 0.7, where 1 is identical), and some starred cells will be chance. The Euro maps use ECMWF's open-data forecasts: the deterministic run is a single forecast, and the ensemble view is the mean of 50 members (an ensemble mean smooths out features that members disagree on, so it looks weaker than any one forecast will). Anomalies come from a smooth ERA5 day-of-year average, so the first days of November and the end of April are the least reliable.</li>
-    </ul>
-</div>
-
 <div class="lt-card">
     <h2>Check the outlook yourself</h2>
     <p>The predictor above uses the observed MJO and the GEFS PNA forecast. The MJO forecasts below are not published as data we can read, so for the second week it leaves the MJO out until the observed values arrive; if you read a phase from these figures, choose &ldquo;Your own values&rdquo; above and enter it. The MJO matters about eight days after the phase it is in. The SEAS5 PNA chart is a monthly outlook, so it is only a tilt.</p>
@@ -70,20 +43,5 @@ under_development: true
     </ul>
 </div>
 </div>
-<script>
-(function () {
-    var group = document.getElementById('euro-model');
-    if (!group) return;
-    var base = {{ '/assets/images/tea-leaves/' | relative_url | jsonify }};
-    group.addEventListener('click', function (e) {
-        var btn = e.target.closest('button[data-model]');
-        if (!btn) return;
-        var model = btn.getAttribute('data-model');
-        group.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-checked', b === btn ? 'true' : 'false'); });
-        document.querySelectorAll('.euro-fig').forEach(function (img) { img.src = base + 'euro_' + model + '_' + img.getAttribute('data-kind') + '.png'; });
-        document.querySelectorAll('.euro-note').forEach(function (n) { n.hidden = n.getAttribute('data-model') !== model; });
-    });
-})();
-</script>
 <script src="{{ '/assets/outlooks.js' | relative_url }}"></script>
 <script src="{{ '/assets/tea-leaves.js' | relative_url }}"></script>
