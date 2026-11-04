@@ -27,6 +27,7 @@
         fallbackUrl: 'https://weather.utah.edu/',
     });
     const CW3E = 'https://cw3e-sites.ucsd.edu/images';
+    const CW3E_MAIN = 'https://cw3e.ucsd.edu/images';
 
     // wwrf: West-WRF meteogram panel code; utah: Utah ensemble point code;
     // basins: CW3E watershed freezing-level plots (HUC8 id).
@@ -239,11 +240,13 @@
         return Array.from({ length: n }, (_, i) => new Date(base - i * step));
     };
     const cw3eSeason = d => { const y = d.getUTCFullYear(), s = d.getUTCMonth() >= 6 ? y : y - 1; return `${s}-${s + 1}`; };
-    const cw3eSnow = (model, w) => ({
+    // kind is 'snow' or 'qpf' (precipitation); the 72-hour precipitation total exists only from forecast hour 72 on
+    const cw3eMap = (kind, model, w) => ({
         hours: range(w, 120, 6), probeHour: w, runs: cw3eRuns(6), runExact: true,
-        urlFor: (r, h) => `${CW3E}/snow_${w}h_map/${cw3eSeason(r)}/WWRF_3km_${model}/WCQPF/${ymdh(r)}/1/snow_${w}h_map__${cw3eSeason(r)}__WWRF_3km_${model}__WCQPF__${ymdh(r)}__1__F${pad(h, 3)}.png`,
+        urlFor: (r, h) => `${CW3E_MAIN}/${kind}_${w}h_map/${cw3eSeason(r)}/WWRF_3km_${model}/WCQPF/${ymdh(r)}/1/${kind}_${w}h_map__${cw3eSeason(r)}__WWRF_3km_${model}__WCQPF__${ymdh(r)}__1__F${pad(h, 3)}.png`,
         fallbackUrl: 'https://cw3e.ucsd.edu/',
     });
+    const cw3eSnow = (model, w) => cw3eMap('snow', model, w);
     // /images/fzllevel_slp_10mwind_map/{season}/WWRF_3km_{GFS|ECMWF}/USWC2/{YYYYMMDDHH}/1/...__F{HHH}.png: every hour to 120 h for the ECMWF-driven run, every 6 h for the GFS-driven one
     // The 9 km run covers the Northeast Pacific out 10 days: /images/fzllevel_slp_10mwind_map/{season}/WWRF_9km_{GFS|ECMWF}/NEPac/...
     const cw3eFzl = (model, grid) => {
@@ -264,8 +267,37 @@
     const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
 
 
+    // Utah-hosted maps (HRRR, RRFS, the Utah ensemble): the total accumulated since the run start, or each 6-hour window.
+    // File names: {HRRR48H|HRRR6H|RRFS60H|RRFS6H|ENSGEFSDS240H|ENSGEFSDS6H}{S snow | P precipitation}_NW{YYYYMMDDHH}F###.png
+    const ACC_ACCUMS = { acc: 'Accumulated since the run start', h6: '6-hour total' };   // 'h6', not 6: integer keys would sort first
+    const UTAH_FAM = {
+        hrrr: { dir: 'hrrrqsf', acc: 'HRRR48H', six: 'HRRR6H', hours: range(1, 48, 1), name: 'HRRR', span: '48 hours',
+                blurb: 'the HRRR, NOAA&rsquo;s hourly-updated 3 km model' },
+        rrfs: { dir: 'rrfsqsf', acc: 'RRFS60H', six: 'RRFS6H', hours: range(1, 60, 1), name: 'RRFS', span: '60 hours',
+                blurb: 'the Rapid Refresh Forecast System (RRFS), NOAA&rsquo;s next-generation 3 km convection-allowing model' },
+        ens: { dir: 'ensgefsds', acc: 'ENSGEFSDS240H', six: 'ENSGEFSDS6H', hours: range(6, 240, 6), name: 'Utah ensemble', span: '10 days',
+               blurb: 'the University of Utah snow ensemble, which combines GEFS and ECMWF ensemble members with statistical downscaling, out to 10 days' },
+    };
+    const utahFam = (f, kind, accum) => utahMap(f.dir, (accum === 'h6' ? f.six : f.acc) + kind, f.hours);
+    const famTitle = (f, word, accum) => `${f.name} ${word}, ${accum === 'h6' ? '6-hour totals' : 'accumulated through ' + f.span}`;
+    const famInfo = (k, snow) => ({
+        what: `Map of forecast ${snow ? 'snowfall' : 'precipitation (rain plus the water in snow)'} over the Northwest from ${UTAH_FAM[k].blurb}: either the total accumulated since the start of the run, or the amount that falls in each 6-hour window. Plots are hosted by the University of Utah.`,
+        how: (k === 'ens' ? `Use it for the longer-range pattern beyond what the HRRR and RRFS cover; totals this far out show where ${snow ? 'snow' : 'precipitation'} is favored, not a point forecast. ` : 'A single run is best in the first day or so. ')
+            + 'Use the accumulated map for totals and the 6-hour map for timing.'
+            + (snow ? '' : ' Compare it with the snow map: where precipitation is high but snow is low, expect rain or a high snow level.')
+            + ' Choose Side by side to put another model next to it.',
+        source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
+    });
+    const famProduct = (k, kind, label) => ({
+        cat: kind === 'S' ? 'snow' : 'precip', region: true, label, accums: ACC_ACCUMS,
+        title: (a, st) => famTitle(UTAH_FAM[k], kind === 'S' ? 'snowfall' : 'precipitation', st.accum),
+        build: (a, st) => utahFam(UTAH_FAM[k], kind, st.accum),
+        info: famInfo(k, kind === 'S'),
+    });
+
     const PRODUCTS = {
         wwrf_snow: {
+            cat: 'snow',
             needs: 'wwrf',
             label: 'Snow (West-WRF)',
             title: (a, st) => `${a.label}: West-WRF ensemble ${st.sub === 'storm' ? 'storm-total' : 'accumulated'} snow`,
@@ -294,6 +326,7 @@
             },
         },
         utah_ens: {
+            cat: 'snow',
             needs: 'utah',
             label: 'Utah 10-day ensemble',
             title: a => `${a.label}: Utah snow ensemble, 10 days`,
@@ -309,6 +342,7 @@
             },
         },
         rrfs: {
+            cat: 'snow',
             needs: 'utah',
             label: 'RRFS 2.5-day ensemble',
             title: a => `${a.label}: RRFS snow ensemble, 2.5 days`,
@@ -323,37 +357,14 @@
                 source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
             },
         },
-        hrrr: {
-            region: true, label: 'HRRR snow (48 h)',
-            title: a => `${a.label}: HRRR snowfall, 48 hours`,
-            build: () => utahMap('hrrrqsf', 'HRRR48HS', range(1, 48, 1)),
-            info: {
-                what: 'Map of forecast snowfall accumulated through each forecast hour from the HRRR, NOAA&rsquo;s hourly-updated 3 km model, over the Northwest. Plots are hosted by the University of Utah.',
-                how: 'Step through the hours to watch when and where the snow falls. The HRRR is a single run (not an ensemble) and is best in the first day or so; compare with the RRFS and the Utah ensemble before trusting any one total.',
-                source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
-            },
-        },
-        rrfs_map: {
-            region: true, label: 'RRFS snow (60 h)',
-            title: a => `${a.label}: RRFS snowfall, 60 hours`,
-            build: () => utahMap('rrfsqsf', 'RRFS60HS', range(1, 60, 1)),
-            info: {
-                what: 'Map of forecast snowfall accumulated through each forecast hour from the Rapid Refresh Forecast System (RRFS), NOAA&rsquo;s next-generation 3 km convection-allowing system. Plots are hosted by the University of Utah.',
-                how: 'A second high-resolution view to compare against the HRRR. Where the two agree on the snow axis and amounts, confidence is higher; where they differ, treat the totals as uncertain.',
-                source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
-            },
-        },
-        utah_map: {
-            region: true, label: 'Utah snow ensemble (10 d)',
-            title: a => `${a.label}: Utah snow ensemble, 10 days`,
-            build: () => utahMap('ensgefsds', 'ENSGEFSDS240HS', range(6, 240, 6)),
-            info: {
-                what: 'Map of forecast snowfall accumulated through each forecast hour from the University of Utah snow ensemble, which combines GEFS and ECMWF ensemble members with statistical downscaling, out to 10 days.',
-                how: 'Use it for the longer-range snow pattern beyond what the HRRR and RRFS cover. Totals this far out are a guide to where snow is favored, not a point forecast.',
-                source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
-            },
-        },
+        hrrr: famProduct('hrrr', 'S', 'HRRR snow'),
+        rrfs_map: famProduct('rrfs', 'S', 'RRFS snow'),
+        utah_map: famProduct('ens', 'S', 'Utah snow ensemble'),
+        hrrr_p: famProduct('hrrr', 'P', 'HRRR precipitation'),
+        rrfs_p: famProduct('rrfs', 'P', 'RRFS precipitation'),
+        utah_p: famProduct('ens', 'P', 'Utah precipitation ensemble'),
         uw_snow: {
+            cat: 'snow',
             region: true, label: 'UW WRF snow',
             models: { acc: 'Accumulated (WRF)', p3: '3-hour (WRF)', ens: '24-hour (ensemble mean)' },
             title: (a, st) => ({ acc: 'UW WRF accumulated snowfall', p3: 'UW WRF 3-hour snowfall', ens: 'UW WRF ensemble mean 24-hour snowfall' })[st.model] || 'UW WRF accumulated snowfall',
@@ -374,6 +385,7 @@
             }, UW_SRC),
         },
         cw3e_snow: {
+            cat: 'snow',
             region: true, compare: true, label: 'West-WRF 3 km snow (CW3E)',
             models: { GFS: 'GFS-driven', ECMWF: 'ECMWF-driven' },
             accums: { 6: '6 hours', 24: '24 hours', 48: '48 hours', 72: '72 hours' },
@@ -382,6 +394,18 @@
             info: {
                 what: 'Maps of forecast snowfall for the whole West Coast from West-WRF, the regional model run by the Center for Western Weather and Water Extremes (CW3E) at UC San Diego at 3 km grid spacing. It is run twice a day, once driven by the GFS (American) and once by the ECMWF (European) global model, out to 5 days. You can show the snow that falls in each 6 hours, or the total over the last 24, 48 or 72 hours, ending at the forecast hour you pick. Runs from October to March.',
                 how: 'The two drivers give two views of the same storm: where the GFS-driven and ECMWF-driven maps agree on the snow axis and the totals, confidence is higher, and where they differ the uncertainty is real. Compare 24, 48 and 72-hour totals to see how much of a storm total comes in the first day. The model needs a few hours after its run time to post, so the newest run may not be there yet; this page falls back to the previous run automatically.',
+                source: 'CW3E West-WRF forecasts', sourceUrl: 'https://cw3e.ucsd.edu/',
+            },
+        },
+        cw3e_qpf: {
+            cat: 'precip', region: true, compare: true, label: 'West-WRF 3 km precip (CW3E)',
+            models: { GFS: 'GFS-driven', ECMWF: 'ECMWF-driven' },
+            accums: { 6: '6 hours', 72: '72 hours' },
+            title: (a, st) => `West-WRF 3 km precipitation, ${st.accum || 6}-hour accumulation (${st.model === 'ECMWF' ? 'ECMWF' : 'GFS'}-driven)`,
+            build: (a, st) => cw3eMap('qpf', st.model === 'ECMWF' ? 'ECMWF' : 'GFS', +st.accum || 6),
+            info: {
+                what: 'Maps of forecast precipitation (rain plus the water in snow) for the whole West Coast from West-WRF, the regional model run by the Center for Western Weather and Water Extremes (CW3E) at UC San Diego at 3 km grid spacing. It is run twice a day, once driven by the GFS (American) and once by the ECMWF (European) global model, out to 5 days. Choose the 6-hour amount for timing or the 72-hour total for the whole storm.',
+                how: 'Where the GFS-driven and ECMWF-driven maps agree on where the heaviest precipitation falls, confidence is higher. Compare it with the snow map: where precipitation is heavy but snow is light, the model has rain or a high snow level. The 72-hour total is only available from forecast hour 72 on.',
                 source: 'CW3E West-WRF forecasts', sourceUrl: 'https://cw3e.ucsd.edu/',
             },
         },
@@ -400,6 +424,7 @@
             }, UW_SRC),
         },
         nbm: {
+            cat: 'snow',
             label: 'NBM snow (6 h)',
             title: a => `${a.label}: NBM snowfall, 6-hour windows`,
             build: (a, st) => ({
@@ -479,6 +504,16 @@
                 source: 'CW3E West-WRF forecasts', sourceUrl: 'https://cw3e.ucsd.edu/',
             },
         },
+        utah_slr: {
+            page: 'level', region: true, label: 'Snow-liquid ratio (Utah ensemble)',
+            title: () => 'Utah snow ensemble: snow-to-liquid ratio',
+            build: () => utahMap('ensgefsds', 'ENSGEFSDSSR', range(6, 240, 6)),
+            info: {
+                what: 'Forecast snow-to-liquid ratio, the inches of snow that one inch of water makes, from the University of Utah snow ensemble. Four panels: the control member, the ensemble mean, the minimum and the maximum of the members. The colors are drawn only where snow is falling.',
+                how: 'About 10 is typical. Lower numbers (under 8) mean wet, dense snow near freezing; higher numbers (15 or more) mean cold, dry, fluffy snow. Multiply the precipitation by the ratio to estimate snowfall, and compare the minimum and maximum panels to see how uncertain the ratio is. It pairs with the freezing level and the dendritic growth zone above.',
+                source: 'University of Utah Atmospheric Sciences', sourceUrl: UTAH,
+            },
+        },
         frz: {
             page: 'level',
             needs: 'basins',
@@ -500,16 +535,26 @@
         },
     };
 
-    // Products are split into "Precipitation Products" and "Cloud Cover Products" (a Type chip before Product).
+    // Products are split into "Precipitation Products", "Snow Products" and "Cloud Cover Products" (a Type chip before Product).
+    // Two map products of the same Type (snow or precipitation) can be played side by side: the viewer keeps the forecast times both have.
     // The freezing-level page has only one kind, so its Type chip is hidden.
-    const CATS = [{ value: 'precip', label: 'Precipitation Products' }, { value: 'cloud', label: 'Cloud Cover Products' }, { value: 'level', label: 'Levels' }];
+    const CATS = [{ value: 'precip', label: 'Precipitation Products' }, { value: 'snow', label: 'Snow Products' }, { value: 'cloud', label: 'Cloud Cover Products' }, { value: 'level', label: 'Levels' }];
     const catOf = p => p.cat || (pageOf(p) === 'level' ? 'level' : 'precip');
     const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && nbmData.sites[NBM_SITE[area]] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))));
     // Links made before the split (#product=uw_cloud or nbm_cloud) pick their type.
     (() => {
         const h = new URLSearchParams(location.hash.slice(1));
-        if (h.get('product') && !h.get('cat') && PRODUCTS[h.get('product')]) { h.set('cat', catOf(PRODUCTS[h.get('product')])); history.replaceState(null, '', '#' + h.toString()); }
+        if (h.get('product') && PRODUCTS[h.get('product')] && h.get('cat') !== catOf(PRODUCTS[h.get('product')])) { h.set('cat', catOf(PRODUCTS[h.get('product')])); history.replaceState(null, '', '#' + h.toString()); }
     })();
+
+    // Other map products of the same Type that this one can be compared with (snow with snow, precipitation with precipitation)
+    const partnersOf = st => (['snow', 'precip'].includes(catOf(PRODUCTS[st.product])) && PRODUCTS[st.product].region)
+        ? productsFor(st.area).filter(k => k !== st.product && PRODUCTS[k].region && catOf(PRODUCTS[k]) === catOf(PRODUCTS[st.product])) : [];
+    const canCompare = st => !!PRODUCTS[st.product].compare || partnersOf(st).length > 0;
+    const firstKey = o => (o ? Object.keys(o)[0] : undefined);
+    // the same accumulation in the other product where it has one (6-hour is 'h6' for the Utah-hosted maps and '6' for West-WRF)
+    const matchAccum = (q, want) => q.accums[want] ? want : (/^h?6$/.test(want) && (q.accums['6'] || q.accums.h6)) ? (q.accums['6'] ? '6' : 'h6') : firstKey(q.accums);
+    const accumText = (q, ac) => (q.accums && q.accums[ac] ? ` (${q.accums[ac]})` : '');
 
     const mount = () => {
         CMWViewer.mount(document.getElementById('viewer'), {
@@ -522,19 +567,36 @@
                 { key: 'model', label: 'Model', options: st => PRODUCTS[st.product].models ? Object.keys(PRODUCTS[st.product].models).map(m => ({ value: m, label: PRODUCTS[st.product].models[m] })) : [{ value: '-', label: '-' }] },
                 { key: 'sub', label: st => PRODUCTS[st.product].subLabel || '', options: st => PRODUCTS[st.product].subs ? Object.keys(PRODUCTS[st.product].subs).map(m => ({ value: m, label: PRODUCTS[st.product].subs[m] })) : [{ value: '-', label: '-' }] },
                 { key: 'accum', label: 'Accumulation', options: st => PRODUCTS[st.product].accums ? Object.keys(PRODUCTS[st.product].accums).map(m => ({ value: m, label: PRODUCTS[st.product].accums[m] })) : [{ value: '-', label: '-' }] },
-                { key: 'layout', label: 'Layout (testing)', options: st => PRODUCTS[st.product].compare ? [{ value: 'single', label: 'One map' }, { value: 'compare', label: 'Side by side' }] : [{ value: 'single', label: '-' }] },
-                { key: 'vs', label: 'Compare with', options: st => { const p = PRODUCTS[st.product]; return p.compare && st.layout === 'compare' ? Object.keys(p.models).filter(m => m !== st.model).map(m => ({ value: m, label: p.models[m] })) : [{ value: '-', label: '-' }]; } },
+                { key: 'layout', label: 'Layout', options: st => canCompare(st) ? [{ value: 'single', label: 'One map' }, { value: 'compare', label: 'Side by side' }] : [{ value: 'single', label: '-' }] },
+                { key: 'vs', label: 'Compare with', options: st => {
+                    const p = PRODUCTS[st.product];
+                    if (st.layout !== 'compare') return [{ value: '-', label: '-' }];
+                    const own = p.compare ? Object.keys(p.models).filter(m => m !== st.model).map(m => ({ value: m, label: p.models[m] })) : [];
+                    const other = partnersOf(st).map(k => ({ value: 'p:' + k, label: PRODUCTS[k].label }));
+                    return own.concat(other).length ? own.concat(other) : [{ value: '-', label: '-' }];
+                } },
             ],
             resolve(st) {
                 const a = AREAS[st.area], p = PRODUCTS[st.product];
                 const info = typeof p.info === 'function' ? p.info(st.product === 'uw_snd' || st.product === 'uw_lvl' ? a : st) : p.info;
                 const view = Object.assign({ hours: [null], runs: null, runExact: false, title: p.title(a, st), info,
                     latestNote: 'Always the most recent run. The run and valid times are printed on the figure, in Z (UTC).' }, p.build(a, st));
-                if (p.compare && st.layout === 'compare' && st.vs && st.vs !== '-' && st.vs !== st.model && view.hours.length > 1) {
-                    // one view per model; for the freezing-level maps the model key is also the build argument
-                    const ids = [st.model, st.vs];
-                    view.title = `${p.title(a, st).replace(/ \((?:GFS|ECMWF)-driven\)$/, '')}: ${p.models[st.model]} vs ${p.models[st.vs]}`;
-                    view.compare = ids.map(m => ({ label: p.models[m], view: p.build(a, Object.assign({}, st, { model: m }), m) }));
+                if (st.layout === 'compare' && st.vs && st.vs !== '-' && view.hours.length > 1) {
+                    if (/^p:/.test(st.vs) && PRODUCTS[st.vs.slice(2)]) {
+                        // another product of the same Type: its first model and, where it has the same accumulation, the same accumulation
+                        const qk = st.vs.slice(2), q = PRODUCTS[qk];
+                        const st2 = Object.assign({}, st, { product: qk, model: firstKey(q.models), sub: firstKey(q.subs),
+                            accum: q.accums ? matchAccum(q, st.accum) : undefined });
+                        const lab1 = (p.compare && p.models ? p.models[st.model] + ' ' : '') + p.label + accumText(p, st.accum);
+                        const lab2 = (q.compare && q.models ? q.models[st2.model] + ' ' : '') + q.label + accumText(q, st2.accum);
+                        view.title = `${lab1} vs ${lab2}`;
+                        view.compare = [{ label: lab1, view: p.build(a, st, st.model) }, { label: lab2, view: q.build(a, st2, st2.model) }];
+                    } else if (p.compare && p.models[st.vs] && st.vs !== st.model) {
+                        // one view per model; for the freezing-level maps the model key is also the build argument
+                        const ids = [st.model, st.vs];
+                        view.title = `${p.title(a, st).replace(/ \((?:GFS|ECMWF)-driven\)$/, '')}: ${p.models[st.model]} vs ${p.models[st.vs]}`;
+                        view.compare = ids.map(m => ({ label: p.models[m], view: p.build(a, Object.assign({}, st, { model: m }), m) }));
+                    }
                 }
                 return view;
             },
