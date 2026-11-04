@@ -85,7 +85,10 @@
             const want = probeOne ? [first] : sampled ? [...new Set([first, hours[Math.floor(hours.length / 2)], last])] : hours;
             const have = await probeHours(v, runs[i], want, stale);
             if (stale()) return null;
-            if (probeOne) return have.size ? { run: runs[i], have: new Set(hours), fellBack: i > 0 } : null;
+            if (probeOne) {   // a single frame decides the run; if it is missing, try the next older run (do not give up on the first)
+                if (have.size) return { run: runs[i], have: new Set(hours), fellBack: i > 0 };
+                continue;
+            }
             if (sampled) {
                 if (have.has(last) && have.has(first)) return { run: runs[i], have: new Set(hours), fellBack: i > 0 };
                 // run still being posted: keep it as a fallback, with the frames up to the latest sampled one
