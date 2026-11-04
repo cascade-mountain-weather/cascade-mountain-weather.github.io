@@ -51,6 +51,68 @@
         return d.liquid_in * (rain + (1 - rain) * slush);
     }
 
+    // Timing recommender: the best 4-hour window of the ski day (08:00-16:00 local), from the hourly NBM series (d.hourly). Each hour gets a
+    // badness from 0 (calm and dry) to 1: rain counts most, active snow less for skiers (it is why you came) but fully for hiking and
+    // biking, and gusts above about 15 mph add to it. A window's score is 100 x (1 - mean badness). Snow that already fell before the
+    // window (fresh, not falling) breaks ties for skiers. Trend: badness in the last two hours against the first two.
+    const WIN_H = 4;
+    const RAIN_FULL = 0.04;     // in/h of rain that counts as fully wet
+    const SNOW_FULL = 0.04;     // in/h of liquid falling as snow that is fully "snowing hard"
+    const hh = h => `${((h + 11) % 12) + 1} ${h % 24 < 12 ? 'am' : 'pm'}`;
+    function bestWindow(z, d, S, lowest, top) {
+        const H = d.hourly;
+        if (!H || !H.lh || H.lh.length < 2) return null;
+        const low = LOW.includes(S.mode);
+        const mid = (lowest + (low ? lowest + 1500 : top)) / 2;
+        const ratio = d.snow_ratio || 10;
+        // one entry per hour, labelled by the hour it ends, filled from the nearest sample (3-hourly files stand for 3 hours)
+        const hours = [];
+        for (let h = 8; h <= 16; h++) {
+            let k = 0;
+            H.lh.forEach((x, i) => { if (Math.abs(x - h) < Math.abs(H.lh[k] - h)) k = i; });
+            if (Math.abs(H.lh[k] - h) > (H.block[k] > 1 ? 2 : 1)) return null;
+            const p = H.precip_in[k], g = H.gust_mph[k], sl = H.snow_level_ft[k];
+            if (p == null && g == null) return null;
+            hours.push({ h, p: p || 0, g, sl, coarse: H.block[k] > 1 });
+        }
+        // Beyond 48 h the NBM only has a 1 h snapshot every third hour, which misses rain that falls in between. There the 6 h liquid totals
+        // (about 4-10 am and 10 am-4 pm) set how much falls, and the snapshots only shape it within the block (spread evenly when they are dry).
+        (H.blocks || []).forEach(b => {
+            const hs = hours.filter(x => x.coarse && x.h > b.end_lh - 6 && x.h <= b.end_lh);
+            if (!hs.length || b.liquid_in == null) return;
+            const sum = hs.reduce((a, x) => a + x.p, 0), avg = b.liquid_in / 6;
+            hs.forEach(x => { x.p = sum > 0 ? avg * x.p / (sum / hs.length) : avg; });
+        });
+        hours.forEach(x => {
+            const rainShare = x.sl == null ? 0.5 : clamp((x.sl - mid) / 2000 + 0.5);
+            x.rain = x.p * rainShare; x.snow = x.p * (1 - rainShare);
+            x.bRain = clamp(x.rain / RAIN_FULL); x.bSnow = clamp(x.snow / SNOW_FULL) * (low ? 1 : 0.35); x.bWind = x.g == null ? 0 : 0.8 * clamp((x.g - 15) / 35);
+            x.b = 1 - (1 - x.bRain) * (1 - x.bSnow) * (1 - x.bWind);
+        });
+        let best = null;
+        for (let i = 0; i + WIN_H <= hours.length; i++) {
+            const w = hours.slice(i, i + WIN_H);
+            const mean = f => w.reduce((a, x) => a + f(x), 0) / WIN_H;
+            const before = hours.slice(0, i).reduce((a, x) => a + x.snow, 0) * ratio;          // inches of snow that fell earlier in the day
+            const fresh = S.mode === 'resort' || S.mode === 'backcountry' || S.mode === 'nordic' ? clamp((Math.max(0, (d.new_snow_in || 0) - w.reduce((a, x) => a + x.snow, 0) * ratio) + before) / 8) : 0;
+            const score = 100 * (1 - mean(x => x.b));
+            const key = score + 5 * fresh - 0.05 * Math.abs(w[0].h - 1 - 9);      // ties go to a window starting near 9 am: after the cold start, before the afternoon
+            if (!best || key > best.key) best = { i, w, score, key };
+        }
+        const w = best.w, half = (a, f) => a.reduce((t, x) => t + f(x), 0) / a.length;
+        const delta = half(w.slice(2), x => x.b) - half(w.slice(0, 2), x => x.b);
+        const trend = delta > 0.12 ? 'deteriorating' : delta < -0.12 ? 'improving' : 'stable';
+        // what changes most between the first and second half
+        const parts = [['rain', x => x.bRain], ['snow', x => x.bSnow], ['wind', x => x.bWind]];
+        const change = parts.map(([n, f]) => [n, half(w.slice(2), f) - half(w.slice(0, 2), f)]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
+        const meanB = half(w, x => x.b);
+        const why = trend === 'deteriorating' ? `${change[0]} builds toward the end` : trend === 'improving' ? `${change[0]} eases as the window goes on`
+            : meanB < 0.1 ? 'dry and calm throughout' : 'much the same all the way through';
+        // beyond 48 h the NBM has no hourly precipitation, so the timing within the day is approximate
+        const fuzzy = hours.filter(x => x.coarse).length / hours.length > 0.5;
+        return { start: w[0].h - 1, end: w[WIN_H - 1].h, score: best.score, trend, why, fuzzy };
+    }
+
     // 1 inside the comfortable band, falling to 0 twenty degrees outside it
     function comfortScore(t, band) {
         const lo = band[0], hi = band[1];
@@ -124,7 +186,7 @@
         if (d.gust_mph != null && d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
         if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
         else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on the way` + (d.risk_parts && d.risk_parts.length > 1 ? ' (' + d.risk_parts.map(p => p.route.replace(/ (Snoqualmie|Stevens|White|Blewett) Pass| North Cascades Highway/, '') + ' ' + Math.round(p.p * 100) + '%').join(', ') + ')' : ' on ' + z.road_risk.route) + ' that day.');
-        return { z, d, drive, vert, total, parts, why, notes, wet };
+        return { z, d, drive, vert, total, parts, why, notes, wet, win: bestWindow(z, d, S, lowest, low ? lowest + 1500 : z.top_ft) };
     }
 
     // A closure or restriction the log has seen on this zone's road, if the log is fresh (under 6 hours old; it is read in the morning).
@@ -173,6 +235,7 @@
                 return `<article class="sk-card${i === 0 ? ' sk-best' : ''}">
                     <div class="sk-head"><span class="sk-rank">${i + 1}</span><h3>${esc(r.z.name)}</h3><span class="sk-score">${Math.round(r.total)}<small>/100</small></span></div>
                     <p class="sk-why">Leads on ${top.join(' and ')}.</p>
+                    ${r.win ? `<p class="sk-window"><span class="sk-wlabel">Best 4 hours</span> <strong>${hh(r.win.start)} &ndash; ${hh(r.win.end)}</strong> <span class="sk-trend sk-trend-${r.win.trend}">${r.win.trend === 'deteriorating' ? '&#8600; ' : r.win.trend === 'improving' ? '&#8599; ' : '&rarr; '}${r.win.trend} conditions</span> <span class="sk-wscore">${Math.round(r.win.score)}/100</span><small>${esc(r.win.why)}</small>${r.win.fuzzy ? '<small class="sk-fuzzy">Timing is approximate: more than 48 hours out, the forecast only gives rain in 6-hour blocks, so the window could shift by a few hours.</small>' : ''}</p>` : ''}
                     <ul class="sk-facts">
                         ${LOW.includes(S.mode) ? `<li><strong>${d.temp_f == null ? '?' : d.temp_f + ' F'}</strong></li>` : ''}<li><strong>${d.new_snow_in == null ? '?' : d.new_snow_in.toFixed(1)} in</strong> new snow${d.new_snow_lo_in != null && d.new_snow_hi_in != null ? ` (${d.new_snow_lo_in.toFixed(1)}&ndash;${d.new_snow_hi_in.toFixed(1)})` : ''}</li><li>snow level <strong>${d.snow_level_ft == null ? '?' : d.snow_level_ft.toLocaleString() + ' ft'}</strong></li>
                         <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li>${r.wet != null ? `<li>wet <strong>${r.wet.toFixed(2)} in</strong></li>` : ''}<li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}

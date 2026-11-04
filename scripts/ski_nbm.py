@@ -1,6 +1,6 @@
 """Extract this week's NBM forecast at every ski-tool zone for the ski tool (needs Herbie: run in the cmw-herbie env).
 
-    python scripts/ski_nbm.py                       # today and the next two days (Pacific), newest long cycle
+    python scripts/ski_nbm.py                       # today and the next three days (Pacific), newest long cycle
     python scripts/ski_nbm.py --first-day 2026-10-09 --days 3 --cycle "2026-10-07 19:00"
 
 Output: data/ski/nbm_extract.json (raw numbers per zone and local day); scripts/ski_features.py --real turns it into assets/data/ski_features.json.
@@ -12,7 +12,9 @@ For each local day D at each zone's forecast point (the nearest 2.5 km NBM grid 
   snow ratio      SNOWLR 50th percentile, at the forecast hour nearest the middle of the ski day (snow-to-liquid ratio, the powder proxy)
   snow level      mean SNOWLVL 50th percentile over the ski window (07:00-16:00 local), feet MSL
   gust            maximum 10 m gust, mph;  cloud, visibility, temperature: means over the ski window (cloud %, miles, F)
-Forecast hours with a real file are hourly to F48 and every third hour from F50 (docs/nbm_fields.md); the ski window is sampled every third of those.
+  hourly          per zone and day, every forecast hour with a real file whose valid time falls 08:00-16:00 local (hourly to F48, every third hour from
+                  F50): 1-hour liquid precipitation, temperature, gust, cloud, visibility and snow level. The page's timing recommender reads it.
+Forecast hours with a real file are hourly to F48 and every third hour from F50 (docs/nbm_fields.md); the daily numbers above sample every third of those.
 Nothing is invented: a value that cannot be read is left null and the tool says so.
 """
 import argparse
@@ -40,14 +42,16 @@ M_TO_FT = 3.28084
 MS_TO_MPH = 2.23694
 
 
-def real_hours(cycle, start, end):
-    """Forecast hours whose valid time is in [start, end] (naive UTC) and that have a real NBM file, thinned to every third."""
+def real_hours(cycle, start, end, thin=True):
+    """Forecast hours whose valid time is in [start, end] (naive UTC) and that have a real NBM file, thinned to every third (or all of them)."""
     out = []
     for t in pd.date_range(start, end, freq="h"):
         f = int((t - cycle).total_seconds() // 3600)
         if f < 1:
             continue
-        if (f <= 48 and f % 3 == 0) or (f >= 50 and (f - 50) % 3 == 0):
+        if f <= 48 and (not thin or f % 3 == 0):
+            out.append(f)
+        elif f >= 50 and (f - 50) % 3 == 0:
             out.append(f)
     return out
 
@@ -68,7 +72,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cycle", help='UTC cycle, e.g. "2026-10-07 19:00" (default: newest long cycle that reaches the last day)')
     ap.add_argument("--first-day", help="first local date, YYYY-MM-DD (default: today, Pacific)")
-    ap.add_argument("--days", type=int, default=3)
+    ap.add_argument("--days", type=int, default=4)
     a = ap.parse_args()
 
     cfg = yaml.safe_load(DEST.read_text(encoding="utf-8"))
@@ -114,18 +118,40 @@ def main():
         liquid = None if any(q is None for q in qpf) else sum(qpf)
         # point fields over the ski window
         hrs = real_hours(cycle, ws, we)
-        series = {k: [] for k in ("tmp", "gust", "tcdc", "vis", "snowlvl")}
-        for f in hrs:
-            series["tmp"].append(field(cycle, f, grid, rf":TMP:2 m above ground:{f} hour fcst:$") - 273.15)
-            series["gust"].append(field(cycle, f, grid, rf":GUST:10 m above ground:{f} hour fcst:$") * MS_TO_MPH)
-            series["tcdc"].append(field(cycle, f, grid, rf":TCDC:(surface|reserved):{f} hour fcst:$"))
-            series["vis"].append(field(cycle, f, grid, rf":VIS:surface:{f} hour fcst:$") / 1609.34)
-            series["snowlvl"].append(field(cycle, f, grid, rf":SNOWLVL:surface:{f} hour fcst:50% level:$") * M_TO_FT)
+        hrs_all = real_hours(cycle, ws + pd.Timedelta(hours=1), we, thin=False)      # every real hour, for the timing recommender
+        cache = {}
+        for f in sorted(set(hrs) | set(hrs_all)):
+            cache[f] = {
+                "tmp": field(cycle, f, grid, rf":TMP:2 m above ground:{f} hour fcst:$") - 273.15,
+                "gust": field(cycle, f, grid, rf":GUST:10 m above ground:{f} hour fcst:$") * MS_TO_MPH,
+                "tcdc": field(cycle, f, grid, rf":TCDC:(surface|reserved):{f} hour fcst:$"),
+                "vis": field(cycle, f, grid, rf":VIS:surface:{f} hour fcst:$") / 1609.34,
+                "snowlvl": field(cycle, f, grid, rf":SNOWLVL:surface:{f} hour fcst:50% level:$") * M_TO_FT,
+            }
+            if f in hrs_all:      # the 1-hour liquid precipitation ending at this hour (kg/m2 -> inches)
+                cache[f]["apcp"] = field(cycle, f, grid, rf":APCP:surface:{f - 1}-{f} hour acc fcst:$") / 25.4
+        series = {k: [cache[f][k] for f in hrs] for k in ("tmp", "gust", "tcdc", "vis", "snowlvl")}
         mid = ws + (we - ws) / 2
         fm = min(real_hours(cycle, ws - pd.Timedelta(hours=3), we + pd.Timedelta(hours=3)) or hrs or [0], key=lambda f: abs((cycle + pd.Timedelta(hours=f)) - mid)) if hrs else None
         ratio = field(cycle, fm, grid, rf":SNOWLR:surface:{fm} hour fcst:50% level:$") if fm else np.full(n, np.nan)
         stack = lambda k: np.vstack(series[k]) if series[k] else np.full((1, n), np.nan)
         for i, z in enumerate(zones):
+            hourly = {"lh": [], "block": [], "precip_in": [], "temp_f": [], "gust_mph": [], "cloud_pct": [], "vis_mi": [], "snow_level_ft": []}
+            for f in hrs_all:
+                c = cache[f]
+                v = lambda x, nd: None if np.isnan(x[i]) else round(float(x[i]), nd)
+                hourly["lh"].append((cycle + pd.Timedelta(hours=f)).tz_localize("UTC").astimezone(PT).hour)
+                hourly["block"].append(1 if f <= 48 else 3)       # hours of the day this sample stands for
+                hourly["precip_in"].append(v(c["apcp"], 3))
+                hourly["temp_f"].append(None if np.isnan(c["tmp"][i]) else round(float(c["tmp"][i]) * 9 / 5 + 32))
+                hourly["gust_mph"].append(v(c["gust"], 0))
+                hourly["cloud_pct"].append(v(c["tcdc"], 0))
+                hourly["vis_mi"].append(v(c["vis"], 1))
+                hourly["snow_level_ft"].append(v(c["snowlvl"], 0))
+            # the two 6 h liquid totals that cover the ski day (they end 18Z and 00Z, about 10 am and 4 pm): the only precipitation timing
+            # the NBM has beyond 48 h, when its files carry a 1 h snapshot every third hour and miss rain that falls in between
+            hourly["blocks"] = [{"end_lh": (ss + pd.Timedelta(hours=6 * (k + 1))).tz_localize("UTC").astimezone(PT).hour, "liquid_in": nbm.r(qpf[k][i], 2)}
+                                for k in (2, 3) if qpf[k] is not None]
             g = lambda arr, fn: nbm.r(fn(arr[:, i]), 1) if arr.size and not np.isnan(arr[:, i]).all() else None
             res[z["id"]].append({
                 "date": str(d), "hours_sampled": hrs,
@@ -141,6 +167,7 @@ def main():
                 "cloud_pct": g(stack("tcdc"), np.nanmean) if series["tcdc"] else None,
                 "vis_mi": g(stack("vis"), np.nanmean) if series["vis"] else None,
                 "temp_f": nbm.r(np.nanmean(stack("tmp")[:, i]) * 9 / 5 + 32, 0) if series["tmp"] and not np.isnan(stack("tmp")[:, i]).all() else None,
+                "hourly": hourly,
             })
     out = {"schema": 1, "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}", "cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}",
            "model": "NOAA National Blend of Models (core CONUS, 2.5 km), via Herbie", "km_to_grid_point": dict(zip(res, grid.km)),
