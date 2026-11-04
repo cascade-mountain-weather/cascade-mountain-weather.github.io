@@ -43,6 +43,9 @@ DEPTH_SWING_IN = 36.0        # depth range within 24h larger than this is suspec
 OFFSEASON_END = (10, 15)     # snow depth reported before Oct 15 is flagged unless water equivalent backs it up; from Oct 15 on it is never flagged for the season
 OFFSEASON_SWE_IN = 0.5       # SWE (own, or any SNOTEL in the area) at least this deep confirms real early-season snow
 DEPTH_VS_REF_IN = 24.0       # depth this far above every SNOTEL in the area is suspect
+UNSUPPORTED_RISE_IN = 3.0    # slack (in) on top of what the nearby SWE gain or precipitation could build
+REGION_KM = 40.0             # "the region" for that check: stations within this distance (the station's own SWE and precip count too)
+MAX_SNOW_RATIO = 20.0        # snow-to-liquid ratio of the lightest powder: the most depth a given amount of liquid can build
 
 now = datetime.now(timezone.utc)
 
@@ -253,6 +256,30 @@ def summarize(cfg, raw):
     }
 
 
+def km_between(a, b):
+    p1, p2 = math.radians(a['lat']), math.radians(b['lat'])
+    h = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(b['lon'] - a['lon']) / 2) ** 2
+    return 12742 * math.asin(math.sqrt(h))
+
+
+def reject_unsupported_rises(all_stations):
+    """Snow cannot appear from nothing: a depth rise larger than the slack plus what the most SWE gain or precipitation at any station within
+    REGION_KM (itself included) could build at MAX_SNOW_RATIO is a sensor error (e.g. Alpental Base reporting 233 in on a bare slope). The depth
+    and its changes are blanked, the reported value is kept in snow_depth_raw_in, and the station is flagged so nothing downstream counts it."""
+    for s in all_stations:
+        rises = [c for c in (s['depth_change_24h_in'], s['depth_change_72h_in']) if c is not None]
+        if not rises or max(rises) <= UNSUPPORTED_RISE_IN:
+            continue
+        near = [o for o in all_stations if km_between(s, o) <= REGION_KM]
+        liquid = max([max(o['swe_change_72h_in'] or 0, o['precip_72h_in'] or 0) for o in near], default=0)
+        if max(rises) <= UNSUPPORTED_RISE_IN + MAX_SNOW_RATIO * liquid:
+            continue
+        s['snow_depth_raw_in'] = s['snow_depth_in']
+        s['_rejected'] = (f'Snow depth rose {max(rises):.0f} in but SWE and precipitation within {REGION_KM:.0f} km only support about {MAX_SNOW_RATIO * liquid:.0f} in: '
+                          f'reported {s["snow_depth_in"]:.0f} in, ignored')
+        s['snow_depth_in'] = s['depth_change_24h_in'] = s['depth_change_72h_in'] = None
+
+
 def apply_trust_flags(stations):
     """Add caution reasons. Never drops data, just marks it questionable."""
     refs = [s for s in stations if s['network'] == 'SNOTEL' and s['snow_depth_in'] is not None]
@@ -262,6 +289,8 @@ def apply_trust_flags(stations):
     for s in stations:
         reasons = []
         depth = s['snow_depth_in']
+        if s.get('_rejected'):
+            reasons.append(s.pop('_rejected'))
 
         if s['obs_time'] is None:
             reasons.append('No recent data')
@@ -383,7 +412,7 @@ def main():
         print('No data from any source; leaving existing JSON untouched.', file=sys.stderr)
         sys.exit(1)
 
-    out_areas = []
+    summarized = {}
     for area in areas:
         stations = []
         for cfg in area['stations']:
@@ -391,6 +420,12 @@ def main():
                 stations.append(summarize(cfg, raw[cfg['id']]))
             else:
                 print(f'WARNING: no data returned for {cfg["id"]}', file=sys.stderr)
+        summarized[area['id']] = stations
+    reject_unsupported_rises([s for st in summarized.values() for s in st])
+
+    out_areas = []
+    for area in areas:
+        stations = summarized[area['id']]
         if not stations:
             continue
         apply_trust_flags(stations)
