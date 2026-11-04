@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
-description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every hour, with the last 24 hours of frames to play, pause and scrub through."
+description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every hour, with the last 6 hours of frames, about 10 minutes apart, to play, pause and scrub through."
 keywords: "GOES satellite loop, Pacific Northwest radar, Washington satellite imagery, PNW weather loop"
 og_title: "GOES Satellite + Radar Loop | Cascade Mountain Weather"
 og_description: "Live GOES true color satellite and radar loop for the Pacific Northwest, updated every hour."
@@ -9,7 +9,7 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
 <section id="satellite-looper" class="satellite-looper">
     <h2>GOES + Radar Looper</h2>
     <p class="satellite-subtitle">
-        Integrated GOES true color and radar loop for the Pacific Northwest. Updated every hour; drag the slider to step back through the last 24 hours (frames are about 20 minutes apart).
+        Integrated GOES true color and radar loop for the Pacific Northwest. Updated every hour; drag the slider to step back through the last 6 hours (frames are about 10 minutes apart).
     </p>
     <div class="satellite-stage">
         <img id="satellite-frame" src="" alt="GOES and radar animation frame for the Pacific Northwest" loading="lazy" />
@@ -175,7 +175,7 @@ og_description: "Live GOES true color satellite and radar loop for the Pacific N
         async function initSatelliteLooper() {
             statusEl.textContent = 'Loading latest satellite loop...';
             timingEl.textContent = 'Reading frame timing...';
-            const remoteBase = `{{ site.satellite_data_url }}`;                    // the satellite-data branch: the last 24 hours, rebuilt hourly
+            const remoteBase = `{{ site.satellite_data_url }}`;                    // the satellite-data branch: the last 6 hours, rebuilt hourly
             const localBase = `{{ '/assets/images/satellite' | relative_url }}`;  // older copy kept in the site itself
             const fallbackStaticPath = `${localBase}/latest_frame.webp?v=${Date.now()}`;
             const bust = Math.floor(Date.now() / 300000);                           // raw.githubusercontent.com caches for 5 minutes

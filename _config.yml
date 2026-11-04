@@ -69,6 +69,6 @@ corn_model_name: "Corn Clock"
 powder_model_name: "Powder Stash Predictor"
 analogs_name: "Reading the Tea Leaves"
 
-# Rolling satellite frames (last 24 hours), force-pushed hourly to this branch by update_satellite_loop.yml
+# Rolling satellite frames (last 6 hours, 10 minutes apart), force-pushed hourly to this branch by update_satellite_loop.yml
 satellite_data_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/satellite-data"
 forecast_data_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/forecast-data"
