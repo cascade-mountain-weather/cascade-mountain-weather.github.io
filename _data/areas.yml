@@ -133,7 +133,7 @@ areas:
     basin: "17110010"
     page: /tools/model-tools-precipitation.html#area=snoqualmie
     webcams:
-      - {type: youtube, id: "8wk81COX2cg", label: "Alpental (top)"}
+      - {type: youtube, id: "8wk81COX2cg", label: "Alpental Base"}
     stations:
       - {id: ALP55, network: NWAC, label: Alpental Summit}
       - {id: ALP44, network: NWAC, label: Alpental Mid-Mountain, primary: true}
@@ -159,8 +159,10 @@ areas:
     webcams:
       - {type: windy, id: "1384985408", label: "Henry M. Jackson Visitor Center"}
       - {type: windy, id: "1384985407", label: "Tatoosh Range"}
+      - {type: windy, id: "1655616821", label: "Longmire (south-west)"}
     stations:
       - {id: MU101, network: NWAC, label: Camp Muir}
+      - {id: GW5594, network: RAWS, label: Longmire}
       - {id: PVC54, network: NWAC, label: Paradise}
       - {id: "679:WA:SNTL", network: SNOTEL, label: Paradise, primary: true}
 
@@ -196,6 +198,9 @@ areas:
     name: Mt. Hood
     basin: "17070105"
     page: /tools/model-tools-precipitation.html#area=mt-hood
+    webcams:
+      - {type: windy, id: "1664374395", label: "Government Camp (north)"}
+      - {type: windy, id: "1719603345", label: "Timberline Lodge - Pucci Glade"}
     stations:
       - {id: TIM70, network: NWAC, label: Timberline, primary: true}
       - {id: MHM54, network: NWAC, label: Mt. Hood Meadows}
