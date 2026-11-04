@@ -9,7 +9,7 @@
                  'Moderate low just to the north', 'Weaker low, far out in the Gulf of Alaska'];
     var SHORT = ['Deep, offshore SW', 'Deep, Gulf of Alaska', 'Far SW', 'South (California)', 'Just to the north', 'Weak, Gulf of Alaska'];
     var COLORS = ['#1e3c72', '#2f80ed', '#0f9d8a', '#e0a100', '#8b5cf6', '#d6457a'];
-    var ZONES = ['Mt. Baker', 'Washington Pass', 'Stevens Pass', 'Hurricane Ridge', 'Blewett Pass', 'Snoqualmie Pass', 'Crystal', 'Paradise', 'White Pass'];
+    var ZONES = ['Mt. Baker', 'Washington Pass', 'Stevens Pass', 'Hurricane Ridge', 'Blewett Pass', 'Snoqualmie Pass', 'Crystal', 'Paradise', 'White Pass', 'Mt. Hood'];
     var state = { view: 'map', mapPat: 0, fmode: 'blend', basins: null, land: null, selA: null, selF: null, model: 'det', kind: 'height_anom', i: 0, day: 0, fc: null, zones: null, base: '', timer: null };
     var ui = {};
 
@@ -265,14 +265,14 @@
 
     // ---- the zone map: Washington / BC / Oregon basemap, each zone's watershed coloured by its shift. opts: value(z) -> {pct, sig}, sel (key), onPick(z).
     var HUC = { 'Mt. Baker': '17110004', 'Washington Pass': '17020008', 'Stevens Pass': '17110009', 'Hurricane Ridge': '17110020', 'Blewett Pass': '17020011',
-                'Snoqualmie Pass': '17110010', 'Crystal': '17110014', 'Paradise': '17110015', 'White Pass': '17080004' };
+                'Snoqualmie Pass': '17110010', 'Crystal': '17110014', 'Paradise': '17110015', 'White Pass': '17080004', 'Mt. Hood': '17070105' };
     var LABEL_OFF = { 'Stevens Pass': [-30, -38, 'end'], 'Blewett Pass': [44, -8, 'start'], 'Snoqualmie Pass': [-40, 18, 'end'],
                       'Crystal': [50, -18, 'start'], 'Paradise': [-40, 20, 'end'], 'White Pass': [38, 14, 'start'] };
     function rings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.coordinates.map(function (c) { return c[0]; }); }
     function mapView(opts) {
         var wrap = el('div', 'pf-mapwrap'), feats = state.basins.features, byHuc = {};
         feats.forEach(function (f) { byHuc[f.properties.huc8] = f; });
-        var bb = [-124.9, 45.75, -119.4, 49.45];                          // the part of the basemap that is shown: the zones with a little margin
+        var bb = [-124.9, 45.05, -119.4, 49.45];                          // the part of the basemap that is shown: the zones with a little margin
         var k = Math.cos(47 * Math.PI / 180), W = 520, pad = 0, sc = (W - 2 * pad) / ((bb[2] - bb[0]) * k), H = Math.round((bb[3] - bb[1]) * sc + 2 * pad);
         function X(lon) { return pad + (lon - bb[0]) * k * sc; }
         function Y(lat) { return H - pad - (lat - bb[1]) * sc; }
@@ -283,7 +283,7 @@
             Object.keys(state.land.states).forEach(function (name) {
                 svg.appendChild(sv('path', { d: state.land.states[name].map(ringPath).join(' '), fill: '#f8fafc', 'fill-rule': 'evenodd', stroke: '#9aa7b8', 'stroke-width': 1.4, 'stroke-linejoin': 'round' }));
             });
-            [['BRITISH COLUMBIA', -122.4, 49.72], ['WASHINGTON', -119.95, 46.55], ['OREGON', -121.9, 45.55]].forEach(function (l) {
+            [['BRITISH COLUMBIA', -122.4, 49.72], ['WASHINGTON', -119.95, 46.55], ['OREGON', -121.9, 45.14]].forEach(function (l) {
                 svg.appendChild(sv('text', { x: X(l[1]), y: Y(l[2]), 'text-anchor': 'middle', 'class': 'pf-map-state' }, l[0]));
             });
             svg.appendChild(sv('text', { x: X(-125.3), y: Y(46.9), 'class': 'pf-map-state pf-map-sea' }, 'PACIFIC'));
