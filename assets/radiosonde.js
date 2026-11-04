@@ -1,7 +1,7 @@
 // Radiosonde / Skew-T tool.
 //
 // Shows MetPy skew-T composites that scripts/radiosonde_skewt.py pre-renders
-// (workflow radiosonde_skewt.yml, a few hours after each 00Z/12Z launch) from
+// (workflow observations.yml, hourly, so a cycle appears soon after each 00Z/12Z launch) from
 // Iowa State's IEM RAOB feed. The page just reads assets/data/radiosonde/manifest.json
 // and swaps PNGs, so there is no in-browser Python to wait for. Plotly is only
 // used for the history chart.
@@ -342,7 +342,7 @@ function showEntry() {
 
 // --- History trend chart (freezing level / wet-bulb zero / snow level) ----
 // Fetches the small, bot-updated JSON asset that scripts/collect_radiosonde_history.py
-// appends to on a schedule (see .github/workflows/radiosonde_history.yml),
+// appends to on a schedule (see .github/workflows/observations.yml),
 // mirroring the same pattern already used for the satellite looper's
 // manifest.json. Cached once per page load since it covers all stations.
 function loadHistory() {

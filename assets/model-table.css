@@ -27,6 +27,7 @@
 .mt-section th.mt-sec { text-align: left; padding: 0.55rem 0.5rem 0.2rem; font-size: 0.85rem; color: #1e3c72; background: #fff; position: sticky; left: 0; }
 .mt-cell { height: 34px; min-width: 40px; font-weight: 600; line-height: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.7); }
 .mt-cell.mt-null { background: #f1f5f9; color: #cbd5e1; font-weight: 400; }
+.mt-ptype { display: block; font-size: 0.7rem; line-height: 1; margin-top: 1px; font-weight: 400; }
 .mt-wind .mt-arrow { display: inline-block; font-size: 0.8rem; margin-left: 1px; }
 .mt-legend-bar { height: 10px; width: 180px; border-radius: 5px; border: 1px solid #e2e8f0; }
 .mt-note { font-size: 0.8rem; color: #64748b; margin: 0.6rem 0 0; }

@@ -23,6 +23,7 @@
     const fmtDay = new Intl.DateTimeFormat('en-US', { timeZone: PAC, weekday: 'short', month: 'numeric', day: 'numeric' });
     const fmtDayKey = new Intl.DateTimeFormat('en-CA', { timeZone: PAC });
     const fmtOnlyHour = new Intl.DateTimeFormat('en-US', { timeZone: PAC, hour: 'numeric', hour12: false });
+    const fmtObsDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -64,9 +65,14 @@
         return have;
     }
 
-    // Newest run with at least MIN_SHARE of its frames; if none gets there, the fullest run that has any.
+    // Newest run that looks complete; if none does, the fullest run that has any frame.
+    // A run with many frames is judged from a sample (first, middle and last forecast hour) instead of every frame:
+    // the sources post a run in order, so the last frame existing means the run is whole, and the frames are large
+    // (a Utah map is over 1 MB), so asking for all of them just to pick a run made the page slow or time out.
+    // Any individual frame that is still missing is skipped when playing (see show()).
     // Single-image products (and views with one candidate run) only need the one frame to exist.
     // Returns { run, have: Set of hours, fellBack } or null.
+    const SAMPLE_OVER = 8;
     async function pickRun(v, stale, onFallback) {
         const runs = v.runs || [];
         const hours = v.hours;
@@ -74,10 +80,19 @@
         for (let i = 0; i < runs.length; i++) {
             if (i > 0 && onFallback) onFallback();
             const probeOne = hours.length < 2 || runs.length < 2;
-            const want = probeOne ? [v.probeHour != null ? v.probeHour : hours[0]] : hours;
+            const first = v.probeHour != null ? v.probeHour : hours[0], last = hours[hours.length - 1];
+            const sampled = !probeOne && hours.length > SAMPLE_OVER;
+            const want = probeOne ? [first] : sampled ? [...new Set([first, hours[Math.floor(hours.length / 2)], last])] : hours;
             const have = await probeHours(v, runs[i], want, stale);
             if (stale()) return null;
             if (probeOne) return have.size ? { run: runs[i], have: new Set(hours), fellBack: i > 0 } : null;
+            if (sampled) {
+                if (have.has(last) && have.has(first)) return { run: runs[i], have: new Set(hours), fellBack: i > 0 };
+                // run still being posted: keep it as a fallback, with the frames up to the latest sampled one
+                const reach = Math.max(-1, ...[...have].map(h => hours.indexOf(h)));
+                if (have.has(first) && (!best || reach > best.reach)) best = { run: runs[i], have: new Set(hours.slice(0, reach + 1)), fellBack: i > 0, reach };
+                continue;
+            }
             if (have.size / hours.length >= MIN_SHARE) return { run: runs[i], have, fellBack: i > 0 };
             if (have.size && (!best || have.size > best.have.size)) best = { run: runs[i], have, fellBack: i > 0 };
         }
@@ -213,7 +228,11 @@
         function renderTimes() {
             const h = view.hours[idx];
             const lines = [];
-            if (view.pair) {
+            if (view.observed && run && h != null && !view.pair) {
+                const v = validTime(idx);
+                lines.push(`<div class="mv-valid"><strong>${esc(fmtObsDay.format(v))}</strong></div>`);
+                lines.push(`<div class="mv-run">${esc(view.observed)}</div>`);
+            } else if (view.pair) {
                 const v = validTime(idx), P = view.pair;
                 lines.push(`<div class="mv-valid"><strong>${esc(pacific(v))}</strong><span class="mv-z">${esc(zulu(v))}</span></div>`);
                 lines.push(`<div class="mv-run">Side by side: ${P.common.length} forecast times have a map from both runs. Hours shown are each run&rsquo;s own forecast hour.</div>`);
@@ -306,7 +325,9 @@
             const link = view.fallbackUrl || (view.info && view.info.sourceUrl);
             failEl.innerHTML = `<p><strong>This image isn't loading right now.</strong></p>
                 <p>The source site may be down, or may have moved this product.</p>
-                ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open the source page &rarr;</a></p>` : ''}`;
+                ${link ? `<p><a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Open the source page &rarr;</a></p>` : ''}
+                <p><button type="button" class="mv-chip mv-retry">Try again</button></p>`;
+            failEl.querySelector('.mv-retry').addEventListener('click', () => load());
             failEl.hidden = false;
             img.removeAttribute('src');
             pairImgs.forEach(x => x.removeAttribute('src'));

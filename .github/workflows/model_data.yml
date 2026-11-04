@@ -3,7 +3,7 @@ name: Update Model Forecast Data
 # One job for the three Herbie-based forecast files (they share the slow conda + ecCodes setup and the same 6-hour cadence):
 #   nbm_plume.py -> assets/data/nbm_plumes.json      NBM snowfall and precipitation plumes
 #   hires_plume.py -> assets/data/hires_plumes.json  HRRR and HRDPS plumes
-#   meteograms.py -> assets/data/meteograms.json     home-page point forecast (NBM, HRRR, HRDPS)
+#   meteograms.py -> assets/data/meteograms.json     home-page point forecast (NBM, HRRR, RRFS, HRDPS)
 # Each script takes the newest complete cycle of its model, so one run time serves all of them.
 # A step that fails does not stop the others; the job still ends red at the end so a failure is visible.
 

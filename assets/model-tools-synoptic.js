@@ -4,6 +4,7 @@
 // are skipped. To fix a broken link, edit the url builders below.
 (function () {
     'use strict';
+    const BASE = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');
     const range = (start, end, step) => Array.from({ length: Math.floor((end - start) / step) + 1 }, (_, i) => start + i * step);
     const pad = (n, w) => String(n).padStart(w, '0');
     const ymd = d => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1, 2)}${pad(d.getUTCDate(), 2)}`;
@@ -24,7 +25,7 @@
     // CW3E map products: /{prod}/v1/{model}/{region}/{run}/1/{prod}__v1__{model}__{region}__{run}__1__F###.png
     function cw3eMap(prod, model, region, cycleH, hours, probeHour) {
         return {
-            hours, probeHour, runs: runs(cycleH, 6), runExact: true,
+            hours, probeHour, runs: runs(cycleH, 8), runExact: true,
             urlFor: (r, h) => `${CW3E}/${prod}/v1/${model}/${region}/${ymdh(r)}/1/${prod}__v1__${model}__${region}__${ymdh(r)}__1__F${pad(h, 3)}.png`,
             fallbackUrl: CW3E_HOME,
         };
@@ -33,7 +34,7 @@
     const season = d => { const y = d.getUTCFullYear(), s = d.getUTCMonth() >= 6 ? y : y - 1; return `${s}-${s + 1}`; };
     function wwrfMap(prod, model, region, cycleH, hours, probeHour) {
         return {
-            hours, probeHour, runs: runs(cycleH, 6), runExact: true,
+            hours, probeHour, runs: runs(cycleH, 8), runExact: true,
             urlFor: (r, h) => `${CW3E}/${prod}/${season(r)}/${model}/${region}/${ymdh(r)}/1/${prod}__${season(r)}__${model}__${region}__${ymdh(r)}__1__F${pad(h, 3)}.png`,
             fallbackUrl: CW3E_HOME,
         };
@@ -41,7 +42,7 @@
     // AR landfall tool: one image per run covering the whole forecast (F384)
     function landfall(model, cycleH) {
         return {
-            hours: [null], runs: runs(cycleH, 6), runExact: true,
+            hours: [null], runs: runs(cycleH, 8), runExact: true,
             urlFor: r => `${CW3E}/landfalltool_ivt250_probability/v1/${model}/coast/${ymdh(r)}/1/landfalltool_ivt250_probability__v1__${model}__coast__${ymdh(r)}__1__F384.png`,
             fallbackUrl: CW3E_HOME,
         };
@@ -49,7 +50,7 @@
     // Utah synoptic panels: /{YYYYMMDD}/images/models/{dir}/{prefix}{YYYYMMDDHH}F###.png
     function utah(dir, prefix, cycleH) {
         return {
-            hours: range(0, 240, 6), runs: runs(cycleH, 6), runExact: true,
+            hours: range(0, 240, 6), runs: runs(cycleH, 8), runExact: true,
             urlFor: (r, h) => `${UTAH}/${ymd(r)}/images/models/${dir}/${prefix}${ymdh(r)}F${pad(h, 3)}.png`,
             fallbackUrl: UTAH + '/',
         };
@@ -58,7 +59,22 @@
     // Point for the ensemble AR plume (off the Washington coast) and how far out it looks: F240 is the 10-day version
     const PLUME = { point: '47.0N_124.0W', hours: 240 };
 
+    // North Pacific SST anomaly (scripts/sst_anomaly_maps.py): one map every few days plus the latest, listed in a manifest.
+    // Frames are dates, not forecast hours, so hours are the day offsets from the first date (the run is noon UTC on that date).
+    let sst = null;
+    function sstView() {
+        const ds = sst.dates.map(d => Date.UTC(+d.slice(0, 4), +d.slice(4, 6) - 1, +d.slice(6, 8), 12));
+        return {
+            hours: ds.map(t => (t - ds[0]) / 3600e3), runs: [new Date(ds[0])], runExact: true,
+            urlFor: (r, h) => { const d = new Date(r.getTime() + h * 3600e3), p = (n, w) => String(n).padStart(w, '0');
+                return `${BASE}data/sst/${sst.file.replace('{date}', `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1, 2)}${p(d.getUTCDate(), 2)}`)}`; },
+            observed: 'Daily analysis (observations), not a forecast. The newest map is a day or two old. Frames are spaced a few days apart.',
+            fallbackUrl: 'https://www.ncei.noaa.gov/products/optimum-interpolation-sst',
+        };
+    }
+
     const MODELS = {
+        oisst: 'NOAA OISST',
         gfs: 'GFS', ecmwf: 'ECMWF HRES', aifs: 'ECMWF AIFS (AI)', hres: 'ECMWF HRES',
         gefs: 'GEFS', eps: 'ECMWF ENS', diff: 'ECMWF ENS minus GEFS',
         wwrf_ecmwf: 'West-WRF (ECMWF-driven)', wwrf_gfs: 'West-WRF (GFS-driven)',
@@ -119,7 +135,7 @@
             models: ['gefs'],
             title: () => 'Ensemble AR outlook: GEFS and ECMWF IVT plumes, 10 days',
             build: () => ({
-                hours: [null], runs: runs(12, 6), runExact: true,
+                hours: [null], runs: runs(12, 8), runExact: true,
                 urlFor: r => `${CW3E}/ivt_ensembleplumes/v1/GEFS_50_ECMWF_ENS/${PLUME.point}/${ymdh(r)}/1/ivt_ensembleplumes__v1__GEFS_50_ECMWF_ENS__${PLUME.point}__${ymdh(r)}__1__F${PLUME.hours}.png`,
                 fallbackUrl: CW3E_HOME,
             }),
@@ -127,6 +143,18 @@
                 what: 'IVT plumes out to 10 days for a point on the coast off Washington (47.0N, 124.0W) from the GEFS and ECMWF ensembles together, so you can compare how strong and how well-timed an atmospheric river is across models.',
                 how: 'Each line is an ensemble member. Look for when the plumes peak and how far apart the models are. Tight bunching means high confidence in timing and strength.',
             }, SRC_CW3E),
+        },
+        sst: {
+            noCompare: true,
+            label: 'North Pacific SST anomaly',
+            models: ['oisst'],
+            title: () => 'North Pacific sea surface temperature anomaly, Japan to the Washington coast',
+            build: () => sstView(),
+            info: {
+                what: 'How much warmer or colder than the 1991&ndash;2020 average the surface of the North Pacific is, from NOAA&rsquo;s daily optimum interpolation SST analysis (OISST v2.1, 0.25&deg; grid). It covers the whole basin from Japan to the Washington coast, with a map every few days over the past two months, ending with the latest day. Grey is land or missing data.',
+                how: 'The ocean sets the temperature of the air that crosses it, so look at the water under the storm track. Warm water in the Gulf of Alaska and off the Northwest coast favors milder, higher snow-level storms; cold water favors colder air and lower snow levels. A big warm patch in the central Pacific near 40&deg;N (a marine heat wave) tends to go with a ridge aloft there. Step through the maps to see whether the pattern is growing or fading. It changes slowly, so read it as background for the season, not the next storm.',
+                source: 'NOAA NCEI OISST v2.1', sourceUrl: 'https://www.ncei.noaa.gov/products/optimum-interpolation-sst',
+            },
         },
         utah: {
             label: 'Utah synoptic panels',
@@ -148,7 +176,7 @@
     // Side by side needs a product with a time slider and a second model to pair with
     const canCompare = st => { const p = PRODUCTS[st.product]; return !p.noCompare && p.models.length > 1 && p.build(p.models[0]).hours.length > 1; };
     const modelsOf = st => PRODUCTS[st.product].models;
-    CMWViewer.mount(document.getElementById('viewer'), {
+    const mount = () => CMWViewer.mount(document.getElementById('viewer'), {
         selectors: [
             { key: 'product', label: 'Product', options: Object.keys(PRODUCTS).map(k => ({ value: k, label: PRODUCTS[k].label })) },
             { key: 'model', label: 'Model', options: st => modelsOf(st).map(m => ({ value: m, label: modelName(m) })) },
@@ -169,5 +197,12 @@
             }
             return view;
         },
+    });
+    // The SST product needs its manifest; without it the rest of the page still works
+    const SST_PRODUCT = PRODUCTS.sst;
+    delete PRODUCTS.sst;
+    fetch(BASE + 'data/sst/manifest.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(m => {
+        if (m && m.dates && m.dates.length) { sst = m; PRODUCTS.sst = SST_PRODUCT; }
+        mount();
     });
 }());
