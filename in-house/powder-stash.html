@@ -1,0 +1,50 @@
+---
+layout: page
+title: "Powder Stash Predictor | Cascade Mountain Weather"
+description: "Which Cascades zones tend to get more or less precipitation than a normal storm, matched to the ECMWF forecast for the next five days."
+under_development: true
+under_development_text: "This tool is experimental. The pattern matching and the numbers it shows are still being tested."
+---
+<link rel="stylesheet" href="{{ '/assets/outlooks.css' | relative_url }}">
+<div class="lt-page">
+<section class="hero">
+    <h1 class="PlotTitle">{{ site.powder_model_name }}</h1>
+    <p>This tool matches current deterministic and ensemble-based ECMWF forecasts with
+        characteristic storm analogs (see description below) to indicate which locations may get more 
+        (or less) precipitation than other places, all things being equal. If no pattern is called out, there either is no storm or the signal is too weak to be meaningful.
+        <strong>But remember, this is for precipitation, not strictly snow.</strong>
+    </p>
+    <p>
+        For example, during a "normal" storm, Mt. Baker gets more precipitation than most places. But when the forecast
+        aligns with, let's say, pattern 0, it suggests that Mt. Baker will get even more precipitation than normal relative to 
+        other sites (a.k.a. a "precipitation bonus"). In other words, the forecast is more favorable for Mt. Baker than it is for other locations.
+    </p>
+</section>
+
+<div class="lt-card" id="pattern-forecast">
+    <div id="pf-viewer" data-remote="{{ site.forecast_data_url }}/" data-local="{{ '/assets/forecast/' | relative_url }}" data-basins="{{ '/assets/data/basins.geojson' | relative_url }}" data-land="{{ '/assets/data/pnw_basemap.json' | relative_url }}"><noscript><p class="ol-fail">The forecast viewer needs JavaScript.</p></noscript></div>
+    <details class="pf-how">
+        <summary>How this works, and the six storm patterns</summary>
+        <ol>
+            <li><strong>Storm days.</strong> We took the 2,111 days from November 15 to April 30, 1992 to 2026 when all SNOTEL sites in the Cascades averaged at least a quarter inch of new water.</li>
+            <li><strong>Six patterns.</strong> On each of those storm days we found the region's lowest 500 hPa height anomaly in the ERA5 reanalysis, noted how deep it was and where it sat. We clustered each day into six patterns by those three numbers (intensity displacement clustering).</li>
+            <li><strong>Over- and under-performing.</strong> For each zone and storm day we asked whether the zone got at least half an inch more water than usual for a storm of that size (over), or half an inch less (under), then counted how often that happened in each pattern.</li>
+            <li><strong>The forecast.</strong> We take ECMWF 500 hPa height anomaly and find the lowest low-pressure system in the region. We assign this to the nearest pattern if it is within a certain distance. Days are labelled dry, slightly wet (under half an inch), moderately wet (half an inch to an inch and a half) or very wet (more).</li>
+        </ol>
+        <div class="lt-figs lt-figs--2">
+            <figure><img class="PlotFormat" loading="lazy" src="{{ '/assets/images/tea-leaves/regimes_height.png' | relative_url }}" alt="Six composite 500 hPa height patterns of Washington storm days, with height anomaly, 850 hPa temperature and moisture transport"><figcaption><strong>The six storm patterns</strong> &middot; mean 500 hPa height (black, dam), its anomaly in standard deviations (shading), 850 hPa temperature (red, heavy line is 0&nbsp;&deg;C) and moisture transport (green, IVT 250, 500 and 750&nbsp;kg/m/s). The star is the Cascades.</figcaption></figure>
+            <figure><img class="PlotFormat" loading="lazy" src="{{ '/assets/images/tea-leaves/regimes_t850_anom.png' | relative_url }}" alt="Six composite 850 hPa temperature anomaly maps of Washington storm days"><figcaption><strong>The same six patterns</strong> &middot; 850 hPa temperature anomaly in kelvin; the dashed line is the 0&nbsp;&deg;C isotherm.</figcaption></figure>
+        </div>
+        <ul>
+            <li><strong>The limits:</strong> six groups are a simplification of a many patterns. 
+                Refitting on resampled data reproduces the grouping only moderately (adjusted Rand 
+                index of about 0.7, where 1 is identical), and some output will be chance. The forecast 
+                uses ECMWF's open data: the deterministic run is one forecast, and the ensemble mean 
+                smooths out features the members disagree on. The patterns 
+                say where a storm may over/underperform, not how much precipitation will fall.</li>
+        </ul>
+    </details>
+</div>
+</div>
+</div>
+<script src="{{ '/assets/pattern-forecast.js' | relative_url }}"></script>

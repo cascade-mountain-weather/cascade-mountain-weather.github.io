@@ -1,13 +1,15 @@
 """Merge the newest satellite frames into the rolling set that is published on the `satellite-data` branch.
 
 Run by .github/workflows/update_satellite_loop.yml every hour, after scripts/build_cod_satellite_loop.py has built
-the newest ~8 hours of frames (20 minutes apart) into a scratch folder:
+the newest ~6.5 hours of frames (10 minutes apart) into a scratch folder:
 
-    python scripts/publish_satellite_frames.py --built BUILT_DIR --site SITE_DIR --keep-hours 24
+    python scripts/publish_satellite_frames.py --built BUILT_DIR --site SITE_DIR --keep-hours 6 --min-gap-minutes 8
 
 SITE_DIR starts as the previous contents of the branch (or empty). New frames are copied in under a name that carries
-their time (so a frame that was already there is not rewritten), frames older than --keep-hours are dropped, and the
-manifest is rewritten, oldest frame first, with paths relative to the branch root:
+their time (so a frame that was already there is not rewritten), frames older than --keep-hours are dropped, frames closer
+than --min-gap-minutes to the one before them are thinned out (each hourly run picks its 10-minute frames from the newest
+image, so their timing can shift by 5 minutes from run to run; thinning starts from the oldest frame in the window, so
+the spacing stays steady and a frame near the start of the window may be swapped for its neighbour), and the manifest is rewritten, oldest frame first, with paths relative to the branch root:
 
     manifest.json, latest_frame.webp, frames/sat_YYYYMMDDTHHMMZ.webp
 
@@ -28,7 +30,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--built", required=True, help="folder from build_cod_satellite_loop.py (satellite_manifest.json + frames/)")
     ap.add_argument("--site", required=True, help="working copy of the satellite-data branch")
-    ap.add_argument("--keep-hours", type=float, default=24)
+    ap.add_argument("--keep-hours", type=float, default=6)
+    ap.add_argument("--min-gap-minutes", type=float, default=0, help="drop a frame that is closer than this to the one before it (0 keeps all)")
     ap.add_argument("--built-manifest", default="satellite_manifest.json")
     args = ap.parse_args()
     built, site = Path(args.built), Path(args.site)
@@ -52,6 +55,13 @@ def main():
     newest = max(parse(f["timestamp_utc"]) for f in frames.values())
     cutoff = newest - timedelta(hours=args.keep_hours)
     kept = sorted((f for f in frames.values() if parse(f["timestamp_utc"]) >= cutoff), key=lambda f: f["timestamp_utc"])
+    if args.min_gap_minutes:
+        thinned = []
+        for f in kept:
+            if thinned and (parse(f["timestamp_utc"]) - parse(thinned[-1]["timestamp_utc"])).total_seconds() < args.min_gap_minutes * 60:
+                continue
+            thinned.append(f)
+        kept = thinned
     keep_files = {f["file"] for f in kept}
     for p in (site / "frames").glob("*"):
         if f"frames/{p.name}" not in keep_files:

@@ -2,15 +2,18 @@
 then which regimes go with a zone over-performing (see scripts/storm_zones.py and PLAN.md, "Storm-type analysis").
 
     python scripts/storm_som.py                 # all four periods, every cold season for which all ERA5 files exist (scripts/era5_fetch.py)
+    python scripts/storm_som.py --period nwac   # Nov 15 - Apr 30 (the NWAC forecasting season)
     python scripts/storm_som.py --period mid    # one period: all (Nov-May), early (Nov-Dec), mid (Jan-Mar) or late (Apr-May)
     python scripts/storm_som.py --seeds 20      # more restarts when judging stability
+    python scripts/storm_som.py --fields z500 t850  # fit on 500 hPa height and 850 hPa temperature anomalies together
+    python scripts/storm_som.py --grid 2 3 --pcs 3   # a 2x3 map on the first 3 principal components (files get a _g2x3_pc3 tag)
 
 Each period gets its own SOM, fit only on that period's storm days (the anomalies are still against the whole-season
 day-of-year mean, so they are comparable). Writes data/storms/som_results_<period>.json and docs/storms/som_*_<period>.png.
 
 Steps: daily means of z500, t850 and IVT from the 6-hourly ERA5 files; anomalies against a smoothed day-of-year mean (three
 harmonics, fitted to the seasons used); storm days from the zone table; the SOM input is z500 anomaly over SOM_BOX, weighted by
-sqrt(cos latitude) and reduced to the principal components that hold 90% of the variance. For each node and zone: the share of
+sqrt(cos latitude) and reduced to the principal components that hold 90% of the variance (or to a fixed number, --pcs). For each node and zone: the share of
 the node's storm days on which the zone over-performed, divided by that zone's share over all storm days (1 = no difference),
 with a 90% range from resampling whole seasons. Stability: the SOM is refit on resampled seasons and every storm day is assigned
 by the refit; the adjusted Rand index against the main fit says how much the grouping changes (1 = identical).
@@ -36,8 +39,16 @@ FIG = ROOT / "docs" / "storms"
 G = 9.80665
 SOM_BOX = dict(lat=(30, 60), lon=(-170, -115))       # south, north; west, east
 NX, NY = 3, 3
-PERIODS = {"all": [11, 12, 1, 2, 3, 4, 5], "early": [11, 12], "mid": [1, 2, 3], "late": [4, 5]}
+PERIODS = {"all": [11, 12, 1, 2, 3, 4, 5], "early": [11, 12], "mid": [1, 2, 3], "late": [4, 5], "nwac": [11, 12, 1, 2, 3, 4]}  # nwac: Nov 15 - Apr 30, the forecasting season
 FIELDS = {"z500": "z", "t850": "t", "ivt_u": "viwve", "ivt_v": "viwvn"}
+
+
+def in_period(days, period):
+    """Boolean mask of `days` (a DatetimeIndex) inside the period; "nwac" also drops Nov 1-14."""
+    m = days.month.isin(PERIODS[period])
+    if period == "nwac":
+        m &= ~((days.month == 11) & (days.day < 15))
+    return np.asarray(m)
 
 
 def seasons_available():
@@ -98,6 +109,21 @@ def assign(som, X):
     return np.array(out)
 
 
+def som_features(fields, z, t850, ivt, storm):
+    """Storm-day feature matrix: each chosen field over SOM_BOX, weighted by sqrt(cos latitude) and scaled to unit mean-square so
+    that no field dominates through its units (z500 anomaly in m, t850 anomaly in K, IVT in kg/m/s)."""
+    src = {"z500": z, "t850": t850, "ivt": ivt}
+    parts = []
+    for f in fields:
+        box = src[f].sel(latitude=slice(SOM_BOX["lat"][1], SOM_BOX["lat"][0]), longitude=slice(*SOM_BOX["lon"]))
+        w = np.sqrt(np.cos(np.deg2rad(box.latitude.values)))[:, None]
+        Ff = (box.values * w).reshape(len(box.time), -1)[storm]
+        if len(fields) > 1:
+            Ff = Ff / np.sqrt(np.mean((Ff - Ff.mean(0)) ** 2))
+        parts.append(Ff)
+    return np.hstack(parts)
+
+
 def run(a, period):
     seasons = seasons_available()
     print(f"\n=== period {period} (months {PERIODS[period]}); seasons with all four ERA5 fields: {seasons[0]}-{seasons[-1]} ({len(seasons)}) ===")
@@ -109,17 +135,19 @@ def run(a, period):
     names = [c[5:] for c in zones.columns if c.startswith("over_")]
     days = pd.DatetimeIndex(z.time.values)
     zt = zones.reindex(days)
-    storm = zt["storm"].fillna(False).astype(bool).values & days.month.isin(PERIODS[period])
+    storm = zt["storm"].fillna(False).astype(bool).values & in_period(days, period)
     print(f"storm days in these seasons: {storm.sum()} of {len(days)}")
 
-    box = z.sel(latitude=slice(SOM_BOX["lat"][1], SOM_BOX["lat"][0]), longitude=slice(*SOM_BOX["lon"]))
-    w = np.sqrt(np.cos(np.deg2rad(box.latitude.values)))[:, None]
-    F = (box.values * w).reshape(len(days), -1)[storm]
+    F = som_features(a.fields, z, t850, ivt, storm)
     mu = F.mean(0)
     U, S, Vt = np.linalg.svd(F - mu, full_matrices=False)
-    k = int(np.searchsorted(np.cumsum(S ** 2) / np.sum(S ** 2), 0.90)) + 1
+    k = a.pcs or int(np.searchsorted(np.cumsum(S ** 2) / np.sum(S ** 2), 0.90)) + 1
     X = (F - mu) @ Vt[:k].T
-    print(f"SOM input: {F.shape[1]} grid points -> {k} principal components (90% of variance)")
+    held = np.sum(S[:k] ** 2) / np.sum(S ** 2)
+    print(f"SOM input: {F.shape[1]} grid points -> {k} principal components ({100 * held:.0f}% of variance), {NX}x{NY} map")
+    tag = period if (a.pcs == 0 and (NX, NY) == (3, 3)) else f"{period}_g{NX}x{NY}_pc{k}"
+    if a.fields != ["z500"]:
+        tag += "_" + "+".join(a.fields)
     sea = zt["season"].values[storm].astype(int)
 
     best = min((fit_som(X, s) for s in range(a.seeds)), key=lambda m: m.quantization_error(X))
@@ -137,7 +165,7 @@ def run(a, period):
     print(f"stability (adjusted Rand vs the main fit, {a.refits} season resamples): median {np.median(aris):.2f}, 10th percentile {np.percentile(aris, 10):.2f}")
 
     # zones: over-performance share by node, relative to the zone's overall share, bootstrap over seasons
-    res = {"period": period, "months": PERIODS[period], "seasons": [int(seasons[0]), int(seasons[-1])], "n_storm_days": int(storm.sum()), "n_per_node": np.bincount(node, minlength=NX * NY).tolist(),
+    res = {"period": period, "grid": [NX, NY], "pcs": int(k), "months": PERIODS[period], "seasons": [int(seasons[0]), int(seasons[-1])], "n_storm_days": int(storm.sum()), "n_per_node": np.bincount(node, minlength=NX * NY).tolist(),
            "stability_ari_median": float(np.median(aris)), "zones": {}}
     boots = [np.concatenate([np.flatnonzero(sea == s) for s in rng.choice(useasons, len(useasons), replace=True)]) for _ in range(a.boot)]
     for zn in names:
@@ -159,7 +187,7 @@ def run(a, period):
                         "lo": None if np.isnan(lo) else round(float(lo), 2), "hi": None if np.isnan(hi) else round(float(hi), 2)})
         res["zones"][zn] = {"over_share_all_storm_days": round(float(base), 3), "nodes": row}
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"som_results_{period}.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    (OUT / f"som_results_{tag}.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
 
     # figures: composites per node, and the zone ratios
     FIG.mkdir(parents=True, exist_ok=True)
@@ -177,7 +205,7 @@ def run(a, period):
         ax.set_xlim(-170, -115)
         ax.set_ylim(30, 62)
     fig.colorbar(cf, ax=axs, shrink=0.7, label="500 hPa height anomaly (m); green: mean IVT 250 and 500 kg/m/s; star: the Cascades")
-    fig.savefig(FIG / f"som_nodes_{period}.png", dpi=130, bbox_inches="tight")
+    fig.savefig(FIG / f"som_nodes_{tag}.png", dpi=130, bbox_inches="tight")
     fig, ax = plt.subplots(figsize=(10, 4.8))
     M = np.array([[r["ratio"] if r["ratio"] is not None else np.nan for r in res["zones"][zn]["nodes"]] for zn in names])
     im = ax.imshow(M, cmap="PuOr_r", norm=matplotlib.colors.TwoSlopeNorm(1, 0, max(2.5, np.nanmax(M))), aspect="auto")
@@ -189,18 +217,23 @@ def run(a, period):
     ax.set_xticklabels([f"node {n}\n(n={c})" for n, c in enumerate(res["n_per_node"])], fontsize=8)
     ax.set_yticks(range(len(names)))
     ax.set_yticklabels(names, fontsize=9)
-    fig.colorbar(im, label="over-performance share vs the zone's overall share (1 = no difference); * = 90% range excludes 1")
-    fig.savefig(FIG / f"som_zones_{period}.png", dpi=130, bbox_inches="tight")
-    print("wrote", OUT / f"som_results_{period}.json", FIG / f"som_nodes_{period}.png", FIG / f"som_zones_{period}.png")
+    fig.colorbar(im, label="over-performance share vs the zone's\noverall share (1 = no difference)\n* = 90% range excludes 1")
+    fig.savefig(FIG / f"som_zones_{tag}.png", dpi=130, bbox_inches="tight")
+    print("wrote", OUT / f"som_results_{tag}.json", FIG / f"som_nodes_{tag}.png", FIG / f"som_zones_{tag}.png")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--period", choices=list(PERIODS), nargs="+", default=list(PERIODS))
+    ap.add_argument("--grid", type=int, nargs=2, default=[3, 3], metavar=("NX", "NY"), help="SOM grid size")
+    ap.add_argument("--pcs", type=int, default=0, help="fixed number of principal components (default: enough for 90%% of the variance)")
+    ap.add_argument("--fields", nargs="+", choices=["z500", "t850", "ivt"], default=["z500"], help="fields the SOM is fit on (each scaled to equal weight)")
     ap.add_argument("--seeds", type=int, default=8, help="SOM restarts for the main fit (the best by quantization error is kept)")
     ap.add_argument("--boot", type=int, default=500, help="season resamples for the zone ranges")
     ap.add_argument("--refits", type=int, default=30, help="season-resampled refits for the stability check")
     a = ap.parse_args()
+    global NX, NY
+    NX, NY = a.grid
     for period in a.period:
         run(a, period)
 
