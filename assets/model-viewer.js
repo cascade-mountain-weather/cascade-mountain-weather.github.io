@@ -46,6 +46,44 @@
         });
     }
 
+    // A run counts as usable when at least this share of its frames exist; a run still being posted falls short.
+    const MIN_SHARE = 0.75;
+    const PREV_MSG = 'The newest run is still incomplete. Loading the previous run…';
+
+    // Which forecast hours of run `r` have a frame (a few requests at a time; the browser keeps what it loads).
+    async function probeHours(v, r, hours, stale) {
+        const have = new Set();
+        let next = 0;
+        const worker = async () => {
+            while (next < hours.length && !stale()) {
+                const h = hours[next++];
+                if (await probe(v.urlFor(r, h))) have.add(h);
+            }
+        };
+        await Promise.all(Array.from({ length: Math.min(6, hours.length) }, worker));
+        return have;
+    }
+
+    // Newest run with at least MIN_SHARE of its frames; if none gets there, the fullest run that has any.
+    // Single-image products (and views with one candidate run) only need the one frame to exist.
+    // Returns { run, have: Set of hours, fellBack } or null.
+    async function pickRun(v, stale, onFallback) {
+        const runs = v.runs || [];
+        const hours = v.hours;
+        let best = null;
+        for (let i = 0; i < runs.length; i++) {
+            if (i > 0 && onFallback) onFallback();
+            const probeOne = hours.length < 2 || runs.length < 2;
+            const want = probeOne ? [v.probeHour != null ? v.probeHour : hours[0]] : hours;
+            const have = await probeHours(v, runs[i], want, stale);
+            if (stale()) return null;
+            if (probeOne) return have.size ? { run: runs[i], have: new Set(hours), fellBack: i > 0 } : null;
+            if (have.size / hours.length >= MIN_SHARE) return { run: runs[i], have, fellBack: i > 0 };
+            if (have.size && (!best || have.size > best.have.size)) best = { run: runs[i], have, fellBack: i > 0 };
+        }
+        return best;
+    }
+
     function mount(root, cfg) {
         const state = {};
         // restore from the URL hash so a view can be shared
@@ -194,6 +232,8 @@
                 const note = view.latestNote || 'Always the most recent run available. The image itself carries the run and valid times.';
                 lines.push(`<div class="mv-run">${esc(note)}</div>`);
             }
+            if (view.usedPrevRun) lines.push('<div class="mv-run">The newest run is still being posted, so this is the previous run.</div>');
+            if (view.pair && view.pair.sides.some(s => s.fellBack)) lines.push('<div class="mv-run">A newer run is still being posted for one of these models, so it shows its previous run.</div>');
             if (view.pairFailed) lines.push('<div class="mv-run">Side by side is not available right now (the two runs share no forecast times yet, or one is missing), so one model is shown.</div>');
             timeEl.innerHTML = lines.join('');
         }
@@ -304,15 +344,14 @@
         }
 
         // Side by side: newest working run of each side, then the forecast times (run time plus hour) both have a frame for.
-        async function setupPair(sides) {
+        async function setupPair(sides, stale) {
             for (const s of sides) {
                 const v = s.view;
-                s.run = null;
-                for (const r of (v.runs || [])) {
-                    if (await probe(v.urlFor(r, v.probeHour != null ? v.probeHour : v.hours[0]))) { s.run = r; break; }
-                }
-                if (!s.run) return null;
-                s.byValid = new Map(v.hours.map(h => [s.run.getTime() + h * 3600e3, h]));
+                const pick = await pickRun(v, stale, () => { loadingEl.textContent = PREV_MSG; });
+                if (!pick) return null;
+                s.run = pick.run;
+                s.fellBack = pick.fellBack;
+                s.byValid = new Map(v.hours.filter(h => pick.have.has(h)).map(h => [s.run.getTime() + h * 3600e3, h]));
             }
             const common = [...sides[0].byValid.keys()].filter(k => sides[1].byValid.has(k)).sort((x, y) => x - y);
             return common.length ? { sides, common } : null;
@@ -323,9 +362,10 @@
             view = cfg.resolve(state);
             missing.clear();
             const tk = ++token;
+            loadingEl.textContent = 'Loading…';
             if (view.compare) {
                 loadingEl.hidden = false;
-                const pair = await setupPair(view.compare);
+                const pair = await setupPair(view.compare, () => tk !== token);
                 if (tk !== token) return;
                 view = pair
                     ? Object.assign({}, view, { pair, compare: null, hours: pair.common.map(k => (k - pair.common[0]) / 3600e3), runs: null, runExact: true })
@@ -361,11 +401,12 @@
             if (!showPair && view.runs && view.runs.length) {
                 const t = ++token;
                 loadingEl.hidden = false;
-                for (const r of view.runs) {
-                    if (await probe(view.urlFor(r, view.probeHour != null ? view.probeHour : view.hours[0]))) { run = r; break; }
-                    if (t !== token) return;
-                }
-                if (!run) { loadingEl.hidden = true; fail(); renderTimes(); renderDays(); return; }
+                const pick = await pickRun(view, () => t !== token, () => { loadingEl.textContent = PREV_MSG; });
+                if (t !== token) return;
+                if (!pick) { loadingEl.hidden = true; fail(); renderTimes(); renderDays(); return; }
+                run = pick.run;
+                view.usedPrevRun = pick.fellBack;
+                view.hours.forEach((h, i) => { if (!pick.have.has(h)) missing.add(i); });
             }
             renderDays();
             renderTimes();
