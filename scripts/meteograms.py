@@ -35,6 +35,7 @@ import rrfs_ops  # noqa: E402,F401  (registers the operational RRFS template wit
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "data" / "meteograms.json"
 WORKERS = 4
+EXTRA_SITES = ("Mt. Hood",)      # drawn here from data/nbm/sites.yml `plume_only_sites`, so they stay out of the weekend forecast and its scoring
 MPS_TO_MPH = 2.236936
 MM_TO_IN = 1 / 25.4
 LABELS = {"nbm": "NBM (NOAA blend, 2.5 km)", "hrrr": "HRRR (NOAA, 3 km)", "rrfs": "RRFS (NOAA, 3 km)", "hrdps": "HRDPS (Environment Canada, 2.5 km)"}
@@ -182,7 +183,8 @@ def main():
         sys.exit("--hours above 48 is not supported yet (see the module docstring)")
 
     cfg = yaml.safe_load(nbm.SITES_FILE.read_text(encoding="utf-8"))
-    sites = [s for s in cfg["sites"] if not args.sites or s["name"] in args.sites]
+    pool = cfg["sites"] + [s for s in cfg.get("plume_only_sites", []) if s["name"] in EXTRA_SITES]
+    sites = [s for s in pool if not args.sites or s["name"] in args.sites]
     out = {"schema": 1, "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
            "units": {"temp_f": "F, 2 m", "rh": "percent, 2 m", "dewpoint_f": "F, 2 m", "wind_mph": "mph, 10 m", "wind_dir": "degrees the wind blows FROM, 10 m", "precip_in": "inches of liquid per hour"},
            "notes": ["Model grid-cell values at the point nearest each ski area; not downscaled or corrected for elevation or terrain."],

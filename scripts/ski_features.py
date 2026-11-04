@@ -98,6 +98,7 @@ def real_days(zid, extract):
             "cloud_pct": None if e["cloud_pct"] is None else int(round(e["cloud_pct"])), "vis_mi": e["vis_mi"], "temp_f": e["temp_f"],
             "avy_danger": -1,                                   # NWAC forecasts start in late November: -1 means no forecast, never "low"
             "swe_in": swe,
+            "hourly": e.get("hourly"),                         # per-hour series for the page's timing recommender (None in an older extract)
         })
     return out
 
