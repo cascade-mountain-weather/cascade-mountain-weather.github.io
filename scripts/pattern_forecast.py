@@ -76,10 +76,39 @@ def fetch_once(job):
         return f"cached {f.name}"
     from herbie import Herbie
     H = Herbie(init, model="ifs", product=PRODUCT[model], fxx=step, verbose=False)
+
+    def _is_herbie_index_error(err):
+        return isinstance(err, TypeError) and "expected str instance, float found" in str(err)
+
+    def _normalize_longitude(ds):
+        if "longitude" not in ds.coords:
+            return ds
+        lon = ds["longitude"]
+        if np.nanmax(lon.values) > 180:
+            ds = ds.assign_coords(longitude=((lon + 180) % 360) - 180).sortby("longitude")
+        return ds
+
+    def _open_cfgrib_field(short_name, level=None):
+        import cfgrib
+        grib = H.download(overwrite=False)
+        fbk = {"shortName": short_name}
+        if level is not None:
+            fbk |= {"typeOfLevel": "isobaricInhPa", "level": level}
+        ds = cfgrib.open_dataset(grib, filter_by_keys=fbk, indexpath="")
+        ds = _normalize_longitude(ds)
+        return ds[short_name]
+
     if kind == "zt":
         m = np.load(MODEL / "pattern_model.npz")
-        zf = H.xarray(r":gh:500:").sel(latitude=m["lat"], longitude=m["lon"])["gh"]
-        tf = H.xarray(r":t:850:").sel(latitude=m["lat"], longitude=m["lon"])["t"]
+        try:
+            zf = H.xarray(r":gh:500:").sel(latitude=m["lat"], longitude=m["lon"])["gh"]
+            tf = H.xarray(r":t:850:").sel(latitude=m["lat"], longitude=m["lon"])["t"]
+        except Exception as e:
+            if not _is_herbie_index_error(e):
+                raise
+            print(f"  fallback to cfgrib for {model} {init:%Y-%m-%d %H} +{step:03d}h z/t read", flush=True)
+            zf = _open_cfgrib_field("gh", 500).sel(latitude=m["lat"], longitude=m["lon"])
+            tf = _open_cfgrib_field("t", 850).sel(latitude=m["lat"], longitude=m["lon"])
         if "isobaricInhPa" in zf.dims:
             zf = zf.sel(isobaricInhPa=500)
         if "isobaricInhPa" in tf.dims:
@@ -93,7 +122,14 @@ def fetch_once(job):
             n = 50 if model == "eps" else 1
             np.savez_compressed(f, tp=np.zeros(n, "float32"))
         else:
-            ds = H.xarray(r":tp:").sel(latitude=slice(BOX[1], BOX[0]), longitude=slice(BOX[2], BOX[3]))
+            try:
+                ds = H.xarray(r":tp:")
+            except Exception as e:
+                if not _is_herbie_index_error(e):
+                    raise
+                print(f"  fallback to cfgrib for {model} {init:%Y-%m-%d %H} +{step:03d}h tp read", flush=True)
+                ds = _open_cfgrib_field("tp").to_dataset(name="tp")
+            ds = ds.sel(latitude=slice(BOX[1], BOX[0]), longitude=slice(BOX[2], BOX[3]))
             tp = ds["tp"].values * 1000.0
             tp = tp.reshape(tp.shape[0], -1) if tp.ndim == 3 else tp.reshape(1, -1)
             np.savez_compressed(f, tp=tp.mean(1).astype("float32"))
