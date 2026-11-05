@@ -1,0 +1,77 @@
+name: Update Powder Stash Forecast
+
+# Twice a day, after the 00 and 12 UTC ECMWF open-data runs are out: read the deterministic and 50-member ensemble fields,
+# draw the 500 hPa / 850 hPa anomaly frames, call the storm pattern for each day, and force-push the result as ONE commit
+# on the `forecast-data` branch. Nothing is committed to main and the branch never builds up history, so the repository
+# does not grow with the frames. The Powder Stash Predictor page reads them from raw.githubusercontent.com
+# (site.forecast_data_url in _config.yml). If a run fails, the branch keeps the previous good forecast.
+on:
+  schedule:
+    - cron: "30 9,21 * * *" # ~9.5 h after the 00 and 12 UTC runs (ECMWF open data is complete by ~8 h)
+  workflow_dispatch:
+    inputs:
+      init:
+        description: 'Run time UTC, e.g. "2026-11-04 00:00" (blank = latest available)'
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast-data
+  cancel-in-progress: false
+
+jobs:
+  update-forecast-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python with ecCodes (Herbie reads GRIB2)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: "3.11"
+          channels: conda-forge
+          channel-priority: strict
+          miniforge-version: latest
+          activate-environment: forecast
+
+      - name: Install dependencies
+        run: mamba install -y -n forecast herbie-data cfgrib eccodes xarray pandas numpy scipy matplotlib cartopy minisom
+
+      - name: Read ECMWF and build frames and pattern calls
+        env:
+          INIT: ${{ github.event.inputs.init }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          if [ -n "$INIT" ]; then
+            python -u scripts/pattern_forecast.py --workers 4 --init "$INIT" --out "$RUNNER_TEMP/site"
+          else
+            python -u scripts/pattern_forecast.py --workers 4 --out "$RUNNER_TEMP/site"
+          fi
+
+      - name: Check the output before publishing
+        run: |
+          test -s "$RUNNER_TEMP/site/pattern_forecast.json"
+          test -s "$RUNNER_TEMP/site/pattern_zones.json"
+          n=$(ls "$RUNNER_TEMP/site/frames" | wc -l)
+          echo "$n frames"
+          test "$n" -ge 44
+
+      - name: Publish as a single commit on forecast-data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$RUNNER_TEMP/site"
+          git init --quiet -b forecast-data
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit --quiet -m "Powder Stash forecast $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" forecast-data
