@@ -6,7 +6,10 @@ name: Update Satellite Looper
 # reads them from raw.githubusercontent.com (site.satellite_data_url in _config.yml).
 on:
   schedule:
-    - cron: "5 * * * *" # hourly, offset from the live conditions run at :10
+    # GitHub throttles scheduled runs: a single hourly cron at :05 was firing only every 4-8 hours. Ask three times an hour at
+    # off-peak minutes instead. Extra runs are cheap (an up-to-date run only republishes the same frames) and each run
+    # rebuilds the newest ~6.5 hours, so a late run never leaves a gap in the loop.
+    - cron: "7,27,47 * * * *"
   workflow_dispatch:
 
 permissions:
