@@ -58,7 +58,7 @@
 {% endif %}
 
 <link rel="stylesheet" href="{{ '/style.css' | relative_url }}">
-{% if page.layout == 'post' %}<link rel="stylesheet" href="{{ '/posts/post-style.css' | relative_url }}">{% endif %}
+{% if page.layout == 'post' %}<link rel="stylesheet" href="{{ '/posts/post-style.css' | relative_url }}?v={{ site.time | date: '%s' }}">{% endif %}
 
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZQLW3ZS2F"></script>
