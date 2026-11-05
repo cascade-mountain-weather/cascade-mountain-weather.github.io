@@ -279,7 +279,6 @@
                     </ul>
                     <div class="sk-bars" aria-label="score breakdown">${r.parts.map(p => `<div class="sk-bar" title="${esc(p.label)}: ${Math.round(p.s * 100)}% (weight ${p.w})"><span style="height:${Math.round(p.s * 100)}%"></span><em>${esc(SHORT[p.id] || p.label.split(' ')[0])}</em></div>`).join('')}</div>
                     ${r.notes.map(n => `<p class="sk-note">${esc(n)}</p>`).join('')}
-                    <p class="sk-access">Park at: ${r.z.access_points.filter(p => p.modes.includes(S.mode)).map(p => esc(p.name)).join(', ') || 'see zone page'} &middot; <a href="${esc(r.z.url)}" target="_blank" rel="noopener noreferrer">conditions</a></p>
                 </article>`;
             };
             el.innerHTML = `
@@ -295,7 +294,7 @@
                 <div class="sk-group"><label class="sk-label" for="sk-drive">Longest drive: <b>${S.maxDrive} h</b></label><input id="sk-drive" type="range" min="1" max="6" step="0.5" value="${S.maxDrive}"></div>
                 ${LOW.includes(S.mode) ? '' : `<div class="sk-group"><label class="sk-label" for="sk-elev">Lowest elevation you will ski: <b>${S.minElev.toLocaleString()} ft</b></label><input id="sk-elev" type="range" min="1500" max="6500" step="250" value="${S.minElev}"></div>`}
             </div>
-            <details class="sk-weights"><summary>What matters to you</summary>
+            <details class="sk-weights"><summary>Rank what conditions matter to you</summary>
                 <div class="sk-wgrid">${modeCrit.map(c => `<label title="${esc(c.tip)}"><span>${esc(c.label)}</span><input type="range" min="0" max="5" step="1" value="${S.w[c.id]}" data-w="${c.id}"><b>${S.w[c.id]}</b></label>`).join('')}</div>
                 <p class="sk-small">Slide to 0 to ignore a factor. Scores are a weighted average of each factor from 0 to 1, so the bars on each card show exactly where its score comes from.</p></details>
             ${ok.length ? `<h2 class="sk-h">Best bets for ${esc(dayLabel(data.zones[0].days[S.day].date))}</h2><div class="sk-list">${ok.map(card).join('')}</div>`
