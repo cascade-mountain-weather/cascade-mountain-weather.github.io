@@ -14,16 +14,16 @@
   "White River Road to Campground": "CLOSED for the season. NOTE: Summerland Trailhead is closed due to Fryingpan Creek Bridge construction through 2029. No pedestrians are allowed on White River Road through the closure zone past Fryingpan Creek Bridge . Bicyclists may travel the closed road but must follow all signage & instructions "
  },
  "open": {
-  "nps:3B2739FF-2415-49C0-8C2C-A9B0896052AD": {
+  "nps:3D10623B-6508-442D-B8E4-1EA41EDAD672": {
    "category": "Park Closure",
    "closed": true,
-   "first_seen_utc": "2026-11-04T20:53Z",
-   "key": "nps:3B2739FF-2415-49C0-8C2C-A9B0896052AD",
+   "first_seen_utc": "2026-11-05T21:09Z",
+   "key": "nps:3D10623B-6508-442D-B8E4-1EA41EDAD672",
    "pass": "paradise",
    "road": "",
    "source": "nps",
-   "text": "Paradise Road Status: Open, traction tires advised, gate closing at 3 p.m.. 11/04/2026 The road is open to Paradise. Traction tires are advised. All vehicles, including 4WD and AWD, must carry tire chains and be ready to use them. The gate at Longmire to Paradise will close to uphill travel at 3 p.m. and downhill travel at 4 p.m. to support public safety.",
-   "url": ""
+   "text": "Paradise Road Status: Open, tire chains required, gate closing at 3 p.m.. 10/29/2026: The road is open to Paradise. All vehicles, including 4WD and AWD, must carry tire chains and be ready to use them; today, tire chains are required to be used on all 2-wheel drive vehicles beginning 5 miles beyond Longmire and continuing up to Paradise. The gate will close to uphill travel at 3 p.m. and downhill travel at 4 p.m. to support public safety.",
+   "url": "https://www.nps.gov/mora/planyourvisit/winter-travel.htm "
   },
   "nps:6E34CD95-476A-4DAB-9377-3DE4542F53A4": {
    "category": "Information",
@@ -164,22 +164,38 @@
    "text": "Fryingpan Creek Bridge Replacement Project: Trail Impacts. Summerland Trailhead is closed at Fryingpan Creek Bridge due to construction through 2029. No pedestrians are allowed on White River Road through the closure zone past Fryingpan Creek Bridge. Bicyclists may travel the closed road but must follow all signage & instructions from construction crews.",
    "url": "https://www.nps.gov/mora/planyourvisit/park-construction.htm/#fryingpan-creek-bridge"
   },
-  "nps:E5F3836C-7B40-4550-9650-4F50BF4CE491": {
+  "nps:DB1ECFED-518B-4A64-AADD-27F15142929E": {
    "category": "Information",
    "closed": false,
+   "first_seen_utc": "2026-11-05T21:09Z",
+   "key": "nps:DB1ECFED-518B-4A64-AADD-27F15142929E",
+   "pass": "paradise",
+   "road": "",
+   "source": "nps",
+   "text": "Overnight closure of SR 706 on October 23; no access to Nisqually Entrance.. SR706 outside of the park will be fully CLOSED overnight from 9 pm Friday 10/23 until 6 am Saturday 10/24, for road repairs to replace a second failing culvert. The closure will be from Kernahan Road East to the Nisqually Entrance. There will be NO ACCESS to the Nisqually Entrance during the closure. To reach Paradise during the closure plan to enter/exit the park through the Stevens Canyon Entrance via SR123 on the east side of the park.",
+   "url": "https://wsdot.wa.gov/about/news/2026/round-2-overnight-closure-sr-706-near-mount-rainier-national-park-friday-oct-23"
+  },
+  "nps:E5F3836C-7B40-4550-9650-4F50BF4CE491": {
+   "category": "Park Closure",
+   "closed": true,
    "first_seen_utc": "2026-10-07T21:47Z",
    "history": [
     {
      "closed": true,
      "text": "SR 165 Carbon River/Fairfax Bridge is closed: no access to Carbon River or Mowich Lake.. There is NO public access to Carbon River & Mowich Lake from SR 165.  The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route.",
      "utc": "2026-11-04T20:53Z"
+    },
+    {
+     "closed": false,
+     "text": "SR 165 Carbon River/Fairfax Bridge is closed: no access to Carbon River or Mowich Lake.. There is NO public access to Carbon River & Mowich Lake from SR 165. The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route.",
+     "utc": "2026-11-05T21:09Z"
     }
    ],
    "key": "nps:E5F3836C-7B40-4550-9650-4F50BF4CE491",
    "pass": "rainier",
    "road": "SR165 Carbon River/Fairfax Bridge Closed",
    "source": "nps",
-   "text": "SR 165 Carbon River/Fairfax Bridge is closed: no access to Carbon River or Mowich Lake.. There is NO public access to Carbon River & Mowich Lake from SR 165. The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route.",
+   "text": "SR 165 Carbon River/Fairfax Bridge is closed: no access to Carbon River or Mowich Lake.. There is NO public access to Carbon River & Mowich Lake from SR 165.  The bridge is closed to pedestrians, bicycles and vehicles and there is no alternate route.",
    "url": "https://www.nps.gov/mora/planyourvisit/carbon-river-and-mowich.htm"
   },
   "nps:EAB6278E-32F7-4DF0-B6D2-C3EFAAB3B897": {
@@ -206,28 +222,6 @@
    "source": "wsdot",
    "source_modified": 1793321156430,
    "text": "From 6 a.m. to 4 p.m. Thursday, Nov. 5, flaggers will alternate traffic in both directions of State Route 410 at Weyerhaeuser Overpass/Greenwater (milepost 45) for utilities work.",
-   "type": "Maintenance"
-  },
-  "wsdot:723181": {
-   "category": "Rest Area",
-   "closed": false,
-   "direction": "Both Directions",
-   "first_seen_utc": "2026-11-03T20:34Z",
-   "history": [
-    {
-     "closed": false,
-     "text": "The travelers rest area at milepost 53 on Snoqualmie Pass is currently closed for repairs, There is no estimated time of reopening.",
-     "utc": "2026-11-04T20:53Z"
-    }
-   ],
-   "key": "wsdot:723181",
-   "lat": 47.418,
-   "lon": -121.4107,
-   "pass": "snoqualmie",
-   "road": "I-90",
-   "source": "wsdot",
-   "source_modified": 1793719301223,
-   "text": "The travelers rest area facilities at milepost 53 on Snoqualmie Pass is currently closed for repairs, There is no estimated time of reopening. There are portable toilets available.",
    "type": "Maintenance"
   }
  }
