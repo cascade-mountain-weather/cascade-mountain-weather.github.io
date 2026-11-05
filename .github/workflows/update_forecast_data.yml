@@ -7,7 +7,9 @@ name: Update Powder Stash Forecast
 # (site.forecast_data_url in _config.yml). If a run fails, the branch keeps the previous good forecast.
 on:
   schedule:
-    - cron: "30 9,21 * * *" # ~9.5 h after the 00 and 12 UTC runs (ECMWF open data is complete by ~8 h)
+    # ECMWF publishes a run's steps over several hours, so start well after the run (about 10.75 h). pattern_forecast.py also
+    # checks that the +120 h files exist and otherwise uses the previous run, so an early start no longer fails midway.
+    - cron: "45 10,22 * * *"
   workflow_dispatch:
     inputs:
       init:

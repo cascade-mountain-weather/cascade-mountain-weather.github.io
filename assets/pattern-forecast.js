@@ -91,7 +91,8 @@
         right.appendChild(el('h3', 'pf-h', 'Which pattern does the forecast suggest?'));
         ui.days = el('div', 'pf-days'); ui.days.setAttribute('role', 'tablist');
         ui.zones = el('div', 'pf-zones');
-        right.appendChild(ui.days); right.appendChild(ui.zones);
+        ui.dayNote = el('p', 'pf-msg');
+        right.appendChild(ui.days); right.appendChild(ui.dayNote); right.appendChild(ui.zones);
         layout.appendChild(left); layout.appendChild(right);
         root.appendChild(layout);
 
@@ -112,19 +113,33 @@
     function renderMap() {
         var fc = state.fc, s = fc.steps[state.i];
         ui.img.src = state.base + 'frames/' + state.model + '_' + state.kind + '_' + pad(s) + '.png';
-        ui.when.textContent = fc.valid[state.i] + '  (+' + s + ' h)';
+        ui.when.textContent = (fc.valid_local || fc.valid)[state.i] + '  (+' + s + ' h)';
         var what = state.kind === 'height_anom'
             ? 'Shading: 500 hPa height anomaly in standard deviations (blue = lower than normal). Black lines: height (dam). Red line: 0 °C at 850 hPa.'
             : 'Shading: 850 hPa temperature anomaly in kelvin. Dashed line: 0 °C. Grey lines: 500 hPa height (dam).';
         var note = state.model === 'eps' ? ' Mean of the 50 members; dots where at least 90% of them agree on the sign.' : ' One forecast.';
-        ui.cap.textContent = what + note + ' Star = the Cascades. Run: ' + fc.init + '.';
+        ui.cap.textContent = what + note + ' Star = the Cascades. Run: ' + (fc.init_local || fc.init) + '.';
+    }
+
+    // A forecast day is a UTC day; this says what it is in Pacific time, e.g. "Sat = Fri 4 pm PST to Sat 4 pm PST".
+    function pacificSpan(d) {
+        var p = String(d.date).split('-').map(Number);
+        function at(h) {
+            var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', hour: 'numeric', timeZoneName: 'short' })
+                .formatToParts(new Date(Date.UTC(p[0], p[1] - 1, p[2], h)));
+            var g = function (t) { return parts.filter(function (x) { return x.type === t; })[0].value; };
+            return g('weekday') + ' ' + g('hour') + ' ' + g('dayPeriod').toLowerCase() + ' ' + g('timeZoneName');
+        }
+        return d.label.split(' ')[0] + ' = ' + at(0) + ' to ' + at(24);
     }
 
     function renderDays() {
         ui.days.textContent = '';
+        ui.dayNote.textContent = days().length ? 'Each day is a UTC day (' + pacificSpan(days()[0]) + ') and the call uses the average of its 00 and 12 UTC maps.' : '';
         days().forEach(function (d, k) {
             var on = k === state.day, w = wetness(d), maybe = !w.dry;
             var tab = el('button', 'pf-day' + (on ? ' pf-day--on' : '') + (maybe ? '' : ' pf-day--dry'));
+            tab.title = pacificSpan(d);
             tab.type = 'button'; tab.setAttribute('role', 'tab'); tab.setAttribute('aria-selected', on ? 'true' : 'false');
             var top = el('div', 'pf-daytop');
             top.appendChild(el('strong', null, d.label));

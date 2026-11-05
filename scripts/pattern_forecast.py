@@ -45,6 +45,25 @@ AGREE = 0.9
 NPAT = 6
 
 
+def pacific(t):
+    """A naive UTC timestamp as Pacific time for the page, e.g. 'Fri Nov 06 4 pm PST' (PDT in summer)."""
+    p = t.tz_localize("UTC").tz_convert("America/Los_Angeles")
+    return f"{p:%a %b %d} {p.hour % 12 or 12} {'am' if p.hour < 12 else 'pm'} {p.tzname()}"
+
+
+def latest_complete_init(models):
+    """Newest 00 or 12 UTC run whose LAST needed step is out for every product. ECMWF publishes a run's steps over a few hours, so +24 h
+    can exist long before +120 h; checking only an early step made a run that started too soon fail partway through the reads."""
+    from herbie import Herbie
+    now = pd.Timestamp.now("UTC").tz_localize(None).floor("12h")
+    for back in range(8):
+        t = now - pd.Timedelta(hours=12 * back)
+        if all(Herbie(t, model="ifs", product=PRODUCT[m], fxx=STEPS[-1], verbose=False).grib is not None for m in models):
+            return t
+        print(f"run {t} is not complete yet (+{STEPS[-1]} h missing), trying the one before", flush=True)
+    raise SystemExit("no complete ECMWF open-data run found in the last four days")
+
+
 def design(doy):
     ang = 2 * np.pi * np.asarray(doy, float) / 366.0
     return np.column_stack([np.ones_like(ang)] + [f(k * ang) for k in (1, 2, 3) for f in (np.cos, np.sin)])
@@ -241,8 +260,7 @@ def main():
     if a.init:
         init = pd.Timestamp(a.init)
     else:
-        import euro_anomaly_maps as E
-        init = E.latest_init(PRODUCT[models[-1]])
+        init = latest_complete_init(models)
     print("run:", init, flush=True)
     if not a.no_fetch:
         fetch(models, init, a.workers)
@@ -260,7 +278,8 @@ def main():
     img.mkdir(parents=True, exist_ok=True)
     data.mkdir(parents=True, exist_ok=True)
     days = forecast_days(init)
-    out = {"init": f"{init:%Y-%m-%d %H}Z", "steps": STEPS, "valid": [f"{v:%a %b %d %H}Z" for v in valid], "models": {}}
+    out = {"init": f"{init:%Y-%m-%d %H}Z", "init_local": pacific(init), "steps": STEPS, "valid": [f"{v:%a %b %d %H}Z" for v in valid],
+           "valid_local": [pacific(v) for v in valid], "models": {}}
 
     for model in models:
         Z, T = load_model(model, init)
@@ -273,7 +292,7 @@ def main():
             if n > 1:
                 fz, ft = (za[i] > 0).mean(0), (ta[i] > 0).mean(0)
                 stip_z, stip_t = np.maximum(fz, 1 - fz) >= AGREE, np.maximum(ft, 1 - ft) >= AGREE
-            title = f"{LABEL[model]}  {valid[i]:%a %b %d %H}Z  (+{s} h)"
+            title = f"{LABEL[model]}  {pacific(valid[i])}  (+{s} h)"
             for kind, st in (("height_anom", stip_z), ("t850_anom", stip_t)):
                 draw_frame(kind, lon, lat, zam / zstd, Z[i].mean(0), T[i].mean(0) - 273.15, tam, st, title, img / f"{model}_{kind}_{s:03d}.png")
         print("  wrote", len(STEPS) * 2, "frames", flush=True)
