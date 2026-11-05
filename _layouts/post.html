@@ -10,8 +10,8 @@
 <main>
     <article class="post">
         <header class="post-header">
-            <p class="post-blog">Dendritic Growth Zone Forecast Blog <a class="post-blog-link" href="{{ '/dendritic-growth-zone.html' | relative_url }}">(what's that?)</a></p>
-            <h1 class="post-title"><span class="post-edition-label">In this week's edition:</span> {{ page.title }}</h1>
+            <p class="post-blog">In this week's edition of the Dendritic Growth Zone Forecast Blog <span aria-hidden="true">·</span> <a class="post-blog-link" href="{{ '/dendritic-growth-zone.html' | relative_url }}">what's that?</a></p>
+            <h1 class="post-title">{{ page.title }}</h1>
             {% if page.subtitle %}<p class="post-subtitle">{{ page.subtitle }}</p>{% endif %}
             <p class="post-meta">
                 <span class="post-date">📅 Posted: {{ page.date | date: "%-d %B %Y" }}</span>
@@ -41,6 +41,8 @@
 {% include footer.html %}
 {% include pwa-scripts.html %}
 {% include lightbox.html %}
+<script src="{{ '/assets/post-sections.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/post-plume-map.js' | relative_url }}" defer></script>
 {% include mailchimp.html %}
 </body>
 </html>

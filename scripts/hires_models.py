@@ -1,6 +1,8 @@
 """High-resolution deterministic models, read through Herbie, for the plume page and the evaluation.
 
     HRRR   NOAA's 3 km Rapid Refresh, cycles every hour; the 00, 06, 12 and 18Z cycles run 48 hours.
+    RRFS   NOAA's operational 3 km Rapid Refresh Forecast System (scripts/rrfs_ops.py); same fields as HRRR,
+           00/06/12/18Z cycles run to 84 hours.
     HRDPS  Environment Canada's 2.5 km High Resolution Deterministic Prediction System, 00/06/12/18Z, 48 hours.
 
 Both give snow and precipitation as totals accumulated from the start of the run, so a window is the
@@ -32,7 +34,12 @@ M_TO_IN = 1 / 0.0254
 MM_TO_IN = 1 / 25.4
 HRDPS_RATIO = 10.0          # assumed snow-to-liquid ratio for HRDPS (see the module docstring)
 CYCLES = (0, 6, 12, 18)     # the cycles that run 48 hours
-MAX_HOURS = 48
+MAX_HOURS = 48              # HRRR and HRDPS
+MAX_BY_MODEL = {"hrrr": 48, "hrdps": 48, "rrfs": 84}   # RRFS 00/06/12/18Z cycles run to f084; a window it lacks is NaN
+
+
+def max_hours(model):
+    return MAX_BY_MODEL.get(model, MAX_HOURS)
 
 
 def newest_cycle(model, now=None, latest=None):
@@ -42,7 +49,7 @@ def newest_cycle(model, now=None, latest=None):
         c = now - pd.Timedelta(hours=back)
         if c.hour not in CYCLES:
             continue
-        if available(model, c, MAX_HOURS):
+        if available(model, c, max_hours(model)):
             return c
     return None
 
@@ -65,8 +72,12 @@ def cumulative(model, cycle, fxx, grid):
     n = len(grid.sites)
     if fxx == 0:
         return np.zeros(n), np.zeros(n)
-    if model == "hrrr":
-        H = Herbie(cycle, model="hrrr", product="sfc", fxx=fxx, verbose=False)
+    if model in ("hrrr", "rrfs"):
+        if model == "rrfs":
+            import rrfs_ops  # noqa: F401  (registers the template)
+            H = Herbie(cycle, model="rrfs_ops", product="2dfld", fxx=fxx, verbose=False)
+        else:
+            H = Herbie(cycle, model="hrrr", product="sfc", fxx=fxx, verbose=False)
         # whole days are labelled in days ("0-1 day acc" at F24, "0-2 day acc" at F48)
         span = f"0-{fxx // 24} day" if fxx % 24 == 0 else f"0-{fxx} hour"
         snow = nbm.fetch(H, grid, f":ASNOW:surface:{span} acc fcst:") * M_TO_IN
@@ -106,7 +117,7 @@ def windows(model, cycle, ends, grid, verbose=True):
     for e in ends:
         fe = int((e - cycle).total_seconds() // 3600)
         fs = fe - 6
-        if fs < 0 or fe > MAX_HOURS:
+        if fs < 0 or fe > max_hours(model):
             out[e] = (np.full(n, np.nan), np.full(n, np.nan))
             continue
         s1, l1 = cum(fe)
