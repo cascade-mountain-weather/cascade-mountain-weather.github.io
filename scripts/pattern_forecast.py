@@ -55,7 +55,20 @@ def cache_file(model, init, step, kind):
 
 
 # ------------------------------------------------------------------ fetch
-def fetch_one(job):
+def fetch_one(job, tries=3):
+    """Retry a read a few times (a parallel Herbie download can lose its file to another process on the first run)."""
+    import time
+    for k in range(tries):
+        try:
+            return fetch_once(job)
+        except Exception as e:
+            if k == tries - 1:
+                raise
+            print(f"  retry {job}: {type(e).__name__}: {e}", flush=True)
+            time.sleep(10 * (k + 1))
+
+
+def fetch_once(job):
     """Read one forecast time and cache it (a worker process). kind is 'zt' (height and temperature on the 1-degree grid) or 'tp' (box-mean precipitation)."""
     model, init, step, kind = job
     f = cache_file(model, init, step, kind)
@@ -100,6 +113,10 @@ def fetch(models, init, workers):
         jobs += [(model, init, s, "tp") for s in sorted({x for d in days for x in (d[1], d[3]) if x > 0})]
     jobs = [j for j in jobs if not cache_file(*j[:3], j[3]).exists()]
     print(f"fetching {len(jobs)} reads with {workers} workers (an ensemble height/temperature read is about 3 minutes each)", flush=True)
+    if not jobs:
+        return
+    print(" ", fetch_one(jobs[0]), flush=True)         # one read alone first, so Herbie's config and folders exist before the workers start
+    jobs = jobs[1:]
     if not jobs:
         return
     with ProcessPoolExecutor(workers) as ex:
