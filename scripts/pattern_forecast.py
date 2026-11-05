@@ -65,6 +65,13 @@ def fetch_one(job, tries=3):
             if k == tries - 1:
                 raise
             print(f"  retry {job}: {type(e).__name__}: {e}", flush=True)
+            try:
+                from herbie import Herbie
+                H = Herbie(job[1], model="ifs", product=PRODUCT[job[0]], fxx=job[2], verbose=False)
+                print("   ", H.grib, flush=True)
+                print(H.inventory(r":(gh|t):(500|850):").iloc[:, :8].to_string(), flush=True)
+            except Exception as e2:
+                print("    (diagnostics failed)", e2, flush=True)
             time.sleep(10 * (k + 1))
 
 
