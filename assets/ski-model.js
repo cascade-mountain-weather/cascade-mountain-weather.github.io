@@ -53,12 +53,12 @@
 
     // Timing recommender: the best 4-hour window of the ski day (08:00-16:00 local), from the hourly NBM series (d.hourly). Each hour gets a
     // badness from 0 (calm and dry) to 1: rain counts most, active snow less for skiers (it is why you came) but fully for hiking and
-    // biking, and gusts above about 15 mph add to it. A window's score is 100 x (1 - mean badness). Snow that already fell before the
+    // biking, gusts above about 15 mph add to it, and so does temperature: outside the comfortable band for hiking and biking, and for snow activities warmth (above about 30 F) counts against a window much more than cold. A window's score is 100 x (1 - mean badness). Snow that already fell before the
     // window (fresh, not falling) breaks ties for skiers. Trend: badness in the last two hours against the first two.
     const WIN_H = 4;
     const RAIN_FULL = 0.04;     // in/h of rain that counts as fully wet
     const SNOW_FULL = 0.04;     // in/h of liquid falling as snow that is fully "snowing hard"
-    const hh = h => `${((h + 11) % 12) + 1} ${h % 24 < 12 ? 'am' : 'pm'}`;
+    const hh = h => `${((h + 11) % 12) + 1} ${h % 24 < 12 ? 'AM' : 'PM'}`;
     function bestWindow(z, d, S, lowest, top) {
         const H = d.hourly;
         if (!H || !H.lh || H.lh.length < 2) return null;
@@ -73,7 +73,7 @@
             if (Math.abs(H.lh[k] - h) > (H.block[k] > 1 ? 2 : 1)) return null;
             const p = H.precip_in[k], g = H.gust_mph[k], sl = H.snow_level_ft[k];
             if (p == null && g == null) return null;
-            hours.push({ h, p: p || 0, g, sl, coarse: H.block[k] > 1 });
+            hours.push({ h, p: p || 0, g, sl, t: H.temp_f ? H.temp_f[k] : null, c: H.cloud_pct ? H.cloud_pct[k] : null, coarse: H.block[k] > 1 });
         }
         // Beyond 48 h the NBM only has a 1 h snapshot every third hour, which misses rain that falls in between. There the 6 h liquid totals
         // (about 4-10 am and 10 am-4 pm) set how much falls, and the snapshots only shape it within the block (spread evenly when they are dry).
@@ -87,7 +87,8 @@
             const rainShare = x.sl == null ? 0.5 : clamp((x.sl - mid) / 2000 + 0.5);
             x.rain = x.p * rainShare; x.snow = x.p * (1 - rainShare);
             x.bRain = clamp(x.rain / RAIN_FULL); x.bSnow = clamp(x.snow / SNOW_FULL) * (low ? 1 : 0.35); x.bWind = x.g == null ? 0 : 0.8 * clamp((x.g - 15) / 35);
-            x.b = 1 - (1 - x.bRain) * (1 - x.bSnow) * (1 - x.bWind);
+            x.bTemp = x.t == null ? 0 : low ? 0.5 * (1 - comfortScore(x.t, COMFORT[S.mode])) : snowTempBad(x.t);
+            x.b = 1 - (1 - x.bRain) * (1 - x.bSnow) * (1 - x.bWind) * (1 - x.bTemp);
         });
         let best = null;
         for (let i = 0; i + WIN_H <= hours.length; i++) {
@@ -102,15 +103,45 @@
         const w = best.w, half = (a, f) => a.reduce((t, x) => t + f(x), 0) / a.length;
         const delta = half(w.slice(2), x => x.b) - half(w.slice(0, 2), x => x.b);
         const trend = delta > 0.12 ? 'deteriorating' : delta < -0.12 ? 'improving' : 'stable';
-        // what changes most between the first and second half
-        const parts = [['rain', x => x.bRain], ['snow', x => x.bSnow], ['wind', x => x.bWind]];
-        const change = parts.map(([n, f]) => [n, half(w.slice(2), f) - half(w.slice(0, 2), f)]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
+        // why: the factors that change most between the first and second half of the window, in words
+        const dT = half(w.slice(2), x => x.t == null ? 0 : x.t) - half(w.slice(0, 2), x => x.t == null ? 0 : x.t);
+        const phrase = {
+            rain: up => up ? 'rain increasing (storm approaching)' : 'rain easing (storm leaving)',
+            snow: up => up ? 'snow increasing (storm approaching)' : 'snow easing (storm leaving)',
+            wind: up => up ? 'wind picking up' : 'wind dropping',
+            temp: () => dT > 0 ? 'warming up' : 'cooling off',
+        };
+        const changes = [['rain', x => x.bRain], ['snow', x => x.bSnow], ['wind', x => x.bWind], ['temp', x => x.bTemp]]
+            .map(([n, f]) => [n, half(w.slice(2), f) - half(w.slice(0, 2), f)]).filter(c => Math.abs(c[1]) >= 0.05).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 2);
         const meanB = half(w, x => x.b);
-        const why = trend === 'deteriorating' ? `${change[0]} builds toward the end` : trend === 'improving' ? `${change[0]} eases as the window goes on`
-            : meanB < 0.1 ? 'dry and calm throughout' : 'much the same all the way through';
+        const steady = [['rain', 'steady rain', x => x.bRain], ['snow', 'snow throughout', x => x.bSnow], ['wind', 'windy throughout', x => x.bWind], ['temp', low ? 'uncomfortable temperatures throughout' : 'warm, soft snow throughout', x => x.bTemp]]
+            .find(([, , f]) => half(w, f) >= 0.3);
+        const why = trend === 'stable' ? (meanB < 0.1 ? 'dry and calm throughout' : steady ? steady[1] : 'little change through the window')
+            : changes.length ? 'with ' + changes.map(([n, v]) => phrase[n](v > 0)).join(' and ') : '';
         // beyond 48 h the NBM has no hourly precipitation, so the timing within the day is approximate
         const fuzzy = hours.filter(x => x.coarse).length / hours.length > 0.5;
-        return { start: w[0].h - 1, end: w[WIN_H - 1].h, score: best.score, trend, why, fuzzy };
+        // corn clock (snow activities): a sunny, dry day whose temperature climbs through freezing. If the snow froze overnight, the surface
+        // softens into corn a couple of hours after it thaws, east-facing slopes first, then south, then west, and turns to mush later.
+        let corn = null;
+        if (!low) {
+            const tt = hours.filter(x => x.t != null), cl = hours.filter(x => x.c != null);
+            const sunny = cl.length && cl.reduce((a, x) => a + x.c, 0) / cl.length < 50;
+            const dry = hours.reduce((a, x) => a + x.p, 0) < 0.03;
+            const thaw = tt.find(x => x.t >= 32);
+            if (tt.length && sunny && dry && thaw && tt[0].t < 32 + 4) {
+                const mush = tt.find(x => x.t >= 45);
+                corn = { thaw: thaw.h - 1, mush: mush ? mush.h - 1 : null, allDay: tt[0].t >= 32 };
+            }
+        }
+        return { start: w[0].h - 1, end: w[WIN_H - 1].h, score: best.score, trend, why, fuzzy, corn };
+    }
+
+    // Snow activities: cold is fine, warm is not. Badness from the forecast point temperature (not corrected for elevation, so a rough guide):
+    // none up to 30 F, rising to 0.5 by 42 F (soft, heavy snow and wet gear); only a mild 0.2 penalty for bitter cold, from 10 F down to -5 F.
+    function snowTempBad(t) {
+        if (t > 30) return 0.5 * clamp((t - 30) / 12);
+        if (t < 10) return 0.2 * clamp((10 - t) / 15);
+        return 0;
     }
 
     // 1 inside the comfortable band, falling to 0 twenty degrees outside it
@@ -123,7 +154,7 @@
         const why = [];
         const timed = ((z.drive_by_time || {})[S.origin] || {})[S.leave];     // typical drive at your leave time, when we have it
         const drive = timed != null ? timed : (z.drive_hours || {})[S.origin];
-        const lowest = Math.max(S.minElev, z.access_ft || 0);
+        const lowest = LOW.includes(S.mode) ? (z.access_ft || 0) : Math.max(S.minElev, z.access_ft || 0);       // hiking and biking start at the trailhead, not your ski minimum
         const vert = z.top_ft - lowest;
         if (!z.modes.includes(S.mode)) why.push(`Not set up for ${MODES[S.mode].toLowerCase()} here`);
         if (drive == null) why.push('No drive time from this city');
@@ -182,7 +213,11 @@
         if (low && d.temp_f != null && d.temp_f > COMFORT[S.mode][1]) notes.push(`Warm: about ${Math.round(d.temp_f)} F at the forecast point.`);
         if (low && d.snow_level_ft != null && d.snow_level_ft < (z.top_ft || 0) && (d.liquid_in || 0) > 0.05) notes.push(`Snow level ${d.snow_level_ft.toLocaleString()} ft: higher trails may have fresh snow.`);
         if (d.new_snow_in != null && d.new_snow_in < 0.5 && S.mode === 'resort') notes.push('Little or no new snow forecast: expect whatever snow is already on the ground.');
-        if (wet != null && wet >= 0.05 && S.wet !== 'dry') notes.push(`About ${wet.toFixed(2)} in of rain or wet snow likely while you are out` + (d.temp_f != null && Math.abs(d.temp_f - 34) < 5 ? ' (near freezing, so expect wet snow or slush)' : '') + '.');
+        if (low && d.liquid_in != null && d.liquid_in >= 0.05) {
+            const snowy = d.snow_level_ft != null && d.snow_level_ft < (z.top_ft || 0);
+            notes.push(`${d.liquid_in.toFixed(2)} in of precipitation in the past 24 hours` + (d.liquid_in >= 0.25 ? (S.mode === 'bike' ? ': expect muddy, soft trails' : ': expect muddy trails') + (snowy ? ' and a moderate amount of fresh snow higher up' : '') : ': trails may be damp') + '.');
+        }
+        if (!low && wet != null && wet >= 0.05 && S.wet !== 'dry') notes.push(`About ${wet.toFixed(2)} in of rain or wet snow likely while you are out` + (d.temp_f != null && Math.abs(d.temp_f - 34) < 5 ? ' (near freezing, so expect wet snow or slush)' : '') + '.');
         if (d.gust_mph != null && d.gust_mph >= 40) notes.push('Strong gusts, expect lift holds or closed upper terrain.');
         if (z.road_risk && z.road_risk.model === 'nps_gate') notes.push('The Paradise road also closes for staffing, snow removal and unsafe road conditions, and in some winters on weekdays. Check the NPS Longmire gate status before you drive.');
         else if (d.delay_risk != null && d.delay_risk >= 0.2) notes.push(`About a ${Math.round(d.delay_risk * 100)}% chance of a traction or avalanche-control delay on the way` + (d.risk_parts && d.risk_parts.length > 1 ? ' (' + d.risk_parts.map(p => p.route.replace(/ (Snoqualmie|Stevens|White|Blewett) Pass| North Cascades Highway/, '') + ' ' + Math.round(p.p * 100) + '%').join(', ') + ')' : ' on ' + z.road_risk.route) + ' that day.');
@@ -235,10 +270,10 @@
                 return `<article class="sk-card${i === 0 ? ' sk-best' : ''}">
                     <div class="sk-head"><span class="sk-rank">${i + 1}</span><h3>${esc(r.z.name)}</h3><span class="sk-score">${Math.round(r.total)}<small>/100</small></span></div>
                     <p class="sk-why">Leads on ${top.join(' and ')}.</p>
-                    ${r.win ? `<p class="sk-window"><span class="sk-wlabel">Best 4 hours</span> <strong>${hh(r.win.start)} &ndash; ${hh(r.win.end)}</strong> <span class="sk-trend sk-trend-${r.win.trend}">${r.win.trend === 'deteriorating' ? '&#8600; ' : r.win.trend === 'improving' ? '&#8599; ' : '&rarr; '}${r.win.trend} conditions</span> <span class="sk-wscore">${Math.round(r.win.score)}/100</span><small>${esc(r.win.why)}</small>${r.win.fuzzy ? '<small class="sk-fuzzy">Timing is approximate: more than 48 hours out, the forecast only gives rain in 6-hour blocks, so the window could shift by a few hours.</small>' : ''}</p>` : ''}
+                    ${r.win ? `<p class="sk-window"><span class="sk-wlabel">When to go</span> <strong>${hh(r.win.start)} &ndash; ${hh(r.win.end)}</strong> <span class="sk-wscore">${Math.round(r.win.score)}/100</span><small>because conditions are <span class="sk-trend sk-trend-${r.win.trend}">${r.win.trend === 'deteriorating' ? '&#8600; ' : r.win.trend === 'improving' ? '&#8599; ' : '&rarr; '}${r.win.trend}</span>${r.win.trend === 'stable' ? ': ' : ', '}${esc(r.win.why)}</small>${r.win.corn ? `<small class="sk-corn"><strong>Corn clock:</strong> sunny and ${r.win.corn.allDay ? 'above freezing all day' : 'thawing through freezing around ' + hh(r.win.corn.thaw)}. If it froze overnight, the surface softens ${hh(r.win.corn.thaw + 1)}&ndash;${hh(r.win.corn.thaw + 3)}: east and southeast slopes first, south around midday, west in the afternoon${r.win.corn.mush != null ? '; by ' + hh(r.win.corn.mush) + ' it is likely mush, so be off steep sunny slopes' : ''}. Timing shifts with elevation and a cloudy or windy night (no refreeze, no corn).</small>` : ''}${r.win.fuzzy ? '<small class="sk-fuzzy">Timing is approximate: more than 48 hours out, the forecast only gives rain in 6-hour blocks, so the window could shift by a few hours.</small>' : ''}</p>` : ''}
                     <ul class="sk-facts">
                         ${LOW.includes(S.mode) ? `<li><strong>${d.temp_f == null ? '?' : d.temp_f + ' F'}</strong></li>` : ''}<li><strong>${d.new_snow_in == null ? '?' : d.new_snow_in.toFixed(1)} in</strong> new snow${d.new_snow_lo_in != null && d.new_snow_hi_in != null ? ` (${d.new_snow_lo_in.toFixed(1)}&ndash;${d.new_snow_hi_in.toFixed(1)})` : ''}</li><li>snow level <strong>${d.snow_level_ft == null ? '?' : d.snow_level_ft.toLocaleString() + ' ft'}</strong></li>
-                        <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li>${r.wet != null ? `<li>wet <strong>${r.wet.toFixed(2)} in</strong></li>` : ''}<li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
+                        <li>gusts <strong>${d.gust_mph == null ? '?' : d.gust_mph + ' mph'}</strong></li>${LOW.includes(S.mode) ? (d.liquid_in != null ? `<li>precip, past 24 h <strong>${d.liquid_in.toFixed(2)} in</strong></li>` : '') : (r.wet != null ? `<li>wet <strong>${r.wet.toFixed(2)} in</strong></li>` : '')}<li><strong>${r.drive == null ? '?' : r.drive.toFixed(1)} h</strong> drive</li>${d.delay_risk != null ? `<li>pass delay chance <strong>${Math.round(d.delay_risk * 100)}%</strong></li>` : ''}
                         ${LOW.includes(S.mode) ? '' : `<li>about <strong>${Math.round(r.vert).toLocaleString()} ft</strong> of vert</li>`}
                         ${r.z.nwac_zone && !LOW.includes(S.mode) ? `<li>avalanche <strong>${esc(AVY[d.avy_danger] || 'n/a')}</strong></li>` : ''}
                     </ul>

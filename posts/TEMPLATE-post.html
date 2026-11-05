@@ -2,189 +2,262 @@
   Template for a new weekly forecast post.
 
   To use: copy this file into _posts/ as YYYY-MM-DD-weekend-forecast.html
-  (the date in the filename becomes the post's date/URL), then fill in the
-  front matter and replace the [UPDATE] markers below. This file itself is
-  excluded from the build (see _config.yml) so it's never published.
+  (the date in the filename becomes the post's date/URL), fill in the front
+  matter, and replace every [UPDATE ...] marker. This file itself is excluded
+  from the build (see _config.yml) so it's never published. /site-check greps
+  for "[UPDATE", so anything you forget will get flagged.
 
-  `tagline` is what shows in the homepage hero for the latest post; `title`
-  is used in the post header, Recent Forecasts, and the archive. They can be
-  the same text. `forecast_period` is just the date range, e.g. "18-19
-  April 2026" — the layout adds the "🎿 Forecast:" label. `subtitle` and `forecaster` show in the post header
-  (blog name, "In this week's edition: title", subtitle, then posted / forecast period / forecaster).
+  FRONT MATTER
+    title / tagline / summary / forecast_period / subtitle / forecaster: as before.
+    thumbnail, thumbnail_alt, thumbnail_caption: the lead photo for the week. The
+      post layout draws it under the header, above everything below. Delete the 3
+      thumbnail lines for none.
+
+  STRUCTURE (each numbered section is a collapsible <details>; the Contents list
+  links to them, and assets/post-sections.js opens a section when it is jumped to)
+    0. Summary (always visible, 2 sentences max)
+    1. Past week recap
+    2. Synoptic (large-scale) overview
+    3. Local overview
+    4. Snow forecast table
+    5. Weekend winners (and losers)
+    6. Mid-range
+    7. Long-term outlook
+    8. Safety & travel (always visible)
+
+  FIGURES: every section ends with a <figure class="figure-slot"> placeholder.
+  Save images to assets/images/YYYYMMDD_fx/ (folder date = post date, no dashes)
+  and replace the placeholder <div> with:
+      <img class="PlotFormat" src="../assets/images/YYYYMMDD_fx/name.png" alt="...">
+  (PlotFormat makes it click-to-enlarge). Keep the <figcaption>. Delete any figure
+  slot you don't need.
+
+  To make a section start collapsed, remove the `open` attribute on its <details>.
 -->
 ---
 title: "[UPDATE: Weekend Title, e.g. Storm Cycle Incoming]"
-description: "[UPDATE: Add weekend forecast summary with key search terms users actually type, e.g. Crystal Mountain weather, Stevens Pass snow report.]"
+description: "[UPDATE: Weekend forecast summary with search terms people actually type, e.g. Crystal Mountain weather, Stevens Pass snow report.]"
 keywords: "[UPDATE: comma-separated search terms]"
 tagline: "[UPDATE: homepage hero tagline, can match title]"
-summary: "[UPDATE: 1-2 sentence homepage hero summary]"
-forecast_period: "[UPDATE: e.g. 18-19 April 2026]"
-subtitle: "[UPDATE: one sentence under the headline; leave out to show none]"
+summary: "[UPDATE: 1-2 sentence homepage hero summary, can match the Summary box below]"
+forecast_period: "[UPDATE: e.g. 14-15 November 2026]"
+subtitle: "[UPDATE: one sentence under the headline; delete this line for none]"
 forecaster: "[UPDATE: Danny Hogan or Clinton Alden]"
-thumbnail: "[UPDATE: main photo shown under the post header, e.g. assets/images/YYYYMMDD_fx/main.png; delete these 3 thumbnail lines for none]"
+thumbnail: "[UPDATE: assets/images/YYYYMMDD_fx/main.jpg; delete the 3 thumbnail lines for none]"
 thumbnail_alt: "[UPDATE: short description of the image]"
-thumbnail_caption: "[UPDATE: optional caption under the thumbnail]"
+thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 ---
-<section class="summary">
-    <h2>🎯 Weekend Summary</h2>
+<!-- ============================ SUMMARY ============================ -->
+<section class="summary" id="summary">
+    <h2>🎯 The Short Version</h2>
     <div class="highlight-box">
-        <p><strong>Best Bets:</strong> [UPDATE]</p>
-        <p><strong>New Snow Expected:</strong> [UPDATE]</p>
-        <p><strong>Conditions:</strong> [UPDATE]</p>
+        <p>[UPDATE: sentence 1, the big picture for the weekend.] [UPDATE: sentence 2, where to go or what to watch.]</p>
     </div>
 </section>
 
-<section class="forecast-section">
-    <h2>🌡️ Temperature Forecast</h2>
-    <div class="forecast-details">
-        <h3>Mt. Baker</h3>
+<!-- ============================ CONTENTS ============================ -->
+<details class="post-toc" id="contents" open>
+    <summary><h2>📑 Contents</h2></summary>
+    <div class="post-toc-body">
+        <div class="post-toc-controls">
+            <button type="button" data-sections="open">Expand all sections</button>
+            <button type="button" data-sections="close">Collapse all sections</button>
+        </div>
+        <ol>
+        <li><a href="#recap">Past week recap</a></li>
+        <li><a href="#synoptic">Synoptic (large-scale) overview</a></li>
+        <li><a href="#local">Local overview</a></li>
+        <li><a href="#snow-table">Snow forecast (map, plumes, table)</a></li>
+        <li><a href="#winners">Weekend winners (and losers)</a></li>
+        <li><a href="#mid-range">Mid-range</a></li>
+        <li><a href="#long-term">Long-term outlook</a></li>
+        <li><a href="#safety">Safety &amp; travel</a></li>
+    </ol>
+    </div>
+</details>
+
+<!-- ============================ 1. RECAP ============================ -->
+<details class="post-section" id="recap" open>
+    <summary><h2>1. Past Week Recap</h2></summary>
+    <div class="post-section-body">
+        <p>[UPDATE: what actually happened since last Thursday's post: storms, snow totals, temperatures, anything notable.]</p>
         <ul>
-            <li><strong>Saturday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Sunday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Trend:</strong> [UPDATE]</li>
+            <li><strong>Observed snowfall (SNOTEL / NWAC):</strong> [UPDATE: by area, or "see table"]</li>
+            <li><strong>Peak wind / freezing level:</strong> [UPDATE]</li>
+            <li><strong>How last week's forecast did:</strong> [UPDATE: one honest line; full scoring is on the <a href="../evaluation.html">evaluation page</a>]</li>
         </ul>
 
-        <h3>Stevens Pass</h3>
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>📊 [UPDATE: add recap figure, e.g. observed snow depth change or live-conditions map]</em></p></div>
+            <figcaption>[UPDATE: caption]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
+    </div>
+</details>
+
+<!-- ============================ 2. SYNOPTIC ============================ -->
+<details class="post-section" id="synoptic" open>
+    <summary><h2>2. Synoptic (Large-Scale) Overview</h2></summary>
+    <div class="post-section-body">
+        <p>[UPDATE: the big picture over the North Pacific and western North America: jet position, troughs/ridges, atmospheric rivers, where the storm track is aimed.]</p>
         <ul>
-            <li><strong>Saturday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Sunday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Trend:</strong> [UPDATE]</li>
+            <li><strong>Pattern:</strong> [UPDATE]</li>
+            <li><strong>Key features this weekend:</strong> [UPDATE]</li>
+            <li><strong>Model agreement:</strong> [UPDATE: high / medium / low, and why]</li>
         </ul>
 
-        <h3>Crystal Mountain</h3>
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>🌀 [UPDATE: add 500 mb / jet / IVT figure]</em></p></div>
+            <figcaption>[UPDATE: caption, include model and valid time]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
+    </div>
+</details>
+
+<!-- ============================ 3. LOCAL ============================ -->
+<details class="post-section" id="local" open>
+    <summary><h2>3. Local Overview</h2></summary>
+    <div class="post-section-body">
+        <p>[UPDATE: what this means for the Cascades, day by day: timing of precipitation, orographic flow, snow level, winds.]</p>
         <ul>
-            <li><strong>Saturday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Sunday:</strong> Base: XX°F | Summit: XX°F</li>
-            <li><strong>Trend:</strong> [UPDATE]</li>
+            <li><strong>Friday:</strong> [UPDATE]</li>
+            <li><strong>Saturday:</strong> [UPDATE]</li>
+            <li><strong>Sunday:</strong> [UPDATE]</li>
         </ul>
 
-        <h3>Other Areas</h3>
+        <h3>Snow level &amp; temperatures</h3>
+        <p>[UPDATE: freezing level / snow level by day, base and summit temperatures where it matters.]</p>
+
+        <h3>Winds</h3>
+        <p>[UPDATE: ridgetop wind direction and speed, which areas are exposed, lift closure risk.]</p>
+
+        <h3>Uncertainties</h3>
+        <p>[UPDATE: the main forecast uncertainty (timing, snow level, rain/snow line, shadowing) and which way it could bust.]</p>
+
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add local figure, e.g. freezing level chart or precipitation map]</em></p></div>
+            <figcaption>[UPDATE: caption]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
+    </div>
+</details>
+
+<!-- ======================== 4. SNOW FORECAST: MAP, PLUMES, TABLE ========================
+  One interactive map does the whole section. Click a site to see its snowfall plume, its liquid
+  precipitation plume, and its snow table (HRRR, RRFS, HRDPS, NBM, "Our call"). The data is frozen:
+  1. git pull (fresh model files), then
+       python scripts/post_plume.py --start YYYY-MM-DD --days 3 --out assets/images/YYYYMMDD_fx
+     (start = the Friday; the window runs 4 am to 4 am Pacific, here Fri 4 am to Mon 4 am).
+     For a holiday weekend use a longer window, e.g. --start <Wednesday> --days 5.
+     Models with short runs show "-" for the days they do not reach.
+  2. Fill in "Our call": edit assets/images/YYYYMMDD_fx/ours.json (written once, never overwritten).
+     Per site, "periods" is one entry per 12-hour period (4a-4p, 4p-4a, for each day) and "total" is
+     the window total; both are plain text, so ranges like "2-4" work. Leave a site out to show dashes.
+  3. Replace YYYYMMDD_fx in the data-src below and write the how-to-read note.
+  Optional: python scripts/post_plume.py also writes plume_snow.png and plume_precip.png (all areas
+  stacked) if you want a single image for social media; scripts/post_snow_table.py prints a static
+  HTML table of all five areas.
+-->
+<details class="post-section" id="snow-table" open>
+    <summary><h2>4. Snow Forecast: Map, Plumes and Table</h2></summary>
+    <div class="post-section-body">
+        <div class="snow-table-warning" role="note">
+            <strong>⚠️ Frozen in time.</strong> These numbers are a snapshot taken when this post was written
+            ([UPDATE: model cycle used, e.g. 12Z Thu 12 Nov]) and are <strong>not updated</strong> afterward.
+            Models change every few hours. For the latest, check the
+            <a href="../in-house/ski-model.html">meteograms</a> and the
+            <a href="../index.html">home page</a>.
+        </div>
+
+        <p>Click a location on the map (or its name below it) to see that site's snowfall and liquid precipitation plumes and its snow table. Sites are colored by their weekend total.</p>
+        <div class="plume-map" data-src="../assets/images/YYYYMMDD_fx/plume_data.json"><noscript>The interactive map needs JavaScript. For current model output see the meteograms.</noscript></div>
+
+        <p class="snow-table-note">[UPDATE: model cycles used, e.g. NBM 07Z, HRRR 06Z, RRFS 06Z, HRDPS 06Z Thu 12 Nov. Snow is assumed where the dew point is at or below [UPDATE: threshold]; the table shows each model's own snow estimate.]</p>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
+    </div>
+</details>
+
+<!-- ============================ 5. WINNERS ============================ -->
+<details class="post-section" id="winners" open>
+    <summary><h2>5. Weekend Winners (and Losers)</h2></summary>
+    <div class="post-section-body">
+        <p>
+            Where this pattern delivers more or less water than a normal storm, from the
+            <a href="../in-house/powder-stash.html">Powder Stash Predictor</a>.
+            Pattern call: <strong>[UPDATE: pattern name]</strong> ([UPDATE: confidence]).
+        </p>
+        <div class="winners-grid">
+            <div class="winners winners-up">
+                <h3>🏆 Winners</h3>
+                <ul>
+                    <li><strong>[UPDATE: area]</strong>: [UPDATE: +XX% vs a normal storm, why]</li>
+                    <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
+                </ul>
+            </div>
+            <div class="winners winners-down">
+                <h3>🥀 Losers</h3>
+                <ul>
+                    <li><strong>[UPDATE: area]</strong>: [UPDATE: −XX% vs a normal storm, why]</li>
+                    <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
+                </ul>
+            </div>
+        </div>
+        <p><strong>Best bet this weekend:</strong> [UPDATE: area and day, one sentence why]</p>
+
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add Powder Stash zone map]</em></p></div>
+            <figcaption>[UPDATE: caption]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
+    </div>
+</details>
+
+<!-- ============================ 6. MID-RANGE ============================ -->
+<details class="post-section" id="mid-range" open>
+    <summary><h2>6. Mid-Range (Early Next Week)</h2></summary>
+    <div class="post-section-body">
+        <p><strong>[UPDATE: Mon DD to Wed DD]</strong></p>
         <ul>
-            <li><strong>Snoqualmie:</strong> [UPDATE]</li>
-            <li><strong>White Pass:</strong> [UPDATE]</li>
-            <li><strong>Blewett Pass:</strong> [UPDATE]</li>
+            <li><strong>Monday:</strong> [UPDATE]</li>
+            <li><strong>Tuesday:</strong> [UPDATE]</li>
+            <li><strong>Wednesday:</strong> [UPDATE]</li>
         </ul>
-    </div>
+        <p><strong>Confidence:</strong> [UPDATE: ensemble spread, what would change the call]</p>
 
-    <!-- Add your temperature chart/figure here. Images for this post live
-         in assets/images/YYYYMMDD_fx/ (folder date = post date, no dashes). -->
-    <div class="figure-placeholder">
-        <p><em>📊 Add temperature chart/figure here</em></p>
-        <p class="figure-instructions">To add: save the image to assets/images/YYYYMMDD_fx/ and replace this div with:<br>
-        <code>&lt;img src="../assets/images/YYYYMMDD_fx/your-image.png" alt="Temperature Forecast"&gt;</code></p>
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>📅 [UPDATE: add ensemble / mid-range figure]</em></p></div>
+            <figcaption>[UPDATE: caption]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
-</section>
+</details>
 
-<section class="forecast-section">
-    <h2>❄️ Precipitation & Snowfall</h2>
-    <div class="forecast-details">
-        <h3>Saturday</h3>
+<!-- ============================ 7. LONG TERM ============================ -->
+<details class="post-section" id="long-term" open>
+    <summary><h2>7. Long-Term Outlook</h2></summary>
+    <div class="post-section-body">
+        <p>[UPDATE: weeks 2 to 4 and beyond. Reading the tea leaves: sub-seasonal regimes, MJO, ENSO, North Pacific SST, CPC outlooks.]</p>
         <ul>
-            <li><strong>Mt. Baker:</strong> [UPDATE]</li>
-            <li><strong>Stevens Pass:</strong> [UPDATE]</li>
-            <li><strong>Crystal Mountain:</strong> [UPDATE]</li>
-            <li><strong>Snoqualmie:</strong> [UPDATE]</li>
-            <li><strong>White Pass:</strong> [UPDATE]</li>
+            <li><strong>Weeks 2–3:</strong> [UPDATE]</li>
+            <li><strong>Signals to watch:</strong> [UPDATE]</li>
+            <li><strong>Season context:</strong> [UPDATE: snowpack vs normal, base depths, opening dates]</li>
         </ul>
+        <p><em>This is low-confidence territory. Treat it as a hint about the pattern, not a forecast of any single storm.</em></p>
 
-        <h3>Sunday</h3>
-        <ul>
-            <li><strong>Mt. Baker:</strong> [UPDATE]</li>
-            <li><strong>Stevens Pass:</strong> [UPDATE]</li>
-            <li><strong>Crystal Mountain:</strong> [UPDATE]</li>
-            <li><strong>Snoqualmie:</strong> [UPDATE]</li>
-            <li><strong>White Pass:</strong> [UPDATE]</li>
-        </ul>
-
-        <p><strong>Total Weekend Accumulation:</strong></p>
-        <ul class="totals">
-            <li>Mt. Baker: [UPDATE]</li>
-            <li>Stevens Pass: [UPDATE]</li>
-            <li>Crystal Mountain: [UPDATE]</li>
-            <li>Snoqualmie: [UPDATE]</li>
-            <li>White Pass: [UPDATE]</li>
-        </ul>
+        <figure class="figure-slot">
+            <div class="figure-placeholder"><p><em>🔭 [UPDATE: add sub-seasonal / outlook figure]</em></p></div>
+            <figcaption>[UPDATE: caption]</figcaption>
+        </figure>
+        <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
+</details>
 
-    <div class="figure-placeholder">
-        <p><em>🗺️ Add precipitation/radar image here</em></p>
-    </div>
-</section>
-
-<section class="forecast-section">
-    <h2>🧊 Freezing Level</h2>
-    <div class="forecast-details">
-        <p><strong>Current Trend:</strong> [UPDATE]</p>
-        <ul>
-            <li><strong>Saturday Morning:</strong> [UPDATE] feet</li>
-            <li><strong>Saturday Afternoon-Evening:</strong> [UPDATE] feet</li>
-            <li><strong>Sunday:</strong> [UPDATE] feet</li>
-        </ul>
-        <p><strong>Impact:</strong> [UPDATE - describe snow levels and road conditions]</p>
-    </div>
-
-    <div class="figure-placeholder">
-        <p><em>📈 Add freezing level chart here</em></p>
-    </div>
-</section>
-
-<section class="forecast-section">
-    <h2>💨 Wind Conditions</h2>
-    <div class="forecast-details">
-        <h3>Upper Mountain Winds</h3>
-        <ul>
-            <li><strong>Mt. Baker:</strong> [UPDATE direction & speed]</li>
-            <li><strong>Stevens Pass:</strong> [UPDATE]</li>
-            <li><strong>Crystal Mountain:</strong> [UPDATE]</li>
-            <li><strong>Snoqualmie:</strong> [UPDATE]</li>
-            <li><strong>White Pass:</strong> [UPDATE]</li>
-        </ul>
-
-        <p><strong>Recommendation:</strong> [UPDATE - describe which day/time has best wind conditions]</p>
-    </div>
-
-    <div class="figure-placeholder">
-        <p><em>🌬️ Add wind speed/direction map here</em></p>
-    </div>
-</section>
-
-<section class="forecast-section">
-    <h2>🔮 Extended Outlook (Next 7-10 Days)</h2>
-    <div class="forecast-details">
-        <h3>Week of [UPDATE DATES]</h3>
-        <p><strong>Monday-Tuesday:</strong> [UPDATE]</p>
-        <p><strong>Wednesday-Thursday:</strong> [UPDATE]</p>
-        <p><strong>Friday-Weekend:</strong> [UPDATE]</p>
-
-        <h3>Snow Pattern Summary</h3>
-        <p>[UPDATE - describe overall pattern and which areas benefit]</p>
-
-        <p><strong>Longer Range:</strong> [UPDATE]</p>
-    </div>
-
-    <div class="figure-placeholder">
-        <p><em>📅 Add extended forecast chart/model output here</em></p>
-    </div>
-</section>
-
-<section class="recommendations">
-    <h2>🎿 Our Recommendations</h2>
-    <div class="highlight-box">
-        <h3>Best Choice This Weekend: [UPDATE]</h3>
-        <p>[UPDATE - explain why this is the top choice]</p>
-
-        <h3>Runner-Up: [UPDATE]</h3>
-        <p>[UPDATE]</p>
-
-        <h3>Other Good Options</h3>
-        <p>[UPDATE]</p>
-    </div>
-</section>
-
-<section class="safety-note">
-    <h2>⚠️ Safety & Travel Notes</h2>
+<!-- ============================ SAFETY ============================ -->
+<section class="safety-note" id="safety">
+    <h2>⚠️ Safety &amp; Travel</h2>
     <ul>
-        <li><strong>For avalanche forecasts:</strong> Check <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">NWAC.us</a> before any backcountry travel.</li>
-        <li><strong>Road Conditions:</strong> Check <a href="https://wsdot.wa.gov/travel" target="_blank" rel="noopener noreferrer">WSDOT</a> for current conditions.</li>
+        <li><strong>Avalanche forecast:</strong> check <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">NWAC.us</a> before any backcountry travel.</li>
+        <li><strong>Roads and passes:</strong> check <a href="https://wsdot.wa.gov/travel" target="_blank" rel="noopener noreferrer">WSDOT</a>. [UPDATE: any pass-specific concern this weekend, or delete]</li>
+        <li><strong>Next forecast:</strong> Thursday, [UPDATE: date].</li>
     </ul>
 </section>
