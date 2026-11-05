@@ -135,7 +135,7 @@
 
     function renderDays() {
         ui.days.textContent = '';
-        ui.dayNote.textContent = days().length ? 'Each day is a UTC day (' + pacificSpan(days()[0]) + ') and the call uses the average of its 00 and 12 UTC maps.' : '';
+        ui.dayNote.textContent = days().length ? 'Each day is a UTC day (' + pacificSpan(days()[0]) + ') and each member is classified at 00 and 12 UTC, half a vote each.' : '';
         days().forEach(function (d, k) {
             var on = k === state.day, w = wetness(d), maybe = !w.dry;
             var tab = el('button', 'pf-day' + (on ? ' pf-day--on' : '') + (maybe ? '' : ' pf-day--dry'));

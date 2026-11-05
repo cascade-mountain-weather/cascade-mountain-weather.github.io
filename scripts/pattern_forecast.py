@@ -13,7 +13,7 @@ total precipitation over the Cascades at the start and end of each UTC day to be
 data/forecast_cache/ (gitignored).
 
 Build: (1) one PNG per variable, model and 12-hour step in assets/forecast/frames/ for the scrolling viewer; (2) for every
-UTC day with both its 00 and 12 UTC frames, each member's daily-mean 500 hPa height anomaly is turned into the same three IDISP
+UTC day with both its 00 and 12 UTC frames, each member's 500 hPa height anomaly at 00 UTC and at 12 UTC (half a vote each) is turned into the same three IDISP
 numbers as the storm days (depth and position of the lowest low west of Anchorage's longitude) and assigned to the nearest of the six
 patterns, or to "no good match" if it is farther from every centre than 90% of the storm days are from their own; the share of members
 per pattern, with the chance of a storm day (a member's mean precipitation over the Cascades box of at least STORM_MM) is written to
@@ -300,13 +300,19 @@ def main():
         rows = []
         for d, s0, s12, s24 in days:
             i0, i12 = STEPS.index(s0), STEPS.index(s12)
-            zday = (Z[i0] + Z[i12]) / 2
-            clim_d = (design([d.dayofyear]) @ m["beta_z"]).reshape(len(lat), len(lon))
-            lab, dist, near, near2, X = call_patterns(zday - clim_d, lat, lon, m)
+            # Each member is classified at 00 UTC and again at 12 UTC (each map against its own climatology) and counts half a vote at each,
+            # so a low that is crossing the domain during the day shows up as a split instead of an average of two places.
+            labs, nears, dists, Xs, by_time = [], [], [], [], {}
+            for tag, i in (("00Z", i0), ("12Z", i12)):
+                lab_i, dist_i, near_i, _, X_i = call_patterns(Z[i] - clim_z[i], lat, lon, m)
+                labs.append(lab_i), nears.append(near_i), dists.append(dist_i), Xs.append(X_i)
+                by_time[tag] = {**{str(p): int((lab_i == p).sum()) for p in range(NPAT)}, "none": int((lab_i == -1).sum())}
+            lab, near, dist, X = np.concatenate(labs), np.concatenate(nears), np.concatenate(dists), np.concatenate(Xs)
             tp = np.load(cache_file(model, init, s24, "tp"))["tp"] - np.load(cache_file(model, init, s0, "tp"))["tp"]
-            votes = {str(p): int((lab == p).sum()) for p in range(NPAT)}
-            votes["none"] = int((lab == -1).sum())
-            row = {"date": f"{d:%Y-%m-%d}", "label": f"{d:%a %b %d}", "members": n, "votes": votes, "pattern": int(np.bincount(near, minlength=NPAT).argmax()),
+            votes = {str(p): round(float((lab == p).sum()) / 2, 1) for p in range(NPAT)}
+            votes["none"] = round(float((lab == -1).sum()) / 2, 1)
+            row = {"date": f"{d:%Y-%m-%d}", "label": f"{d:%a %b %d}", "members": n, "votes": votes, "votes_by_time": by_time,
+                   "pattern": int(np.bincount(near, minlength=NPAT).argmax()),
                    "median_distance": round(float(np.median(dist)), 2), "p_storm": round(float((tp >= STORM_MM).mean()), 2),
                    "precip_mm": [round(float(x), 1) for x in np.percentile(tp, [25, 50, 75])],
                    "lowest_low": {"intensity_m": round(float(np.median(X[:, 0]))), "km_east": round(float(np.median(X[:, 1]))), "km_north": round(float(np.median(X[:, 2])))}}
