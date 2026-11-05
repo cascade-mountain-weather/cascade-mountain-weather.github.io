@@ -78,8 +78,13 @@ def fetch_once(job):
     H = Herbie(init, model="ifs", product=PRODUCT[model], fxx=step, verbose=False)
     if kind == "zt":
         m = np.load(MODEL / "pattern_model.npz")
-        ds = H.xarray(r":(gh|t):(500|850):").sel(latitude=m["lat"], longitude=m["lon"])
-        z, t = ds["gh"].sel(isobaricInhPa=500).values, ds["t"].sel(isobaricInhPa=850).values
+        zf = H.xarray(r":gh:500:").sel(latitude=m["lat"], longitude=m["lon"])["gh"]
+        tf = H.xarray(r":t:850:").sel(latitude=m["lat"], longitude=m["lon"])["t"]
+        if "isobaricInhPa" in zf.dims:
+            zf = zf.sel(isobaricInhPa=500)
+        if "isobaricInhPa" in tf.dims:
+            tf = tf.sel(isobaricInhPa=850)
+        z, t = zf.values, tf.values
         if z.ndim == 2:
             z, t = z[None], t[None]
         np.savez_compressed(f, z=z.astype("float32"), t=t.astype("float32"))
