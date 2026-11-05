@@ -1,7 +1,21 @@
 /* Post-specific styles */
 
+/* Posts are one flat white page: no grey page background, and no card-in-a-card around the sections inside the
+   post (the site-wide `section` rule gives every section its own white box with a shadow) */
+body {
+    background: #ffffff;
+}
+
 .post {
     background: white;
+}
+
+.post-content > section {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.5rem 0 0;
+    margin-bottom: 1.5rem;
 }
 
 .post-header {
@@ -281,8 +295,10 @@
 }
 
 .post-footer {
+    background: none;   /* the site-wide footer rule paints dark blue; this is the post's own footer */
+    color: inherit;
     margin-top: 3rem;
-    padding-top: 2rem;
+    padding: 2rem 0 0;
     border-top: 2px solid #e0e0e0;
     text-align: center;
 }
@@ -306,23 +322,6 @@
 
 .back-link:hover {
     background-color: #1e3c72;
-}
-
-#infinite-forecast-feed {
-    margin-top: 2rem;
-}
-
-.loaded-post {
-    margin-top: 2rem;
-    border-top: 2px solid #e0e0e0;
-    padding-top: 2rem;
-}
-
-#infinite-forecast-sentinel {
-    margin: 1.5rem 0 0.5rem;
-    text-align: center;
-    color: #666;
-    font-size: 0.95rem;
 }
 
 p {
@@ -414,8 +413,8 @@ p {
 
     /* The nested discussion card does not need a second layer of side padding on a phone */
     .post-content > section {
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 0;
+        padding-right: 0;
     }
     
     .forecast-section h2 {
@@ -558,3 +557,33 @@ figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #5
 .pm-title + .pm-h4 { margin-top: 0.25rem; }
 .pm-table-box { margin-top: 0.5rem; }
 .pm-table-box .snow-table { min-width: 0; }
+
+/* "Related tools" row at the end of each collapsible section */
+.section-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+    margin: 1rem 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.section-tools > span {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.section-tools a {
+    padding: 0.2rem 0.7rem;
+    background: #eaf1fb;
+    border: 1px solid #c9d8f0;
+    border-radius: 999px;
+    color: #1e3c72;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.section-tools a:hover {
+    background: #dbe8f8;
+    border-color: #2a5298;
+}
