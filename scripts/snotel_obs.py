@@ -273,10 +273,13 @@ def station_steps(series_by_el, start, end):
     return steps
 
 
-def station_window(series_by_el, start, end):
+def station_window(series_by_el, start, end, fill=None):
     """Observed snowfall at one station over [start, end] from cleaned 3 h steps (see station_steps).
 
     start and end must be on the 3 h UTC grid (the 12Z and 0Z period edges are). Same output keys as v1.
+
+    `fill`, if given, is a function fill(swe_gain_in) -> {low, mid, high, method} used when SWE is usable but the depth sensor is out
+    (scripts/slr_depth_model.py): the snow is then SWE times a station and temperature specific ratio, not the fixed 11% density.
     """
     steps = station_steps(series_by_el, start, end)
     inside = [s for s in steps if s['t0'] >= start and s['t1'] <= end]
@@ -309,6 +312,11 @@ def station_window(series_by_el, start, end):
     else:
         out['gate'], out['snowfall_in'] = None, None
         return out
+    if fill is not None and have_swe and not have_depth and (out['swe_gain_in'] or 0) > 0:
+        try:
+            tot = fill(out['swe_gain_in'])
+        except Exception as exc:  # noqa: BLE001 -- the model must not stop the scoring; keep the fixed-density estimate
+            print(f"  depth model skipped: {str(exc)[:100]}")
     # A gain this small is at the sensors' resolution (0.1 in SWE): keep the middle estimate, but the true
     # amount may be nothing, so the low end is 0 and the window is flagged.
     out['flags']['near_sensor_resolution'] = bool(have_swe and 0 < out['swe_gain_in'] < 0.2)
@@ -348,11 +356,13 @@ def estimate_snowfall(swe_gain, depth_gain):
     return {'low': round(lo, 1), 'mid': round(mid, 1), 'high': round(hi, 1), 'method': 'swe (depth disagreed)'}
 
 
-def combine(triplets, hourly, meta, start, end):
+def combine(triplets, hourly, meta, start, end, fill=None):
     """One forecast area over [start, end]: per-station inputs plus the average estimate."""
     stations = {}
     for trip in triplets:
-        res = station_window(hourly.get(trip, {}), start, end)
+        lon = meta.get(trip, {}).get('longitude')
+        fill_st = (lambda swe, trip=trip, lon=lon: fill(trip, swe, start, end, lon)) if fill else None
+        res = station_window(hourly.get(trip, {}), start, end, fill_st)
         res['name'] = meta.get(trip, {}).get('name')
         res['elev_ft'] = None if meta.get(trip, {}).get('elevation') is None else round(meta[trip]['elevation'])
         stations[trip] = res
@@ -365,19 +375,19 @@ def combine(triplets, hourly, meta, start, end):
     return {'snowfall_in': combined, 'stations': stations}
 
 
-def window_obs(triplets, start, end):
+def window_obs(triplets, start, end, fill=None):
     """Observed snowfall for one forecast area over [start, end] (UTC datetimes).
 
     Several stations are averaged. Returns the combined estimate plus each station's inputs.
     """
     hourly, meta = fetch_hourly(triplets, start, end)
-    return combine(triplets, hourly, meta, start, end)
+    return combine(triplets, hourly, meta, start, end, fill)
 
 
-def windows_obs(triplets, windows):
+def windows_obs(triplets, windows, fill=None):
     """Same for several windows at once: windows is {id: (start, end)}; one fetch covers them all."""
     hourly, meta = fetch_hourly(triplets, min(s for s, _ in windows.values()), max(e for _, e in windows.values()))
-    return {wid: combine(triplets, hourly, meta, s, e) for wid, (s, e) in windows.items()}
+    return {wid: combine(triplets, hourly, meta, s, e, fill) for wid, (s, e) in windows.items()}
 
 
 if __name__ == '__main__':

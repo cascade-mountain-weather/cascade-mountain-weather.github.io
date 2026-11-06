@@ -1,11 +1,48 @@
 <!--
   Template for a new weekly forecast post.
 
-  To use: copy this file into _posts/ as YYYY-MM-DD-weekend-forecast.html
-  (the date in the filename becomes the post's date/URL), fill in the front
-  matter, and replace every [UPDATE ...] marker. This file itself is excluded
-  from the build (see _config.yml) so it's never published. /site-check greps
-  for "[UPDATE", so anything you forget will get flagged.
+  ======================= THE WEEKLY WORKFLOW, IN ORDER =======================
+  Dates below use a Friday-to-Monday weekend with the post written on Thursday.
+  FRIDAY = the weekend's first day (YYYY-MM-DD); THURSDAY = the post date (YYYYMMDD in folder names).
+
+  THURSDAY, before you write
+   1. git pull                    fresh bot data (assets/data/nbm_plumes.json and hires_plumes.json).
+   2. Make the post file          copy this file to _posts/THURSDAY-weekend-forecast.html (the filename date is the
+                                  post date and URL), or run /new-forecast-post.
+   3. Make the figures folder     assets/images/YYYYMMDD_fx/ with the post date, no dashes (written
+                                  THURSDAY_fx below). Figures and the thumbnail go here.
+   4. Freeze the plume data       python scripts/post_plume.py --start FRIDAY --days 3 --out assets/images/THURSDAY_fx
+                                  Writes plume_data.json (the numbers the post shows, frozen), ours.json (your call,
+                                  never overwritten) and optional plume_*.png. Holiday weekend: --start the Wednesday
+                                  and --days 5.
+   5. Save the evaluation snapshot   python scripts/nbm_snapshot.py --first-day FRIDAY     (in the cmw-herbie env)
+                                  Do this at the same time as step 4: it records what the models said when you wrote
+                                  the forecast (NBM, HRRR, RRFS, HRDPS, freezing level) and cannot be rebuilt later.
+                                  Check the output for "skipped" lines. It writes data/forecasts/nbm_snapshot_FRIDAY.json.
+
+  THURSDAY, writing
+   6. Write the post              front matter first, then the sections below. Powder Stash Predictor numbers go in
+                                  Winners and Losers; never invent model numbers.
+   7. Fill in your call           assets/images/THURSDAY_fx/ours.json: per site, "total" (snow, inches, e.g. "2-4"),
+                                  "precip" (liquid inches, optional) and the 12-hour "periods". The map table shows it
+                                  and the Monday evaluation scores it, so leave a site as a dash rather than guess.
+   8. Point the map at the data   set data-src in section 4 to ../assets/images/THURSDAY_fx/plume_data.json and write
+                                  the model cycles note. Add figures and captions to the figure slots.
+
+  THURSDAY, before you push
+   9. Check                       search the file for "[UPDATE" (none may remain), then run /site-check
+                                  (Jekyll build, front matter, missing images). Remove the 3 thumbnail lines if no photo.
+  10. Commit and push             the post, the whole fx folder (plume_data.json and ours.json included) and
+                                  data/forecasts/nbm_snapshot_FRIDAY.json. Without the snapshot there is nothing to score.
+
+  MONDAY, automatic
+  11. 10 am Pacific               the "Weekly forecast evaluation" workflow scores the weekend and updates the
+                                  evaluation page. If the snapshot was not pushed it opens a GitHub issue ("Evaluation
+                                  skipped"); push the snapshot and run the workflow again from the Actions tab. By hand:
+                                  python scripts/weekly_evaluation.py (or /run-evaluation).
+
+  Nothing else needs editing: the homepage card and the archive update by themselves from the post file.
+  This file is excluded from the build (see _config.yml), so it is never published.
 
   FRONT MATTER
     title / tagline / summary / forecast_period / subtitle / forecaster: as before.
@@ -156,6 +193,8 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
   2. Fill in "Our call": edit assets/images/YYYYMMDD_fx/ours.json (written once, never overwritten).
      Per site, "periods" is one entry per 12-hour period (4a-4p, 4p-4a, for each day) and "total" is
      the window total; both are plain text, so ranges like "2-4" work. Leave a site out to show dashes.
+     "precip" (optional) is your liquid precipitation total in inches, e.g. "1.5-2.5"; the evaluation scores it.
+     The evaluation reads this file for your call, so fill in "total" (and "precip") before Monday.
   3. Replace YYYYMMDD_fx in the data-src below and write the how-to-read note.
   Optional: python scripts/post_plume.py also writes plume_snow.png and plume_precip.png (all areas
   stacked) if you want a single image for social media; scripts/post_snow_table.py prints a static

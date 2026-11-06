@@ -262,9 +262,9 @@ def main():
     ours = out / "ours.json"
     if not ours.exists():
         nper = (len(data["ends_utc"]) + 1) // 2
-        skeleton = {n: {"periods": ["—"] * nper, "total": "—"} for n in data["sites"]}
+        skeleton = {n: {"periods": ["—"] * nper, "total": "—", "precip": "—"} for n in data["sites"]}
         ours.write_text(json.dumps(skeleton, indent=1, ensure_ascii=False), encoding="utf-8")
-        print("wrote", ours, "(fill in your forecast: one entry per 12-hour period, plus the total)")
+        print("wrote", ours, "(fill in your forecast: one entry per 12-hour period, the snow total, and optionally the liquid precipitation total)")
 
 
 if __name__ == "__main__":

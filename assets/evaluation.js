@@ -19,9 +19,10 @@
     const $ = id => document.getElementById(id);
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    const SLACK = 0.5;            // a hit allows half an inch either side of the range
+    const SLACK = 0.5;            // a snowfall hit allows half an inch either side of the range
+    const PRECIP_SLACK = 0.1;     // a precipitation hit allows a tenth of an inch (a gauge reads in tenths)
     const DASH = '–';
-    const COLORS = { nbm: '#2a5298', ours: '#d97706', hrrr: '#0d9488', hrdps: '#7c3aed' };
+    const COLORS = { nbm: '#2a5298', ours: '#d97706', hrrr: '#0d9488', rrfs: '#db2777', hrdps: '#7c3aed' };
     const SCALE = ['#b2182b', '#e5694d', '#f2b79a', '#cfd6dd', '#9ec8e2', '#4a90c4', '#2166ac'];   // red .. grey .. blue
     const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
     function diverging(s) {   // s in [-1, 1]; +1 is blue, -1 is red
@@ -41,9 +42,12 @@
 
     let RAW = null;     // everything in the file
     let D = null;       // the selected season's weekends, records and soundings (weekend indexes renumbered)
-    const POINT = ['hrrr', 'hrdps'];   // single-valued model products
-    const S = { season: null, win: 'total', area: 'ALL', metric: 'mae', mapProduct: 'nbm', axis: 'sqrt', view: 'values', show: { nbm: true, ours: true, hrrr: true, hrdps: true },
-        weekend: null, threshold: 6, snowSite: 'ALL' };
+    const POINT = ['hrrr', 'rrfs', 'hrdps'];   // single-valued model products
+    const S = { season: null, win: 'total', area: 'ALL', metric: 'mae', mapProduct: 'nbm', axis: 'sqrt', view: 'values', show: { nbm: true, ours: true, hrrr: true, rrfs: true, hrdps: true }, measure: 'snow',
+        weekend: null, threshold: 6, freezeSite: 'ALL' };
+    const isPrecip = () => S.measure === 'precip';
+    const slack = () => (isPrecip() ? PRECIP_SLACK : SLACK);
+    const measureName = () => (isPrecip() ? 'Precipitation' : 'Snowfall');
 
     // ---- seasons ------------------------------------------------------------------------------
 
@@ -57,11 +61,20 @@
         const winRec = r => {
             const d = S.win === 'day1' ? (r.days && r.days.day1) : (r.periods && r.periods[S.win]);
             if (!d || !d.obs) return null;
-            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, hrdps: d.hrdps, coco: d.coco || null, days: r.days, periods: r.periods };
+            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, rrfs: d.rrfs, hrdps: d.hrdps, coco: d.coco || null, days: r.days, periods: r.periods };
+        };
+        // Liquid precipitation: the same shapes, built from each record's `precip` block (observed is the SNOTEL stations' gain)
+        const precipRec = r => {
+            const p = r.precip;
+            if (!p) return null;
+            const d = S.win === 'total' ? p.total : S.win === 'day1' ? (p.days || {}).day1 : (p.periods || {})[S.win];
+            if (!d || !d.obs) return null;
+            return { w: r.w, a: r.a, obs: d.obs, nbm: d.nbm || null, ours: d.ours || null, hrrr: d.hrrr, rrfs: d.rrfs, hrdps: d.hrdps, coco: null, days: p.days, periods: p.periods };
         };
         let recs = RAW.records.filter(keep).map(renum);
-        if (S.win !== 'total') recs = recs.map(winRec).filter(Boolean);
-        return Object.assign({}, RAW, { weekends: wk, records: recs, snow_level: RAW.snow_level.filter(keep).map(renum) });
+        if (isPrecip()) recs = recs.map(precipRec).filter(Boolean);
+        else if (S.win !== 'total') recs = recs.map(winRec).filter(Boolean);
+        return Object.assign({}, RAW, { weekends: wk, records: recs, freezing_level: (RAW.freezing_level || []).filter(keep).map(renum) });
     }
 
     // ---- statistics ---------------------------------------------------------------------------
@@ -100,7 +113,7 @@
             const v = value(pid, r);
             if (!v) return;
             const err = v.mid - v.obs[1];
-            out.push({ w: r.w, a: r.a, err, abs: Math.abs(err), hit: v.obs[1] >= v.lo - SLACK && v.obs[1] <= v.hi + SLACK, width: v.hi - v.lo });
+            out.push({ w: r.w, a: r.a, err, abs: Math.abs(err), hit: v.obs[1] >= v.lo - slack() && v.obs[1] <= v.hi + slack(), width: v.hi - v.lo });
         });
         return out;
     }
@@ -123,7 +136,7 @@
 
         $('eval-trackers').innerHTML = D.products.map(p => {
             if (!live.some(l => l.id === p.id)) {
-                const why = POINT.includes(p.id) ? (S.win === 'total' ? 'Choose the Friday view to compare' : isPeriod() ? 'Not archived for 12-hour periods yet' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
+                const why = POINT.includes(p.id) ? (S.win === 'total' ? 'Choose the Friday view to compare' : isPeriod() ? 'Not archived for 12-hour periods yet' : p.id === 'hrdps' ? 'Not archived: starts when the 2026&ndash;27 forecasts begin' : p.id === 'rrfs' ? 'Starts when the 2026&ndash;27 forecasts begin' : 'No data for this season yet')
                     : p.id === 'ours' && S.win !== 'total' ? (isPeriod() ? 'Our forecast is the weekend total only' : 'No day-level forecast saved yet') : 'Coming soon';
                 return `<div class="eval-card eval-card--off"><h4>${esc(p.label)}</h4><div class="eval-note">${why}</div></div>`;
             }
@@ -243,12 +256,12 @@
         let top = 1;
         rows.forEach(r => {
             if (r.none) return;
-            [r.obs && r.obs[2], r.nbm && r.nbm[2], r.ours && r.ours[2], r.hrrr && r.hrrr[2], r.hrdps && r.hrdps[2]].forEach(v => { if (v) top = Math.max(top, v); });
+            [r.obs && r.obs[2], r.nbm && r.nbm[2], r.ours && r.ours[2]].concat(POINT.map(pid => r[pid] && r[pid][2])).forEach(v => { if (v) top = Math.max(top, v); });
         });
         let eAbs = 1;
         if (err) rows.forEach(r => {
             if (r.none || !r.obs) return;
-            [['nbm', r.obs], ['ours', r.obsOurs], ['hrrr', r.obs], ['hrdps', r.obs]].forEach(([pid, o]) => {
+            [['nbm', r.obs], ['ours', r.obsOurs]].concat(POINT.map(pid => [pid, r.obs])).forEach(([pid, o]) => {
                 const f = r[pid]; if (!f || !o) return;
                 [f[0] - o[1], f[2] - o[1], o[0] - o[1], o[2] - o[1]].forEach(v => { eAbs = Math.max(eAbs, Math.abs(v)); });
             });
@@ -260,14 +273,14 @@
 
         let g = ticks.map(t => `<line x1="${PL}" x2="${W - PR}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" class="${err && t === 0 ? 'ep-zero' : 'ep-grid'}"/>` +
             `<text x="${PL - 6}" y="${(y(t) + 3.5).toFixed(1)}" text-anchor="end" class="ep-axis">${err && t > 0 ? '+' : ''}${t}</text>`).join('');
-        g += `<text transform="translate(12 ${PT + ph / 2}) rotate(-90)" text-anchor="middle" class="ep-axis">${err ? 'Forecast minus observed (inches)' : 'Snowfall (inches)'}</text>`;
+        g += `<text transform="translate(12 ${PT + ph / 2}) rotate(-90)" text-anchor="middle" class="ep-axis">${err ? 'Forecast minus observed (inches)' : measureName() + ' (inches)'}</text>`;
 
         rows.forEach(r => {
             const cx = PL + (r.i + 0.5) * cw, bw = cw * 0.62;
             const label = r.wk.id.slice(5).replace('-', '/').replace(/^0/, '').replace('/0', '/');
             g += `<text x="${cx.toFixed(1)}" y="${H - PB + 15}" text-anchor="middle" class="ep-axis">${label}</text>`;
             const tip = r.none ? `${r.wk.label}: no data` : `${r.wk.label}\nObserved ${fmt(r.obs && r.obs[1])} in (${fmt(r.obs && r.obs[0])}–${fmt(r.obs && r.obs[2])})` +
-                `${r.nbm ? `\nNBM ${fmt(r.nbm[1])} in (${fmt(r.nbm[0])}–${fmt(r.nbm[2])})` : ''}${r.ours ? `\nOurs ${fmt(r.ours[1])} in (${fmt(r.ours[0])}–${fmt(r.ours[2])})` : ''}${r.hrrr ? `\nHRRR ${fmt(r.hrrr[1])} in` : ''}${r.hrdps ? `\nHRDPS ${fmt(r.hrdps[1])} in` : ''}`;
+                `${r.nbm ? `\nNBM ${fmt(r.nbm[1])} in (${fmt(r.nbm[0])}–${fmt(r.nbm[2])})` : ''}${r.ours ? `\nOurs ${fmt(r.ours[1])} in (${fmt(r.ours[0])}–${fmt(r.ours[2])})` : ''}${POINT.map(pid => (r[pid] ? `\n${pid.toUpperCase()} ${fmt(r[pid][1])} in` : '')).join('')}`;
             g += `<rect class="ep-col${S.weekend === r.i ? ' is-sel' : ''}" data-i="${r.i}" x="${(cx - cw / 2).toFixed(1)}" y="${PT}" width="${cw.toFixed(1)}" height="${ph}"><title>${esc(tip)}</title></rect>`;
             if (r.none || !r.obs) return;
 
@@ -276,7 +289,7 @@
             else g += `<rect class="ep-obs" x="${(cx - bw / 2).toFixed(1)}" y="${y(o[2]).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, y(o[0]) - y(o[2])).toFixed(1)}"/>` +
                 `<line class="ep-obsmid" x1="${(cx - bw / 2).toFixed(1)}" x2="${(cx + bw / 2).toFixed(1)}" y1="${y(o[1]).toFixed(1)}" y2="${y(o[1]).toFixed(1)}"/>`;
 
-            const shown = ['nbm', 'ours', 'hrrr', 'hrdps'].filter(pid => S.show[pid] && r[pid]);   // forecasts, side by side
+            const shown = ['nbm', 'ours'].concat(POINT).filter(pid => S.show[pid] && r[pid]);   // forecasts, side by side
             shown.forEach((pid, k) => {
                 const f = r[pid], ob = pid === 'ours' ? r.obsOurs : r.obs;
                 const x = cx + (k - (shown.length - 1) / 2) * cw * (shown.length > 2 ? 0.2 : 0.26);
@@ -285,7 +298,7 @@
                     `<circle cx="${x.toFixed(1)}" cy="${y(mid).toFixed(1)}" r="3.6" fill="#fff" stroke="${COLORS[pid]}" stroke-width="2"/>`;
             });
         });
-        $('eval-plot').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecasts and observed snowfall for each weekend">${g}</svg>`;
+        $('eval-plot').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecasts and observed ${measureName().toLowerCase()} for each weekend">${g}</svg>`;
 
         $('eval-plotcaption').textContent = `${S.area === 'ALL' ? 'Average of the 9 areas' : S.area}. ${winCaption()} Click a weekend for the day-by-day view.`;
         $('eval-key').innerHTML = `<span><i style="background:#94a3b8;opacity:.6"></i>Observed range</span>` +
@@ -335,7 +348,7 @@
         box.hidden = false;
         box.innerHTML = `<button type="button" class="ed-close" aria-label="Close">&times;</button>
             <h4>${esc(wk.label)} &middot; ${S.area === 'ALL' ? 'average of the 9 areas' : esc(S.area)}</h4>
-            <ul class="eval-lines">${line(`Observed, ${winName()}`, tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${tot.hrrr ? `<li>HRRR: <strong>${fmt(tot.hrrr[1])} in</strong></li>` : ''}${tot.hrdps ? `<li>HRDPS: <strong>${fmt(tot.hrdps[1])} in</strong></li>` : ''}</ul>
+            <ul class="eval-lines">${line(`Observed, ${winName()}`, tot.obs)}${line('NBM', tot.nbm)}${line('Our forecast', tot.ours)}${POINT.map(pid => (tot[pid] ? `<li>${pid.toUpperCase()}: <strong>${fmt(tot[pid][1])} in</strong></li>` : '')).join('')}</ul>
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Day by day, observed and NBM">${g}</svg>
             <p class="eval-note">Grey = observed. Blue = NBM.${dayVals.some(d => d.ours) ? ' Orange = our forecast.' : ' Our forecast was only a weekend total.'}</p>`;
     }
@@ -445,27 +458,36 @@
         if (more) more.addEventListener('click', () => { COCO.all = !COCO.all; renderCoco(); });
     }
 
-    // ---- snow level ---------------------------------------------------------------------------
+    // ---- freezing level ------------------------------------------------------------------------
 
-    function renderSnow() {
-        const rows = D.snow_level.filter(r => r.sat && r.nbm && r.sonde !== null && (S.snowSite === 'ALL' || r.site === S.snowSite));
+    // The sounding's freezing level (the one the sounding pages show) against the freezing level HRRR and RRFS forecast at the
+    // same launch time. The NBM has no freezing level product, and the snow level is no longer scored.
+    function renderFreezing() {
+        const rows = (D.freezing_level || []).filter(r => r.sonde !== null && r.sonde !== undefined && (S.freezeSite === 'ALL' || r.site === S.freezeSite));
         const colors = { Quillayute: '#2a5298', Salem: '#d97706' };
-        const panel = (title, xKey) => {
-            const pts = rows.filter(r => r[xKey] !== null && r[xKey] !== undefined);
-            const errs = pts.map(r => r.nbm[1] - r[xKey]);
+        const labelOf = pid => ((RAW.products || []).find(p => p.id === pid) || { label: pid.toUpperCase() }).label;
+        const panel = pid => {
+            const pts = rows.filter(r => typeof r[pid] === 'number');
+            if (!pts.length) return '';
+            const errs = pts.map(r => r[pid] - r.sonde), name = labelOf(pid);
             const W = 380, H = 330, PL = 46, PR = 10, PT = 10, PB = 38, pw = W - PL - PR, ph = H - PT - PB, max = 12000;
             const x = v => PL + v / max * pw, y = v => PT + (1 - v / max) * ph;
             let g = [0, 3000, 6000, 9000, 12000].map(t => `<line x1="${PL}" x2="${W - PR}" y1="${y(t)}" y2="${y(t)}" class="ep-grid"/><text x="${PL - 5}" y="${y(t) + 3.5}" text-anchor="end" class="ep-axis">${t / 1000}k</text><text x="${x(t)}" y="${H - 22}" text-anchor="middle" class="ep-axis">${t / 1000}k</text>`).join('');
             g += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(max)}" y2="${y(max)}" stroke="#0f172a" stroke-dasharray="4 3" stroke-width="1.2"/>`;
-            g += pts.map(r => `<circle class="sp-pt" cx="${x(Math.min(max, r[xKey])).toFixed(1)}" cy="${y(Math.min(max, r.nbm[1])).toFixed(1)}" r="3.4" fill="${colors[r.site] || '#475569'}"><title>${esc(`${r.site} ${r.valid}: ${r[xKey]} ft, NBM ${Math.round(r.nbm[1])} ft`)}</title></circle>`).join('');
-            g += `<text x="${PL + pw / 2}" y="${H - 6}" text-anchor="middle" class="ep-axis">${esc(title)} (feet)</text><text transform="translate(11 ${PT + ph / 2}) rotate(-90)" text-anchor="middle" class="ep-axis">NBM snow level (feet)</text>`;
-            return `<div class="eval-card"><h4>NBM vs ${esc(title.toLowerCase())}</h4>
-                <div class="eval-big">${errs.length ? signed(Math.round(mean(errs)), 0) : DASH} <small>ft bias</small></div>
-                <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="NBM snow level against ${esc(title.toLowerCase())}">${g}</svg>
-                <ul class="eval-lines"><li>Typical error ${errs.length ? Math.round(mean(errs.map(Math.abs))).toLocaleString() : DASH} ft over ${errs.length} soundings</li></ul></div>`;
+            g += pts.map(r => `<circle class="sp-pt" cx="${x(Math.min(max, r.sonde)).toFixed(1)}" cy="${y(Math.min(max, r[pid])).toFixed(1)}" r="3.4" fill="${colors[r.site] || '#475569'}"><title>${esc(`${r.site} ${r.valid}: sounding ${r.sonde} ft, ${name} ${Math.round(r[pid])} ft`)}</title></circle>`).join('');
+            g += `<text x="${PL + pw / 2}" y="${H - 6}" text-anchor="middle" class="ep-axis">Sounding freezing level (feet)</text><text transform="translate(11 ${PT + ph / 2}) rotate(-90)" text-anchor="middle" class="ep-axis">${esc(name)} freezing level (feet)</text>`;
+            return `<div class="eval-card"><h4><span style="color:${COLORS[pid]}">&#9632;</span>&nbsp;${esc(name)} vs sounding</h4>
+                <div class="eval-big">${signed(Math.round(mean(errs)), 0)} <small>ft bias</small></div>
+                <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} freezing level against the sounding freezing level">${g}</svg>
+                <ul class="eval-lines"><li>Typical error ${Math.round(mean(errs.map(Math.abs))).toLocaleString()} ft over ${errs.length} soundings</li></ul></div>`;
         };
-        $('eval-snow').innerHTML = panel('Sounding snow level', 'sonde') + panel('Sounding freezing level', 'freezing') +
-            `<p class="eval-sub" style="grid-column:1/-1">Radiosonde launches at Quillayute and Salem where the air was near saturation. The snow level is computed from the sounding with a melting-layer model; the freezing level is measured directly. The NBM has no freezing-level product.</p>`;
+        const cards = ['hrrr', 'rrfs'].map(panel).join('');
+        const sonde = rows.map(r => r.sonde);
+        const base = `<div class="eval-card"><h4>Sounding freezing level</h4>
+            <div class="eval-big">${sonde.length ? Math.round(mean(sonde)).toLocaleString() : DASH} <small>ft average</small></div>
+            <ul class="eval-lines"><li>${sonde.length} soundings${sonde.length ? `, from ${Math.round(Math.min(...sonde)).toLocaleString()} to ${Math.round(Math.max(...sonde)).toLocaleString()} ft` : ''}</li>${cards ? '' : '<li>No model freezing levels saved for this season yet. Each new weekend&rsquo;s snapshot saves HRRR&rsquo;s and RRFS&rsquo;s.</li>'}</ul></div>`;
+        $('eval-freezing').innerHTML = base + cards +
+            `<p class="eval-sub" style="grid-column:1/-1">Radiosonde launches at Quillayute and Salem (00Z and 12Z), the same freezing level the sounding pages show. The model value is the height of the 0&deg;C isotherm at the nearest grid point at the launch time, for the hours HRRR (48) and RRFS (84) reach. The NBM has no freezing level product.</p>`;
     }
 
     function renderMethod() {
@@ -473,7 +495,9 @@
             <li><strong>Forecasts.</strong> The NBM (National Blend of Models) median and 25&ndash;75% range for the weekend total, and our range from each post. For 2025&ndash;26 the NBM was rebuilt from the model archive using the Thursday 19Z run, not the exact numbers seen at the time.</li>
             <li><strong>Observed snowfall</strong> is an estimate from nearby SNOTEL stations (snow water equivalent and depth). Trace precipitation counts as none, and gains while the station was above 35&deg;F are treated as rain. The estimate is a range because new-snow density is unknown; only its midpoint is used for errors.</li>
             <li><strong>Stations</strong> sit at their own elevation, not the 5,000 ft the forecasts target.</li>
-            <li><strong>HRRR and HRDPS</strong> are single-value models that run 48 hours, so they are compared on Friday only (the first day the Thursday forecast covers). HRRR snowfall is the model&rsquo;s own; HRDPS snowfall is its water equivalent of snow times 10, an assumed ratio. HRDPS is not archived, so it appears only for weekends scored from the 2026&ndash;27 season on; HRRR was rebuilt from the archive for 2025&ndash;26.</li>
+            <li><strong>HRRR, RRFS and HRDPS</strong> are single-value models. HRRR and HRDPS run 48 hours, so they are compared on Friday only (the first day the Thursday forecast covers); RRFS runs 84 hours, so it also reaches part of Saturday. HRRR and RRFS snowfall is the model&rsquo;s own; HRDPS snowfall is its water equivalent of snow times 10, an assumed ratio. HRDPS and RRFS are not archived, so they appear only for weekends scored from the 2026&ndash;27 season on; HRRR was rebuilt from the archive for 2025&ndash;26.</li>
+            <li><strong>Precipitation</strong> is liquid water: the SNOTEL stations&rsquo; precipitation gain (rain plus melted snow; lowest, mean and highest station) against each forecast&rsquo;s liquid total. The NBM publishes only a single precipitation value, so it has no range. A hit allows a tenth of an inch. Stations sit at their own elevation and the models read the nearest grid point, so expect a spread.</li>
+            <li><strong>Freezing level</strong> is compared at the Quillayute and Salem soundings: the sounding&rsquo;s freezing level against the 0&deg;C isotherm HRRR and RRFS forecast at that time. The snow level is no longer scored.</li>
             <li><strong>CoCoRaHS</strong> volunteer reports within 25 km are shown as a cross-check and are not scored.</li>
             <li><strong>Inside range</strong> means the observed midpoint fell in the forecast range (half an inch of slack). <strong>Typical error</strong> is the average distance from the forecast middle; <strong>bias</strong> is forecast minus observed.</li>
             <li>The <a href="/evaluation-2025-26-original.html">original 2025&ndash;26 evaluation</a> used a different method, so its numbers are not comparable.</li></ul>`;
@@ -484,7 +508,7 @@
     function setArea(a) { S.area = a; $('eval-area').value = a; renderAll(); }
 
     function renderAll() {
-        renderTrackers(); renderHeat(); renderPlot(); renderDetail(); renderStats(); renderEvents(); renderCoco(); renderSnow();
+        renderTrackers(); renderHeat(); renderPlot(); renderDetail(); renderStats(); renderEvents(); renderCoco(); renderFreezing();
     }
 
     function refreshProducts() {
@@ -501,7 +525,9 @@
         $('eval-season').value = id;
         $('eval-seasonnote').textContent = season.note || '';
         $('eval-seasonnote').hidden = !season.note;
-        const empty = D.weekends.length === 0;
+        const noPrecip = isPrecip() && D.records.length === 0;
+        const empty = D.weekends.length === 0 || noPrecip;
+        $('eval-empty').textContent = noPrecip && D.weekends.length ? 'No precipitation has been scored for this season yet. Precipitation is saved and scored starting with the first 2026\u201327 forecast.' : 'No weekends have been scored this season yet. Each weekend appears here after its forecast is scored the following Monday.';
         $('eval-empty').hidden = !empty;
         $('eval-main').hidden = empty;
         if (empty) return;
@@ -517,7 +543,7 @@
         const first = (withData[0] || RAW.seasons[0]).id;
         $('eval-season').innerHTML = RAW.seasons.map(s => `<option value="${esc(s.id)}">${esc(s.label)}${RAW.weekends.some(w => w.season === s.id) ? '' : ' (not started)'}</option>`).join('');
         $('eval-area').innerHTML = '<option value="ALL">All areas</option>' + areasNS().map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
-        $('eval-snowsite').innerHTML = '<option value="ALL">Both</option>' + [...new Set(RAW.snow_level.map(r => r.site))].map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+        $('eval-freezesite').innerHTML = '<option value="ALL">Both</option>' + [...new Set((RAW.freezing_level || []).map(r => r.site))].map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
         D = buildView(first);
         refreshProducts(); renderMethod();
         try { initMap(); } catch (e) { console.error('Evaluation map failed:', e); map = null; $('eval-map').parentNode.hidden = true; }
@@ -530,7 +556,8 @@
         $('eval-axis').addEventListener('change', e => { S.axis = e.target.value; renderPlot(); renderDetail(); });
         $('eval-view').addEventListener('change', e => { S.view = e.target.value; renderPlot(); });
         $('eval-threshold').addEventListener('change', e => { S.threshold = Number(e.target.value); renderEvents(); });
-        $('eval-snowsite').addEventListener('change', e => { S.snowSite = e.target.value; renderSnow(); });
+        $('eval-freezesite').addEventListener('change', e => { S.freezeSite = e.target.value; renderFreezing(); });
+        $('eval-measure').addEventListener('change', e => { S.measure = e.target.value; setSeason(S.season); });
         $('eval-toggles').addEventListener('change', e => { const p = e.target.dataset.prod; if (p) { S.show[p] = e.target.checked; renderPlot(); } });
         $('eval-heat').addEventListener('click', e => { const tr = e.target.closest('tr[data-area]'); if (tr) setArea(tr.dataset.area); });
         $('eval-plot').addEventListener('click', e => { const c = e.target.closest('.ep-col'); if (c) { S.weekend = Number(c.dataset.i); renderPlot(); renderDetail(); const d = $('eval-detail'); if (!d.hidden) d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } });

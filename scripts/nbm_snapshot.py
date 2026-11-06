@@ -58,6 +58,7 @@ LONG_CYCLES = (1, 7, 13, 19)   # the only cycles that reach F263 (docs/nbm_field
 STEP_H = 3                     # series spacing; every hour <=F48 and every 3rd hour after exist
 M_TO_FT = 3.28084
 M_TO_IN = 1 / 0.0254
+MM_TO_IN = 1 / 25.4
 PCTS = (25, 50, 75)
 
 
@@ -177,6 +178,42 @@ def snowfall_window(cycle, start, end, grid, n):
     return out
 
 
+def precip_6h(cycle, end, grid, n):
+    """Liquid precipitation (in) over the 6 hours ending at `end`, per site: the NBM's deterministic APCP.
+    The NBM carries no APCP percentiles, only the deterministic value and exceedance probabilities, so precipitation is a
+    single value, not a range. NaN where the message is missing (a short or placeholder file)."""
+    fe = int((end - cycle).total_seconds() // 3600)
+    fs = fe - 6
+    det = f":APCP:surface:{fs}-{fe} hour acc fcst:"
+    try:
+        H = herbie_for(cycle, fe)
+        if det not in set(H.inventory().search_this):
+            return np.full(n, np.nan)
+        return fetch(H, grid, re.escape(det) + "$") * MM_TO_IN
+    except Exception as exc:   # noqa: BLE001 -- precipitation is extra; do not lose the snowfall over it
+        print(f"    precipitation F{fe:03d}: skipped ({str(exc)[:80]})", file=sys.stderr)
+        return np.full(n, np.nan)
+
+
+def precip_windows(cycle, spans, grid, n, verbose=True):
+    """{window id: liquid precipitation (in) per site}: each window is the sum of its 6 h APCP windows (spans are
+    {id: (start, end)}, every start and end on a 6 h boundary). One missing 6 h part makes the window NaN."""
+    parts = {}
+    out = {}
+    for wid, (s, e) in spans.items():
+        total = np.zeros(n)
+        t = s
+        while t < e:
+            t += pd.Timedelta(hours=6)
+            if t not in parts:
+                parts[t] = precip_6h(cycle, t, grid, n)
+            total = total + parts[t]
+        out[wid] = total
+    if verbose:
+        print(f"precipitation: {len(parts)} six-hour windows read")
+    return out
+
+
 # Six 12 h periods per weekend, in UTC from the first Friday 12Z: day = 12Z-0Z, night = 0Z-12Z
 # (docs/forecast-cycles-design.md). The NBM has no 12 h snowfall window, so each period is two 6 h windows added up.
 PERIODS = [("fri_day", 0), ("fri_night", 12), ("sat_day", 24), ("sat_night", 36), ("sun_day", 48), ("sun_night", 60)]
@@ -277,6 +314,10 @@ def main():
                             "fxx": [int((ps - cycle).total_seconds() // 3600), int((pe - cycle).total_seconds() // 3600)]}
             snow[pid] = d
 
+    # liquid precipitation for the same windows (deterministic only; see precip_6h)
+    precip = precip_windows(cycle, {wid: (pd.Timestamp(w["start_utc"].rstrip("Z")), pd.Timestamp(w["end_utc"].rstrip("Z")))
+                                    for wid, w in windows.items()}, grid, n)
+
     # 3-hourly series
     fxx0 = int((p_start - cycle).total_seconds() // 3600)
     fxx1 = int((p_end - cycle).total_seconds() // 3600)
@@ -312,6 +353,7 @@ def main():
             "Snowfall windows run 12Z to 12Z (4 am PST / 5 am PDT). The six 12 h periods (fri_day ... sun_night; day 12Z-0Z, night 0Z-12Z) are "
             "scaled sums of two 6 h windows, because the NBM has no 12 h window (see scaled_sum in scripts/nbm_snapshot.py).",
             "p25/p50/p75 are the 25th, 50th (median) and 75th percentiles of the NBM ensemble blend.",
+            "precip_in is liquid precipitation, the sum of the NBM's deterministic 6 h APCP windows. The NBM has no APCP percentiles, so it is a single value.",
             "snowfall method 'exceedance-interp' means the percentiles were interpolated from "
             "exceedance probabilities (more than 0.1, 1, 2, 4, 6, 8, 10, 12, 18, 24 in); treat as approximate.",
         ],
@@ -333,6 +375,7 @@ def main():
                 "method": d["method"],
                 **{key: r(d[key][k]) for key in ("p25", "p50", "p75", "deterministic") if key in d},
             }
+        entry["precip_in"] = {wid: r(arr[k], 2) for wid, arr in precip.items()}
         entry["snow_level_ft"] = {
             "p25": [r(v[k], 0) for v in series["p25"]], "p50": [r(v[k], 0) for v in series["p50"]],
             "p75": [r(v[k], 0) for v in series["p75"]], "deterministic": [r(v[k], 0) for v in series["det"]],
@@ -353,13 +396,15 @@ def main():
         entry["gust_mph"] = [r(v[k], 0) for v in series["gust"]]
         out["sites"][s["name"]] = entry
 
-    # HRRR and HRDPS for the windows they reach (their 48 hours), saved with the snapshot for scoring
+    # HRRR, RRFS and HRDPS for the windows they reach, saved with the snapshot for scoring
     try:
         import hires_models
         spans = {wid: (pd.Timestamp(w["start_utc"].rstrip("Z")), pd.Timestamp(w["end_utc"].rstrip("Z"))) for wid, w in windows.items()}
-        out["hires"] = hires_models.for_snapshot(cycle, spans, cfg["sites"])
+        # sounding points and their 00Z/12Z launches: HRRR and RRFS also save their freezing level there
+        launches = [p_start + pd.Timedelta(hours=12 * i) for i in range(2 * args.days + 1)]
+        out["hires"] = hires_models.for_snapshot(cycle, spans, cfg["sites"], points=cfg.get("verification_points", []), launches=launches)
     except Exception as exc:   # the NBM snapshot is the main product; do not lose it over a high-resolution model
-        print(f"warning: HRRR/HRDPS skipped: {str(exc)[:120]}", file=sys.stderr)
+        print(f"warning: HRRR/RRFS/HRDPS skipped: {str(exc)[:120]}", file=sys.stderr)
         out["hires"] = {}
 
     out_dir = Path(args.out_dir) if args.out_dir else OUT_DIR

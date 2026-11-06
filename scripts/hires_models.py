@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import nbm_snapshot as nbm  # noqa: E402  (Grid, fetch)
 
 M_TO_IN = 1 / 0.0254
+M_TO_FT = 3.28084
 MM_TO_IN = 1 / 25.4
 HRDPS_RATIO = 10.0          # assumed snow-to-liquid ratio for HRDPS (see the module docstring)
 CYCLES = (0, 6, 12, 18)     # the cycles that run 48 hours
@@ -102,6 +103,37 @@ def cumulative(model, cycle, fxx, grid):
     return snow_swe * HRDPS_RATIO, liq
 
 
+def _open(model, cycle, fxx):
+    """The Herbie handle for one HRRR or RRFS forecast hour."""
+    if model == "rrfs":
+        import rrfs_ops  # noqa: F401  (registers the template)
+        return Herbie(cycle, model="rrfs_ops", product="2dfld", fxx=fxx, verbose=False)
+    return Herbie(cycle, model="hrrr", product="sfc", fxx=fxx, verbose=False)
+
+
+def freezing_levels(model, cycle, launches, points, verbose=True):
+    """Height of the 0 C isotherm (feet above sea level) at `points` for each time in `launches`, for the evaluation.
+
+    HRRR and RRFS carry it as HGT:0C isotherm (the NBM and HRDPS do not). It is the same quantity the radiosonde
+    pages report as the freezing level, so it is compared with the sounding at the launch time. Only times the model
+    reaches are filled.   Returns {point name: {"YYYY-MM-DDTHH:MMZ": feet or None}}.
+    """
+    out = {p["name"]: {} for p in points}
+    if model not in ("hrrr", "rrfs") or not points:
+        return out
+    grid = nbm.Grid(points)
+    for t in launches:
+        fxx = int((t - cycle).total_seconds() // 3600)
+        if fxx < 1 or fxx > max_hours(model):
+            continue
+        vals = nbm.fetch(_open(model, cycle, fxx), grid, rf":HGT:0C isotherm:{fxx} hour fcst:") * M_TO_FT
+        for k, p in enumerate(points):
+            out[p["name"]][f"{t:%Y-%m-%dT%H:%MZ}"] = nbm.r(vals[k], 0)
+        if verbose:
+            print(f"  {model} freezing level {t:%a %d %H}Z (F{fxx:03d}) done")
+    return out
+
+
 def windows(model, cycle, ends, grid, verbose=True):
     """6-hour snowfall and liquid precipitation (in) per site for each window end in `ends`.
     Returns {end_timestamp: (snow[n], liquid[n])}; a window outside the model's 48 hours is NaN."""
@@ -128,13 +160,15 @@ def windows(model, cycle, ends, grid, verbose=True):
     return out
 
 
-def for_snapshot(nbm_cycle, spans, sites, models=("hrrr", "hrdps"), verbose=True):
-    """HRRR and HRDPS snowfall and liquid precipitation for the snapshot's windows, for scoring.
+def for_snapshot(nbm_cycle, spans, sites, models=("hrrr", "rrfs", "hrdps"), verbose=True, points=None, launches=None):
+    """HRRR, RRFS and HRDPS snowfall and liquid precipitation for the snapshot's windows, for scoring.
 
     nbm_cycle  the NBM cycle the snapshot used; each model's newest 48-hour cycle at or before it is used
                (the forecast was made with what existed then)
-    spans      {window id: (start, end)} as naive UTC Timestamps; only windows that end within 48 hours of the
-               model's cycle can be filled (normally Friday only), and the weekend "total" is skipped
+    spans      {window id: (start, end)} as naive UTC Timestamps; only windows that end within the model's reach
+               (48 hours for HRRR and HRDPS, 84 for RRFS) can be filled, and the weekend "total" is skipped
+    points     optional sounding points (dicts with name, lat, lon); with `launches` (UTC Timestamps of the 00Z and 12Z
+               launches) HRRR and RRFS also record their freezing level there, under "freezing_level_ft"
     sites      forecast sites (dicts with name, lat, lon)
     Returns {model: {"cycle_utc", "windows": {wid: {"fxx": [a, b]}}, "sites": {name: {"snowfall_in": {wid: x}, "liquid_in": {wid: x}}}}}
     A model with no cycle available (HRDPS for an old weekend, which is not archived) is left out.
@@ -153,7 +187,7 @@ def for_snapshot(nbm_cycle, spans, sites, models=("hrrr", "hrdps"), verbose=True
             if wid == "total":
                 continue
             fs, fe = int((s - cycle).total_seconds() // 3600), int((e - cycle).total_seconds() // 3600)
-            if fs < 0 or fe > MAX_HOURS:
+            if fs < 0 or fe > max_hours(model):
                 continue
             s1, l1 = cumulative(model, cycle, fe, grid)
             s0, l0 = cumulative(model, cycle, fs, grid)
@@ -165,4 +199,9 @@ def for_snapshot(nbm_cycle, spans, sites, models=("hrrr", "hrdps"), verbose=True
         out[model] = {"cycle_utc": f"{cycle:%Y-%m-%dT%H:%MZ}", "windows": {w: {"fxx": f} for w, f in fxx.items()},
                       "sites": {s["name"]: {"snowfall_in": {w: nbm.r(res[w][0][k]) for w in res},
                                             "liquid_in": {w: nbm.r(res[w][1][k], 2) for w in res}} for k, s in enumerate(sites)}}
+        if points and launches and model in ("hrrr", "rrfs"):
+            try:   # the freezing level is extra; never lose the snow and precipitation over it
+                out[model]["freezing_level_ft"] = freezing_levels(model, cycle, launches, points, verbose)
+            except Exception as exc:   # noqa: BLE001
+                print(f"    {model} freezing level skipped: {str(exc)[:100]}", file=sys.stderr)
     return out
