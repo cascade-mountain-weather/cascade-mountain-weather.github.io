@@ -1663,3 +1663,13 @@ nav a,
 
 /* small second line under a menu item, e.g. the terms a page covers */
 .dropdown-menu .nav-sub { display: block; margin-top: 0.1rem; font-size: 0.72rem; font-weight: 400; line-height: 1.2; color: #64748b; }
+
+/* Top menu spacing. The side padding of each top-level item shrinks with the window so all the items stay on one row on
+   a laptop, down to a minimum (0.55rem, so about 18px between items). Below that width the items wrap onto a second row,
+   and at 800px and under the menu becomes the hamburger list. The slope is (window width - 960px) / 14 padded sides: 960px
+   is the items' text width plus room for the scrollbar and a little font variation. Add an item and the text width grows,
+   so raise 960 by about its width. */
+@media (min-width: 801px) {
+    :root { --nav-pad: clamp(0.55rem, calc(7.14vw - 68px), 1.5rem); }
+    #primary-nav > li > a { padding-left: var(--nav-pad); padding-right: var(--nav-pad); }
+}

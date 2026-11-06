@@ -302,3 +302,6 @@ h3.cmap-title { font-size: 1.15rem; margin-bottom: 0.5rem; }
 
 /* seven tiles in three columns: let the last one span the row */
 .cmap-tiles .cmap-tile:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+.cmap-hourly { margin: 0.45rem 0 0; }
+.cmap-hourly svg { display: block; width: 100%; height: auto; }
+.cmap-hourly .cmap-from { margin-top: 0.2rem; }

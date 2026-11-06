@@ -9,6 +9,7 @@ Run from the repo root:  python scripts/collect_live_conditions.py
 import json
 import math
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -28,6 +29,7 @@ SYNOPTIC_URL = 'https://api.synopticdata.com/v2/stations/timeseries'
 AWDB_URL = 'https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1'
 
 LOOKBACK_HOURS = 72
+HOURLY_STEPS = 48            # hourly history kept per station for the popup chart (SWE and precipitation)
 FETCH_HOURS = 24 * 30        # Synoptic's max; keeps long-dead stations visible, flagged
 STALE_HOURS = 6              # last report older than this -> flagged stale
 
@@ -83,6 +85,36 @@ def net_change(series, hours, tolerance_h=6):
         return None
     past = value_at(series, cur_t - timedelta(hours=hours), tolerance_h)
     return None if past is None else round(cur - past, 2)
+
+
+def hourly_grid():
+    """The hour ends covered by the hourly history: HOURLY_STEPS hours ending at the current hour (UTC)."""
+    end = now.replace(minute=0, second=0, microsecond=0)
+    return [end - timedelta(hours=HOURLY_STEPS - 1 - i) for i in range(HOURLY_STEPS)]
+
+
+def hourly_series(series, grid, digits=1):
+    """One value per grid hour: the newest reading in the hour ending then (None if there was none).
+    SNOTEL reports on the hour; NWAC stations report every 10 to 15 minutes, so the last reading of each hour is used."""
+    pts = [(t, v) for t, v in series if v is not None]
+    out = []
+    for h_end in grid:
+        in_hour = [v for t, v in pts if h_end - timedelta(hours=1) < t <= h_end]
+        out.append(round(in_hour[-1], digits) if in_hour else None)
+    return out if sum(v is not None for v in out) >= 2 else None
+
+
+def precip_hourly(raw, grid=None):
+    """Precipitation in each grid hour (inches). SNOTEL reports a running total, so each hour is the step in that total
+    (a drop, such as a reset, counts as 0; a missing reading leaves the hour unknown). NWAC stations report an hourly amount."""
+    grid = grid or hourly_grid()
+    if raw['precip_accum']:
+        ext = [grid[0] - timedelta(hours=1)] + grid
+        acc = hourly_series(raw['precip_accum'], ext, 2) or [None] * len(ext)
+        out = [None if acc[i] is None or acc[i + 1] is None else round(max(acc[i + 1] - acc[i], 0.0), 2) for i in range(len(grid))]
+    else:
+        out = hourly_series(raw['precip_hourly'], grid, 2) or [None] * len(grid)
+    return out if sum(v is not None for v in out) >= 2 else None
 
 
 def accum_change(series, hours):
@@ -219,9 +251,11 @@ def summarize(cfg, raw):
     newest = max([t for t in (obs_t, d_t, s_t) if t], default=None)
 
     if raw['precip_accum']:
+        p6 = accum_change(raw['precip_accum'], 6)
         p24 = accum_change(raw['precip_accum'], 24)
         p72 = accum_change(raw['precip_accum'], 72)
     else:
+        p6 = summed(raw['precip_hourly'], 6)
         p24 = summed(raw['precip_hourly'], 24)
         p72 = summed(raw['precip_hourly'], 72)
 
@@ -245,13 +279,19 @@ def summarize(cfg, raw):
         'gust_mph': r(gust),
         'snow_depth_in': r(depth),
         'swe_in': r(swe, 1) if swe is not None else None,
+        'precip_6h_in': r(p6, 2),
         'precip_24h_in': r(p24, 2),
         'precip_72h_in': r(p72, 2),
+        'swe_change_1h_in': net_change(raw['swe'], 1, tolerance_h=3),
+        'swe_change_6h_in': net_change(raw['swe'], 6, tolerance_h=6),
+        'swe_change_24h_in': net_change(raw['swe'], 24),
         'depth_change_24h_in': net_change(raw['depth'], 24),
         'depth_change_72h_in': net_change(raw['depth'], 72),
         'swe_change_72h_in': net_change(raw['swe'], 72),
         '_depth_range_24h': (max(depth_window) - min(depth_window)) if depth_window else None,
         'has_swe': bool(raw['swe']),
+        'swe_hourly_in': hourly_series(raw['swe'], hourly_grid(), 2),
+        'precip_hourly_in': precip_hourly(raw),
         'trust': {'ok': True, 'reasons': []},
     }
 
@@ -446,12 +486,19 @@ def main():
 
     payload = {
         'generated_utc': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        # swe_hourly_in / precip_hourly_in on each station: one value per hour, oldest first, the last one ending at hourly_end_utc
+        'hourly_end_utc': hourly_grid()[-1].strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'hourly_step_h': 1,
         'sources': {'NWAC': 'Synoptic Data API', 'RAWS': 'Synoptic Data API', 'SNOTEL': 'NRCS AWDB'},
         'errors': errors,
         'areas': out_areas,
     }
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUT_FILE.write_text(json.dumps(payload, indent=1), encoding='utf-8')
+    text = json.dumps(payload, indent=1)
+    # json.dumps(indent=1) puts every array element on its own line; keep the numeric hourly series on one line each
+    text = re.sub(r'\[\s*((?:-?\d+(?:\.\d+)?|null)(?:,\s*(?:-?\d+(?:\.\d+)?|null))+)\s*\]',
+                  lambda m: '[' + re.sub(r'\s+', '', m.group(1)) + ']', text)
+    OUT_FILE.write_text(text, encoding='utf-8')
     n_st = sum(len(a['stations']) for a in out_areas)
     print(f'Wrote {OUT_FILE.relative_to(REPO)}: {len(out_areas)} areas, {n_st} stations.')
 

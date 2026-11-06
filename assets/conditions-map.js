@@ -1,7 +1,7 @@
 // Live conditions map: one box per forecast area, small dots for its stations.
 // Hover shows the area name; click opens a popup with a mini table of every
 // station (high to low), a 72-hour checklist, and any data-quality cautions.
-// Data: assets/data/live_conditions.json, written every 2 hours by
+// Data: assets/data/live_conditions.json, written hourly (observations.yml) by
 // scripts/collect_live_conditions.py. Missing values render as an en dash.
 
 (function () {
@@ -86,6 +86,60 @@
         return `<div class="cmap-tile${o.cls ? ' ' + o.cls : ''}"${o.title ? ` title="${esc(o.title)}"` : ''}><span>${label}</span><strong>${value}</strong></div>`;
     }
 
+    // ---- hourly chart (last 48 h): SWE change and precipitation accumulation on one axis ----
+    // Both lines start at 0 at the left edge, so the eye can compare them: SWE rising with the precipitation is snow
+    // building the pack, precipitation with no SWE rise is usually rain, and a SWE drop is melt or settling.
+    let hourlyEndMs = null;   // end of the last hourly step, from data.hourly_end_utc
+    const signed = (v, unit) => (v === null || v === undefined) ? DASH : `${v > 0 ? '+' : v < 0 ? '\u2212' : ''}${Math.abs(v).toFixed(1)}${unit || ''}`;
+
+    function hourlyChart(h) {
+        const swe = h.swe_hourly_in, pr = h.precip_hourly_in;
+        if (hourlyEndMs === null) return '';
+        const n = (swe || pr || []).length;
+        // SWE relative to its first reading in the window (can go down); precipitation as a running total of the hourly amounts
+        const sweFirst = (swe || []).find(v => v !== null && v !== undefined);
+        const sweS = [], prS = [];
+        (swe || []).forEach((v, i) => { if (v !== null && v !== undefined) sweS.push({ i, v: v - sweFirst }); });
+        let run = 0, prSeen = 0;
+        (pr || []).forEach((v, i) => { if (v !== null && v !== undefined) { run += v; prSeen++; } if (prSeen) prS.push({ i, v: run }); });
+        const hasSwe = sweS.length >= 2, hasPr = prSeen >= 2;
+        if (!n || (!hasSwe && !hasPr)) return '';
+
+        const W = 360, H = 150, padL = 32, padR = 34, top = 18, bot = H - 16;
+        const x = i => padL + (W - padL - padR) * i / (n - 1);
+        const all = (hasSwe ? sweS : []).concat(hasPr ? prS : []).map(p => p.v);
+        const lo = Math.min(0, ...all), hi = Math.max(0, ...all), span = Math.max(hi - lo, 0.5), pad = span * 0.08;
+        const y0 = lo - pad, y1 = Math.max(hi, lo + 0.5) + pad;
+        const y = v => bot - (bot - top) * (v - y0) / (y1 - y0);
+        const when = i => pacific.format(new Date(hourlyEndMs - (n - 1 - i) * 3.6e6));
+        const line = (pts, color, dash, title, dot) => pts.length < 2 ? '' :
+            `<polyline points="${pts.map(p => `${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="1.8"${dash ? ' stroke-dasharray="4 2"' : ''}/>`
+            + (dot ? pts.map(p => `<circle cx="${x(p.i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="1.7" fill="${color}"><title>${when(p.i)}: ${title(p.v)}</title></circle>`).join('') : '');
+        const SWE_C = '#1e3c72', PR_C = '#0ea5e9';
+        const closeEnds = hasSwe && hasPr && Math.abs(y(sweS[sweS.length - 1].v) - y(prS[prS.length - 1].v)) < 9;   // keep the two end labels from overlapping
+        const endLbl = (pts, color, dy) => pts.length ? `<text x="${W - padR + 3}" y="${(y(pts[pts.length - 1].v) + dy).toFixed(1)}" font-size="8.5" font-weight="700" fill="${color}">${signed(pts[pts.length - 1].v)}</text>` : '';
+        const tick = v => `<text x="${padL - 3}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="#64748b">${v.toFixed(1)}</text>`;
+        const legend = (hasSwe ? `<line x1="${padL}" x2="${padL + 16}" y1="9" y2="9" stroke="${SWE_C}" stroke-width="1.8"/><text x="${padL + 20}" y="12" font-size="8.5" fill="#334155">SWE change</text>` : '')
+            + (hasPr ? `<line x1="${padL + (hasSwe ? 86 : 0)}" x2="${padL + (hasSwe ? 102 : 16)}" y1="9" y2="9" stroke="${PR_C}" stroke-width="1.8" stroke-dasharray="4 2"/><text x="${padL + (hasSwe ? 106 : 20)}" y="12" font-size="8.5" fill="#334155">Precipitation accumulation</text>` : '');
+        const label = `Last ${n} hours: ${hasSwe ? 'SWE change ' + signed(sweS[sweS.length - 1].v, ' in') : ''}${hasSwe && hasPr ? ', ' : ''}${hasPr ? 'precipitation ' + prS[prS.length - 1].v.toFixed(2) + ' in' : ''}`;
+        const sweLine = hasSwe ? `SWE change: ${signed(h.swe_change_1h_in, ' in')} over 1 h, ${signed(h.swe_change_6h_in, ' in')} over 6 h, ${signed(h.swe_change_24h_in, ' in')} over 24 h. ` : '';
+        const prLine = (h.precip_6h_in !== null && h.precip_6h_in !== undefined) || (h.precip_24h_in !== null && h.precip_24h_in !== undefined)
+            ? `Precipitation: ${num(h.precip_6h_in, 2, ' in')} in 6 h, ${num(h.precip_24h_in, 2, ' in')} in 24 h. ` : '';
+        return `<div class="cmap-hourly">
+            <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
+                ${legend}
+                <line x1="${padL}" x2="${W - padR}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#94a3b8" stroke-width="0.7" stroke-dasharray="2 2"/>
+                ${tick(0)}${hi > 0.05 ? tick(hi) : ''}${lo < -0.15 ? tick(lo) : ''}
+                ${hasPr ? line(prS, PR_C, true, v => v.toFixed(2) + ' in precipitation so far', false) : ''}
+                ${hasSwe ? line(sweS, SWE_C, false, v => signed(v, ' in') + ' SWE since the start', true) : ''}
+                ${endLbl(hasSwe ? sweS : [], SWE_C, closeEnds ? 9 : 3)}${endLbl(hasPr ? prS : [], PR_C, closeEnds ? -3 : 3)}
+                <text x="${padL}" y="${H - 3}" font-size="8.5" fill="#64748b">${n} h ago</text>
+                <text x="${W - padR}" y="${H - 3}" text-anchor="end" font-size="8.5" fill="#64748b">now</text>
+            </svg>
+            <p class="cmap-from">Inches since the left edge, hourly. ${hasSwe && hasPr ? 'SWE rising with the precipitation is snow building the pack; precipitation with no SWE rise is usually rain; a SWE drop is melt or settling. ' : ''}${sweLine}${prLine}Readings are to 0.1 in, so single-hour steps of 0.1 in are within the rounding.</p>
+        </div>`;
+    }
+
     function headlineHtml(area, h) {
         const pills = area.stations.length > 1
             ? `<div class="cmap-picks" role="group" aria-label="Choose a station">${area.stations.map((s, i) =>
@@ -102,6 +156,7 @@
             <div class="cmap-tiles${h.trust.ok ? '' : ' cmap-tiles--flag'}">${tile('Temp', num(h.temp_f, 0, '°F'))}${tile('24h hi / lo', hiLo(h), { title: 'Highest and lowest temperature in the last 24 hours (rolling, not the calendar day)' })}${tile('Dew pt (RH)', dewText, humid ? { cls: 'cmap-tile--humid', title: 'Near saturation: the temperature is within 3°F of the dew point, or RH is 95% or more. Fog or low cloud is possible.' } : {})}${tile('Wind', wind)}
                 ${tile('Snow depth', num(h.snow_depth_in, 0, ' in'))}${tile('SWE', num(h.swe_in, 1, ' in'))}
                 ${tile('Precip 24h', num(h.precip_24h_in, 2, ' in'))}</div>
+            ${hourlyChart(h)}
             <p class="cmap-from">${esc(h.label)}${h.elev_ft ? ` &middot; ${h.elev_ft.toLocaleString()}'` : ''} &middot; ${esc(h.network)} &middot; ${esc(obs)}</p>
             ${h.trust.ok ? '' : `<p class="cmap-from cmap-warn">&#9888; ${h.trust.reasons.map(esc).join('; ')}</p>`}`;
     }
@@ -338,9 +393,10 @@
     Promise.all([getJson(dataUrl), getJson(basinsUrl), zonesUrl ? getJson(zonesUrl).catch(() => null) : null])
         .then(([data, basins, zones]) => {
             const generated = new Date(data.generated_utc);
+            hourlyEndMs = data.hourly_end_utc ? Date.parse(data.hourly_end_utc) : null;
             const ageH = (Date.now() - generated.getTime()) / 3.6e6;
             setStatus(
-                `Conditions as of ${pacific.format(generated)}. Updates about every 2 hours. ` +
+                `Conditions as of ${pacific.format(generated)}. Updates about every hour. ` +
                 'NWAC stations via Synoptic, SNOTEL via NRCS. An en dash means that station does not report the value.' +
                 (ageH > STALE_DATA_HOURS ? ' This data is more than 6 hours old, so it may be out of date.' : ''),
                 ageH > STALE_DATA_HOURS);
