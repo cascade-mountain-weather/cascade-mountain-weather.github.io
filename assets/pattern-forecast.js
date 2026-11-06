@@ -96,7 +96,7 @@
         root.appendChild(layout);
 
         ui.all = el('details', 'pf-all');
-        ui.all.appendChild(el('summary', null, 'All six patterns'));
+        ui.all.appendChild(el('summary', null, 'What these patterns mean for precipitation in each zone'));
         ui.allbody = el('div'); ui.all.appendChild(ui.allbody);
         root.appendChild(ui.all);
         render();
