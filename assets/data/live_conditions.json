@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-06T19:25:14Z",
+ "generated_utc": "2026-11-06T20:05:40Z",
  "sources": {
   "NWAC": "Synoptic Data API",
   "RAWS": "Synoptic Data API",
@@ -62,21 +62,21 @@
      "lat": 47.94485,
      "lon": -123.42594,
      "elev_ft": 5010,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 43.0,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 42.6,
      "temp_hi_24h_f": 43.0,
      "temp_lo_24h_f": 34.9,
      "rh": null,
      "dewpoint_f": null,
-     "wind_mph": 10.5,
+     "wind_mph": 11.1,
      "gust_mph": null,
-     "snow_depth_in": 1,
-     "swe_in": 0.4,
+     "snow_depth_in": 0,
+     "swe_in": 0.3,
      "precip_24h_in": 0.1,
      "precip_72h_in": 0.2,
-     "depth_change_24h_in": -1,
-     "depth_change_72h_in": -3,
-     "swe_change_72h_in": -0.4,
+     "depth_change_24h_in": -2,
+     "depth_change_72h_in": -4,
+     "swe_change_72h_in": -0.6,
      "trust": {
       "ok": true,
       "reasons": []
@@ -88,7 +88,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -0.7 in, SWE -0.40 in"
+     "detail": "depth -0.7 in, SWE -0.60 in"
     },
     {
      "key": "precip_72h",
@@ -143,21 +143,21 @@
      "lat": 48.85933,
      "lon": -121.43895,
      "elev_ft": 5280,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 34.5,
-     "temp_hi_24h_f": 34.7,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 37.0,
+     "temp_hi_24h_f": 37.0,
      "temp_lo_24h_f": 31.5,
      "rh": null,
      "dewpoint_f": null,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": 11,
-     "swe_in": 3.1,
+     "swe_in": 3.2,
      "precip_24h_in": null,
      "precip_72h_in": null,
      "depth_change_24h_in": 3,
      "depth_change_72h_in": 3,
-     "swe_change_72h_in": 1.1,
+     "swe_change_72h_in": 1.2,
      "trust": {
       "ok": true,
       "reasons": []
@@ -225,7 +225,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "yes",
-     "detail": "depth +3.0 in, SWE +1.10 in"
+     "detail": "depth +3.0 in, SWE +1.20 in"
     },
     {
      "key": "precip_72h",
@@ -608,8 +608,8 @@
      "lat": 47.74607,
      "lon": -121.09288,
      "elev_ft": 3940,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 34.3,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 35.6,
      "temp_hi_24h_f": 39.6,
      "temp_lo_24h_f": 33.1,
      "rh": null,
@@ -621,7 +621,7 @@
      "precip_24h_in": 0.2,
      "precip_72h_in": 0.4,
      "depth_change_24h_in": 0,
-     "depth_change_72h_in": -2,
+     "depth_change_72h_in": 0,
      "swe_change_72h_in": -0.3,
      "trust": {
       "ok": true,
@@ -683,18 +683,18 @@
      "lat": 47.59404,
      "lon": -120.88255,
      "elev_ft": 4550,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 35.8,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 36.3,
      "temp_hi_24h_f": 39.4,
      "temp_lo_24h_f": 33.1,
-     "rh": 99.0,
-     "dewpoint_f": 35.5,
-     "wind_mph": 0.5,
-     "gust_mph": 2.5,
+     "rh": 98.0,
+     "dewpoint_f": 35.8,
+     "wind_mph": 0.9,
+     "gust_mph": 3.9,
      "snow_depth_in": 0,
      "swe_in": 0.2,
-     "precip_24h_in": 0.1,
-     "precip_72h_in": 0.2,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.0,
      "depth_change_24h_in": 0,
      "depth_change_72h_in": 0,
      "swe_change_72h_in": -0.2,
@@ -714,8 +714,8 @@
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
-     "status": "yes",
-     "detail": "0.20 in (0.10 in in 24 h)"
+     "status": "no",
+     "detail": "0.00 in (0.00 in in 24 h)"
     },
     {
      "key": "temp",
@@ -727,13 +727,13 @@
      "key": "humidity",
      "label": "High humidity",
      "status": "yes",
-     "detail": "99% RH"
+     "detail": "98% RH"
     },
     {
      "key": "visibility",
      "label": "Possible low visibility (fog/cloud)",
      "status": "yes",
-     "detail": "temp and dew point 0.3\u00b0F apart"
+     "detail": "temp and dew point 0.5\u00b0F apart"
     }
    ]
   },
@@ -765,9 +765,9 @@
      "lat": 47.35037,
      "lon": -120.6796,
      "elev_ft": 4240,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 37.8,
-     "temp_hi_24h_f": 40.8,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 41.2,
+     "temp_hi_24h_f": 41.2,
      "temp_lo_24h_f": 35.4,
      "rh": null,
      "dewpoint_f": null,
@@ -779,7 +779,7 @@
      "precip_72h_in": 0.1,
      "depth_change_24h_in": 0,
      "depth_change_72h_in": 0,
-     "swe_change_72h_in": 0.1,
+     "swe_change_72h_in": 0.0,
      "trust": {
       "ok": true,
       "reasons": []
@@ -821,7 +821,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth +0.0 in, SWE +0.10 in"
+     "detail": "depth +0.0 in, SWE +0.00 in"
     },
     {
      "key": "precip_72h",
@@ -899,9 +899,9 @@
      "lat": 47.28734,
      "lon": -120.37015,
      "elev_ft": 4330,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 40.3,
-     "temp_hi_24h_f": 45.3,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 42.3,
+     "temp_hi_24h_f": 43.7,
      "temp_lo_24h_f": 35.6,
      "rh": null,
      "dewpoint_f": null,
@@ -980,8 +980,8 @@
      "lat": 47.38485,
      "lon": -121.06323,
      "elev_ft": 4340,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 36.0,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 37.0,
      "temp_hi_24h_f": 40.5,
      "temp_lo_24h_f": 34.5,
      "rh": null,
@@ -1018,7 +1018,7 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "36\u00b0F at Sasse Ridge"
+     "detail": "37\u00b0F at Sasse Ridge"
     },
     {
      "key": "humidity",
@@ -1141,8 +1141,8 @@
      "lat": 47.37406,
      "lon": -121.44213,
      "elev_ft": 4010,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 37.4,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 38.5,
      "temp_hi_24h_f": 39.2,
      "temp_lo_24h_f": 35.4,
      "rh": null,
@@ -1151,10 +1151,10 @@
      "gust_mph": null,
      "snow_depth_in": 2,
      "swe_in": 0.1,
-     "precip_24h_in": 0.1,
+     "precip_24h_in": 0.2,
      "precip_72h_in": 0.6,
      "depth_change_24h_in": 0,
-     "depth_change_72h_in": -1,
+     "depth_change_72h_in": 0,
      "swe_change_72h_in": -0.7,
      "trust": {
       "ok": true,
@@ -1167,19 +1167,19 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -1.0 in, SWE -0.70 in"
+     "detail": "depth +0.0 in, SWE -0.70 in"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "yes",
-     "detail": "0.60 in (0.10 in in 24 h)"
+     "detail": "0.60 in (0.20 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "37\u00b0F at Olallie Meadows"
+     "detail": "38\u00b0F at Olallie Meadows"
     },
     {
      "key": "humidity",
@@ -1288,7 +1288,7 @@
      "gust_mph": null,
      "snow_depth_in": null,
      "swe_in": null,
-     "precip_24h_in": 0.14,
+     "precip_24h_in": 0.13,
      "precip_72h_in": 0.57,
      "depth_change_24h_in": null,
      "depth_change_72h_in": null,
@@ -1313,7 +1313,7 @@
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "yes",
-     "detail": "0.57 in (0.14 in in 24 h) (unverified)"
+     "detail": "0.57 in (0.13 in in 24 h) (unverified)"
     },
     {
      "key": "temp",
@@ -1446,19 +1446,19 @@
      "lat": 46.90585,
      "lon": -121.4827,
      "elev_ft": 5400,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 39.7,
-     "temp_hi_24h_f": 39.7,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 45.3,
+     "temp_hi_24h_f": 45.3,
      "temp_lo_24h_f": 30.6,
      "rh": null,
      "dewpoint_f": null,
      "wind_mph": null,
      "gust_mph": null,
-     "snow_depth_in": 9,
+     "snow_depth_in": 8,
      "swe_in": 2.6,
      "precip_24h_in": 0.0,
      "precip_72h_in": 0.1,
-     "depth_change_24h_in": -1,
+     "depth_change_24h_in": -2,
      "depth_change_72h_in": -2,
      "swe_change_72h_in": 0.0,
      "trust": {
@@ -1621,8 +1621,8 @@
      "lat": 46.78266,
      "lon": -121.74767,
      "elev_ft": 5150,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 40.8,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 38.8,
      "temp_hi_24h_f": 41.0,
      "temp_lo_24h_f": 32.0,
      "rh": null,
@@ -1631,11 +1631,11 @@
      "gust_mph": null,
      "snow_depth_in": 2,
      "swe_in": 0.8,
-     "precip_24h_in": 0.2,
-     "precip_72h_in": 0.6,
+     "precip_24h_in": 0.1,
+     "precip_72h_in": 0.5,
      "depth_change_24h_in": -1,
      "depth_change_72h_in": -4,
-     "swe_change_72h_in": -0.4,
+     "swe_change_72h_in": -0.5,
      "trust": {
       "ok": true,
       "reasons": []
@@ -1647,19 +1647,19 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -4.0 in, SWE -0.40 in"
+     "detail": "depth -4.0 in, SWE -0.50 in"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "yes",
-     "detail": "0.60 in (0.22 in in 24 h)"
+     "detail": "0.53 in (0.22 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "41\u00b0F at Paradise"
+     "detail": "39\u00b0F at Paradise"
     },
     {
      "key": "humidity",
@@ -1696,8 +1696,8 @@
      "lat": 46.1638,
      "lon": -122.18402,
      "elev_ft": 4440,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 39.6,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 40.1,
      "temp_hi_24h_f": 42.1,
      "temp_lo_24h_f": 36.1,
      "rh": null,
@@ -1777,8 +1777,8 @@
      "lat": 46.62153,
      "lon": -121.38643,
      "elev_ft": 5800,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 35.4,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 37.0,
      "temp_hi_24h_f": 37.9,
      "temp_lo_24h_f": 29.7,
      "rh": null,
@@ -1787,8 +1787,8 @@
      "gust_mph": null,
      "snow_depth_in": 6,
      "swe_in": 2.3,
-     "precip_24h_in": 0.1,
-     "precip_72h_in": 0.3,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.2,
      "depth_change_24h_in": 0,
      "depth_change_72h_in": -2,
      "swe_change_72h_in": 0.2,
@@ -1863,9 +1863,9 @@
      "lat": 46.64142,
      "lon": -121.38153,
      "elev_ft": 4440,
-     "obs_time": "2026-11-06T19:00:00Z",
-     "temp_f": 38.3,
-     "temp_hi_24h_f": 38.3,
+     "obs_time": "2026-11-06T20:00:00Z",
+     "temp_f": 38.7,
+     "temp_hi_24h_f": 38.7,
      "temp_lo_24h_f": 30.9,
      "rh": null,
      "dewpoint_f": null,
@@ -1895,13 +1895,13 @@
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "yes",
-     "detail": "0.30 in (0.10 in in 24 h)"
+     "detail": "0.20 in (0.00 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "38\u00b0F at White Pass E.S."
+     "detail": "39\u00b0F at White Pass E.S."
     },
     {
      "key": "humidity",
@@ -1938,9 +1938,9 @@
      "lat": 46.34963,
      "lon": -121.51435,
      "elev_ft": 4510,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 39.9,
-     "temp_hi_24h_f": 39.9,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 41.4,
+     "temp_hi_24h_f": 41.4,
      "temp_lo_24h_f": 29.7,
      "rh": null,
      "dewpoint_f": null,
@@ -1966,21 +1966,21 @@
      "lat": 46.09497,
      "lon": -121.76345,
      "elev_ft": 4280,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 42.4,
-     "temp_hi_24h_f": 42.4,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 43.7,
+     "temp_hi_24h_f": 43.7,
      "temp_lo_24h_f": 34.3,
      "rh": null,
      "dewpoint_f": null,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": 1,
-     "swe_in": 0.3,
-     "precip_24h_in": 0.1,
-     "precip_72h_in": 0.6,
+     "swe_in": 0.4,
+     "precip_24h_in": 0.0,
+     "precip_72h_in": 0.5,
      "depth_change_24h_in": 0,
      "depth_change_72h_in": -3,
-     "swe_change_72h_in": -0.9,
+     "swe_change_72h_in": -0.8,
      "trust": {
       "ok": true,
       "reasons": []
@@ -1992,19 +1992,19 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -2.0 in, SWE -0.90 in"
+     "detail": "depth -2.0 in, SWE -0.80 in"
     },
     {
      "key": "precip_72h",
      "label": "Precipitation in the last 72 h",
      "status": "yes",
-     "detail": "0.60 in (0.10 in in 24 h)"
+     "detail": "0.50 in (0.00 in in 24 h)"
     },
     {
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "42\u00b0F at Surprise Lakes"
+     "detail": "44\u00b0F at Surprise Lakes"
     },
     {
      "key": "humidity",
@@ -2108,12 +2108,12 @@
      "lat": 45.32097,
      "lon": -121.7158,
      "elev_ft": 5370,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 42.3,
-     "temp_hi_24h_f": 42.3,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 42.8,
+     "temp_hi_24h_f": 42.8,
      "temp_lo_24h_f": 31.5,
-     "rh": 50.0,
-     "dewpoint_f": 24.8,
+     "rh": 68.0,
+     "dewpoint_f": 32.9,
      "wind_mph": null,
      "gust_mph": null,
      "snow_depth_in": 7.0,
@@ -2121,7 +2121,7 @@
      "precip_24h_in": null,
      "precip_72h_in": null,
      "depth_change_24h_in": -1.0,
-     "depth_change_72h_in": -2.0,
+     "depth_change_72h_in": -1.0,
      "swe_change_72h_in": null,
      "trust": {
       "ok": true,
