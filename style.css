@@ -326,19 +326,33 @@ nav.open .nav-toggle-bar:nth-child(3) {
     transform: translateX(-50%) rotate(-45deg);
 }
 
+/* Page structure. One set of values for every page: <main> is a single column of cards; a card is a <section>
+   (or .lt-card, .mg-card), all with the same width, padding, gap, radius and shadow. Change them here. */
+:root {
+    --content-w: 1100px;   /* width of the column */
+    --gutter: 1rem;        /* space between the column and the screen edge */
+    --card-pad: 1.5rem;    /* padding inside a card */
+    --card-gap: 1.25rem;   /* space between cards */
+    --radius: 8px;
+    --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+@media (max-width: 600px) {
+    :root { --gutter: 0.75rem; --card-pad: 1rem; --card-gap: 1rem; }
+}
+
 /* Main Content */
 main {
-    max-width: 1200px;
+    max-width: var(--content-w);
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: var(--card-gap) var(--gutter) 2rem;
 }
 
 section {
     background: white;
-    margin-bottom: 2rem;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: var(--card-gap);
+    padding: var(--card-pad);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
 }
 
 h2 {
@@ -1073,9 +1087,12 @@ figcaption { margin: 0; padding: 0; }
 }
 
 .PlotTitle {
-    font-size: 3em;
+    font-size: clamp(1.6rem, 4.5vw, 2.6rem);   /* shrinks with the screen so the title box always fits */
+    line-height: 1.2;
     font-weight: bold;
     margin-top: 0.5em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
 }
 
 
@@ -1503,8 +1520,7 @@ nav a,
 
 /* "Under development" flag on pages that are still being built */
 .dev-banner {
-    max-width: 1100px;
-    margin: 1rem auto 0;
+    margin: 0 0 var(--card-gap);
     padding: 0.7rem 1rem;
     background: #fef3c7;
     border: 1px solid #f59e0b;
@@ -1530,15 +1546,14 @@ nav a,
 
 /* Long-term outlook and in-house model pages */
 .lt-page {
-    max-width: 1100px;
-    margin: 1rem auto;
+    margin: 0;   /* the column comes from <main> */
 }
 .lt-card {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    padding: 1.25rem 1.5rem;
-    margin: 1rem 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: var(--card-pad);
+    margin: 0 0 var(--card-gap);
 }
 .lt-card h2 {
     color: #1e3c72;
@@ -1634,10 +1649,9 @@ nav a,
     .header-name { font-size: 1.15rem; }
     .header-full .tagline { font-size: 0.85rem; }
     .header-full .tagline span { display: inline; }   /* one wrapped paragraph instead of three stacked lines */
+    .header-full .tagline-hide-mobile { display: none; }   /* every page but the home page: skip the tagline to keep the header short */
 
-    main { padding: 1rem 0.75rem; }
-    section { padding: 1rem; margin-bottom: 1rem; }
-    main h1, .PlotTitle { font-size: clamp(1.5rem, 7vw, 2rem); line-height: 1.2; margin-top: 0.25em; }
+    main h1, .PlotTitle { margin-top: 0.25em; }
     h2 { font-size: 1.5rem; margin-bottom: 1rem; }
 
     summary, .previous-link { min-height: 36px; display: inline-flex; align-items: center; }
@@ -1646,3 +1660,6 @@ nav a,
 /* Growing-snowflake loading animation (assets/images/snowflake-loader.gif), from a time-lapse by Ken Libbrecht (snowcrystals.com). Use <span class="cmw-flake" aria-hidden="true"></span> beside a loading message. */
 .cmw-flake { display: inline-block; width: 72px; height: 72px; border-radius: 50%; background: url('assets/images/snowflake-loader.gif') center / cover; vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) { .cmw-flake { display: none; } }
+
+/* small second line under a menu item, e.g. the terms a page covers */
+.dropdown-menu .nav-sub { display: block; margin-top: 0.1rem; font-size: 0.72rem; font-weight: 400; line-height: 1.2; color: #64748b; }

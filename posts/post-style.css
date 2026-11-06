@@ -1,29 +1,23 @@
 /* Post-specific styles */
 
-/* Posts are one flat white page: no grey page background, and no card-in-a-card around the sections inside the
-   post (the site-wide `section` rule gives every section its own white box with a shadow) */
-body {
-    background: #ffffff;
-}
-
+/* A post is the same column of cards as every other page (see :root in style.css): the header, the lead photo, the
+   contents list, each section and the safety note are cards with the shared width, padding, gap, radius and shadow.
+   Nothing here sets its own spacing; change it in :root. */
 .post {
-    background: white;
+    background: none;
 }
 
 .post-content > section {
-    background: none;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0.5rem 0 0;
-    margin-bottom: 1.5rem;
+    margin: 0 0 var(--card-gap);   /* the card itself (white, padding, radius, shadow) is the site-wide section rule */
 }
 
 .post-header {
-    padding: 1.75rem 2rem 1.5rem 2rem;
+    padding: var(--card-pad);
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: #ffffff;
-    border-radius: 8px 8px 0 0;
-    margin: -2rem -2rem 0.75rem -2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 0 0 var(--card-gap);
 }
 
 /* Header block, left aligned: a small blog-name line, the headline, an optional subtitle, then one quiet
@@ -99,15 +93,20 @@ body {
 
 /* Main photo for the post (front matter `thumbnail`): a modest centered figure under the header */
 .post-lead-photo {
-    max-width: 620px;
-    margin: 1rem auto;
+    background: #fff;
+    padding: var(--card-pad);
+    margin: 0 0 var(--card-gap);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
     text-align: center;
 }
 
 .post-lead-photo img {
     display: block;
     width: 100%;
+    max-width: 620px;
     height: auto;
+    margin: 0 auto;
     border-radius: 6px;
 }
 
@@ -119,23 +118,13 @@ body {
 
 .post-content {
     line-height: 1.8;
-    /* Fills the card up to a readable cap (about 100 characters a line); phones just use the full width */
-    max-width: 64rem;
-    margin: 0 auto;
+    margin: 0;
 }
 
 /* Keep the gap under the blue header small: the first block (often a nested card with its own padding and a
    highlight box) should not add another 50px of air */
 .post-content > :first-child {
     margin-top: 0;
-}
-
-.post-content > section:first-child {
-    padding-top: 0.5rem;
-}
-
-.post-content > section:first-child > .highlight-box:first-child {
-    margin-top: 0.5rem;
 }
 
 .forecast-section {
@@ -225,10 +214,6 @@ body {
 }
 
 .summary {
-    background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 50%);
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
     border-left: 4px solid #f57f17;
 }
 
@@ -246,10 +231,6 @@ body {
 }
 
 .recommendations {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    padding: 2rem;
-    border-radius: 8px;
-    margin-top: 3rem;
     border-left: 4px solid #388e3c;
 }
 
@@ -269,10 +250,6 @@ body {
 }
 
 .safety-note {
-    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-    padding: 2rem;
-    border-radius: 8px;
-    margin-top: 3rem;
     border-left: 4px solid #c62828;
 }
 
@@ -297,9 +274,8 @@ body {
 .post-footer {
     background: none;   /* the site-wide footer rule paints dark blue; this is the post's own footer */
     color: inherit;
-    margin-top: 3rem;
-    padding: 2rem 0 0;
-    border-top: 2px solid #e0e0e0;
+    margin: 0 0 var(--card-gap);
+    padding: 0;
     text-align: center;
 }
 
@@ -400,23 +376,12 @@ p {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .post-header {
-        padding: 1.25rem 1.5rem;
-        margin: -1.5rem -1.5rem 0.75rem -1.5rem;
-    }
-
     .post-meta {
         flex-direction: column;
         align-items: center;
         gap: 0.2rem;
     }
 
-    /* The nested discussion card does not need a second layer of side padding on a phone */
-    .post-content > section {
-        padding-left: 0;
-        padding-right: 0;
-    }
-    
     .forecast-section h2 {
         font-size: 1.5rem;
     }
@@ -436,18 +401,18 @@ p {
 html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
 
 .post-toc {
-    background: #f5f7fa;
-    border: 1px solid #d5deea;
-    border-radius: 8px;
-    margin: 1.5rem 0;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 0 0 var(--card-gap);
 }
-.post-toc > summary { cursor: pointer; list-style: none; padding: 0.8rem 1.25rem; display: flex; align-items: center; gap: 0.6rem; }
+.post-toc > summary { cursor: pointer; list-style: none; padding: 0.8rem var(--card-pad); display: flex; align-items: center; gap: 0.6rem; }
 .post-toc > summary::-webkit-details-marker { display: none; }
 .post-toc > summary::before { content: "▸"; color: #2a5298; font-size: 1.2rem; transition: transform 0.15s; }
 .post-toc[open] > summary::before { transform: rotate(90deg); }
 .post-toc > summary h2 { color: #1e3c72; font-size: 1.3rem; margin: 0; }
 .post-toc > summary:focus-visible { outline: 2px solid #2a5298; outline-offset: 2px; }
-.post-toc-body { padding: 0 1.5rem 1rem; }
+.post-toc-body { padding: 0 var(--card-pad) var(--card-pad); }
 .post-toc ol { margin: 0.75rem 0 0 1.5rem; }
 .post-toc li { margin-bottom: 0.3rem; }
 .post-toc a { color: #1e3c72; font-weight: 600; }
@@ -468,22 +433,22 @@ html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
 .post-toc, details.post-section, .safety-note, .summary { scroll-margin-top: 4.5rem; }
 
 details.post-section {
-    margin-top: 1.25rem;
-    border: 1px solid #d5deea;
-    border-radius: 8px;
+    margin: 0 0 var(--card-gap);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
     background: #fff;
 }
 details.post-section > summary {
     cursor: pointer;
     list-style: none;
-    padding: 0.9rem 1.25rem;
+    padding: 0.9rem var(--card-pad);
     display: flex;
     align-items: center;
     gap: 0.6rem;
     background: #eef3fa;
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
-details.post-section[open] > summary { border-radius: 8px 8px 0 0; border-bottom: 1px solid #d5deea; }
+details.post-section[open] > summary { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid #d5deea; }
 details.post-section > summary::-webkit-details-marker { display: none; }
 details.post-section > summary::before {
     content: "▸";
@@ -494,7 +459,7 @@ details.post-section > summary::before {
 details.post-section[open] > summary::before { transform: rotate(90deg); }
 details.post-section > summary h2 { margin: 0; font-size: 1.4rem; color: #1e3c72; }
 details.post-section > summary:focus-visible { outline: 2px solid #2a5298; outline-offset: 2px; }
-.post-section-body { padding: 1rem 1.25rem 1.25rem; }
+.post-section-body { padding: var(--card-pad); }
 .post-section-body ul { margin-left: 1.5rem; margin-bottom: 1rem; }
 .post-section-body h3 { color: #2a5298; font-size: 1.15rem; margin: 1.25rem 0 0.4rem; }
 .to-top { text-align: right; font-size: 0.9rem; margin: 0.5rem 0 0; }
