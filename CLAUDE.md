@@ -32,6 +32,7 @@ Areas covered: Mt. Baker, Stevens Pass, Snoqualmie Pass, Blewett Pass, Crystal, 
 ## How things connect
 
 - The homepage "Latest Forecast" card and `posts/archive.html` ("Previous Forecasts", a year/month selector over every post) are both driven by `site.posts` (Liquid), sorted newest-first automatically by Jekyll. There is no `latest-post-summary.html` anymore and no client-side fetch/probe JS for posts — publishing a new post file is the only step needed to update both.
+- Post `<title>`: a post's `seo_title` front matter is used if present; otherwise `head.html` builds "Washington Cascades Weekend Ski Forecast: <forecast_period>" (year added if missing). `title` is only the visible heading. Write each post's `description` with the area names, since that is the Google snippet.
 - `_includes/head.html` appends " | Cascade Mountain Weather" to post `<title>`/og:title automatically (posts' front matter `title` is just the plain heading text, matching what shows in the post header/archive/recent-posts list).
 
 ## Local preview

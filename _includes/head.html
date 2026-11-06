@@ -2,7 +2,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 {% assign page_title = page.title | default: site.title %}
-{% if page.layout == 'post' %}{% assign page_title = page_title | append: " | Cascade Mountain Weather" %}{% endif %}
+{% comment %}
+  Posts: the <title> is for search results, so it says what the page is. Use the post's own `seo_title` if it has one;
+  otherwise build "Washington Cascades Weekend Ski Forecast: <forecast_period>" (the year is added when the period lacks it).
+  The joke headline in `title` stays the visible heading. The site name is added unless seo_title already has it.
+{% endcomment %}
+{% if page.layout == 'post' %}
+  {% if page.seo_title %}
+    {% assign page_title = page.seo_title %}
+  {% elsif page.forecast_period %}
+    {% assign post_year = page.date | date: "%Y" %}
+    {% assign page_title = "Washington Cascades Weekend Ski Forecast: " | append: page.forecast_period %}
+    {% unless page.forecast_period contains post_year %}{% assign page_title = page_title | append: ", " | append: post_year %}{% endunless %}
+  {% endif %}
+  {% unless page_title contains "Cascade Mountain Weather" %}{% assign page_title = page_title | append: " | Cascade Mountain Weather" %}{% endunless %}
+{% endif %}
 {% assign og_title = page.og_title | default: page_title %}
 
 <title>{{ page_title }}</title>
