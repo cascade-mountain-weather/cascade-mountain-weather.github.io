@@ -86,10 +86,24 @@
     this.title = h('h3', { 'class': 'pm-title' }, this.right);
     this.charts = {};
     ['snow', 'precip'].forEach(function (pk) {
-      h('h4', { 'class': 'pm-h4' }, self.right, PRODUCTS[pk].label + ' plume');
+      var block = h('div', { 'class': 'pm-plume' }, self.right);
+      var head = h('div', { 'class': 'pm-plume-head' }, block);
+      h('h4', { 'class': 'pm-h4' }, head, PRODUCTS[pk].label + ' plume');
+      var zoom = h('div', { 'class': 'pm-zoom', role: 'group', 'aria-label': 'Zoom the plume chart' }, head);
+      var scroller = h('div', { 'class': 'pm-chart-scroll' }, block);
       var svg = el('svg', { 'class': 'pm-chart', viewBox: '0 0 760 ' + CH, role: 'img', 'aria-label': PRODUCTS[pk].label + ' plume for the selected site' }, null);
-      self.right.appendChild(svg);
-      self.charts[pk] = { svg: svg, sum: h('p', { 'class': 'pm-sum' }, self.right) };
+      scroller.appendChild(svg);
+      var level = 1, apply = function () {
+        svg.style.width = (level * 100) + '%';
+        scroller.classList.toggle('zoomed', level > 1);
+        zin.disabled = level >= 4; zout.disabled = level <= 1; zreset.disabled = level === 1;
+      };
+      var zbtn = function (txt, label, fn) { var b = h('button', { type: 'button', 'aria-label': label, title: label }, zoom, txt); b.addEventListener('click', fn); return b; };
+      var zout = zbtn('−', 'Zoom out', function () { level = Math.max(1, level - 0.5); apply(); });
+      var zin = zbtn('+', 'Zoom in', function () { level = Math.min(4, level + 0.5); apply(); });
+      var zreset = zbtn('Reset', 'Reset zoom', function () { level = 1; apply(); scroller.scrollLeft = 0; });
+      apply();
+      self.charts[pk] = { block: block, svg: svg, sum: h('p', { 'class': 'pm-sum' }, block) };
     });
     this.tableBox = h('div', { 'class': 'pm-table-box' }, this.right);
     this.note = h('p', { 'class': 'pm-note' }, root);
@@ -171,10 +185,12 @@
     });
 
     this.title.textContent = st.site + (st.same ? '' : ' (plots use this site’s own scale)');
-    this.drawChart('snow');
-    this.drawChart('precip');
-    this.drawTable();
-    var c = this.data.cycles;
+    // show only the plume for the selected product ("Color map by")
+    ['snow', 'precip'].forEach(function (pk) { self.charts[pk].block.hidden = pk !== st.product; });
+    this.drawChart(st.product);
+    this.tableBox.hidden = st.product !== 'snow';   // the table is snowfall only
+    if (!this.tableBox.hidden) this.drawTable();
+    var c =this.data.cycles;
     this.note.textContent = 'Frozen when this post was written (NBM ' + c.nbm.replace('T', ' ') + (c.hrrr ? ', HRRR ' + c.hrrr.replace('T', ' ') : '') + (c.hrdps ? ', HRDPS ' + c.hrdps.replace('T', ' ') : '') +
       '). Forecast days run 4 am to 4 am Pacific. Values are at the nearest model grid point, not corrected for elevation; HRDPS snowfall assumes a 10:1 ratio. A model that does not reach the whole window is totaled only as far as it goes. For current numbers see the meteograms.';
   };

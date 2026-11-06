@@ -539,8 +539,19 @@ figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #5
 .pm-group button[aria-pressed="true"] { background: #1e3c72; color: #fff; }
 .pm-check { font-size: 0.85rem; color: #334155; cursor: pointer; }
 .pm-grid { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; gap: 1rem; align-items: start; }
-@media (max-width: 760px) { .pm-grid { grid-template-columns: 1fr; } }
+.pm-grid > * { min-width: 0; }
+@media (max-width: 760px) {
+  .pm-grid { grid-template-columns: minmax(0, 1fr); }
+  .pm-table-box .snow-table { min-width: 30rem; }   /* scrolls sideways inside .snow-table-wrap instead of widening the page */
+}
 .post-content svg.pm-map, .post-content svg.pm-chart { width: 100%; height: auto; display: block; border: 1px solid #d5deea; border-radius: 8px; margin: 0; box-shadow: none; }
+.pm-plume[hidden] { display: none; }
+.pm-plume-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.pm-zoom { display: inline-flex; gap: 0.25rem; }
+.pm-zoom button { font: inherit; font-size: 0.85rem; min-width: 2rem; padding: 0.15rem 0.5rem; border: 1px solid #2a5298; background: #fff; color: #1e3c72; border-radius: 6px; cursor: pointer; }
+.pm-zoom button:disabled { opacity: 0.4; cursor: default; }
+.pm-chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pm-chart-scroll.zoomed { cursor: grab; }
 .pm-site { cursor: pointer; }
 .pm-site:focus-visible circle { stroke: #0f172a; stroke-width: 3; }
 .pm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #475569; margin: 0.5rem 0; }
@@ -556,6 +567,7 @@ figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #5
 .pm-h4 { margin: 1rem 0 0.35rem; font-size: 1rem; color: #2a5298; }
 .pm-title + .pm-h4 { margin-top: 0.25rem; }
 .pm-table-box { margin-top: 0.5rem; }
+.pm-table-box[hidden] { display: none; }
 .pm-table-box .snow-table { min-width: 0; }
 
 /* "Related tools" row at the end of each collapsible section */
