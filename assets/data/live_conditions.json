@@ -1,5 +1,5 @@
 {
- "generated_utc": "2026-11-06T19:20:00Z",
+ "generated_utc": "2026-11-06T19:25:14Z",
  "sources": {
   "NWAC": "Synoptic Data API",
   "RAWS": "Synoptic Data API",
@@ -1055,8 +1055,8 @@
      "lat": 47.27427,
      "lon": -121.34162,
      "elev_ft": 3850,
-     "obs_time": "2026-11-06T18:00:00Z",
-     "temp_f": 36.9,
+     "obs_time": "2026-11-06T19:00:00Z",
+     "temp_f": 38.3,
      "temp_hi_24h_f": 40.1,
      "temp_lo_24h_f": 35.6,
      "rh": null,
@@ -1067,8 +1067,8 @@
      "swe_in": 0.3,
      "precip_24h_in": 0.2,
      "precip_72h_in": 0.8,
-     "depth_change_24h_in": -1,
-     "depth_change_72h_in": -4,
+     "depth_change_24h_in": 0,
+     "depth_change_72h_in": -3,
      "swe_change_72h_in": -0.2,
      "trust": {
       "ok": true,
@@ -1081,7 +1081,7 @@
      "key": "snow_72h",
      "label": "Snow in the last 72 h",
      "status": "no",
-     "detail": "depth -4.0 in, SWE -0.20 in"
+     "detail": "depth -3.0 in, SWE -0.20 in"
     },
     {
      "key": "precip_72h",
@@ -1093,7 +1093,7 @@
      "key": "temp",
      "label": "Below freezing",
      "status": "no",
-     "detail": "37\u00b0F at Stampede Pass"
+     "detail": "38\u00b0F at Stampede Pass"
     },
     {
      "key": "humidity",
