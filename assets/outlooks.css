@@ -58,7 +58,8 @@
 @media (max-width: 700px) { .lt-figs.lt-figs--2 { grid-template-columns: 1fr; } }
 
 /* Teleconnections and snow explorer (see assets/tele-snow.js) */
-.ts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0.5rem 0; align-items: start; }
+.ts-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; margin: 0.5rem 0; align-items: start; }   /* one column: the average bars, then the map, then the lag chart */
+#ts-map { max-width: 560px; margin: 0 auto; }
 .ts-box { min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.8rem; background: #fff; margin-bottom: 0.6rem; }
 .ts-box h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: #1e3c72; }
 @media (max-width: 800px) { .ts-grid { grid-template-columns: 1fr; } }
@@ -175,3 +176,4 @@ html { scroll-behavior: smooth; }
 .pf-mapwrap { max-width: 560px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
 .pf-map-val { font-size: 19px; }
 .pf-map-name { font-size: 13.5px; }
+.ol-aka { margin: -0.4rem 0 0.6rem; font-size: 0.9rem; color: #64748b; text-align: center; }

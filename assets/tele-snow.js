@@ -32,6 +32,11 @@
         swe: ['Snowiest', 'Least snowy'], bigsnow: ['Most big snow days', 'Fewest big snow days'], tanom: ['Warmest', 'Coldest'],
         rain: ['Rainiest', 'Least rain'], bigwet: ['Most big precipitation days', 'Fewest big precipitation days'],
     };
+    // the same extremes worded for the map heading: "Which PNA phase is the snowiest at each SNOTEL location?"
+    const EXTREME_Q = {
+        swe: ['is the snowiest', 'is the least snowy'], bigsnow: ['has the most big snow days', 'has the fewest big snow days'], tanom: ['is the warmest', 'is the coldest'],
+        rain: ['is the rainiest', 'has the least rain'], bigwet: ['has the most big precipitation days', 'has the fewest big precipitation days'],
+    };
     const PHASE_COL = ['#d73027', '#f46d43', '#fdae61', '#c9b100', '#66bd63', '#1a9850', '#4575b4', '#8e6bbf'];
     const el = (t, a, kids) => { const n = document.createElementNS(NS, t); for (const k in a || {}) n.setAttribute(k, a[k]); (kids || []).forEach(c => n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c)); return n; };
 
@@ -85,8 +90,8 @@
                         <label class="ol-label" for="ts-spr" style="margin-top:.3rem">Blend nearby days (spread): <b>&plusmn;${S.spread}</b></label><input id="ts-spr" type="range" min="0.5" max="4" step="0.5" value="${S.spread}" style="width:220px;max-width:100%"></div>`}
                 </div>
                 <p class="ci-hint">${idx.note} ${idx.noLag ? 'The ENSO value is a monthly number, so it does not change over a couple of weeks and there is no lag to choose. ' : idx.lagNote + ' '}${METRIC_NOTE[S.metric]} ${S.tier !== 'all' ? 'Only the stations in the elevation group are averaged.' : ''}</p>
-                <div class="ts-grid"><div class="ts-box"><h3>Average by ${idx.label}</h3><div id="ts-bars"></div></div>
-                    <div class="ts-box"><h3>Where: ${S.show === 'class' ? idx.cls[S.cls] : EXTREME[S.metric][S.show === 'best' ? 0 : 1] + ' ' + (S.index === 'mjo' ? 'phase' : 'class') + ' at each station'}</h3>
+                <div class="ts-grid"><div class="ts-box"><h3>Average by ${idx.short} phase</h3><div id="ts-bars"></div></div>
+                    <div class="ts-box"><h3>${S.show === 'class' ? 'Where (click a phase above): ' + idx.cls[S.cls] : 'Which ' + idx.short + ' phase ' + EXTREME_Q[S.metric][S.show === 'best' ? 0 : 1] + ' at each SNOTEL location?'}</h3>
                         <div class="ol-chips" style="margin-bottom:.4rem"><button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'class'}" data-k="show" data-v="class">Selected ${S.index === 'mjo' ? 'phase' : 'class'}</button>
                         <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'best'}" data-k="show" data-v="best">${EXTREME[S.metric][0]} ${S.index === 'mjo' ? 'phase' : 'class'}</button>
                         <button type="button" class="ol-chip" role="radio" aria-checked="${S.show === 'worst'}" data-k="show" data-v="worst">${EXTREME[S.metric][1]} ${S.index === 'mjo' ? 'phase' : 'class'}</button></div>
@@ -110,7 +115,7 @@
         }
 
         function bars(host, classes, perClass, ids, V, base, lim, unit, idx) {
-            const W = 560, H = 250, m = { l: 46, r: 8, t: 10, b: 46 };
+            const W = Math.max(340, Math.min(900, host.clientWidth || 560)), H = 200, m = { l: 46, r: 8, t: 10, b: 40 };
             const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Average by class', style: 'width:100%;height:auto' });
             const all = perClass.filter(v => v != null).concat(...ids.map(s => V[s].filter(v => v != null)));
             let lo = Math.min(base, ...all), hi = Math.max(base, ...all);
