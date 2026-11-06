@@ -57,7 +57,7 @@ header h1 {
 }
 
 .header-name {
-    font-size: 2.1rem;
+    font-size: 1.6rem;
     font-weight: 700;
     line-height: 1.1;
     text-align: right;
@@ -137,7 +137,7 @@ header h1 {
     }
 
     .header-name {
-        font-size: 1.8rem;
+        font-size: 1.4rem;
     }
 
     .tagline {
@@ -181,7 +181,7 @@ header h1 {
     }
 
     .header-name {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         text-align: center;
     }
 
@@ -197,35 +197,6 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
-}
-
-/* Once the header has scrolled away, the logo appears at the left of the sticky nav bar */
-.nav-mini-logo {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    display: none;
-    opacity: 0;
-    transition: opacity 0.25s ease;
-}
-
-.nav-mini-logo img {
-    display: block;
-    height: 34px;
-    width: auto;
-}
-
-@media (min-width: 769px) {
-    .nav-mini-logo {
-        display: block;
-        pointer-events: none;
-    }
-
-    nav.scrolled .nav-mini-logo {
-        opacity: 1;
-        pointer-events: auto;
-    }
 }
 
 nav ul {
@@ -1660,7 +1631,7 @@ nav a,
 
     .header-full { padding: 0.6rem 1rem 0.7rem; gap: 0.15rem; }
     .header-brand .cmw-header-main-logo { width: 64px; }
-    .header-name { font-size: 1.35rem; }
+    .header-name { font-size: 1.15rem; }
     .header-full .tagline { font-size: 0.85rem; }
     .header-full .tagline span { display: inline; }   /* one wrapped paragraph instead of three stacked lines */
 

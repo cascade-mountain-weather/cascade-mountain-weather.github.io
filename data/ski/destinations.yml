@@ -302,18 +302,34 @@ zones:
       - {id: skibowl_lot, name: Skibowl lot, type: resort_lot, lat: 45.303, lon: -121.755, modes: [resort, hike, bike]}
     verify: [coordinates, top elevation, drive times, and the road (US 26 closures are not modeled yet)]
   - id: north_bend
-    name: North Bend (lowland trails)
+    name: Raging River / North Bend (lowland trails)
     modes: [hike, bike]
     live_areas: []
     nwac_zone: null
-    forecast_point: {lat: 47.496, lon: -121.787}
-    winter_access: {name: North Bend (town and trailheads), lat: 47.496, lon: -121.787}
-    top_ft: 4167
+    forecast_point: {lat: 47.45431, lon: -121.80761}
+    winter_access: {name: North Bend trailheads, lat: 47.496, lon: -121.787}
+    top_ft: 3200
     road_dependencies: []
     pass: {type: none}
     snotel: []
     url: https://www.wta.org/go-hiking/regions/snoqualmie-pass
     drive_hours: {seattle: 0.6, tacoma: 1.0, bellingham: 2.2, olympia: 1.6, portland: 3.4}
     access_points:
-      - {id: north_bend_town, name: North Bend trailheads (Rattlesnake Ledge, Mt. Si, Twin Falls), type: trailhead, lat: 47.496, lon: -121.787, modes: [hike, bike]}
-    verify: [hand-estimated drive times until the Google pull is applied; top_ft is the Mt. Si summit; list of lowland trailheads to include]
+      - {id: north_bend_town, name: North Bend and Raging River trailheads, type: trailhead, lat: 47.496, lon: -121.787, modes: [hike, bike]}
+    verify: [hand-estimated drive times until the Google pull is applied; forecast point (3,186 ft on the DEM, chosen by Danny) is far above the 444 ft trailhead; trailhead coordinates]
+  - id: tiger_mountain
+    name: Tiger Mountain (lowland trails)
+    modes: [hike, bike]
+    live_areas: []
+    nwac_zone: null
+    forecast_point: {lat: 47.515, lon: -121.975}
+    winter_access: {name: Tiger Mountain trailheads (High Point), lat: 47.538, lon: -121.983}
+    top_ft: 2000
+    road_dependencies: []
+    pass: {type: none}
+    snotel: []
+    url: https://www.wta.org/go-hiking/hikes/tiger-mountain-state-forest
+    drive_hours: {seattle: 0.6, tacoma: 1.0, bellingham: 2.2, olympia: 1.6, portland: 3.4}
+    access_points:
+      - {id: tiger_high_point, name: Tiger Mountain trailheads (High Point, Poo Poo Point, Tiger Mountain Trail), type: trailhead, lat: 47.538, lon: -121.983, modes: [hike, bike]}
+    verify: [drive times are copied from North Bend (not pulled separately); trailhead coordinates; forecast point is one grid cell at about 1500 ft]

@@ -1,5 +1,5 @@
 <!-- Shared header behavior (nav dropdown, mobile toggle, logo swap) -->
-<script src="{{ '/assets/header.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/header.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
 <script>
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {

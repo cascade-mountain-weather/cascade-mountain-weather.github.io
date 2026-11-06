@@ -37,3 +37,15 @@
 .lt-page h1.PlotTitle { font-size: clamp(1.6rem, 7vw, 3rem); line-height: 1.15; overflow-wrap: anywhere; }
 @media (max-width: 480px) { .sk-wgrid label { grid-template-columns: 7rem 1fr 1.2rem; } .sk-group input[type=range] { width: 100%; } }
 .sk-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; font-weight: 600; }
+
+/* Timing recommender: the best 4-hour window of the day */
+.sk-window { margin: 0.4rem 0; padding: 0.45rem 0.6rem; border-radius: 8px; background: #f1f5f9; font-size: 0.9rem; color: #334155; line-height: 1.45; }
+.sk-window small { display: block; color: #64748b; font-size: 0.8rem; }
+.sk-wlabel { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+.sk-wscore { float: right; font-weight: 700; color: #1e3c72; }
+.sk-trend { font-weight: 600; }
+.sk-trend-improving { color: #15803d; }
+.sk-trend-stable { color: #1e3c72; }
+.sk-trend-deteriorating { color: #b45309; }
+.sk-window .sk-fuzzy { color: #92400e; font-style: italic; }
+.sk-window .sk-corn { display: block; margin-top: .25rem; }

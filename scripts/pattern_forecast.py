@@ -55,7 +55,27 @@ def cache_file(model, init, step, kind):
 
 
 # ------------------------------------------------------------------ fetch
-def fetch_one(job):
+def fetch_one(job, tries=3):
+    """Retry a read a few times (a parallel Herbie download can lose its file to another process on the first run)."""
+    import time
+    for k in range(tries):
+        try:
+            return fetch_once(job)
+        except Exception as e:
+            if k == tries - 1:
+                raise
+            print(f"  retry {job}: {type(e).__name__}: {e}", flush=True)
+            try:
+                from herbie import Herbie
+                H = Herbie(job[1], model="ifs", product=PRODUCT[job[0]], fxx=job[2], verbose=False)
+                print("   ", H.grib, flush=True)
+                print(H.inventory(r":(gh|t):(500|850):").iloc[:, :8].to_string(), flush=True)
+            except Exception as e2:
+                print("    (diagnostics failed)", e2, flush=True)
+            time.sleep(10 * (k + 1))
+
+
+def fetch_once(job):
     """Read one forecast time and cache it (a worker process). kind is 'zt' (height and temperature on the 1-degree grid) or 'tp' (box-mean precipitation)."""
     model, init, step, kind = job
     f = cache_file(model, init, step, kind)
@@ -63,10 +83,44 @@ def fetch_one(job):
         return f"cached {f.name}"
     from herbie import Herbie
     H = Herbie(init, model="ifs", product=PRODUCT[model], fxx=step, verbose=False)
+
+    def _is_herbie_index_error(err):
+        return isinstance(err, TypeError) and "expected str instance, float found" in str(err)
+
+    def _normalize_longitude(ds):
+        if "longitude" not in ds.coords:
+            return ds
+        lon = ds["longitude"]
+        if np.nanmax(lon.values) > 180:
+            ds = ds.assign_coords(longitude=((lon + 180) % 360) - 180).sortby("longitude")
+        return ds
+
+    def _open_cfgrib_field(short_name, level=None):
+        import cfgrib
+        grib = H.download(overwrite=False)
+        fbk = {"shortName": short_name}
+        if level is not None:
+            fbk |= {"typeOfLevel": "isobaricInhPa", "level": level}
+        ds = cfgrib.open_dataset(grib, filter_by_keys=fbk, indexpath="")
+        ds = _normalize_longitude(ds)
+        return ds[short_name]
+
     if kind == "zt":
         m = np.load(MODEL / "pattern_model.npz")
-        ds = H.xarray(r":(gh|t):(500|850):").sel(latitude=m["lat"], longitude=m["lon"])
-        z, t = ds["gh"].sel(isobaricInhPa=500).values, ds["t"].sel(isobaricInhPa=850).values
+        try:
+            zf = H.xarray(r":gh:500:").sel(latitude=m["lat"], longitude=m["lon"])["gh"]
+            tf = H.xarray(r":t:850:").sel(latitude=m["lat"], longitude=m["lon"])["t"]
+        except Exception as e:
+            if not _is_herbie_index_error(e):
+                raise
+            print(f"  fallback to cfgrib for {model} {init:%Y-%m-%d %H} +{step:03d}h z/t read", flush=True)
+            zf = _open_cfgrib_field("gh", 500).sel(latitude=m["lat"], longitude=m["lon"])
+            tf = _open_cfgrib_field("t", 850).sel(latitude=m["lat"], longitude=m["lon"])
+        if "isobaricInhPa" in zf.dims:
+            zf = zf.sel(isobaricInhPa=500)
+        if "isobaricInhPa" in tf.dims:
+            tf = tf.sel(isobaricInhPa=850)
+        z, t = zf.values, tf.values
         if z.ndim == 2:
             z, t = z[None], t[None]
         np.savez_compressed(f, z=z.astype("float32"), t=t.astype("float32"))
@@ -75,7 +129,14 @@ def fetch_one(job):
             n = 50 if model == "eps" else 1
             np.savez_compressed(f, tp=np.zeros(n, "float32"))
         else:
-            ds = H.xarray(r":tp:").sel(latitude=slice(BOX[1], BOX[0]), longitude=slice(BOX[2], BOX[3]))
+            try:
+                ds = H.xarray(r":tp:")
+            except Exception as e:
+                if not _is_herbie_index_error(e):
+                    raise
+                print(f"  fallback to cfgrib for {model} {init:%Y-%m-%d %H} +{step:03d}h tp read", flush=True)
+                ds = _open_cfgrib_field("tp").to_dataset(name="tp")
+            ds = ds.sel(latitude=slice(BOX[1], BOX[0]), longitude=slice(BOX[2], BOX[3]))
             tp = ds["tp"].values * 1000.0
             tp = tp.reshape(tp.shape[0], -1) if tp.ndim == 3 else tp.reshape(1, -1)
             np.savez_compressed(f, tp=tp.mean(1).astype("float32"))
@@ -100,6 +161,10 @@ def fetch(models, init, workers):
         jobs += [(model, init, s, "tp") for s in sorted({x for d in days for x in (d[1], d[3]) if x > 0})]
     jobs = [j for j in jobs if not cache_file(*j[:3], j[3]).exists()]
     print(f"fetching {len(jobs)} reads with {workers} workers (an ensemble height/temperature read is about 3 minutes each)", flush=True)
+    if not jobs:
+        return
+    print(" ", fetch_one(jobs[0]), flush=True)         # one read alone first, so Herbie's config and folders exist before the workers start
+    jobs = jobs[1:]
     if not jobs:
         return
     with ProcessPoolExecutor(workers) as ex:

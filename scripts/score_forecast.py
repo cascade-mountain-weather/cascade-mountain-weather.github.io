@@ -52,15 +52,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from collect_radiosonde_history import compute_melting_layer, fetch_profile  # noqa: E402
 import cocorahs_obs  # noqa: E402
 from draft_forecast_tables import is_pdt  # noqa: E402
+from ours_from_posts import parse_range  # noqa: E402
 from snotel_obs import utc, windows_obs  # noqa: E402
+import slr_depth_model  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SITES_FILE = ROOT / "data" / "nbm" / "sites.yml"
 POSTS = ROOT / "_posts"
+FX_DIR = ROOT / "assets" / "images"
 OUT_DIR = ROOT / "data" / "evaluation"
 SLACK_IN = 1.0               # floor on the slack for a snowfall hit, inches
 SLACK_FRAC = 0.10            # slack grows with the amount: 10% of the observed value, so a big storm is held to a range, not a point
 SLACK_FT = 500.0
+PRECIP_SLACK_IN = 0.1        # floor on the slack for a precipitation hit, inches (a gauge reads in tenths)
 SATURATED_WITHIN_M = 300.0   # actual and fully saturated snow levels this close = column is near saturation
 M_TO_FT = 3.28084
 PERIOD_IDS = ("fri_day", "fri_night", "sat_day", "sat_night", "sun_day", "sun_night")   # 12 h periods, see scripts/nbm_snapshot.py
@@ -82,6 +86,26 @@ def load_our_forecast(first_day):
         if isinstance(fc, dict) and str(fc.get("snapshot")) == first_day:
             return fc.get("areas") or {}
     return None
+
+
+def load_ours_json(first_day):
+    """Your call from the post's map: assets/images/<Thursday>_fx/ours.json (see scripts/post_plume.py).
+    {area: {"total": [lo, hi], "precip": [lo, hi]}} for the sites you filled in; text that is not a plain range ("-")
+    is skipped, never guessed. None when there is no file."""
+    thursday = date.fromisoformat(first_day) - timedelta(days=1)
+    path = FX_DIR / f"{thursday:%Y%m%d}_fx" / "ours.json"
+    if not path.exists():
+        return None
+    out = {}
+    for area, v in json.loads(path.read_text(encoding="utf-8")).items():
+        entry = {}
+        for key in ("total", "precip"):
+            rng = parse_range(str(v.get(key, ""))) if isinstance(v, dict) else None
+            if rng:
+                entry[key] = rng
+        if entry:
+            out[area] = entry
+    return out or None
 
 
 def local_to_utc(d, hour):
@@ -127,6 +151,31 @@ def score_ours(ours, obs):
     return {"ours_error_in": round((lo + hi) / 2 - obs["mid"], 1),
             "ours_hit": within(obs["mid"], lo, hi),
             "obs_overlaps_ours": overlaps(obs["low"], obs["high"], lo, hi)}
+
+
+def observed_precip(stations):
+    """Observed liquid precipitation (in) for a window from the SNOTEL stations' precipitation gain:
+    {low, mid, high, n} as the lowest, mean and highest station, or None when no station reports it."""
+    vals = [s["precip_in"] for s in (stations or {}).values() if s.get("precip_in") is not None]
+    if not vals:
+        return None
+    return {"low": round(min(vals), 2), "mid": round(sum(vals) / len(vals), 2), "high": round(max(vals), 2), "n": len(vals)}
+
+
+def precip_within(value, lo, hi):
+    k = max(PRECIP_SLACK_IN, SLACK_FRAC * value)
+    return lo - k <= value <= hi + k
+
+
+def precip_scores(models, ours, obs):
+    """Errors against the observed mean: each model's value minus observed, and whether your range held it."""
+    if not obs:
+        return {}
+    out = {f"{m}_error_in": round(v - obs["mid"], 2) for m, v in models.items() if v is not None}
+    if ours:
+        out["ours_error_in"] = round(sum(ours) / 2 - obs["mid"], 2)
+        out["ours_hit"] = precip_within(obs["mid"], ours[0], ours[1])
+    return out
 
 
 def launches(start, end):
@@ -187,6 +236,28 @@ def snow_level_scores(snap, start, end, verbose=True):
     return result
 
 
+def freezing_level_rows(snow_level, hires):
+    """The sounding's freezing level at each launch next to the freezing level HRRR and RRFS forecast there (the
+    models' 0 C isotherm, saved in the snapshot; see hires_models.freezing_levels). This replaces the snow level in the
+    evaluation: it is measured directly, not modeled, and it is the same quantity the sounding pages show.
+    {site: [{valid_utc, sounding_ft, models: {model: ft}}]}; the NBM has no freezing level product."""
+    out = {}
+    for site, sl in (snow_level or {}).items():
+        rows = []
+        for row in sl["launches"]:
+            ft = row.get("sounding_freezing_level_ft")
+            if ft is None:
+                continue
+            models = {}
+            for m, md in hires.items():
+                v = ((md.get("freezing_level_ft") or {}).get(site) or {}).get(row["valid_utc"])
+                if v is not None:
+                    models[m] = v
+            rows.append({"valid_utc": row["valid_utc"], "sounding_ft": ft, "models": models})
+        out[site] = rows
+    return out
+
+
 # ---------------------------------------------------------------- the scoring itself
 
 def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None):
@@ -236,7 +307,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
             continue
         if verbose:
             print(f"  {name}: fetching {', '.join(trips)}")
-        obs = windows_obs(trips, obs_windows)
+        obs = windows_obs(trips, obs_windows, fill=slr_depth_model.make_fill())   # fills in snowfall where a depth sensor is out
         area = {"obs_stations": {t: {"name": s["name"], "elev_ft": s["elev_ft"]} for t, s in next(iter(obs.values()))["stations"].items()},
                 "forecast_elev_ft": (site_snap.get("elevation_ft") or {}).get("site"), "windows": {}}
         if coco.get(name):
@@ -265,6 +336,14 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
                 "scores": scores,
             }
             entry.update(models)
+            # liquid precipitation: the same windows, scored against the SNOTEL stations' precipitation gain
+            o_prec = observed_precip((obs["ours_period"] if use_ours_period else obs[wid])["stations"])
+            p_models = {"nbm": (site_snap.get("precip_in") or {}).get(wid)}
+            p_models.update({m: ((md["sites"].get(name) or {}).get("liquid_in") or {}).get(wid) for m, md in hires.items()})
+            p_ours = ((ours_all or {}).get(name) or {}).get("precip") if wid == "total" else None
+            if o_prec and any(v is not None for v in p_models.values()):
+                entry["precip"] = {"observed": o_prec, "forecast": {m: v for m, v in p_models.items() if v is not None},
+                                   "ours": p_ours, "scores": precip_scores(p_models, p_ours, o_prec)}
             if (coco.get(name) or {}).get("windows", {}).get(wid):
                 entry["cocorahs"] = coco[name]["windows"][wid]
             if use_ours_period and ours:
@@ -273,6 +352,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
         result["areas"][name] = area
 
     result["snow_level"] = snow_level if snow_level is not None else snow_level_scores(snap, min(s for s, _ in windows.values()), last_end, verbose)
+    result["freezing_level"] = freezing_level_rows(result["snow_level"], hires)
     return result
 
 
@@ -304,7 +384,8 @@ def main():
             sys.exit("no nbm_snapshot_*.json in data/forecasts")
         path = found[-1]
     snap = json.loads(path.read_text(encoding="utf-8"))
-    ours = load_our_forecast(snap["source"]["first_day_local"])
+    first_day = snap["source"]["first_day_local"]
+    ours = load_our_forecast(first_day) or load_ours_json(first_day)
     try:
         result = score_snapshot(snap, path.name, ours)
     except RuntimeError as exc:

@@ -1,7 +1,21 @@
 /* Post-specific styles */
 
+/* Posts are one flat white page: no grey page background, and no card-in-a-card around the sections inside the
+   post (the site-wide `section` rule gives every section its own white box with a shadow) */
+body {
+    background: #ffffff;
+}
+
 .post {
     background: white;
+}
+
+.post-content > section {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.5rem 0 0;
+    margin-bottom: 1.5rem;
 }
 
 .post-header {
@@ -12,21 +26,22 @@
     margin: -2rem -2rem 0.75rem -2rem;
 }
 
-/* Header block, top to bottom: blog name (largest), "In this week's edition: title", subtitle, then
-   posted / forecast period / forecaster. Colors are the site's palette on the blue gradient. */
+/* Header block, left aligned: a small blog-name line, the headline, an optional subtitle, then one quiet
+   line with the dates. Colors are the site's palette on the blue gradient. */
+.post-header { text-align: center; }
+
 .post-blog {
-    font-size: clamp(2.1rem, 1.5rem + 2.8vw, 3.25rem);
-    font-weight: 800;
-    line-height: 1.1;
-    color: #ffffff;
-    margin: 0 0 1rem 0;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #dbeafe;
+    margin: 0 0 0.5rem 0;
 }
 
-/* Light blue on the dark blue gradient (about 6:1 contrast). Every state is set so a visited link
-   never falls back to the browser's purple, which is unreadable here. */
+/* Light blue on the dark blue gradient. Every state is set so a visited link never falls back to the
+   browser's purple, which is unreadable here. */
 .post-blog .post-blog-link,
 .post-blog .post-blog-link:visited {
-    font-size: 1rem;
     font-weight: 600;
     color: #dbeafe;
     text-decoration: underline;
@@ -47,34 +62,29 @@
 }
 
 .post-header h1.post-title {
-    font-size: clamp(1.15rem, 1rem + 0.8vw, 1.5rem);
-    font-weight: 700;
-    line-height: 1.3;
+    font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.2;
     color: #ffffff;
-    margin: 0 0 0.5rem 0;
-}
-
-.post-edition-label {
-    font-weight: 400;
-    color: #dbeafe;
+    margin: 0 0 0.6rem 0;
 }
 
 .post-subtitle {
-    font-size: 1.05rem;
+    font-size: 1rem;
     line-height: 1.5;
     color: #eef4ff;
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
 .post-meta {
     display: flex;
-    gap: 0.4rem 1.75rem;
+    gap: 0.25rem 1.25rem;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 0.95rem;
-    color: #ffffff;
+    font-size: 0.85rem;
+    color: #dbeafe;
     margin: 0;
     padding-top: 0.85rem;
     border-top: 1px solid rgba(255, 255, 255, 0.25);
@@ -82,14 +92,14 @@
 
 /* The shared .post-date rule (gray, with its own margins) is meant for the post list, and was winning here */
 .post-meta span {
-    color: #ffffff;
+    color: #dbeafe;
     margin: 0;
     font-size: inherit;
 }
 
 /* Main photo for the post (front matter `thumbnail`): a modest centered figure under the header */
 .post-lead-photo {
-    max-width: 420px;
+    max-width: 620px;
     margin: 1rem auto;
     text-align: center;
 }
@@ -285,8 +295,10 @@
 }
 
 .post-footer {
+    background: none;   /* the site-wide footer rule paints dark blue; this is the post's own footer */
+    color: inherit;
     margin-top: 3rem;
-    padding-top: 2rem;
+    padding: 2rem 0 0;
     border-top: 2px solid #e0e0e0;
     text-align: center;
 }
@@ -310,23 +322,6 @@
 
 .back-link:hover {
     background-color: #1e3c72;
-}
-
-#infinite-forecast-feed {
-    margin-top: 2rem;
-}
-
-.loaded-post {
-    margin-top: 2rem;
-    border-top: 2px solid #e0e0e0;
-    padding-top: 2rem;
-}
-
-#infinite-forecast-sentinel {
-    margin: 1.5rem 0 0.5rem;
-    text-align: center;
-    color: #666;
-    font-size: 0.95rem;
 }
 
 p {
@@ -413,13 +408,13 @@ p {
     .post-meta {
         flex-direction: column;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.2rem;
     }
 
     /* The nested discussion card does not need a second layer of side padding on a phone */
     .post-content > section {
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 0;
+        padding-right: 0;
     }
     
     .forecast-section h2 {
@@ -435,4 +430,172 @@ p {
     .snow-totals-grid th {
         font-size: 0.8rem;
     }
+}
+
+/* ---- Collapsible sections, contents list, snow table (weekly template) ---- */
+html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+
+.post-toc {
+    background: #f5f7fa;
+    border: 1px solid #d5deea;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+.post-toc > summary { cursor: pointer; list-style: none; padding: 0.8rem 1.25rem; display: flex; align-items: center; gap: 0.6rem; }
+.post-toc > summary::-webkit-details-marker { display: none; }
+.post-toc > summary::before { content: "▸"; color: #2a5298; font-size: 1.2rem; transition: transform 0.15s; }
+.post-toc[open] > summary::before { transform: rotate(90deg); }
+.post-toc > summary h2 { color: #1e3c72; font-size: 1.3rem; margin: 0; }
+.post-toc > summary:focus-visible { outline: 2px solid #2a5298; outline-offset: 2px; }
+.post-toc-body { padding: 0 1.5rem 1rem; }
+.post-toc ol { margin: 0.75rem 0 0 1.5rem; }
+.post-toc li { margin-bottom: 0.3rem; }
+.post-toc a { color: #1e3c72; font-weight: 600; }
+.post-toc-controls button {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.7rem;
+    margin-right: 0.4rem;
+    border: 1px solid #2a5298;
+    border-radius: 6px;
+    background: #fff;
+    color: #1e3c72;
+    cursor: pointer;
+}
+.post-toc-controls button:hover { background: #e3f2fd; }
+
+/* the site nav is sticky, so a jumped-to section needs room above it or its title ends up hidden behind the bar */
+.post-toc, details.post-section, .safety-note, .summary { scroll-margin-top: 4.5rem; }
+
+details.post-section {
+    margin-top: 1.25rem;
+    border: 1px solid #d5deea;
+    border-radius: 8px;
+    background: #fff;
+}
+details.post-section > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.9rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #eef3fa;
+    border-radius: 8px;
+}
+details.post-section[open] > summary { border-radius: 8px 8px 0 0; border-bottom: 1px solid #d5deea; }
+details.post-section > summary::-webkit-details-marker { display: none; }
+details.post-section > summary::before {
+    content: "▸";
+    color: #2a5298;
+    font-size: 1.2rem;
+    transition: transform 0.15s;
+}
+details.post-section[open] > summary::before { transform: rotate(90deg); }
+details.post-section > summary h2 { margin: 0; font-size: 1.4rem; color: #1e3c72; }
+details.post-section > summary:focus-visible { outline: 2px solid #2a5298; outline-offset: 2px; }
+.post-section-body { padding: 1rem 1.25rem 1.25rem; }
+.post-section-body ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+.post-section-body h3 { color: #2a5298; font-size: 1.15rem; margin: 1.25rem 0 0.4rem; }
+.to-top { text-align: right; font-size: 0.9rem; margin: 0.5rem 0 0; }
+
+figure.figure-slot { margin: 1.5rem 0; }
+figure.figure-slot .figure-placeholder { margin: 0; }
+figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #555; font-style: italic; text-align: center; }
+
+.snow-table-warning {
+    background: #fff4e5;
+    border-left: 4px solid #f57f17;
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+}
+.snow-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.snow-table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.92rem; }
+.snow-table caption { text-align: left; font-size: 0.85rem; color: #555; padding-bottom: 0.4rem; }
+.snow-table th, .snow-table td { border: 1px solid #d5deea; padding: 0.3rem 0.5rem; text-align: center; }
+.snow-table thead th { background: #1e3c72; color: #fff; }
+.snow-table tbody th[scope="rowgroup"] { background: #eef3fa; color: #1e3c72; text-align: left; }
+.snow-table tbody th[scope="row"] { text-align: left; font-weight: 600; background: #fafbfd; }
+.snow-table td.total { font-weight: 700; background: #f5f7fa; }
+.snow-table tr.area-start > * { border-top: 2px solid #1e3c72; }
+.snow-table tr.mine > * { background: #e8f5e9; font-weight: 700; }
+.snow-table-note { font-size: 0.88rem; color: #555; margin-top: 0.75rem; }
+
+.winners-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.winners { padding: 0.75rem 1rem; border-radius: 8px; }
+.winners h3 { margin-top: 0; }
+.winners ul { margin-bottom: 0; }
+.winners-up { background: #e8f5e9; border-left: 4px solid #388e3c; }
+.winners-down { background: #ffebee; border-left: 4px solid #c62828; }
+@media (max-width: 640px) { .winners-grid { grid-template-columns: 1fr; } }
+
+/* ---- Interactive plume map ---- */
+.plume-map { margin: 1rem 0; }
+.pm-controls { display: flex; flex-wrap: wrap; gap: 0.6rem 1.25rem; align-items: center; margin-bottom: 0.75rem; }
+.pm-group { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.pm-label { font-size: 0.85rem; color: #475569; margin-right: 0.2rem; }
+.pm-group button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.7rem; border: 1px solid #2a5298; background: #fff; color: #1e3c72; cursor: pointer; border-radius: 6px; }
+.pm-group button[aria-pressed="true"] { background: #1e3c72; color: #fff; }
+.pm-check { font-size: 0.85rem; color: #334155; cursor: pointer; }
+.pm-grid { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; gap: 1rem; align-items: start; }
+.pm-grid > * { min-width: 0; }
+@media (max-width: 760px) {
+  .pm-grid { grid-template-columns: minmax(0, 1fr); }
+  .pm-table-box .snow-table { min-width: 30rem; }   /* scrolls sideways inside .snow-table-wrap instead of widening the page */
+}
+.post-content svg.pm-map, .post-content svg.pm-chart { width: 100%; height: auto; display: block; border: 1px solid #d5deea; border-radius: 8px; margin: 0; box-shadow: none; }
+.pm-plume[hidden] { display: none; }
+.pm-plume-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.pm-zoom { display: inline-flex; gap: 0.25rem; }
+.pm-zoom button { font: inherit; font-size: 0.85rem; min-width: 2rem; padding: 0.15rem 0.5rem; border: 1px solid #2a5298; background: #fff; color: #1e3c72; border-radius: 6px; cursor: pointer; }
+.pm-zoom button:disabled { opacity: 0.4; cursor: default; }
+.pm-chart-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pm-chart-scroll.zoomed { cursor: grab; }
+.pm-site { cursor: pointer; }
+.pm-site:focus-visible circle { stroke: #0f172a; stroke-width: 3; }
+.pm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: #475569; margin: 0.5rem 0; }
+.pm-ramp { display: inline-block; width: 90px; height: 10px; border-radius: 3px; border: 1px solid #cbd5e1; }
+.pm-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pm-chip { font: inherit; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.55rem; border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; cursor: pointer; color: #1e293b; }
+.pm-chip.sel { border-color: #0f172a; box-shadow: 0 0 0 1px #0f172a; }
+.pm-sw { width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 1px solid #94a3b8; display: inline-block; }
+.pm-title { margin: 0 0 0.4rem; font-size: 1.1rem; color: #1e3c72; }
+.pm-sum { font-size: 0.9rem; margin: 0.5rem 0 0; color: #1e293b; }
+.pm-note { font-size: 0.8rem; color: #64748b; margin-top: 0.75rem; }
+
+.pm-h4 { margin: 1rem 0 0.35rem; font-size: 1rem; color: #2a5298; }
+.pm-title + .pm-h4 { margin-top: 0.25rem; }
+.pm-table-box { margin-top: 0.5rem; }
+.pm-table-box[hidden] { display: none; }
+.pm-table-box .snow-table { min-width: 0; }
+
+/* "Related tools" row at the end of each collapsible section */
+.section-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.5rem;
+    margin: 1rem 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.section-tools > span {
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.section-tools a {
+    padding: 0.2rem 0.7rem;
+    background: #eaf1fb;
+    border: 1px solid #c9d8f0;
+    border-radius: 999px;
+    color: #1e3c72;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.section-tools a:hover {
+    background: #dbe8f8;
+    border-color: #2a5298;
 }

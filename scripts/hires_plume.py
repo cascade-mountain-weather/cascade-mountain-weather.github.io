@@ -1,4 +1,4 @@
-"""Write the HRRR and HRDPS 6-hour snowfall and liquid precipitation the precipitation page overlays on the NBM plume.
+"""Write the HRRR, RRFS and HRDPS 6-hour snowfall and liquid precipitation the precipitation page overlays on the NBM plume.
 
     python scripts/hires_plume.py                  # newest 48-hour cycle of each model
     python scripts/hires_plume.py --models hrrr    # one model only
@@ -24,12 +24,12 @@ import nbm_snapshot as nbm  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "data" / "hires_plumes.json"
-LABELS = {"hrrr": "HRRR (NOAA, 3 km)", "hrdps": "HRDPS (Environment Canada, 2.5 km)"}
+LABELS = {"hrrr": "HRRR (NOAA, 3 km)", "rrfs": "RRFS (NOAA, 3 km)", "hrdps": "HRDPS (Environment Canada, 2.5 km)"}
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--models", nargs="+", default=["hrrr", "hrdps"], choices=["hrrr", "hrdps"])
+    ap.add_argument("--models", nargs="+", default=["hrrr", "rrfs", "hrdps"], choices=["hrrr", "rrfs", "hrdps"])
     ap.add_argument("--out", help="output path (default assets/data/hires_plumes.json)")
     args = ap.parse_args()
 
@@ -50,8 +50,11 @@ def main():
             continue
         print(f"{model}: cycle {cycle:%Y-%m-%d %H}Z")
         grid = nbm.Grid(sites)
-        ends = [cycle + pd.Timedelta(hours=h) for h in range(6, hm.MAX_HOURS + 1, 6)]
+        ends = [cycle + pd.Timedelta(hours=h) for h in range(6, hm.max_hours(model) + 1, 6)]
         res = hm.windows(model, cycle, ends, grid)
+        if grid.km is None:  # no field could be read at all: skip this model rather than lose the others
+            print(f"{model}: no data could be read from cycle {cycle:%Y-%m-%d %H}Z, skipped", file=sys.stderr)
+            continue
         per_site = {}
         for k, s in enumerate(sites):
             per_site[s["name"]] = {

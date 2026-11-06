@@ -9,9 +9,9 @@ Run from the repo root in the `cmw-herbie` conda env (Herbie, cfgrib, eccodes; s
 
 ## Each weekend
 
-1. **Thursday, when the forecast is written:** `python scripts/nbm_snapshot.py` (newest long NBM cycle, Friday to Sunday). It writes `data/forecasts/nbm_snapshot_<first-day>.json`. The NBM cannot be rebuilt later for the exact run you saw, so capture it then.
+1. **Thursday, when the forecast is written:** `python scripts/nbm_snapshot.py` (newest long NBM cycle, Friday to Sunday). It writes `data/forecasts/nbm_snapshot_<first-day>.json`: NBM snowfall and liquid precipitation, plus HRRR, RRFS and HRDPS snowfall and precipitation, and the HRRR and RRFS freezing level at the sounding sites. The NBM cannot be rebuilt later for the exact run you saw, so capture it then, and write your call into `assets/images/<Thursday YYYYMMDD>_fx/ours.json` (`total`, and optionally `precip`).
    `python scripts/draft_forecast_tables.py` drafts the post's snowfall and snow-level tables from it.
-2. **Monday, after the weekend:** `python scripts/score_forecast.py data/forecasts/nbm_snapshot_<first-day>.json` scores it against SNOTEL snowfall (`scripts/snotel_obs.py`) and radiosonde snow level, and reads your ranges from the published post (`scripts/ours_from_posts.py`). Output: `data/evaluation/score_<first-day>.json`.
+2. **Monday, after the weekend:** `python scripts/score_forecast.py data/forecasts/nbm_snapshot_<first-day>.json` scores it against SNOTEL snowfall and precipitation (`scripts/snotel_obs.py`) and the radiosonde freezing level, and reads your ranges from the post's `ours.json` (or the older post tables, `scripts/ours_from_posts.py`). The snow level is still computed for the backfill but is no longer shown. Output: `data/evaluation/score_<first-day>.json`.
    `score_forecast.py` also adds HRRR/HRDPS (saved in the snapshot by `nbm_snapshot.py`) and the CoCoRaHS cross-check.
 3. `python scripts/build_evaluation_json.py` rebuilds `assets/data/evaluation.json`, which `evaluation.html` reads in the browser. The weekend's season comes from its date.
 

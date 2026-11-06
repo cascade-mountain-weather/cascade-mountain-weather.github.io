@@ -1,0 +1,96 @@
+name: Weekly forecast evaluation
+
+# Mondays at 10 am Pacific (SNOTEL stations do not post their overnight values until about 8 am): score the weekend that just ended and refresh the evaluation page.
+# GitHub cron is in UTC and does not follow daylight time, so it fires at both 17:00 and 18:00 UTC and the first step
+# lets through only the run that is 10 am in Los Angeles. Run it by hand from the Actions tab at any time.
+#
+# It needs the snapshot you save on Thursday (python scripts/nbm_snapshot.py, committed to data/forecasts/), and it uses
+# your call from assets/images/<Thursday>_fx/ours.json. If the snapshot is missing it opens an issue instead, so a
+# skipped Thursday step shows up in your email rather than as a silent gap.
+on:
+  schedule:
+    - cron: "0 17,18 * * 1"
+  workflow_dispatch:
+    inputs:
+      first_day:
+        description: "Friday of the weekend to score, YYYY-MM-DD (blank = the most recent Friday)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: weekly-evaluation
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Only at 10 am Pacific
+        id: gate
+        run: |
+          hour=$(TZ=America/Los_Angeles date +%H)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$hour" = "10" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "It is ${hour}:00 in Los Angeles, not 10 am; the other cron entry handles this week."
+          fi
+
+      - name: Checkout repository
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests numpy pyyaml
+
+      - name: Score the weekend and rebuild the page data
+        if: steps.gate.outputs.run == 'true'
+        id: score
+        env:
+          FIRST_DAY: ${{ github.event.inputs.first_day }}
+        run: |
+          if [ -n "$FIRST_DAY" ]; then
+            python scripts/weekly_evaluation.py --first-day "$FIRST_DAY"
+          else
+            python scripts/weekly_evaluation.py
+          fi
+
+      - name: Commit and push
+        if: steps.score.outputs.status == 'scored'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git add data/evaluation assets/data/evaluation.json
+          git commit -m "Score weekend ${{ steps.score.outputs.first_day }} [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Open an issue if the snapshot is missing
+        if: steps.score.outputs.status == 'missing-snapshot'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIRST_DAY: ${{ steps.score.outputs.first_day }}
+        run: |
+          gh label create evaluation --color 2a5298 --description "Weekly forecast evaluation" 2>/dev/null || true
+          gh issue create --label evaluation \
+            --title "Evaluation skipped: no snapshot for the weekend of ${FIRST_DAY}" \
+            --body "The Monday evaluation looked for data/forecasts/nbm_snapshot_${FIRST_DAY}.json and did not find it, so nothing was scored.
+
+          The snapshot is saved on Thursday when the forecast is written (python scripts/nbm_snapshot.py --first-day ${FIRST_DAY}) and has to be committed and pushed. If you still have it locally, push it and run this workflow again from the Actions tab (Run workflow)."

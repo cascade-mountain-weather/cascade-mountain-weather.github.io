@@ -24,6 +24,10 @@ Record fields (inches), per weekend and area:
   periods   {fri_day|fri_night|sat_day|sat_night|sun_day|sun_night: {obs: [...], nbm: [...], hrrr: x, hrdps: x}}   the six
             12 h periods (day 12Z-0Z, night 0Z-12Z). The NBM values are scaled sums of two 6 h windows (approximate; see
             scaled_sum in scripts/nbm_snapshot.py); no CoCoRaHS (it reports once a day)
+  precip    liquid precipitation, the same windows: {total|days: {day1..}|periods: {...}} each {obs: [low, mid, high],
+            nbm: [x, x, x], hrrr: x, rrfs: x, hrdps: x, ours: [low, high] (total only)}. Observed is the SNOTEL stations'
+            precipitation gain (lowest, mean, highest station). The NBM has no precipitation percentiles, so its value is
+            one number repeated.
   coco      CoCoRaHS cross-check (volunteer stations within 25 km): {n, nr, full, med, max, top: [name, elev_ft, in]}
             for the weekend total, and the same under days. Not part of any score.
 """
@@ -75,6 +79,27 @@ def coco(w, a=None, wid=None):
     return out
 
 
+MODELS = ("hrrr", "rrfs", "hrdps")   # single-valued model products
+
+
+def precip_entry(w, ours=None):
+    """One window's precipitation: observed range plus each forecast, or None when nothing was observed or forecast."""
+    p = (w or {}).get("precip")
+    if not p or not p.get("observed"):
+        return None
+    o = p["observed"]
+    f = p.get("forecast") or {}
+    out = {"obs": [o["low"], o["mid"], o["high"]]}
+    if f.get("nbm") is not None:
+        out["nbm"] = [f["nbm"]] * 3
+    for m in MODELS:
+        if f.get(m) is not None:
+            out[m] = f[m]
+    if p.get("ours"):
+        out["ours"] = p["ours"]
+    return out
+
+
 def triple(d, keys):
     if not d or any(d.get(k) is None for k in keys):
         return None
@@ -88,7 +113,7 @@ def main():
     for d in SCORE_DIRS:                      # later directories win when a weekend appears twice
         for p in sorted(d.glob("score_*.json")):
             files[p.stem.replace("score_", "")] = p
-    weekends, areas, records, snow = [], {}, [], []
+    weekends, areas, records, freezing = [], {}, [], []
     for first_day, path in sorted(files.items()):
         if first_day in PRESEASON:
             continue
@@ -116,7 +141,7 @@ def main():
                     days[wid] = {"obs": triple(w.get("observed"), ("low", "mid", "high")), "nbm": triple(w.get("nbm"), ("p25", "p50", "p75"))}
             for wid, w in a["windows"].items():
                 if wid.startswith("day"):
-                    for model in ("hrrr", "hrdps"):
+                    for model in MODELS:
                         if w.get(model) and w[model].get("snowfall_in") is not None:
                             days[wid][model] = w[model]["snowfall_in"]
                     c = coco(w, a, wid)
@@ -129,19 +154,36 @@ def main():
             for wid, w in a["windows"].items():
                 if wid in PERIOD_IDS:
                     periods[wid] = {"obs": triple(w.get("observed"), ("low", "mid", "high")), "nbm": triple(w.get("nbm"), ("p25", "p50", "p75"))}
-                    for model in ("hrrr", "hrdps"):
+                    for model in MODELS:
                         if w.get(model) and w[model].get("snowfall_in") is not None:
                             periods[wid][model] = w[model]["snowfall_in"]
             if periods:
                 rec["periods"] = periods
             if coco(tot, a, "total"):
                 rec["coco"] = coco(tot, a, "total")
+            prec = {}
+            if precip_entry(tot):
+                prec["total"] = precip_entry(tot)
+            pdays = {wid: precip_entry(w) for wid, w in a["windows"].items() if wid.startswith("day") and precip_entry(w)}
+            pper = {wid: precip_entry(w) for wid, w in a["windows"].items() if wid in PERIOD_IDS and precip_entry(w)}
+            if pdays:
+                prec["days"] = pdays
+            if pper:
+                prec["periods"] = pper
+            if prec:
+                rec["precip"] = prec
             records.append(rec)
-        for site, sl in (s.get("snow_level") or {}).items():
-            for r in sl["launches"]:
-                snow.append({"w": wi, "site": site, "valid": r["valid_utc"], "sonde": r["sounding_snow_level_ft"],
-                             "freezing": r.get("sounding_freezing_level_ft"), "sat": bool(r["column_saturated"]),
-                             "nbm": triple(r["nbm"], ("p25", "p50", "p75"))})
+        # freezing level at the sounding sites: the sounding's value (the one the sounding pages show) and the models'
+        # 0 C isotherm when the snapshot saved it. Weekends scored before that was saved have the sounding only.
+        if s.get("freezing_level"):
+            for site, rows in s["freezing_level"].items():
+                for r in rows:
+                    freezing.append({"w": wi, "site": site, "valid": r["valid_utc"], "sonde": r["sounding_ft"], **r.get("models", {})})
+        else:
+            for site, sl in (s.get("snow_level") or {}).items():
+                for r in sl["launches"]:
+                    if r.get("sounding_freezing_level_ft") is not None:
+                        freezing.append({"w": wi, "site": site, "valid": r["valid_utc"], "sonde": r["sounding_freezing_level_ft"]})
     out = {
         "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
         "seasons": SEASONS,
@@ -149,17 +191,18 @@ def main():
             {"id": "nbm", "label": "NBM", "long": "NBM median, with the 25th–75th percentile range", "kind": "range", "available": True},
             {"id": "ours", "label": "Our forecast", "long": "Our forecast range (weekend total)", "kind": "range", "available": True},
             {"id": "hrrr", "label": "HRRR", "long": "HRRR (single value, first 48 hours: Friday)", "kind": "point", "available": True},
+            {"id": "rrfs", "label": "RRFS", "long": "RRFS (single value, first 84 hours: Friday and Saturday)", "kind": "point", "available": True},
             {"id": "hrdps", "label": "HRDPS", "long": "HRDPS (single value, first 48 hours: Friday; assumes 10:1 snow ratio)", "kind": "point", "available": True},
         ],
         "periods": PERIODS,
         "areas": list(areas.values()),
         "weekends": weekends,
         "records": records,
-        "snow_level": snow,
+        "freezing_level": freezing,
     }
     OUT.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {OUT.relative_to(ROOT)}: {len(weekends)} weekends, {len(areas)} areas, {len(records)} records, "
-          f"{len(snow)} launches, {OUT.stat().st_size // 1024} KB")
+          f"{len(freezing)} launches, {OUT.stat().st_size // 1024} KB")
 
 
 if __name__ == "__main__":
