@@ -1,0 +1,227 @@
+{
+ "about": "Fills in observed snowfall when a SNOTEL depth sensor is out: depth = SWE x clip(level + b (T700 - t0) + c (SWE - 1), slr_min, slr_max). Built by scripts/slr_model_swe.py --export from hourly SNOTEL storms (SWE gain >= min_swe) and Quillayute and Salem 700 hPa temperatures. The depth it predicts is what a working SNOTEL depth sensor would have read, a lower bound on true new snow.",
+ "built": "2026-11-05",
+ "seasons": [
+  2006,
+  2026
+ ],
+ "storms": 5800,
+ "min_swe_in": 0.5,
+ "t700_default_c": -9.0,
+ "t0_c": -10.0,
+ "b_per_c": -0.2876,
+ "c_per_in_swe": -0.3729,
+ "slr_min": 2.0,
+ "slr_max": 25.0,
+ "level_default": 7.833,
+ "level_default_east": 8.677,
+ "level_default_west": 7.552,
+ "east_lon": -121.0,
+ "obs_over_pred_quantiles": {
+  "p10": 0.581,
+  "p25": 0.782,
+  "p50": 1.0,
+  "p75": 1.225,
+  "p90": 1.462
+ },
+ "skill_leave_one_season_out": {
+  "mae_depth_in": 2.05,
+  "median_abs_error_pct": 21.7,
+  "r2": 0.74,
+  "bias": 0.99
+ },
+ "stations": {
+  "1085:WA:SNTL": {
+   "name": "Cayuse Pass",
+   "elev_ft": 5260,
+   "storms": 38,
+   "level": 8.144
+  },
+  "352:WA:SNTL": {
+   "name": "Blewett Pass",
+   "elev_ft": 4240,
+   "storms": 151,
+   "level": 8.286
+  },
+  "375:WA:SNTL": {
+   "name": "Bumping Ridge",
+   "elev_ft": 4600,
+   "storms": 225,
+   "level": 8.688
+  },
+  "418:WA:SNTL": {
+   "name": "Corral Pass",
+   "elev_ft": 5810,
+   "storms": 245,
+   "level": 7.847
+  },
+  "420:WA:SNTL": {
+   "name": "Cougar Mountain",
+   "elev_ft": 3210,
+   "storms": 119,
+   "level": 6.357
+  },
+  "478:WA:SNTL": {
+   "name": "Fish Lake",
+   "elev_ft": 3440,
+   "storms": 220,
+   "level": 8.297
+  },
+  "502:WA:SNTL": {
+   "name": "Green Lake",
+   "elev_ft": 5920,
+   "storms": 248,
+   "level": 8.461
+  },
+  "507:WA:SNTL": {
+   "name": "Grouse Camp",
+   "elev_ft": 5390,
+   "storms": 220,
+   "level": 7.734
+  },
+  "515:WA:SNTL": {
+   "name": "Harts Pass",
+   "elev_ft": 6490,
+   "storms": 208,
+   "level": 8.37
+  },
+  "599:WA:SNTL": {
+   "name": "Lost Horse",
+   "elev_ft": 5100,
+   "storms": 155,
+   "level": 8.035
+  },
+  "606:WA:SNTL": {
+   "name": "Lyman Lake",
+   "elev_ft": 5990,
+   "storms": 175,
+   "level": 9.094
+  },
+  "642:WA:SNTL": {
+   "name": "Morse Lake",
+   "elev_ft": 5400,
+   "storms": 216,
+   "level": 7.835
+  },
+  "648:WA:SNTL": {
+   "name": "Mount Crag",
+   "elev_ft": 3960,
+   "storms": 200,
+   "level": 7.826
+  },
+  "672:WA:SNTL": {
+   "name": "Olallie Meadows",
+   "elev_ft": 4010,
+   "storms": 212,
+   "level": 6.393
+  },
+  "679:WA:SNTL": {
+   "name": "Paradise",
+   "elev_ft": 5150,
+   "storms": 76,
+   "level": 6.834
+  },
+  "692:WA:SNTL": {
+   "name": "Pigtail Peak",
+   "elev_ft": 5800,
+   "storms": 331,
+   "level": 7.138
+  },
+  "699:WA:SNTL": {
+   "name": "Pope Ridge",
+   "elev_ft": 3590,
+   "storms": 160,
+   "level": 9.726
+  },
+  "711:WA:SNTL": {
+   "name": "Rainy Pass",
+   "elev_ft": 4880,
+   "storms": 134,
+   "level": 8.901
+  },
+  "734:WA:SNTL": {
+   "name": "Sasse Ridge",
+   "elev_ft": 4340,
+   "storms": 232,
+   "level": 8.188
+  },
+  "748:WA:SNTL": {
+   "name": "Sheep Canyon",
+   "elev_ft": 3990,
+   "storms": 262,
+   "level": 6.358
+  },
+  "788:WA:SNTL": {
+   "name": "Stampede Pass",
+   "elev_ft": 3850,
+   "storms": 158,
+   "level": 7.123
+  },
+  "791:WA:SNTL": {
+   "name": "Stevens Pass",
+   "elev_ft": 3940,
+   "storms": 223,
+   "level": 8.143
+  },
+  "832:WA:SNTL": {
+   "name": "Trough",
+   "elev_ft": 5480,
+   "storms": 192,
+   "level": 7.792
+  },
+  "841:WA:SNTL": {
+   "name": "Upper Wheeler",
+   "elev_ft": 4330,
+   "storms": 122,
+   "level": 9.513
+  },
+  "863:WA:SNTL": {
+   "name": "White Pass E.S.",
+   "elev_ft": 4440,
+   "storms": 184,
+   "level": 7.588
+  },
+  "899:WA:SNTL": {
+   "name": "Tinkham Creek",
+   "elev_ft": 3000,
+   "storms": 167,
+   "level": 7.299
+  },
+  "909:WA:SNTL": {
+   "name": "Wells Creek",
+   "elev_ft": 4040,
+   "storms": 179,
+   "level": 7.823
+  },
+  "910:WA:SNTL": {
+   "name": "Elbow Lake",
+   "elev_ft": 3050,
+   "storms": 233,
+   "level": 6.933
+  },
+  "941:WA:SNTL": {
+   "name": "Mowich",
+   "elev_ft": 3170,
+   "storms": 91,
+   "level": 6.844
+  },
+  "942:WA:SNTL": {
+   "name": "Burnt Mountain",
+   "elev_ft": 4160,
+   "storms": 257,
+   "level": 6.556
+  },
+  "974:WA:SNTL": {
+   "name": "Waterhole",
+   "elev_ft": 5010,
+   "storms": 156,
+   "level": 8.813
+  },
+  "998:WA:SNTL": {
+   "name": "Easy Pass",
+   "elev_ft": 5280,
+   "storms": 11,
+   "level": 7.725
+  }
+ }
+}

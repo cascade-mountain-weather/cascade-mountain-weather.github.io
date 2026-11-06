@@ -259,3 +259,6 @@ data/corn/validation/
 # live forecast reads (scripts/pattern_forecast.py)
 data/forecast_cache/
 assets/forecast/
+
+# snow-to-liquid-ratio study downloads (scripts/slr_pull_snotel.py, slr_pull_soundings.py)
+data/slr/
