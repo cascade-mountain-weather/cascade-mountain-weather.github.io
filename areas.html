@@ -1,0 +1,18 @@
+---
+layout: page
+title: "Washington Cascades Ski Area Weather & Snow Forecasts"
+description: "Weather and snow forecasts for Washington Cascade and Olympic ski areas: Mt. Baker, Stevens Pass, Snoqualmie Pass, Crystal Mountain, White Pass, Paradise, Washington Pass, Blewett Pass and Hurricane Ridge."
+keywords: "Washington ski forecast, Cascades snow forecast, Mt. Baker weather, Stevens Pass weather, Snoqualmie Pass weather, Crystal Mountain weather, White Pass weather"
+---
+<link rel="stylesheet" href="{{ '/assets/area-page.css' | relative_url }}">
+<section class="hero area-hero">
+    <h1 class="PlotTitle">Areas We Cover</h1>
+    <p>Each area has its own page with snowfall and precipitation forecasts from the NBM, HRRR, RRFS and HRDPS, cloud cover, and an hour-by-hour point forecast. For the weekend outlook across all of them, read the <a href="{{ site.posts.first.url | relative_url }}">latest forecast</a>.</p>
+</section>
+<section class="area-more">
+    <ul>
+    {% for ar in site.data.area_pages.areas %}
+        <li><a href="{{ '/tools/' | append: ar.slug | append: '.html' | relative_url }}"><strong>{{ ar.name }}</strong></a>: {{ ar.where }}</li>
+    {% endfor %}
+    </ul>
+</section>

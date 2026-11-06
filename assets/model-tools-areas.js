@@ -9,7 +9,7 @@
     const pageOf = p => p.page || 'precip';
     let nbmData = null; // assets/data/nbm_plumes.json, written by scripts/nbm_plume.py
     let soundings = {}; // assets/data/uw_soundings/<site>.json (UW WRF forecast soundings), written by scripts/uw_soundings.py
-    let hiresData = null; // assets/data/hires_plumes.json (HRRR and HRDPS), written by scripts/hires_plume.py
+    let plumeData = null; // assets/data/plume_live.json (NBM, HRRR, RRFS, HRDPS on shared windows), written by scripts/plume_live.py
     const pad = (n, w) => String(n).padStart(w, '0');
     const ymd = d => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1, 2)}${pad(d.getUTCDate(), 2)}`;
     const ymdh = d => ymd(d) + pad(d.getUTCHours(), 2);
@@ -51,169 +51,22 @@
     const NBM_SITE = { 'mt-baker': 'Mt. Baker', stevens: 'Stevens Pass', snoqualmie: 'Snoqualmie Pass', blewett: 'Blewett Pass',
         crystal: 'Crystal', paradise: 'Paradise', white: 'White Pass', washington: 'Washington Pass',
         hurricane: 'Hurricane Ridge', winthrop: 'Winthrop', 'mt-hood': 'Mt. Hood' };
-    const PAC_H = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' });
-    const PAC_D = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'numeric', day: 'numeric' });
     const num = (v, d) => (v == null ? '\u2013' : (+v).toFixed(d == null ? 1 : d));
 
-    // HRRR and HRDPS 6-hour windows for one site, drawn over the NBM: diamonds and triangles, lines for the totals
-    const HIRES_STYLE = { hrrr: { color: '#dc2626', shape: 'diamond', dx: -4 }, hrdps: { color: '#7c3aed', shape: 'triangle', dx: 4 } };
-    function hiresSeries(siteName) {
-        if (!hiresData || !hiresData.models) return [];
-        return Object.keys(hiresData.models).filter(m => HIRES_STYLE[m] && hiresData.models[m].sites[siteName]).map(m => {
-            const md = hiresData.models[m], st = md.sites[siteName];
-            return Object.assign({ key: m, label: md.label.split(' (')[0], cycle: Date.parse(md.cycle_utc),
-                ends: md.window_end_utc.map(t => Date.parse(t)), snow: st.snow, precip: st.precip }, HIRES_STYLE[m]);
-        }).filter(h => h.snow.some(v => v != null));
+    // The same plume chart the forecast posts use (assets/post-plume-map.js), for one area, as an SVG image.
+    function plumeChart(areaId, product) {
+        const out = window.CMWPlume && plumeData && window.CMWPlume.chartSvg(plumeData, NBM_SITE[areaId], product);
+        return out ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(out.svg) : '';
     }
-    const marker = (shape, x, y, color) => shape === 'diamond'
-        ? `<path d="M${x} ${y - 4.5}L${x + 4.5} ${y}L${x} ${y + 4.5}L${x - 4.5} ${y}Z" fill="${color}" stroke="#fff" stroke-width="1"/>`
-        : `<path d="M${x} ${y - 4.5}L${x + 4.5} ${y + 3.5}L${x - 4.5} ${y + 3.5}Z" fill="${color}" stroke="#fff" stroke-width="1"/>`;
-    const cumulate = arr => { const c = [0]; for (const v of arr) { if (v == null) break; c.push(c[c.length - 1] + v); } return c; };
-
-    function nbmChart(areaId) {
-        const site = nbmData && nbmData.sites[NBM_SITE[areaId]];
-        if (!site) return null;
-        const ends = nbmData.window_end_utc.map(t => Date.parse(t));
-        const W = nbmData.window_hours * 3600e3, n = ends.length;
-        const hi = hiresSeries(NBM_SITE[areaId]);
-        const t0 = Math.min(ends[0] - W, ...hi.map(h => h.ends[0] - W)), t1 = Math.max(ends[n - 1], ...hi.map(h => h.ends[h.ends.length - 1]));
-        const W_ = 820, pad = { l: 52, r: 16 }, plotW = W_ - pad.l - pad.r;
-        const X = t => pad.l + (t - t0) / (t1 - t0) * plotW;
-        const p25 = site.p25, p50 = site.p50, p75 = site.p75, det = site.det;
-        // cumulative curves run until the first window with no data
-        const cum = { lo: [0], mid: [0], hi: [0] };
-        let known = 0;
-        while (known < n && p50[known] != null) {
-            cum.lo.push(cum.lo[known] + (p25[known] || 0));
-            cum.mid.push(cum.mid[known] + p50[known]);
-            cum.hi.push(cum.hi[known] + (p75[known] != null ? p75[known] : p50[known]));
-            known++;
-        }
-        const hiCum = hi.map(h => cumulate(h.snow));
-        const maxBar = Math.max(1, ...p75.filter(v => v != null), ...det.filter(v => v != null), ...hi.flatMap(h => h.snow.filter(v => v != null)));
-        const maxCum = Math.max(1, cum.hi[cum.hi.length - 1] || 0, ...hiCum.map(c => c[c.length - 1]));
-        const nice = m => { const st = m <= 1 ? 0.25 : m <= 2 ? 0.5 : m <= 4 ? 1 : m <= 12 ? 2 : m <= 30 ? 5 : 10; return Math.ceil(m / st) * st; };
-        const topMax = nice(maxBar * 1.1), botMax = nice(maxCum * 1.05);
-        const hiHasQ = hi.some(h => h.precip.some(v => v != null));
-        const qpf = Array.isArray(site.precip) && site.precip.some(v => v != null) ? site.precip : (hiHasQ ? new Array(n).fill(null) : null);
-        const A = { y0: 44, h: 170 }, Q = { y0: 262, h: 110 }, B = { y0: qpf ? 424 : 270, h: 170 };
-        const H_ = qpf ? 646 : 492;
-        const qMax = qpf ? nice(Math.max(0.25, ...qpf.filter(v => v != null), ...hi.flatMap(h => h.precip.filter(v => v != null))) * 1.1) : 1;
-        const YQ = v => Q.y0 + Q.h - v / qMax * Q.h;
-        const YA = v => A.y0 + A.h - v / topMax * A.h, YB = v => B.y0 + B.h - v / botMax * B.h;
-        const out = [];
-        const grid = (P, M, Y, label) => {
-            const st = M <= 1 ? 0.25 : M <= 2 ? 0.5 : M <= 4 ? 1 : M <= 12 ? 2 : M <= 30 ? 5 : 10;
-            for (let v = 0; v <= M; v += st) out.push(`<line x1="${pad.l}" x2="${W_ - pad.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e2e8f0"/><text x="${pad.l - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="#64748b">${v}</text>`);
-            out.push(`<text x="14" y="${P.y0 + P.h / 2}" transform="rotate(-90 14 ${P.y0 + P.h / 2})" text-anchor="middle" font-size="12" fill="#334155">${label}</text>`);
-        };
-        out.push(`<rect width="${W_}" height="${H_}" fill="#fff"/>`);
-        out.push(`<text x="${pad.l}" y="18" font-size="14" font-weight="700" fill="#1e3c72">${hi.length ? 'Snowfall: NBM, ' + hi.map(h => h.label).join(' and ') : 'NBM snowfall'}</text>`);
-        out.push(`<text x="${pad.l}" y="34" font-size="11" fill="#64748b">NBM bars: median per 6 hours. Whiskers: 25th to 75th percentile. Orange dot: NBM deterministic.</text>`);
-        if (hi.length) {
-            let lx = W_ - pad.r;
-            for (const h of hi.slice().reverse()) {
-                const lab = `${h.label} ${new Date(h.cycle).getUTCHours().toString().padStart(2, '0')}Z run`;
-                out.push(`<text x="${lx}" y="18" text-anchor="end" font-size="11" fill="#334155">${lab}</text>`);
-                lx -= lab.length * 5.6 + 14;
-                out.push(marker(h.shape, lx, 14, h.color));
-                lx -= 16;
-            }
-        }
-        grid(A, topMax, YA, 'inches per 6 h');
-        if (qpf) grid(Q, qMax, YQ, 'liquid inches per 6 h');
-        grid(B, botMax, YB, 'snow inches accumulated');
-        // Pacific midnights and day labels
-        for (let t = Math.ceil(t0 / 3600e3) * 3600e3; t <= t1; t += 3600e3) {
-            if (+PAC_H.format(t) !== 0) continue;
-            for (const P of (qpf ? [A, Q, B] : [A, B])) out.push(`<line x1="${X(t)}" x2="${X(t)}" y1="${P.y0}" y2="${P.y0 + P.h}" stroke="#94a3b8" stroke-dasharray="3 3"/>`);
-            if (X(t) > W_ - pad.r - 50) continue;
-            out.push(`<text x="${X(t) + 4}" y="${B.y0 + B.h + 16}" font-size="11" fill="#334155">${PAC_D.format(t + 6 * 3600e3).replace(',', '')}</text>`);
-        }
-        out.push(`<text x="${pad.l}" y="${B.y0 + B.h + 34}" font-size="10.5" fill="#64748b">Dashed lines mark midnight Pacific time; labels are the Pacific day that follows.</text>`);
-        // bars
-        const bw = Math.max(3, plotW / n - 3);
-        for (let i = 0; i < n; i++) {
-            const xc = X(ends[i] - W / 2);
-            if (p50[i] == null) {
-                out.push(`<rect x="${xc - bw / 2}" y="${A.y0}" width="${bw}" height="${A.h}" fill="#f1f5f9"/>`);
-                continue;
-            }
-            out.push(`<rect x="${xc - bw / 2}" y="${YA(p50[i])}" width="${bw}" height="${Math.max(0, YA(0) - YA(p50[i]))}" fill="#3b82f6" opacity="0.85"/>`);
-            if (p25[i] != null && p75[i] != null) out.push(`<line x1="${xc}" x2="${xc}" y1="${YA(p25[i])}" y2="${YA(p75[i])}" stroke="#1e3a8a" stroke-width="1.6"/><line x1="${xc - 3}" x2="${xc + 3}" y1="${YA(p75[i])}" y2="${YA(p75[i])}" stroke="#1e3a8a" stroke-width="1.6"/><line x1="${xc - 3}" x2="${xc + 3}" y1="${YA(p25[i])}" y2="${YA(p25[i])}" stroke="#1e3a8a" stroke-width="1.6"/>`);
-            if (det[i] != null) out.push(`<circle cx="${xc}" cy="${YA(det[i])}" r="3" fill="#f59e0b" stroke="#fff" stroke-width="1"/>`);
-        }
-        // HRRR / HRDPS 6-hour snowfall
-        for (const h of hi) for (let i = 0; i < h.ends.length; i++) if (h.snow[i] != null) out.push(marker(h.shape, X(h.ends[i] - W / 2) + h.dx, YA(h.snow[i]), h.color));
-        // liquid precipitation row: deterministic NBM value per window
-        if (qpf) {
-            out.push(`<text x="${pad.l}" y="${Q.y0 - 8}" font-size="12" font-weight="700" fill="#1e3c72">Liquid precipitation <tspan font-weight="400" fill="#64748b">(rain plus the water in snow, 6-hour totals; green bars are the NBM)</tspan></text>`);
-            let tot = 0, seen = 0;
-            for (let i = 0; i < n; i++) {
-                const xc = X(ends[i] - W / 2);
-                if (qpf[i] == null) { out.push(`<rect x="${xc - bw / 2}" y="${Q.y0}" width="${bw}" height="${Q.h}" fill="#f1f5f9"/>`); continue; }
-                tot += qpf[i]; seen++;
-                out.push(`<rect x="${xc - bw / 2}" y="${YQ(qpf[i])}" width="${bw}" height="${Math.max(0, YQ(0) - YQ(qpf[i]))}" fill="#0f766e" opacity="0.85"/>`);
-            }
-            for (const h of hi) for (let i = 0; i < h.ends.length; i++) if (h.precip[i] != null) out.push(marker(h.shape, X(h.ends[i] - W / 2) + h.dx, YQ(h.precip[i]), h.color));
-            if (seen) out.push(`<text x="${W_ - pad.r}" y="${Q.y0 - 8}" text-anchor="end" font-size="12" font-weight="700" fill="#0f766e">NBM total ${num(tot, 2)} in</text>`);
-        }
-        // cumulative band + median
-        if (known > 0) {
-            const xs = [ends[0] - W, ...ends.slice(0, known)].map(X);
-            const poly = (a, b) => a.map((v, i) => `${xs[i]},${YB(v)}`).join(' ') + ' ' + b.map((v, i) => `${xs[b.length - 1 - i]},${YB(b[b.length - 1 - i])}`).join(' ');
-            out.push(`<polygon points="${poly(cum.hi, cum.lo)}" fill="#3b82f6" opacity="0.18"/>`);
-            out.push(`<polyline points="${cum.mid.map((v, i) => `${xs[i]},${YB(v)}`).join(' ')}" fill="none" stroke="#1e3c72" stroke-width="2.4"/>`);
-            const lastX = xs[xs.length - 1];
-            out.push(`<text x="${Math.min(lastX + 6, W_ - 4)}" y="${YB(cum.mid[known]) - 6}" text-anchor="${lastX > W_ - 120 ? 'end' : 'start'}" font-size="12" font-weight="700" fill="#1e3c72">${num(cum.mid[known])}" (${num(cum.lo[known])}\u2013${num(cum.hi[known])}")</text>`);
-        }
-        hi.forEach((h, k) => {
-            const c = hiCum[k], xs = [h.ends[0] - W, ...h.ends.slice(0, c.length - 1)].map(X);
-            if (c.length < 2) return;
-            out.push(`<polyline points="${c.map((v, i) => `${xs[i]},${YB(v)}`).join(' ')}" fill="none" stroke="${h.color}" stroke-width="2.2" stroke-dasharray="6 3"/>`);
-            out.push(`<text x="${Math.min(xs[xs.length - 1] + 6, W_ - 4)}" y="${YB(c[c.length - 1]) + 14}" text-anchor="${xs[xs.length - 1] > W_ - 120 ? 'end' : 'start'}" font-size="12" font-weight="700" fill="${h.color}">${num(c[c.length - 1])}"</text>`);
-        });
-        out.push(`<text x="${pad.l}" y="${B.y0 - 6}" font-size="11" fill="#64748b">Accumulation: line is the sum of the medians, shading the sum of the 25th and 75th percentiles (approximate).</text>`);
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W_}" height="${H_}" viewBox="0 0 ${W_} ${H_}" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif">${out.join('')}</svg>`;
-        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    }
+    const plumeInfo = what => ({
+        what: `The forecast ${what} for this area from four models on one set of 6-hour windows for the next four forecast days: the National Blend of Models (bars are the median, whiskers the 25th to 75th percentile), HRRR, RRFS and HRDPS (dots). The lines below the bars are the running total.`,
+        how: 'Where the dots and bars line up, the models agree. A dot far from the NBM range means one model is an outlier. HRRR and HRDPS only run 48 hours, so their dots stop early. HRDPS snowfall assumes a 10:1 ratio and values are at the nearest grid point, not corrected for elevation. This is the same plot used in the forecast posts, but live.',
+        source: 'NBM, HRRR, RRFS and HRDPS, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
+    });
 
     function cloudChart(areaId) {
-        const site = nbmData && nbmData.sites[NBM_SITE[areaId]];
-        if (!site || !site.cloud_pct || !nbmData.cloud_time_utc) return null;
-        const ts = nbmData.cloud_time_utc.map(t => Date.parse(t)), v = site.cloud_pct;
-        const W_ = 820, H_ = 316, pad = { l: 52, r: 16, t: 48, b: 74 };
-        const t0 = ts[0], t1 = ts[ts.length - 1];
-        const X = t => pad.l + (t - t0) / (t1 - t0) * (W_ - pad.l - pad.r);
-        const Y = p => pad.t + (100 - p) / 100 * (H_ - pad.t - pad.b);
-        const out = [`<rect width="${W_}" height="${H_}" fill="#fff"/>`,
-            `<text x="${pad.l}" y="18" font-size="14" font-weight="700" fill="#1e3c72">NBM cloud cover</text>`,
-            `<text x="${pad.l}" y="34" font-size="11" fill="#64748b">Percent of sky covered, every 3 hours. Under 25% is mostly sunny; over 75% is mostly cloudy.</text>`];
-        out.push(`<rect x="${pad.l}" y="${Y(100)}" width="${W_ - pad.l - pad.r}" height="${Y(75) - Y(100)}" fill="#e2e8f0" opacity="0.5"/>`);
-        out.push(`<rect x="${pad.l}" y="${Y(25)}" width="${W_ - pad.l - pad.r}" height="${Y(0) - Y(25)}" fill="#fef3c7" opacity="0.6"/>`);
-        for (const g of [0, 25, 50, 75, 100]) out.push(`<line x1="${pad.l}" x2="${W_ - pad.r}" y1="${Y(g)}" y2="${Y(g)}" stroke="#e2e8f0"/><text x="${pad.l - 6}" y="${Y(g) + 4}" text-anchor="end" font-size="11" fill="#64748b">${g}</text>`);
-        // a tick and a Pacific clock label every 3 hours; midnights are dashed and carry the day name below
-        const clock = h => (h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p');
-        for (let t = Math.ceil(t0 / 3600e3) * 3600e3; t <= t1; t += 3600e3) {
-            const hr = +PAC_H.format(t);
-            if (hr % 3 !== 0) continue;
-            const mid = hr === 0;
-            out.push(`<line x1="${X(t)}" x2="${X(t)}" y1="${pad.t}" y2="${H_ - pad.b}" stroke="${mid ? '#94a3b8' : '#e2e8f0'}"${mid ? ' stroke-dasharray="3 3"' : ''}/>`);
-            if (X(t) < pad.l - 1 || X(t) > W_ - pad.r + 1) continue;
-            out.push(`<text x="${X(t)}" y="${H_ - pad.b + 14}" text-anchor="middle" font-size="9.5" fill="${mid ? '#334155' : '#64748b'}">${clock(hr)}</text>`);
-            if (mid && X(t) < W_ - pad.r - 50) out.push(`<text x="${X(t) + 4}" y="${H_ - pad.b + 30}" font-size="11" font-weight="700" fill="#334155">${PAC_D.format(t + 6 * 3600e3).replace(',', '')}</text>`);
-        }
-        out.push(`<text x="${pad.l}" y="${H_ - pad.b + 50}" font-size="10.5" fill="#64748b">Hour labels are Pacific time, every 3 hours (a = am, p = pm). Dashed lines mark midnight; the day name is the Pacific day that follows.</text>`);
-        const pts = ts.map((t, i) => v[i] == null ? null : [X(t), Y(v[i])]);
-        // draw in runs so a missing value breaks the line
-        let seg = [];
-        const flush = () => { if (seg.length > 1) out.push(`<polyline points="${seg.map(p => p.join(',')).join(' ')}" fill="none" stroke="#1e3c72" stroke-width="2.4"/>`); seg = []; };
-        pts.forEach(p => { if (p) seg.push(p); else flush(); });
-        flush();
-        pts.forEach(p => { if (p) out.push(`<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#1e3c72"/>`); });
-        out.push(`<text x="14" y="${(pad.t + H_ - pad.b) / 2}" transform="rotate(-90 14 ${(pad.t + H_ - pad.b) / 2})" text-anchor="middle" font-size="12" fill="#334155">cloud cover (%)</text>`);
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W_}" height="${H_}" viewBox="0 0 ${W_} ${H_}" font-family="-apple-system, Segoe UI, Roboto, Arial, sans-serif">${out.join('')}</svg>`;
-        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        const svg = window.CMWCloud && window.CMWCloud.chartSvg(nbmData, NBM_SITE[areaId]);
+        return svg ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) : null;
     }
 
     const ENSEMBLE_HOW = 'Look at the range of the ensemble members (the ensemble spread) to judge uncertainty in the forecast. A larger spread means lower confidence.';
@@ -447,20 +300,27 @@
                 how: 'Use the middle layer to see whether the terrain will be in cloud, the low layer to judge valley fog and inversions, and the high layer to judge sunshine and sky color. ' + ENS_NOTE,
             }, UW_SRC),
         },
-        nbm: {
+        plume_snow: {
             cat: 'snow',
-            label: 'NBM snow (6 h)',
-            title: a => `${a.label}: NBM snowfall, 6-hour windows`,
+            label: 'Model plume (snow)',
+            title: a => `${a.label}: snowfall plume, NBM, HRRR, RRFS and HRDPS`,
             build: (a, st) => ({
-                hours: [null], runs: nbmData ? [new Date(Date.parse(nbmData.cycle_utc))] : null, runExact: true,
-                urlFor: () => nbmChart(st.area) || '',
+                hours: [null], runs: plumeData ? [new Date(Date.parse(plumeData.cycles.nbm))] : null, runExact: true,
+                urlFor: () => plumeChart(st.area, 'snow'),
                 fallbackUrl: 'https://www.weather.gov/mdl/nbm_home',
             }),
-            info: {
-                what: 'Snowfall from the National Blend of Models (NBM), NOAA&rsquo;s statistical blend of many models, for the grid cell nearest this area (2.5 km), in 6-hour windows. Bars are the median, whiskers span the 25th to 75th percentile, and the orange dot is the NBM deterministic value. The middle panel is liquid precipitation (rain plus the water in snow) for the same windows: green bars are the NBM deterministic value. Red diamonds are the HRRR and purple triangles the HRDPS, two high-resolution models that run only 48 hours; they are drawn over the NBM so you can compare them. The bottom panel adds the snowfall windows up (the NBM median with its range, and a dashed line for each high-resolution model). HRRR snowfall is the model&rsquo;s own; HRDPS snowfall is its water equivalent of snow times 10, an assumed ratio. Updated every 6 hours.',
-                how: 'A blend like this tends to be smooth and conservative, so compare its total and spread with the West-WRF and Utah ensembles: when they all agree, confidence is high. Percentiles do not add exactly, so the accumulated shading is approximate. Gaps mean the NBM has no snowfall window for that period.',
-                source: 'NOAA National Blend of Models, via Herbie', sourceUrl: 'https://www.weather.gov/mdl/nbm_home',
-            },
+            info: plumeInfo('snowfall'),
+        },
+        plume_precip: {
+            cat: 'precip',
+            label: 'Model plume (precip)',
+            title: a => `${a.label}: liquid precipitation plume, NBM, HRRR, RRFS and HRDPS`,
+            build: (a, st) => ({
+                hours: [null], runs: plumeData ? [new Date(Date.parse(plumeData.cycles.nbm))] : null, runExact: true,
+                urlFor: () => plumeChart(st.area, 'precip'),
+                fallbackUrl: 'https://www.weather.gov/mdl/nbm_home',
+            }),
+            info: plumeInfo('liquid precipitation'),
         },
         nbm_cloud: {
             cat: 'cloud',
@@ -586,7 +446,7 @@
     // The freezing-level page has only one kind, so its Type chip is hidden.
     const CATS = [{ value: 'precip', label: 'Precipitation Products' }, { value: 'snow', label: 'Snow Products' }, { value: 'cloud', label: 'Cloud Cover Products' }, { value: 'level', label: 'Levels' }];
     const catOf = p => p.cat || (pageOf(p) === 'level' ? 'level' : 'precip');
-    const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && nbmData.sites[NBM_SITE[area]] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))));
+    const productsFor = area => Object.keys(PRODUCTS).filter(k => pageOf(PRODUCTS[k]) === PAGE && !!PRODUCTS[k].region === !!AREAS[area].region && (!PRODUCTS[k].needs || AREAS[area][PRODUCTS[k].needs]) && (!/^nbm/.test(k) || (nbmData && NBM_SITE[area] && nbmData.sites[NBM_SITE[area]] && (k !== 'nbm_cloud' || nbmData.cloud_time_utc))) && (!/^plume/.test(k) || (plumeData && window.CMWPlume && NBM_SITE[area] && plumeData.sites[NBM_SITE[area]])));
     // Links made before the split (#product=uw_cloud or nbm_cloud) pick their type.
     (() => {
         const h = new URLSearchParams(location.hash.slice(1));
@@ -658,9 +518,9 @@
         return;
     }
     const uwSites = [...new Set(Object.values(AREAS).map(a => a.uw).filter(Boolean))];
-    Promise.all([getJson('nbm_plumes.json'), getJson('hires_plumes.json'), Promise.all(uwSites.map(k => CMWSounding.load(k)))])
-        .then(([nbm, hires, uw]) => {
-            nbmData = nbm; hiresData = hires;
+    Promise.all([getJson('nbm_plumes.json'), getJson('plume_live.json'), Promise.all(uwSites.map(k => CMWSounding.load(k)))])
+        .then(([nbm, plume, uw]) => {
+            nbmData = nbm; plumeData = plume;
             uwSites.forEach((k, i) => { if (uw[i] && uw[i].frames && uw[i].frames.length) soundings[k] = uw[i]; });
             Object.values(AREAS).forEach(a => { if (a.uw && !soundings[a.uw]) delete a.uw; });   // no data: hide the products for that area
             mount();

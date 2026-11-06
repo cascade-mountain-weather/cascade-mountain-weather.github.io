@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include head.html %}
+<link rel="stylesheet" href="{{ '/assets/area-page.css' | relative_url }}">
+</head>
+<body>
+{% include header.html %}
+{% include nav.html %}
+{% assign ap = site.data.area_pages.areas | where: "slug", page.area | first %}
+
+<main>
+<section class="hero area-hero">
+    <h1 class="PlotTitle">{{ ap.name }} Weather &amp; Snow Forecast</h1>
+    <p>{{ ap.where }} This page puts the model forecasts for {{ ap.name }} in one place: snowfall and precipitation from four models, cloud cover, and an hour-by-hour point forecast.
+        The forecast data updates every few hours; each chart says which model runs it shows.</p>
+    {% assign stn_names = "" | split: "" %}
+    {% for aid in ap.stations %}{% assign ar = site.data.areas.areas | where: "id", aid | first %}{% for st in ar.stations %}{% capture lbl %}{{ st.label }} ({{ st.network }}){% endcapture %}{% assign stn_names = stn_names | push: lbl %}{% endfor %}{% endfor %}
+    {% if stn_names.size > 0 %}<p class="area-stations"><strong>Observations nearby:</strong> {{ stn_names | join: ", " }}. See them live on the <a href="{{ '/tools/conditions-map.html' | relative_url }}">live conditions map</a>.</p>{% endif %}
+</section>
+
+{% assign note_post = nil %}
+{% for p in site.posts %}{% if p.area_notes[ap.slug] %}{% assign note_post = p %}{% break %}{% endif %}{% endfor %}
+{% assign latest = site.posts.first %}
+<section class="area-latest">
+    <h2>Latest forecast</h2>
+    {% if note_post %}
+    <p>{{ note_post.area_notes[ap.slug] }}</p>
+    <p class="area-source">From the <a href="{{ note_post.url | relative_url }}">{{ note_post.date | date: "%B %-d, %Y" }} weekend forecast</a>{% if note_post != latest %}. The newest forecast is <a href="{{ latest.url | relative_url }}">here</a>{% endif %}.</p>
+    {% else %}
+    <p>{{ latest.summary | default: latest.description }}</p>
+    <p class="area-source">From the regional <a href="{{ latest.url | relative_url }}">{{ latest.date | date: "%B %-d, %Y" }} weekend forecast</a>, which covers all our forecast areas.</p>
+    {% endif %}
+</section>
+
+<section class="area-charts" id="area-charts" data-site="{{ ap.site }}" data-plume-src="{{ '/assets/data/plume_live.json' | relative_url }}" data-nbm-src="{{ '/assets/data/nbm_plumes.json' | relative_url }}">
+    <h2>Snowfall forecast</h2>
+    <figure class="area-fig" data-chart="snow"><div class="area-loading">Loading the snowfall plume&hellip;</div></figure>
+    <h2>Precipitation forecast</h2>
+    <figure class="area-fig" data-chart="precip"><div class="area-loading">Loading the precipitation plume&hellip;</div></figure>
+    <p class="area-howto">Bars are the National Blend of Models median in 6-hour windows, with whiskers for the 25th to 75th percentile. Dots are single runs of HRRR, RRFS and HRDPS, and where they line up with the bars the models agree. HRDPS snowfall assumes a 10:1 snow-to-liquid ratio, and every value is the model grid cell nearest the area, not corrected for elevation.</p>
+    <h2>Cloud cover</h2>
+    <figure class="area-fig" data-chart="cloud"><div class="area-loading">Loading cloud cover&hellip;</div></figure>
+    <noscript><p>The charts need JavaScript. The <a href="{{ '/tools/model-tools-precipitation.html' | relative_url }}#area={{ ap.tool }}">precipitation tools</a> show the same models.</p></noscript>
+</section>
+
+{% include meteogram.html site=ap.site name=ap.name %}
+
+<section class="area-more">
+    <h2>More for {{ ap.name }}</h2>
+    <ul>
+        <li><a href="{{ '/tools/model-tools-precipitation.html' | relative_url }}#area={{ ap.tool }}">Precipitation and snow models</a>: West-WRF and Utah ensembles, RRFS, and maps</li>
+        <li><a href="{{ '/tools/model-tools-freezing-level.html' | relative_url }}#area={{ ap.tool }}">Freezing and snow level</a></li>
+        <li><a href="{{ '/tools/conditions-map.html' | relative_url }}">Live conditions map</a></li>
+        <li><a href="{{ '/in-house/ski-model.html' | relative_url }}">Ski recommendation model</a></li>
+    </ul>
+    <p class="area-all">Other areas: {% for o in site.data.area_pages.areas %}{% unless o.slug == ap.slug %}<a href="{{ '/tools/' | append: o.slug | append: '.html' | relative_url }}">{{ o.name }}</a>{% unless forloop.last %}, {% endunless %}{% endunless %}{% endfor %}</p>
+</section>
+</main>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": {{ page.title | jsonify }},
+  "description": {{ page.description | jsonify }},
+  "url": "{{ page.url | absolute_url }}",
+  "isPartOf": { "@type": "WebSite", "name": "Cascade Mountain Weather", "url": "{{ site.url }}/" },
+  "about": {
+    "@type": "Place",
+    "name": {{ ap.name | jsonify }},
+    "geo": { "@type": "GeoCoordinates", "latitude": {{ ap.lat }}, "longitude": {{ ap.lon }} },
+    "containedInPlace": { "@type": "AdministrativeArea", "name": {{ ap.state | default: "Washington, USA" | jsonify }} }
+  }
+}
+</script>
+
+{% include footer.html %}
+{% include pwa-scripts.html %}
+{% include lightbox.html %}
+{% include mailchimp.html %}
+<script src="{{ '/assets/post-plume-map.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/nbm-cloud-chart.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/area-page.js' | relative_url }}" defer></script>
+</body>
+</html>

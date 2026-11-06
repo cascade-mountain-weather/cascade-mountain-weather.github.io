@@ -45,6 +45,7 @@
     const dayName = d => fDay.format(d).replace(',', '');
 
     const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { /* ignore */ } return null; };
+    const fixedSite = !!root.dataset.site;
     const state = { site: null, span: 48, step: 3, humid: 'td', units: store('mg-units') === 'metric' ? 'metric' : 'us' };
     let data = null;
     const F2C = v => (v - 32) * 5 / 9, MPH2MS = 0.44704, IN2MM = 25.4;
@@ -135,7 +136,8 @@
         cols.forEach(c => { const k = fKey.format(c.d); const last = days[days.length - 1];
             if (last && last.k === k) last.n++; else days.push({ k, n: 1, label: dayName(c.d) }); });
         const isMid = c => +fHour.format(c.d) === 0;
-        const head = () => `<tr><th class="mt-name"></th>${days.map(d => `<th class="mt-day" colspan="${d.n}">${d.label}</th>`).join('')}</tr>
+        const winHours = cols.length * step;
+        const head = total => `<tr><th class="mt-name"></th>${days.map(d => `<th class="mt-day" colspan="${d.n}">${d.label}</th>`).join('')}${total ? `<th class="mt-day mt-total-h" rowspan="2" title="Sum over every column shown (${winHours} hours)">Total<small>${winHours} h</small></th>` : ''}</tr>
             <tr><th class="mt-name"></th>${cols.map(c => `<th class="mt-hour${isMid(c) ? ' mt-midnight' : ''}" title="${fFull.format(c.d)}">${pacHour(c.d)}</th>`).join('')}</tr>`;
 
         let body = '';
@@ -144,7 +146,7 @@
             const stops = palFor(s);
             const lo = stops[0][0], hi = stops[stops.length - 1][0];
             const legend = `<span class="mt-legend"><span>${lo}</span><span class="mt-legend-bar" style="background:${gradient(stops)}"></span><span>${hi}${s.key === 'pcp' || s.key === 'wind' ? '+' : ''}</span><span>${s.key === 'temp' || (s.key === 'dew' && state.humid === 'td') ? '\u00b0F' : s.key === 'wind' ? 'mph' : s.key === 'pcp' ? 'in per 3 h' : '%'} scale</span></span>`;
-            body += `<tr class="mt-section"><th class="mt-sec" colspan="${cols.length + 1}"><div class="mt-sec-in">${s.title()}${legend}</div></th></tr>${head()}`;
+            body += `<tr class="mt-section"><th class="mt-sec" colspan="${cols.length + 1}"><div class="mt-sec-in">${s.title()}${legend}</div></th></tr>${head(s.key === 'pcp')}`;
             ms.forEach(m => {
                 const vals = series(m, siteName, field, cols, step) || [];
                 const dirs = s.key === 'wind' ? (series(m, siteName, 'wind_dir', cols, step) || []) : [];
@@ -163,6 +165,15 @@
                     const tip = `${SHORT[m] || m}, ${fFull.format(c.d)}: ${show(s, v)}${unitOf(s)}${s.key === 'wind' && dirs[i] != null ? ' from ' + Math.round(dirs[i]) + '°' : ''}${pt ? ', likely ' + pt[1] : ''}`;
                     body += `<td class="mt-cell${s.key === 'wind' ? ' mt-wind' : ''}${mid}" style="background:${css(col)};color:${ink(col)}" title="${tip}">${txt}</td>`;
                 });
+                if (s.key === 'pcp') {   // accumulation over the whole window: sum of the columns shown; * = the model does not cover all of them
+                    const have = vals.filter(v => v != null), sum = have.reduce((a, b) => a + b, 0);
+                    if (!have.length) body += '<td class="mt-cell mt-null mt-total">–</td>';
+                    else {
+                        const part = have.length < cols.length, txt = show(s, sum) + (part ? '*' : '');
+                        const tip = `${SHORT[m] || m} total over ${winHours} hours: ${show(s, sum)}${unitOf(s)}` + (part ? ` (model data covers ${have.length} of ${cols.length} columns)` : '');
+                        body += `<td class="mt-cell mt-total" title="${tip}">${txt}<small>${unitOf(s).trim()}</small></td>`;
+                    }
+                }
                 body += '</tr>';
             });
         });
@@ -170,7 +181,7 @@
         const gen = new Date(data.generated_utc);
         const km = ms.map(m => { const s = data.models[m].sites[siteName]; return s && s.grid_km != null ? `${SHORT[m] || m} ${s.grid_km} km` : null; }).filter(Boolean).join(', ');
         root.innerHTML = `<div class="mt-controls">
-            ${ctl('Area', `<select class="mt-select" id="mt-site">${data.sites.map(s => `<option value="${s.name}"${s.name === siteName ? ' selected' : ''}>${s.name}</option>`).join('')}</select>`)}
+            ${fixedSite ? '' : ctl('Area', `<select class="mt-select" id="mt-site">${data.sites.map(s => `<option value="${s.name}"${s.name === siteName ? ' selected' : ''}>${s.name}</option>`).join('')}</select>`)}
             ${ctl('Time span', chips('span', [[24, '24 h'], [48, '48 h']], state.span))}
             ${ctl('Column step', chips('step', [[1, '1 h'], [3, '3 h'], [6, '6 h']], state.step))}
             ${ctl('Humidity', chips('humid', [['td', 'Dew point'], ['rh', 'Relative humidity']], state.humid))}
@@ -178,7 +189,7 @@
         </div>
         <div class="mt-scroll"><table class="mt-table">${body}</table></div>
         <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction. Wind arrows point the way the wind blows toward. The ❄️ and 🌧️ in the precipitation rows are an estimate from the grid cell&rsquo;s wet-bulb temperature. The amounts are liquid water. Precipitation colors show the amount only. Times are Pacific. Updated ${fFull.format(gen)}.</p>`;
-        root.querySelector('#mt-site').addEventListener('change', e => { state.site = e.target.value; store('mg-site', state.site); render(); });
+        if (!fixedSite) root.querySelector('#mt-site').addEventListener('change', e => { state.site = e.target.value; store('mg-site', state.site); render(); });
         const bind = (name, fn) => root.querySelectorAll(`[data-${name}]`).forEach(b => b.addEventListener('click', () => { fn(b.dataset[name]); render(); }));
         bind('span', v => { state.span = +v; });
         bind('step', v => { state.step = +v; });
@@ -192,7 +203,8 @@
         .then(d => {
             data = d;
             const names = d.sites.map(s => s.name);
-            state.site = [hash.get('site'), store('mg-site'), names[0]].find(n => n && names.includes(n));
+            // an area page pins the site (data-site) and shows no Area selector; the home page remembers the last pick
+            state.site = [root.dataset.site, hash.get('site'), store('mg-site'), names[0]].find(n => n && names.includes(n));
             render();
         })
         .catch(() => { root.innerHTML = '<div class="mt-empty">The point forecast table is not available right now.</div>'; });

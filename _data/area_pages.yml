@@ -1,0 +1,30 @@
+# The nine area pages (tools/<slug>.html, layout: area) and the "Areas We Cover" nav menu.
+#   slug      page file name under /tools/
+#   name      shown in headings and the menu
+#   site      the site name in assets/data/meteograms.json, nbm_plumes.json and plume_live.json (the point forecast data)
+#   tool      the area id the precipitation and freezing-level tool pages use in #area=
+#   where     one plain sentence on where it is; no elevations or numbers
+#   stations  ids from _data/areas.yml whose stations are listed as the area's observations
+#   lat, lon  the model grid point's target, for the page's schema.org Place
+#   state     optional; defaults to "Washington, USA"
+areas:
+  - {slug: mt-baker, name: Mt. Baker, site: "Mt. Baker", tool: mt-baker, lat: 48.857, lon: -121.667, stations: [mt-baker],
+     where: "Mt. Baker Ski Area (Heather Meadows) sits at the end of the Mt. Baker Highway in the North Cascades."}
+  - {slug: washington-pass, name: Washington Pass, site: "Washington Pass", tool: washington, lat: 48.524, lon: -120.646, stations: [washington-pass],
+     where: "Washington Pass is on the North Cascades Highway (SR 20), between the Methow Valley and the North Cascades."}
+  - {slug: stevens-pass, name: Stevens Pass, site: "Stevens Pass", tool: stevens, lat: 47.745, lon: -121.089, stations: [stevens-pass],
+     where: "Stevens Pass Ski Area is on US-2 in the central Cascades, between the Skykomish and Wenatchee valleys."}
+  - {slug: snoqualmie-pass, name: Snoqualmie Pass, site: "Snoqualmie Pass", tool: snoqualmie, lat: 47.428, lon: -121.416, stations: [snoqualmie-west, snoqualmie-central, snoqualmie-east, alpental],
+     where: "Snoqualmie Pass is on I-90 in the central Cascades, the closest pass to Seattle. The forecast region encompasses all the main Summit at Snoqualmie resorts."}
+  - {slug: blewett-pass, name: Blewett Pass, site: "Blewett Pass", tool: blewett, lat: 47.35, lon: -120.58, stations: [blewett-pass],
+     where: "Blewett Pass is on US-97 on the drier east side of the central Cascades."}
+  - {slug: crystal-mountain, name: Crystal Mountain, site: "Crystal", tool: crystal, lat: 46.935, lon: -121.475, stations: [crystal-mountain],
+     where: "Crystal Mountain Ski Resort is at the end of HWY 410, northeast of Mt. Rainier."}
+  - {slug: paradise, name: Paradise (Mt. Rainier), site: "Paradise", tool: paradise, lat: 46.786, lon: -121.736, stations: [paradise],
+     where: "Paradise is on the south slope of Mt. Rainier, in Mt. Rainier National Park."}
+  - {slug: white-pass, name: White Pass, site: "White Pass", tool: white, lat: 46.638, lon: -121.391, stations: [white-pass],
+     where: "White Pass Ski Area is on US-12 in the south Cascades."}
+  - {slug: mt-hood, name: Mt. Hood, site: "Mt. Hood", tool: mt-hood, lat: 45.331, lon: -121.711, stations: [mt-hood], state: "Oregon, USA",
+     where: "Mt. Hood is in the Oregon Cascades, south of the Columbia River Gorge; we include it as a neighbor to the Washington areas."}
+  - {slug: hurricane-ridge, name: Hurricane Ridge, site: "Hurricane Ridge", tool: hurricane, lat: 47.97, lon: -123.498, stations: [hurricane-ridge],
+     where: "Hurricane Ridge is in Olympic National Park, on the north side of the Olympic Peninsula."}

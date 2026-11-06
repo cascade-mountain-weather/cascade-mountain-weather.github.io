@@ -48,6 +48,11 @@ jobs:
         continue-on-error: true
         run: python scripts/hires_plume.py
 
+      - name: Build live plume map data
+        id: plume_live
+        continue-on-error: true
+        run: python scripts/plume_live.py
+
       - name: Build point forecast meteograms
         id: meteograms
         continue-on-error: true
@@ -60,13 +65,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git add assets/data/nbm_plumes.json assets/data/hires_plumes.json assets/data/meteograms.json
+          git add assets/data/nbm_plumes.json assets/data/hires_plumes.json assets/data/plume_live.json assets/data/meteograms.json
           git commit -m "Update model forecast data [skip ci]" || echo "No changes to commit"
           git pull --rebase origin main
           git push origin main
 
       - name: Fail the job if any build step failed
-        if: steps.nbm.outcome == 'failure' || steps.hires.outcome == 'failure' || steps.meteograms.outcome == 'failure'
+        if: steps.nbm.outcome == 'failure' || steps.hires.outcome == 'failure' || steps.plume_live.outcome == 'failure' || steps.meteograms.outcome == 'failure'
         run: |
           echo "nbm: ${{ steps.nbm.outcome }}, hires: ${{ steps.hires.outcome }}, meteograms: ${{ steps.meteograms.outcome }}"
           exit 1

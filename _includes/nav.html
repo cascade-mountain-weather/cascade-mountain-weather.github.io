@@ -18,7 +18,14 @@
             <ul class="dropdown-menu" role="menu" aria-label="Forecast blog subpages">
                 <li role="none"><a role="menuitem" href="{{ site.posts.first.url | relative_url }}">Latest Forecast</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/posts/archive.html' | relative_url }}">Previous Forecasts</a></li>
-                <li role="none"><a role="menuitem" href="{{ '/evaluation.html' | relative_url }}">Evaluation</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/evaluation.html' | relative_url }}"><img class="nav-cmw" src="{{ '/assets/images/cmw_logo-256.png' | relative_url }}" alt="" title="Built in-house by Cascade Mountain Weather" width="20" height="20" loading="lazy"> Evaluation</a></li>
+            </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a href="{{ '/areas.html' | relative_url }}" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Areas We Cover <span class="dropdown-caret">▾</span></a>
+            <ul class="dropdown-menu" role="menu" aria-label="Forecast pages for each area">
+                {% for ar in site.data.area_pages.areas %}<li role="none"><a role="menuitem" href="{{ '/tools/' | append: ar.slug | append: '.html' | relative_url }}">{{ ar.name }}</a></li>
+                {% endfor %}
             </ul>
         </li>
         <li class="nav-item dropdown">
@@ -46,7 +53,7 @@
             <ul class="dropdown-menu" role="menu" aria-label="Long-term outlook subpages">
                 <li role="none"><a role="menuitem" href="{{ '/outlooks/subseasonal.html' | relative_url }}">Sub-seasonal</a></li>
                 <li role="none"><a role="menuitem" href="{{ '/outlooks/seasonal.html' | relative_url }}">Seasonal</a></li>
-                <li role="none"><a role="menuitem" href="{{ '/outlooks/teleconnections.html' | relative_url }}">Teleconnections</a></li>
+                <li role="none"><a role="menuitem" href="{{ '/outlooks/teleconnections.html' | relative_url }}">Teleconnections<small class="nav-sub">(El Ni&ntilde;o, ENSO, PNA, MJO)</small></a></li>
                 <li role="none"><a role="menuitem" href="{{ '/outlooks/tea-leaves.html' | relative_url }}"><img class="nav-cmw" src="{{ '/assets/images/cmw_logo-256.png' | relative_url }}" alt="" title="Built in-house by Cascade Mountain Weather" width="20" height="20" loading="lazy"> {{ site.analogs_name }} <span class="dev-tag">in development</span></a></li>
             </ul>
         </li>

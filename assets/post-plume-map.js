@@ -346,6 +346,25 @@
     h('p', { 'class': 'snow-table-note' }, box, 'Inches of new snow as each model reports it (HRRR and RRFS snow depth; HRDPS water equivalent x 10; NBM median). “' + DASH + '”: the model has no data for that period. “*”: only part of the period (or window) is covered. “Our call” is our own estimate, not an average of the models.');
   };
 
+  // One site's plume as a standalone SVG string (no map, controls or table), for the precipitation tools page.
+  // data is the plume JSON (frozen or live); product is 'snow' or 'precip'. Returns { svg, summary } or null.
+  function chartSvg(data, site, product) {
+    if (!data || !data.sites || !data.sites[site] || !PRODUCTS[product]) return null;
+    var self = Object.create(Plume.prototype), svg = el('svg', { viewBox: '0 0 760 ' + CH, width: 760, height: CH, xmlns: SVGNS, 'font-family': 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' }, null);
+    self.data = data; self.ours = {};
+    self.names = Object.keys(data.sites);
+    self.ends = data.ends_utc.map(function (t) { return Date.parse(t); });
+    self.state = { product: product, model: 'nbm', same: false, site: site };
+    self.charts = {}; self.charts[product] = { svg: svg, sum: {} };
+    self.drawChart(product);
+    var summary = self.charts[product].sum.textContent || '';
+    svg.setAttribute('viewBox', '0 0 760 ' + (CH + 26)); svg.setAttribute('height', CH + 26);
+    el('rect', { y: CH, width: 760, height: 26, fill: '#fff' }, svg);
+    el('text', { x: 52, y: CH + 12, 'font-size': 11, fill: '#334155' }, svg, summary.replace(/^Window total: /, 'Total: '));
+    return { svg: new XMLSerializer().serializeToString(svg), summary: summary };
+  }
+  window.CMWPlume = { chartSvg: chartSvg };
+
   function init(root) {
     var src = root.getAttribute('data-src');
     var baseSrc = root.getAttribute('data-basemap') || '../assets/data/pnw_basemap.json';

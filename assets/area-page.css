@@ -1,0 +1,14 @@
+/* Area pages (_layouts/area.html). Card width, padding and spacing come from the shared section style in style.css. */
+.area-hero { align-items: stretch; text-align: left; padding: var(--card-pad); }
+.area-hero h1 { margin-top: 0; }
+.area-stations { font-size: 0.95rem; }
+.area-latest h2, .area-charts h2, .area-more h2 { font-size: 1.35rem; margin: 0 0 0.5rem; }
+.area-charts h2:not(:first-child) { margin-top: 1.25rem; }
+.area-source { font-size: 0.9rem; color: #475569; margin-top: 0; }
+.area-fig { margin: 0 0 1rem; }
+.area-fig img { width: 100%; height: auto; display: block; border: 1px solid #e2e8f0; border-radius: var(--radius); background: #fff; }
+.area-fig figcaption { font-size: 0.85rem; color: #475569; margin-top: 0.3rem; }
+.area-loading { padding: 2rem 1rem; text-align: center; color: #64748b; background: #f1f5f9; border-radius: var(--radius); }
+.area-howto { font-size: 0.9rem; color: #475569; }
+.area-more ul { padding-left: 1.2rem; }
+.area-all { font-size: 0.9rem; color: #475569; }
