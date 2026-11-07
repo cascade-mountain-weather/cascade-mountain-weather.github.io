@@ -119,6 +119,14 @@
         const closeEnds = hasSwe && hasPr && Math.abs(y(sweS[sweS.length - 1].v) - y(prS[prS.length - 1].v)) < 9;   // keep the two end labels from overlapping
         const endLbl = (pts, color, dy) => pts.length ? `<text x="${W - padR + 3}" y="${(y(pts[pts.length - 1].v) + dy).toFixed(1)}" font-size="8.5" font-weight="700" fill="${color}">${signed(pts[pts.length - 1].v)}</text>` : '';
         const tick = v => `<text x="${padL - 3}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="#64748b">${v.toFixed(1)}</text>`;
+        // faint horizontal lines every quarter inch, or every half inch once the data spans more than an inch
+        const gridStep = (hi - lo) > 1 ? 0.5 : 0.25;
+        let grid = '';
+        for (let g = Math.ceil(y0 / gridStep); g * gridStep <= y1; g++) {
+            if (g === 0) continue;   // the zero line is drawn separately
+            const gy = y(g * gridStep).toFixed(1);
+            grid += `<line x1="${padL}" x2="${W - padR}" y1="${gy}" y2="${gy}" stroke="#cbd5e1" stroke-width="0.5" opacity="0.7"/>`;
+        }
         const legend = (hasSwe ? `<line x1="${padL}" x2="${padL + 16}" y1="9" y2="9" stroke="${SWE_C}" stroke-width="1.8"/><text x="${padL + 20}" y="12" font-size="8.5" fill="#334155">SWE change</text>` : '')
             + (hasPr ? `<line x1="${padL + (hasSwe ? 86 : 0)}" x2="${padL + (hasSwe ? 102 : 16)}" y1="9" y2="9" stroke="${PR_C}" stroke-width="1.8" stroke-dasharray="4 2"/><text x="${padL + (hasSwe ? 106 : 20)}" y="12" font-size="8.5" fill="#334155">Precipitation accumulation</text>` : '');
         const label = `Last ${n} hours: ${hasSwe ? 'SWE change ' + signed(sweS[sweS.length - 1].v, ' in') : ''}${hasSwe && hasPr ? ', ' : ''}${hasPr ? 'precipitation ' + prS[prS.length - 1].v.toFixed(2) + ' in' : ''}`;
@@ -128,6 +136,7 @@
         return `<div class="cmap-hourly">
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
                 ${legend}
+                ${grid}
                 <line x1="${padL}" x2="${W - padR}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="#94a3b8" stroke-width="0.7" stroke-dasharray="2 2"/>
                 ${tick(0)}${hi > 0.05 ? tick(hi) : ''}${lo < -0.15 ? tick(lo) : ''}
                 ${hasPr ? line(prS, PR_C, true, v => v.toFixed(2) + ' in precipitation so far', false) : ''}
@@ -136,7 +145,6 @@
                 <text x="${padL}" y="${H - 3}" font-size="8.5" fill="#64748b">${n} h ago</text>
                 <text x="${W - padR}" y="${H - 3}" text-anchor="end" font-size="8.5" fill="#64748b">now</text>
             </svg>
-            <p class="cmap-from">Inches since the left edge, hourly. ${hasSwe && hasPr ? 'SWE rising with the precipitation is snow building the pack; precipitation with no SWE rise is usually rain; a SWE drop is melt or settling. ' : ''}${sweLine}${prLine}Readings are to 0.1 in, so single-hour steps of 0.1 in are within the rounding.</p>
         </div>`;
     }
 
