@@ -90,7 +90,7 @@ def load_our_forecast(first_day):
 
 def load_ours_json(first_day):
     """Your call from the post's map: assets/images/<Thursday>_fx/ours.json (see scripts/post_plume.py).
-    {area: {"total": [lo, hi], "precip": [lo, hi]}} for the sites you filled in; text that is not a plain range ("-")
+    {area: {"total": [lo, hi], "precip": [lo, hi], and, from "periods", day1..day3 and the six 12 h periods}} for the sites you filled in; text that is not a plain range ("-")
     is skipped, never guessed. None when there is no file."""
     thursday = date.fromisoformat(first_day) - timedelta(days=1)
     path = FX_DIR / f"{thursday:%Y%m%d}_fx" / "ours.json"
@@ -103,6 +103,17 @@ def load_ours_json(first_day):
             rng = parse_range(str(v.get(key, ""))) if isinstance(v, dict) else None
             if rng:
                 entry[key] = rng
+        # the 12-hour call (fri_day ... sun_night), when every period is a plain number: it scores our Friday (day1) and
+        # each period, the same windows HRRR and the NBM are scored on. A dash or blank anywhere leaves those windows out.
+        per = v.get("periods") if isinstance(v, dict) else None
+        if isinstance(per, list) and len(per) == len(PERIOD_IDS):
+            vals = [parse_range(str(x)) for x in per]
+            if all(vals):
+                mid = [(r[0] + r[1]) / 2 for r in vals]
+                for pid, r in zip(PERIOD_IDS, vals):
+                    entry[pid] = r
+                for i, day in enumerate(("day1", "day2", "day3")):
+                    entry[day] = [round(vals[2 * i][0] + vals[2 * i + 1][0], 2), round(vals[2 * i][1] + vals[2 * i + 1][1], 2)]
         if entry:
             out[area] = entry
     return out or None

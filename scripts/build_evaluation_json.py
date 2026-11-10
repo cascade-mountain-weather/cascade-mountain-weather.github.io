@@ -157,6 +157,8 @@ def main():
                     for model in MODELS:
                         if w.get(model) and w[model].get("snowfall_in") is not None:
                             periods[wid][model] = w[model]["snowfall_in"]
+                    if isinstance(w.get("ours"), list):          # our 12-hour call, from ours.json "periods"
+                        periods[wid]["ours"] = w["ours"]
             if periods:
                 rec["periods"] = periods
             if coco(tot, a, "total"):

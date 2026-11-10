@@ -362,7 +362,7 @@
             return `<tr><td><span style="color:${COLORS[p.id] || '#1e3c72'}">&#9632;</span> ${esc(p.label)}</td><td>${m.n}</td>
                 <td>${signed(m.bias)} in</td><td>${fmt(m.mae)} in</td><td>${pct(m.hit)}</td><td>${fmt(m.width)} in</td></tr>`;
         }).join('');
-        $('eval-stats').innerHTML = `<table class="eval-table"><thead><tr><th>Product</th><th>Weekends</th><th>Bias</th><th>Typical error</th><th>Inside range</th><th>Range width</th></tr></thead><tbody>${rows}</tbody></table>
+        $('eval-stats').innerHTML = `<table class="eval-table"><thead><tr><th>Product</th><th>Total Evaluations</th><th>Bias</th><th>Typical error</th><th>Inside range</th><th>Range width</th></tr></thead><tbody>${rows}</tbody></table>
             <p class="eval-sub">${S.area === 'ALL' ? 'All areas. ' : esc(S.area) + '. '}Bias is forecast minus observed.</p>`;
     }
 
