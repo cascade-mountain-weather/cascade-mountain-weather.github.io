@@ -124,11 +124,16 @@
     // ---------------------------------------------------------------- levels over time
     const niceStep = span => { const raw = span / 5, m = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map(k => k * m).find(s => s >= raw); };
 
-    function levels(site) {
+    // mode 'levels': freezing and snow level only. mode 'dgz': the dendritic growth zone (base and top) only.
+    function levels(site, mode) {
+        const dgzOnly = mode === 'dgz';
         const fr = site.frames, t0 = Date.parse(fr[0].valid_utc), t1 = Date.parse(fr[fr.length - 1].valid_utc);
         const LW = 760, LH = 500, left = 66, right = 20, aTop = 70, aH = 340;
         const pw = LW - left - right, x = ms => left + pw * (ms - t0) / (t1 - t0);
-        const lo0 = Math.min(site.elevation_ft, ...fr.map(f => f.snow_level_ft).filter(v => v != null), ...fr.map(f => f.freezing_level_ft).filter(v => v != null)), hi0 = Math.max(...fr.map(f => Math.max(f.freezing_level_ft || 0, f.dgz_top_ft || 0)));
+        const vals = k => fr.map(f => f[k]).filter(v => v != null);
+        const lo0 = dgzOnly ? Math.min(...vals('dgz_base_ft'), 1e9) : Math.min(site.elevation_ft, ...vals('snow_level_ft'), ...vals('freezing_level_ft'));
+        const hi0 = dgzOnly ? Math.max(...vals('dgz_top_ft'), 0) : Math.max(...fr.map(f => f.freezing_level_ft || 0));
+        if (dgzOnly && !vals('dgz_top_ft').length) return noDgz(site);
         const step = niceStep(hi0 - lo0 + 1000), yLo = Math.max(0, Math.floor((lo0 - 600) / step) * step), yHi = Math.ceil((hi0 + 400) / step) * step;
         const ya = v => aTop + aH * (1 - (v - yLo) / (yHi - yLo));
         let s = '';
@@ -152,7 +157,7 @@
             if (seg.length > 1) s += `<polygon points="${seg.map(i => `${x(Date.parse(fr[i].valid_utc))},${ya(fr[i].dgz_top_ft)}`).join(' ')} ${seg.slice().reverse().map(i => `${x(Date.parse(fr[i].valid_utc))},${ya(fr[i].dgz_base_ft)}`).join(' ')}" fill="${C.dgz}" opacity=".2"/>`; seg = [];
         };
         band.forEach((i, k) => { if (k && i !== band[k - 1] + 1) flush(); seg.push(i); });
-        flush();
+        if (dgzOnly) flush();
         const line = (key, col, w, flag) => {
             let d = '', pen = false;
             fr.forEach(f => {
@@ -162,22 +167,30 @@
             return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>` +
                 fr.map(f => (f[key] == null ? '' : `<circle cx="${x(Date.parse(f.valid_utc)).toFixed(1)}" cy="${ya(f[key]).toFixed(1)}" r="2.8" fill="${f[flag] ? '#fff' : col}" stroke="${col}" stroke-width="1.4"/>`)).join('');
         };
-        s += `<line x1="${left}" y1="${ya(site.elevation_ft)}" x2="${left + pw}" y2="${ya(site.elevation_ft)}" stroke="#78716c" stroke-dasharray="3 4"/>`;
-        s += `<text x="${left + pw - 4}" y="${ya(site.elevation_ft) - 5}" text-anchor="end" font-size="12" fill="#78716c" ${halo}>sounding point ${fmtFt(site.elevation_ft)}</text>`;
-        s += line('freezing_level_ft', C.frz, 2.6, 'freezing_below_surface') + line('snow_level_ft', C.snow, 2.6, 'snow_below_surface');
+        if (!dgzOnly) {
+            s += `<line x1="${left}" y1="${ya(site.elevation_ft)}" x2="${left + pw}" y2="${ya(site.elevation_ft)}" stroke="#78716c" stroke-dasharray="3 4"/>`;
+            s += `<text x="${left + pw - 4}" y="${ya(site.elevation_ft) - 5}" text-anchor="end" font-size="12" fill="#78716c" ${halo}>sounding point ${fmtFt(site.elevation_ft)}</text>`;
+            s += line('freezing_level_ft', C.frz, 2.6, 'freezing_below_surface') + line('snow_level_ft', C.snow, 2.6, 'snow_below_surface');
+        } else {
+            s += line('dgz_top_ft', C.dgz, 2.2, 'none') + line('dgz_base_ft', C.dgz, 2.2, 'none');
+        }
         const init = initDate(site).getTime();
-        const head = `<text x="${left}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(/,(WA|OR)$/, ''))}: freezing level, snow level and dendritic growth zone</text>
+        const head = `<text x="${left}" y="24" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(/,(WA|OR)$/, ''))}: ${dgzOnly ? 'dendritic growth zone' : 'freezing level and snow level'}</text>
             <text x="${left}" y="44" font-size="14" fill="${C.text}">UW WRF forecast, run ${zStr(init)} ${PAC_D.format(init)}, every 3 hours. Times are Pacific.</text>`;
-        const lg = `<g font-size="12" fill="${C.text}">
+        const lg = dgzOnly ? `<g font-size="12" fill="${C.text}">
+            <rect x="${left}" y="${aTop - 16}" width="22" height="12" fill="${C.dgz}" opacity=".25"/><text x="${left + 28}" y="${aTop - 6}">dendritic growth zone (-12 to -18&#176;C): lower line is -12&#176;C, upper line is -18&#176;C</text></g>
+            <text x="${left}" y="${aTop + aH + 52}" font-size="12" fill="${C.muted}">Heights are feet above sea level. Gaps mean no layer between -12 and -18&#176;C in that profile.</text>` : `<g font-size="12" fill="${C.text}">
             <line x1="${left}" y1="${aTop - 10}" x2="${left + 22}" y2="${aTop - 10}" stroke="${C.frz}" stroke-width="3"/><text x="${left + 28}" y="${aTop - 6}">freezing level (0&#176;C)</text>
-            <line x1="${left + 170}" y1="${aTop - 10}" x2="${left + 192}" y2="${aTop - 10}" stroke="${C.snow}" stroke-width="3"/><text x="${left + 198}" y="${aTop - 6}">snow level (0&#176;C wet bulb)</text>
-            <rect x="${left + 362}" y="${aTop - 16}" width="22" height="12" fill="${C.dgz}" opacity=".25"/><text x="${left + 390}" y="${aTop - 6}">dendritic growth zone (-12 to -18&#176;C)</text></g>
+            <line x1="${left + 170}" y1="${aTop - 10}" x2="${left + 192}" y2="${aTop - 10}" stroke="${C.snow}" stroke-width="3"/><text x="${left + 198}" y="${aTop - 6}">snow level (0&#176;C wet bulb)</text></g>
             <text x="${left}" y="${aTop + aH + 52}" font-size="12" fill="${C.muted}">Heights are feet above sea level. Snow level is the 0&#176;C wet-bulb level.</text>
             <text x="${left}" y="${aTop + aH + 68}" font-size="12" fill="${C.muted}">Hollow dots: the level is below the model surface (extended below ground at 6.5&#176;C/km).</text>`;
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${LW}" height="${LH}" viewBox="0 0 ${LW} ${LH}" font-family="system-ui,Segoe UI,Arial,sans-serif" role="img" aria-label="Freezing level, snow level and dendritic growth zone over time"><rect width="${LW}" height="${LH}" fill="#fff"/>
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${LW}" height="${LH}" viewBox="0 0 ${LW} ${LH}" font-family="system-ui,Segoe UI,Arial,sans-serif" role="img" aria-label="${dgzOnly ? 'Dendritic growth zone' : 'Freezing level and snow level'} over time"><rect width="${LW}" height="${LH}" fill="#fff"/>
             ${head}${lg}${s}<rect x="${left}" y="${aTop}" width="${pw}" height="${aH}" fill="none" stroke="#94a3b8"/>${axis}</svg>`;
     }
 
+    function noDgz(site) {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="760" height="120" viewBox="0 0 760 120" font-family="system-ui,Segoe UI,Arial,sans-serif"><rect width="760" height="120" fill="#fff"/><text x="66" y="40" font-size="17" font-weight="700" fill="#1e3c72">${esc(site.name.replace(/,(WA|OR)$/, ''))}: dendritic growth zone</text><text x="66" y="70" font-size="14" fill="${C.text}">No layer between -12 and -18&#176;C in this forecast run.</text></svg>`;
+    }
     const dataUrl = svg => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    window.CMWSounding = { load, initDate, skewT: (site, i) => dataUrl(skewT(site, i)), levels: site => dataUrl(levels(site)), skewTSvg: skewT, levelsSvg: levels };
+    window.CMWSounding = { load, initDate, skewT: (site, i) => dataUrl(skewT(site, i)), levels: site => dataUrl(levels(site, 'levels')), dgz: site => dataUrl(levels(site, 'dgz')), skewTSvg: skewT, levelsSvg: levels };
 }());

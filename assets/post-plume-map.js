@@ -79,7 +79,7 @@
     var grid = h('div', { 'class': 'pm-grid' }, root);
     var left = h('div', { 'class': 'pm-left' }, grid);
     this.right = h('div', { 'class': 'pm-right' }, grid);
-    this.mapSvg = el('svg', { 'class': 'pm-map', viewBox: '0 0 420 470', role: 'img', 'aria-label': 'Map of Washington Cascades sites, colored by forecast total' }, null);
+    this.mapSvg = el('svg', { 'class': 'pm-map', viewBox: '0 0 420 355', role: 'img', 'aria-label': 'Map of Washington Cascades sites, colored by forecast total' }, null);
     left.appendChild(this.mapSvg);
     this.legend = h('div', { 'class': 'pm-legend' }, left);
     this.chips = h('div', { 'class': 'pm-chips' }, left);
@@ -110,7 +110,7 @@
 
     // ---- projection and static basemap ----
     var k = 460 / (BBOX.lat1 - BBOX.lat0), cx = Math.cos(47 * Math.PI / 180);
-    this.proj = function (lon, lat) { return [10 + (lon - BBOX.lon0) * cx * k * 0.98, 5 + (BBOX.lat1 - lat) * k]; };
+    this.proj = function (lon, lat) { return [10 + (lon - BBOX.lon0) * cx * k * 0.98, 5 + (BBOX.lat1 - lat) * k * 0.75]; };
     this.drawBase(base, basins);
     this.siteLayer = el('g', {}, this.mapSvg);
     this.render();
@@ -118,7 +118,7 @@
 
   Plume.prototype.drawBase = function (base, basins) {
     var self = this, svg = this.mapSvg;
-    el('rect', { width: 420, height: 470, fill: '#e9f1fa' }, svg);
+    el('rect', { width: 420, height: 355, fill: '#e9f1fa' }, svg);
     var path = function (ring) { return 'M' + ring.map(function (p) { var q = self.proj(p[0], p[1]); return q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join('L') + 'Z'; };
     if (base && base.states) Object.keys(base.states).forEach(function (s) {
       var d = base.states[s].map(path).join('');
@@ -218,6 +218,14 @@
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     var ends = this.ends, W = 6 * 3600e3, n = ends.length, t0 = ends[0] - W, t1 = ends[n - 1];
     var ext = this.extent(product, st.same ? null : st.site), d = snow ? 1 : 2;
+    // our own call (ours.json): the 12-hour snowfall amounts, and the weekend total range for snow or liquid
+    var mine = (this.ours && this.ours[st.site]) || {}, num = function (x) { var v = parseFloat(x); return isFinite(v) ? v : null; };
+    var rng = function (x) { var m = String(x == null ? '' : x).replace(/[–—]/g, '-').match(/^\s*(\d*\.?\d+)\s*(?:-\s*(\d*\.?\d+))?/); return m ? [parseFloat(m[1]), parseFloat(m[2] != null ? m[2] : m[1])] : null; };
+    var myPer = snow && mine.periods ? mine.periods.map(num) : [], myTot = rng(snow ? mine.total : mine.precip);
+    var myCum = []; if (myPer.length) { var run = 0; myCum.push(0); for (var z = 0; z < myPer.length; z++) { if (myPer[z] == null) break; run += myPer[z]; myCum.push(run); } }
+    var oursTop = Math.max(myCum.length ? myCum[myCum.length - 1] : 0, myTot ? myTot[1] : 0);
+    if (oursTop * 1.05 > ext.mc) ext.mc = nice(oursTop * 1.05);
+    myPer.forEach(function (v) { if (v != null && v / 2 * 1.1 > ext.m6) ext.m6 = nice(v / 2 * 1.1); });
     var padL = 52, padR = 16, plotW = 760 - padL - padR, X = function (t) { return padL + (t - t0) / (t1 - t0) * plotW; };
     var A = { y0: 34, h: 125 }, B = { y0: 222, h: 125 }, YA = function (v) { return A.y0 + A.h - v / ext.m6 * A.h; }, YB = function (v) { return B.y0 + B.h - v / ext.mc * B.h; };
     el('rect', { width: 760, height: CH, fill: '#fff' }, svg);
@@ -298,8 +306,30 @@
         sumTxt.push(MODELS[k].label + ' ' + fmt(c[c.length - 1], snow ? 1 : 2) + '"' + (c.length - 1 < n ? ' (through ' + clock(t0 + (c.length - 1) * W) + ')' : ''));
       }
     });
+    // our call: 12-hour amounts as an orange bar over its two 6 h windows (rate per 6 h), the running total, and the weekend total range
+    var OURS = '#d97706', hasMine = false;
+    myPer.forEach(function (v, q) {
+      if (v == null || 2 * q + 2 > n) return;
+      hasMine = true;
+      var xa = X(t0 + 2 * q * W) + 3, xb = X(t0 + (2 * q + 2) * W) - 3;
+      var ln = el('line', { x1: xa, x2: xb, y1: YA(v / 2), y2: YA(v / 2), stroke: OURS, 'stroke-width': 4, 'stroke-linecap': 'round' }, svg);
+      el('title', {}, ln, clock(t0 + 2 * q * W) + '–' + clock(t0 + (2 * q + 2) * W) + ' our call ' + fmt(v, 1) + '" (' + fmt(v / 2, 2) + '" per 6 h)');
+    });
+    if (myCum.length > 1) {
+      hasMine = true;
+      el('polyline', { points: myCum.map(function (v, q) { return X(t0 + 2 * q * W) + ',' + YB(v); }).join(' '), fill: 'none', stroke: OURS, 'stroke-width': 2.6 }, svg);
+      sumTxt.push('Our call ' + fmt(myCum[myCum.length - 1], 1) + '"');
+    }
+    if (myTot) {
+      hasMine = true;
+      var xe = X(t1) - 6;
+      el('line', { x1: xe, x2: xe, y1: YB(myTot[0]), y2: YB(myTot[1]), stroke: OURS, 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0.55 }, svg);
+      var od = el('circle', { cx: xe, cy: YB((myTot[0] + myTot[1]) / 2), r: 4.6, fill: '#fff', stroke: OURS, 'stroke-width': 2.4 }, svg);
+      el('title', {}, od, 'Our call, weekend ' + (snow ? 'snow' : 'liquid') + ': ' + (myTot[0] === myTot[1] ? fmt(myTot[0], d) : fmt(myTot[0], d) + '–' + fmt(myTot[1], d)) + '"');
+      if (!myCum.length) sumTxt.push('Our call ' + (myTot[0] === myTot[1] ? fmt(myTot[0], d) : fmt(myTot[0], d) + '–' + fmt(myTot[1], d)) + '"');
+    }
     // legend row
-    var lx = padL; [['NBM', '#1e3c72']].concat(['hrrr', 'rrfs', 'hrdps'].filter(function (k) { return s[k] && (snow ? s[k].snow : s[k].precip).some(function (v) { return v != null; }); }).map(function (k) { return [MODELS[k].label, MODELS[k].color]; })).forEach(function (e) {
+    var lx = padL; [['NBM', '#1e3c72']].concat(['hrrr', 'rrfs', 'hrdps'].filter(function (k) { return s[k] && (snow ? s[k].snow : s[k].precip).some(function (v) { return v != null; }); }).map(function (k) { return [MODELS[k].label, MODELS[k].color]; })).concat(hasMine ? [['Our call', OURS]] : []).forEach(function (e) {
       el('rect', { x: lx, y: 10, width: 12, height: 12, fill: e[1] }, svg); el('text', { x: lx + 17, y: 21, 'font-size': 12, fill: '#334155' }, svg, e[0]); lx += 24 + e[0].length * 8;
     });
     el('text', { x: padL, y: B.y0 - 8, 'font-size': 11, fill: '#64748b' }, svg, 'Accumulation' + (snow ? ' (line: sum of NBM medians; shading: 25th to 75th percentile, approximate)' : ''));

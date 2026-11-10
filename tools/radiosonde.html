@@ -233,7 +233,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     #history-plot {
         display: none;
         width: 100%;
-        height: 320px;
+        height: 480px;
     }
     #history-plot.is-visible { display: block; }
     .wrf-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; font-size: 0.85rem; margin: 0.5rem 0; }
@@ -243,8 +243,11 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     .wrf-skill-table th, .wrf-skill-table td { padding: 0.3rem 0.8rem; text-align: right; border-bottom: 1px solid #e2e8f0; }
     .wrf-skill-table th:first-child, .wrf-skill-table td:first-child { text-align: left; }
     .wrf-skill-table tr.is-best td { background: #e6f4ea; font-weight: 700; }
-    @media (max-width: 600px) {
-        #history-plot { height: 260px; }
+    /* On a phone the trend is drawn wider than the screen and scrolls sideways, so days are not squeezed together;
+       the plot is also taller. Drag on the plot to zoom a box; use the toolbar (top right of the plot) to pan, zoom out or reset. */
+    .history-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (max-width: 700px) {
+        #history-plot { height: 520px; min-width: 760px; }
     }
 </style>
 
@@ -268,8 +271,8 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     <aside class="radiosonde-controls">
         <h2>Units</h2>
         <div class="radiosonde-unit-toggle" role="group" aria-label="Units">
-            <button type="button" id="unit-metric" class="radiosonde-unit-btn" aria-pressed="true">Metric</button>
-            <button type="button" id="unit-imperial" class="radiosonde-unit-btn" aria-pressed="false">Imperial</button>
+            <button type="button" id="unit-metric" class="radiosonde-unit-btn" aria-pressed="false">Metric</button>
+            <button type="button" id="unit-imperial" class="radiosonde-unit-btn" aria-pressed="true">Imperial</button>
         </div>
 
         <h2>Station</h2>
@@ -376,7 +379,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
     <p class="radiosonde-status">
         Left of the black line is what the soundings observed over the last three days; right of it, at Quillayute,
         is the latest UW WRF forecast for the next three. Every sounding is stored, so use the window menu to look further
-        back. Drag to pan or zoom.
+        back. Heights are in feet on the left and meters on the right (the two scales match), with a gridline every 1,000 ft and a fainter one every 500 ft. Drag a box to zoom, double-click to reset; on a phone, scroll the plot sideways.
     </p>
     <div class="wrf-controls">
         <label>Window <select id="history-window">
@@ -400,7 +403,7 @@ og_description: "Interactive Skew-T diagrams for Quillayute, Salem, Spokane, and
         <p class="radiosonde-status">Dashed lines are what WRF forecast, at that lead, for each launch time. Quillayute only. The WRF point is Olympex DOW, about 60&nbsp;km away, so some of the difference is location rather than model error.</p>
     </div>
     <p id="history-note" class="radiosonde-status" hidden></p>
-    <div id="history-plot"></div>
+    <div class="history-scroll"><div id="history-plot"></div></div>
     <p id="history-empty" class="radiosonde-status" hidden>No recorded history yet for this station -- check back after the next automated update.</p>
 </section>
 

@@ -131,7 +131,7 @@ header h1 {
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .cmw-header-main-logo {
         width: clamp(80px, 24vw, 105px);
     }
@@ -773,7 +773,7 @@ footer p {
 }
 
 /* Responsive navigation: collapse to hamburger on smaller screens */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     nav {
         position: sticky;
         top: 0;
@@ -786,13 +786,22 @@ footer p {
         width: 100%;
     }
 
-    nav.open ul {
+    nav.open > ul {
         display: flex;
         margin-top: 0;
         padding-top: 0; /* the first item shares its row with the menu button in the top-right corner (no empty gap above it) */
+        /* Fixed to the screen, not the page: the menu opens where you are, however far down you have scrolled */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 140;
         max-height: 100vh;
+        max-height: 100dvh;
         overflow-y: auto;
+        overscroll-behavior: contain;
         background: white;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
     }
 
     /* Ensure all items (including bare anchors) align and stretch uniformly */
@@ -827,13 +836,26 @@ footer p {
         gap: 0.25rem;
     }
 
-    nav.open ul {
+    nav.open > ul {
         display: flex;
     }
 
     nav a {
         padding: 0.85rem 1.25rem;
         text-align: center;
+        width: 100%;
+    }
+
+    /* Long menu items wrap inside the screen instead of widening the menu (which made it scroll sideways) */
+    nav.open > ul { overflow-x: hidden; box-sizing: border-box; }
+    nav ul, nav li, .dropdown-menu { max-width: 100%; box-sizing: border-box; }
+    .dropdown-menu li a,
+    .nav-item.dropdown .dropdown-menu li a {
+        white-space: normal;
+        flex-wrap: wrap;
+        justify-content: center;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
         width: 100%;
     }
 

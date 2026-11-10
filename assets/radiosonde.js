@@ -75,7 +75,7 @@ const state = {
     cycles: [],            // manifest entries for the selected station, newest first
     index: 0,              // position in `cycles` currently shown
     activeRequest: 0,
-    units: 'metric',       // 'metric' | 'imperial' -- affects hover text and the diagnostics table
+    units: 'imperial',     // 'metric' | 'imperial' (feet first; the second axis shows the other) -- affects hover text and the diagnostics table
     wrfPromise: null,      // cached fetch of assets/data/wrf_uil.json (WRF-vs-Quillayute overlay + skill scores)
     wrfVar: 'freezing_level_ft',
     wrfLeads: [24, 48],
@@ -444,17 +444,22 @@ function renderHistoryChart(stationId) {
         let ymax = 0;
         traces.forEach(tr => tr.x.forEach((xv, i) => { const t = Date.parse(xv), v = tr.y[i]; if (t >= lo && t <= hi && v != null && v > ymax) ymax = v; }));
         ymax = Math.max(ymax * 1.1, units === 'imperial' ? 3000 : 1000);
+        // round the top up to a whole major step so both axes end on a gridline; the right axis is the same range in the other unit
+        const major = units === 'imperial' ? 1000 : 500, minor = units === 'imperial' ? 500 : 100;
+        ymax = Math.ceil(ymax / major) * major;
+        const narrow = window.innerWidth < 700;
         const toOther = v => (units === 'imperial' ? v / 3.28084 : v * 3.28084);
 
         // an invisible point on the second axis so the other unit's scale is drawn
         traces.push({ x: [nowIso], y: [null], yaxis: 'y2', mode: 'markers', showlegend: false, hoverinfo: 'skip' });
 
         const layout = {
-            margin: { l: 58, r: 66, t: 34, b: 40 },
-            xaxis: Object.assign({ type: 'date', tickformat: '%b %d', gridcolor: '#e2e8f0' }, xRange ? { range: xRange } : {}),
-            yaxis: { title: units === 'imperial' ? 'Feet above ground' : 'Meters above ground', range: [0, ymax], gridcolor: '#e2e8f0', tickformat: ',.0f' },
-            yaxis2: { title: units === 'imperial' ? 'Meters' : 'Feet', overlaying: 'y', side: 'right', range: [0, toOther(ymax)], showgrid: false, tickformat: ',.0f' },
-            legend: { orientation: 'h', y: -0.2 },
+            margin: { l: 58, r: 66, t: 34, b: narrow ? 90 : 40 },
+            xaxis: Object.assign({ type: 'date', tickformat: '%b %d', gridcolor: '#cbd5e1', minor: { dtick: 6 * 3600e3, showgrid: true, gridcolor: '#eef2f7', ticks: '' } }, xRange ? { range: xRange } : {}),
+            yaxis: { title: units === 'imperial' ? 'Feet above ground' : 'Meters above ground', range: [0, ymax], gridcolor: '#cbd5e1', tickformat: ',.0f', dtick: major, minor: { dtick: minor, showgrid: true, gridcolor: '#eef2f7', ticks: '' } },
+            yaxis2: { title: units === 'imperial' ? 'Meters' : 'Feet', overlaying: 'y', side: 'right', range: [0, toOther(ymax)], showgrid: false, tickformat: ',.0f', dtick: units === 'imperial' ? 250 : 1000 },
+            legend: { orientation: 'h', y: narrow ? -0.28 : -0.2 },
+            dragmode: 'zoom',
             hovermode: 'closest',
             shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: nowIso, x1: nowIso, y0: 0, y1: 1, line: { color: '#0f172a', width: 2 } }],
             annotations: [
@@ -464,7 +469,7 @@ function renderHistoryChart(stationId) {
         };
         // visible first: Plotly sizes itself from the container, and a display:none one falls back to 700px wide
         els.historyPlot.classList.add('is-visible');
-        Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false });
+        Plotly.react(els.historyPlot, traces, layout, { responsive: true, displaylogo: false, displayModeBar: true, scrollZoom: false, modeBarButtonsToRemove: ['select2d', 'lasso2d'] });
     });
 }
 

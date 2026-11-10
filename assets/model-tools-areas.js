@@ -116,12 +116,14 @@
             fallbackUrl: 'https://cw3e.ucsd.edu/',
         };
     };
-    // Storm-total snow plot for one point (West-WRF ensemble, 00Z run only, one image per run reaching 7 days)
-    const cw3eStorm = code => ({
+    // Point meteogram panels from the West-WRF ensemble (00Z run only, one image per run reaching 7 days).
+    // kind: snow_storm_total | snow_accumulated | qpf_accumulated. The old fixed /wwrf/images/ensemble/ files stopped updating in 2026.
+    const cw3ePoint = (kind, code) => ({
         hours: [null], runs: Array.from({ length: 4 }, (_, i) => new Date(Math.floor(Date.now() / 864e5) * 864e5 - i * 864e5)), runExact: true,
-        urlFor: r => `${CW3E}/snow_storm_total_meteogram/${cw3eSeason(r)}/WWRF_9km_ENS/${code}/${ymdh(r)}/1/snow_storm_total_meteogram__${cw3eSeason(r)}__WWRF_9km_ENS__${code}__${ymdh(r)}__1__F168.png`,
+        urlFor: r => `${CW3E}/${kind}_meteogram/${cw3eSeason(r)}/WWRF_9km_ENS/${code}/${ymdh(r)}/1/${kind}_meteogram__${cw3eSeason(r)}__WWRF_9km_ENS__${code}__${ymdh(r)}__1__F168.png`,
         fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms',
     });
+    const cw3eStorm = code => cw3ePoint('snow_storm_total', code);
     const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
     const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
 
@@ -164,7 +166,7 @@
             title: (a, st) => `${a.label}: West-WRF ensemble ${st.sub === 'storm' ? 'storm-total' : 'accumulated'} snow`,
             subLabel: 'Snowfall',
             subs: { period: 'Forecast total', storm: 'Storm total' },
-            build: (a, st) => st.sub === 'storm' ? cw3eStorm(a.wwrf) : ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccSnow_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
+            build: (a, st) => st.sub === 'storm' ? cw3eStorm(a.wwrf) : cw3ePoint('snow_accumulated', a.wwrf),
             info: st => st.sub === 'storm' ? {
                 what: 'Storm-total snowfall for this area from the West-WRF ensemble at CW3E, UC San Diego. The top-left panel is the spread of the ensemble members (box and whiskers, with the mean as a line), the lower-left panel is the chance of reaching each snowfall total, and the right panel shows every member (ECMWF-driven members on top, GFS-driven below). It is marked experimental by CW3E, runs from the 00Z cycle only, and reaches 7 days.',
                 how: 'Use it for how much a single storm could add up to, rather than the running total of the whole forecast period. Read the lower-left panel for odds (for example, the chance of at least 12 inches), and the member panel to see whether the models agree on when it falls. A wide spread means low confidence. Switch to Forecast total for the period accumulation.',
@@ -179,7 +181,7 @@
             needs: 'wwrf',
             label: 'Precip (West-WRF)',
             title: a => `${a.label}: West-WRF ensemble accumulated precipitation`,
-            build: a => ({ urlFor: () => `${CW3E}/wwrf/images/ensemble/West-WRF_AccQPF_Meteogram_Panel_${a.wwrf}.png`, fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms' }),
+            build: a => cw3ePoint('qpf_accumulated', a.wwrf),
             info: {
                 what: 'Accumulated precipitation (rain plus the water content of snow) for this area from the West-WRF ensemble at CW3E, UC San Diego. Same model as the snow plot; this one shows the total water, so compare the two to see how much of it falls as snow.',
                 how: ENSEMBLE_HOW,
@@ -360,7 +362,7 @@
             page: 'level',
             needs: 'uw',
             label: 'UW WRF levels over time',
-            title: a => `${a.label}: UW WRF freezing level, snow level and dendritic growth zone (${soundings[a.uw].name.replace(/,(WA|OR)$/, '')})`,
+            title: a => `${a.label}: UW WRF freezing level and snow level (${soundings[a.uw].name.replace(/,(WA|OR)$/, '')})`,
             build: a => {
                 const site = soundings[a.uw];
                 return {
@@ -370,8 +372,8 @@
                 };
             },
             info: a => ({
-                what: 'The freezing level (blue), the snow level (orange; the height where the wet-bulb temperature reaches 0&deg;C) and the dendritic growth zone (purple band, from its base to its top) from the UW WRF forecast soundings at the nearest UW sounding point' + (a.uw === 'heheb' ? ' (Hehe Butte, about 27 miles south-southeast of Timberline, on the dry east side of Mt. Hood and roughly 3,000 ft lower, so treat it as an analog for the levels, not a point forecast for the ski area)' : '') + ', every 3 hours for 72 hours. The growth zone is the layer between -12 and -18&deg;C, and it only makes powder where the air in it is moist, so check the sounding for saturation.',
-                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Hollow dots are levels below the sounding point&rsquo;s ground, extended downward at 6.5&deg;C per km. A thick purple band over a snow level below your elevation is the setup for light snow, if the sounding shows the layer is saturated. One model run is one scenario.',
+                what: 'The freezing level (blue) and the snow level (orange; the height where the wet-bulb temperature reaches 0&deg;C) from the UW WRF forecast soundings at the nearest UW sounding point' + (a.uw === 'heheb' ? ' (Hehe Butte, about 27 miles south-southeast of Timberline, on the dry east side of Mt. Hood and roughly 3,000 ft lower, so treat it as an analog for the levels, not a point forecast for the ski area)' : '') + ', every 3 hours for 72 hours. The dendritic growth zone over time is on the <a href="/dendritic-growth-zone.html">What&rsquo;s the DGZ</a> page.',
+                how: 'Compare the snow level with the elevation you plan to ski (the dashed line is the sounding point itself). A snow level that drops below your elevation is the change from rain to snow. Hollow dots are levels below the sounding point&rsquo;s ground, extended downward at 6.5&deg;C per km. One model run is one scenario.',
                 source: 'University of Washington Atmospheric Sciences, PacNW WRF-GFS 4/3 km', sourceUrl: 'https://a.atmos.washington.edu/mm5rt/rt/',
             }),
         },

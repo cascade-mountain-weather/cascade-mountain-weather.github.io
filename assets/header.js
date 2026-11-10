@@ -106,26 +106,8 @@
         }
       });
 
-      // Hide hamburger when scrolling past header
-      let lastScroll = 0;
-      window.addEventListener('scroll', function(){
-        const header = document.querySelector('header');
-        if(!header) return;
-        const headerHeight = header.offsetHeight;
-        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if(currentScroll > headerHeight) {
-          toggle.classList.add('scrolled');
-          // Close menu if it's open when hiding hamburger
-          if(nav.classList.contains('open')){
-            nav.classList.remove('open');
-            toggle.setAttribute('aria-expanded','false');
-          }
-        } else {
-          toggle.classList.remove('scrolled');
-        }
-        lastScroll = currentScroll;
-      });
+      // The hamburger stays on screen at any scroll position and the open menu is fixed to the screen,
+      // so scrolling no longer closes it (that left the button and menu out of step).
     }
   }catch(err){ console.warn('nav toggle error', err); }
 
