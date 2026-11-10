@@ -73,8 +73,59 @@
         };
     }
 
+    // ECMWF Open Charts (charts.ecmwf.int, CC-BY-4.0), cropped to the North Pacific (100E to 100W) and pre-rendered twice a day by
+    // scripts/fetch_ecmwf_charts.py (workflow ecmwf_charts.yml) onto the ecmwf-charts branch; the viewer reads that branch's manifest.json.
+    // HRES reaches 10 days, the AI models 15; frames are 6 hours apart to day 6, then 12 hours to day 10, then daily. A product shows only when its manifest entry exists.
+    let charts = null;
+    const CHARTS_URL = (window.ECMWF_CHARTS_URL || '').replace(/\/$/, '') + '/';
+    // before the ecmwf-charts branch exists (or when previewing locally), fall back to assets/data/ecmwf_charts/ (scripts/fetch_ecmwf_charts.py --out assets/data/ecmwf_charts)
+    const CHARTS_LOCAL = BASE + 'data/ecmwf_charts/';
+    let chartsBase = CHARTS_URL;
+    function chartView(key, m) {
+        const c = charts.charts[key][m], b = c.base;
+        return {
+            hours: c.hours, runs: [new Date(Date.UTC(+b.slice(0, 4), +b.slice(4, 6) - 1, +b.slice(6, 8), +b.slice(8, 10)))], runExact: true,
+            urlFor: (r, h) => chartsBase + charts.file.replace('{product}', key).replace('{model}', m).replace('{base}', b).replace('{hour}', pad(h, 3)),
+            fallbackUrl: 'https://charts.ecmwf.int/',
+        };
+    }
+    const OC_SRC = { source: 'ECMWF Open Charts (CC-BY-4.0)', sourceUrl: 'https://charts.ecmwf.int/' };
+    const OC_AI = ' The AIFS is ECMWF&rsquo;s AI model; the AIFS ensemble line is its control run (one member), not the ensemble mean. When the AI and physics-based runs agree on the pattern, confidence is higher. The star marks the central Washington coast. Cropped from ECMWF&rsquo;s Open Charts, updated twice a day.';
+    const OC_DEFS = {
+        jet200: ['Jet stream (200 hPa wind)', 'sea level pressure and 200 hPa wind',
+            'Sea level pressure (lines) and the wind at 200 hPa (shading), about 39,000 feet, the level of the jet stream, over the North Pacific from eastern Siberia to the Rockies.',
+            'Find the jet core (the strongest wind) and where it is aimed. A jet pointed at Washington brings storms; a jet that splits or dives south of the state means a colder or drier pattern; a ridge with the jet far to the north means dry. Step forward to see whether the jet is extending or retracting across the Pacific.'],
+        z500: ['500 hPa height and wind', '500 hPa height and wind',
+            'Geopotential height (lines) and wind (shading) at 500 hPa, about 18,000 feet, the standard level for reading ridges and troughs, over the North Pacific.',
+            'Troughs (low heights, lines dipping south) near the coast bring storms; ridges (heights bulging north) bring dry weather. Look for a trough digging toward Washington, and for blocking ridges over the Gulf of Alaska.'],
+        wind850: ['MSLP and 850 hPa wind', 'sea level pressure and 850 hPa wind',
+            'Sea level pressure (lines) and the wind at 850 hPa (shading), about 5,000 feet, the level that feeds moisture into the Cascades.',
+            'Strong 850 hPa wind aimed at the coast is the low-level push behind heavy mountain precipitation (compare the Moisture product). Wind from the southwest tends to be milder; wind from the northwest is colder and showery.'],
+        z500t850: ['500 hPa height and 850 hPa temp', '500 hPa height and 850 hPa temperature',
+            '500 hPa height (lines) with 850 hPa temperature (colors) over the North Pacific, a one-glance view of the pattern aloft and how cold the air at pass level is.',
+            'A trough over the Northwest with the 0&deg;C color line at or below pass level is the snow setup. For a closer look at the temperature alone, see the 850 mb temperature product.'],
+    };
+    const OC_ORDER = ['hres', 'aifs', 'aifs_ens'];
+
+    // add the chart products that the manifest has, right after the 850 mb temperature product
+    function addChartProducts() {
+        const entries = Object.entries(PRODUCTS);
+        Object.keys(PRODUCTS).forEach(k => delete PRODUCTS[k]);
+        entries.forEach(([k, v]) => {
+            PRODUCTS[k] = v;
+            if (k !== 'temp850') return;
+            Object.keys(OC_DEFS).forEach(key => {
+                if (!charts) return;
+                const have = OC_ORDER.filter(m => charts.charts[key] && charts.charts[key][m]);
+                if (!have.length) return;
+                const [label, title, what, how] = OC_DEFS[key];
+                PRODUCTS[key] = { label, models: have, title: m => `${modelName(m)}: ${title}`, build: m => chartView(key, m), info: Object.assign({ what: what + OC_AI, how }, OC_SRC) };
+            });
+        });
+    }
+
     const MODELS = {
-        oisst: 'NOAA OISST',
+        oisst: 'NOAA OISST', aifs_ens: 'ECMWF AIFS ensemble (control)',
         gfs: 'GFS', ecmwf: 'ECMWF HRES', aifs: 'ECMWF AIFS (AI)', hres: 'ECMWF HRES',
         gefs: 'GEFS', eps: 'ECMWF ENS', diff: 'ECMWF ENS minus GEFS',
         wwrf_ecmwf: 'West-WRF (ECMWF-driven)', wwrf_gfs: 'West-WRF (GFS-driven)',
@@ -201,8 +252,15 @@
     // The SST product needs its manifest; without it the rest of the page still works
     const SST_PRODUCT = PRODUCTS.sst;
     delete PRODUCTS.sst;
-    fetch(BASE + 'data/sst/manifest.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(m => {
+    const getManifest = url => fetch(url, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    Promise.all([
+        getManifest(BASE + 'data/sst/manifest.json'),
+        (window.ECMWF_CHARTS_URL ? getManifest(CHARTS_URL + 'manifest.json') : Promise.resolve(null))
+            .then(m => m || getManifest(CHARTS_LOCAL + 'manifest.json').then(l => { if (l) chartsBase = CHARTS_LOCAL; return l; })),
+    ]).then(([m, c]) => {
         if (m && m.dates && m.dates.length) { sst = m; PRODUCTS.sst = SST_PRODUCT; }
+        if (c && c.charts && c.file) charts = c;
+        if (charts) addChartProducts();
         mount();
     });
 }());

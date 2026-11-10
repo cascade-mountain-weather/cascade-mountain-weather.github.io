@@ -263,3 +263,6 @@ assets/forecast/
 # snow-to-liquid-ratio study downloads (scripts/slr_pull_snotel.py, slr_pull_soundings.py)
 data/slr/
 .git_token
+
+# local preview of the ECMWF chart frames (the ecmwf-charts branch is the published copy)
+assets/data/ecmwf_charts/

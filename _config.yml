@@ -72,3 +72,5 @@ analogs_name: "Reading the Tea Leaves"
 # Rolling satellite frames (last 6 hours, 10 minutes apart), force-pushed hourly to this branch by update_satellite_loop.yml
 satellite_data_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/satellite-data"
 forecast_data_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/forecast-data"
+# Cropped ECMWF Open Charts frames (North Pacific jet, 500 hPa, 850 hPa), force-pushed twice a day to this branch by ecmwf_charts.yml
+ecmwf_charts_url: "https://raw.githubusercontent.com/cascade-mountain-weather/cascade-mountain-weather.github.io/ecmwf-charts"
