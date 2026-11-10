@@ -464,9 +464,48 @@ details.post-section > summary:focus-visible { outline: 2px solid #2a5298; outli
 .post-section-body h3 { color: #2a5298; font-size: 1.15rem; margin: 1.25rem 0 0.4rem; }
 .to-top { text-align: right; font-size: 0.9rem; margin: 0.5rem 0 0; }
 
-figure.figure-slot { margin: 1.5rem 0; }
-figure.figure-slot .figure-placeholder { margin: 0; }
-figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #555; font-style: italic; text-align: center; }
+/* Figures: a small boxed thumbnail floated to the right so the text wraps around it. Click the image to enlarge it
+   (assets/lightbox.js, via the PlotFormat class). Put the <figure> BEFORE the text it should sit beside, at the top
+   of the section. Several images in one figure stack inside the same box. */
+.post-section-body { display: flow-root; }   /* contains the float so the "Related tools" row never wraps beside it */
+figure.figure-slot {
+    float: right;
+    clear: right;
+    width: min(300px, 42%);
+    margin: 0.2rem 0 0.9rem 1.25rem;
+    padding: 0.5rem;
+    background: #f5f7fa;
+    border: 1px solid #d5deea;
+    border-radius: var(--radius);
+    box-sizing: border-box;
+}
+figure.figure-slot img { display: block; width: 100%; height: auto; margin: 0 0 0.5rem; border-radius: 6px; box-shadow: none; cursor: zoom-in; }
+figure.figure-slot img:last-of-type { margin-bottom: 0; }
+figure.figure-slot .figure-placeholder { margin: 0; padding: 1rem; }
+figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.85rem; line-height: 1.4; color: #555; font-style: italic; text-align: center; }
+figure.figure-slot figcaption::before { content: "🔍 click to enlarge"; display: block; font-style: normal; font-size: 0.72rem; color: #2a5298; margin-bottom: 0.15rem; }
+figure.figure-slot:not(:has(img)) figcaption::before { content: none; }
+
+/* Older posts wrap their images in an inline-styled flex <div>; keep them inside the box too */
+.post-section-body figure.figure-slot > div[style] { display: block !important; max-width: none !important; margin: 0 !important; }
+.post-section-body figure.figure-slot > div[style] img { width: 100% !important; flex: none !important; margin: 0 0 0.5rem !important; }
+
+/* Figure below the text: .post-cols > .post-text + figure stacks in one column, the figure in a small box under the
+   text. The Related tools row is a sibling after .post-cols, so it stays at the bottom, full width. */
+.post-cols { display: block; }
+.post-cols > figure.figure-slot { float: none; clear: none; width: 100%; max-width: 420px; margin: 1rem 0 0; position: static; }
+@media (max-width: 600px) { .post-cols > figure.figure-slot { max-width: 260px; margin: 1rem auto 0; } }
+.post-text > :first-child { margin-top: 0; }
+.post-text > :last-child { margin-bottom: 0; }
+figure.figure-slot figcaption { text-align: left !important; }
+
+/* The map, tables and winners grid need the full width */
+.plume-map, .snow-table-wrap, .winners-grid, .snow-table-warning { clear: both; }
+
+/* On a phone there is no room to wrap: the box goes full width above the text */
+@media (max-width: 600px) {
+    figure.figure-slot { float: none; width: 100%; max-width: 420px; margin: 0.75rem auto 1rem; }
+}
 
 .snow-table-warning {
     background: #fff4e5;
@@ -503,10 +542,11 @@ figure.figure-slot figcaption { margin-top: 0.4rem; font-size: 0.9rem; color: #5
 .pm-group button { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.7rem; border: 1px solid #2a5298; background: #fff; color: #1e3c72; cursor: pointer; border-radius: 6px; }
 .pm-group button[aria-pressed="true"] { background: #1e3c72; color: #fff; }
 .pm-check { font-size: 0.85rem; color: #334155; cursor: pointer; }
-.pm-grid { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; gap: 1rem; align-items: start; }
+.pm-grid { display: grid; grid-template-columns: minmax(180px, 3fr) 7fr; gap: 1rem; align-items: start; }
 .pm-grid > * { min-width: 0; }
 @media (max-width: 760px) {
   .pm-grid { grid-template-columns: minmax(0, 1fr); }
+  .post-content .pm-grid svg.pm-map { max-width: 240px; margin: 0 auto; }
   .pm-table-box .snow-table { min-width: 30rem; }   /* scrolls sideways inside .snow-table-wrap instead of widening the page */
 }
 .post-content svg.pm-map, .post-content svg.pm-chart { width: 100%; height: auto; display: block; border: 1px solid #d5deea; border-radius: 8px; margin: 0; box-shadow: none; }

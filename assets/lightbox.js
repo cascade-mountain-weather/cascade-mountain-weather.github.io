@@ -57,7 +57,8 @@
             const img = gallery[index];
             lbImg.src = img.currentSrc || img.src;
             lbImg.alt = img.alt || '';
-            caption.textContent = img.alt || '';
+            const fc = img.closest('figure') && img.closest('figure').querySelector('figcaption');
+            caption.textContent = (fc && fc.textContent.trim()) || img.alt || '';
             const multi = gallery.length > 1;
             btnPrev.hidden = !multi;
             btnNext.hidden = !multi;

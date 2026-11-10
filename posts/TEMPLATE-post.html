@@ -62,12 +62,15 @@
     7. Long-term outlook
     8. Safety & travel (always visible)
 
-  FIGURES: every section ends with a <figure class="figure-slot"> placeholder.
-  Save images to assets/images/YYYYMMDD_fx/ (folder date = post date, no dashes)
-  and replace the placeholder <div> with:
+  FIGURES: every section has a two-column <div class="post-cols">: the text in <div class="post-text"> on the left,
+  and a <figure class="figure-slot"> boxed thumbnail in its own column on the right. The Related tools row
+  sits below both. Delete the <figure> and the text goes full width. Clicking the image opens it large (lightbox), and the caption
+  says so. Save images to assets/images/YYYYMMDD_fx/ (folder date = post date, no dashes) and replace
+  the placeholder <div> with:
       <img class="PlotFormat" src="../assets/images/YYYYMMDD_fx/name.png" alt="...">
-  (PlotFormat makes it click-to-enlarge). Keep the <figcaption>. Delete any figure
-  slot you don't need.
+  (PlotFormat is what makes it click-to-enlarge; alt text is the caption in the big view.) Two images
+  for one section: put both <img> tags in the same figure and they stack in one box. Keep the
+  <figcaption>. Delete any figure slot you don't need. On a phone the box goes full width above the text.
 
   To make a section start collapsed, remove the `open` attribute on its <details>.
 -->
@@ -125,17 +128,21 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="recap" open>
     <summary><h2>1. Past Week Recap</h2></summary>
     <div class="post-section-body">
-        <p>[UPDATE: what actually happened since last Thursday's post: storms, snow totals, temperatures, anything notable.]</p>
-        <ul>
-            <li><strong>Observed snowfall (SNOTEL / NWAC):</strong> [UPDATE: by area, or "see table"]</li>
-            <li><strong>Peak wind / freezing level:</strong> [UPDATE]</li>
-            <li><strong>How last week's forecast did:</strong> [UPDATE: one honest line; full scoring is on the <a href="../evaluation.html">evaluation page</a>]</li>
-        </ul>
+        <div class="post-cols">
+            <div class="post-text">
+            <p>[UPDATE: what actually happened since last Thursday's post: storms, snow totals, temperatures, anything notable.]</p>
+            <ul>
+                <li><strong>Observed snowfall (SNOTEL / NWAC):</strong> [UPDATE: by area, or "see table"]</li>
+                <li><strong>Peak wind / freezing level:</strong> [UPDATE]</li>
+                <li><strong>How last week's forecast did:</strong> [UPDATE: one honest line; full scoring is on the <a href="../evaluation.html">evaluation page</a>]</li>
+            </ul>
+            </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>📊 [UPDATE: add recap figure, e.g. observed snow depth change or live-conditions map]</em></p></div>
+                <figcaption>[UPDATE: caption]</figcaption>
+            </figure>
+        </div>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>📊 [UPDATE: add recap figure, e.g. observed snow depth change or live-conditions map]</em></p></div>
-            <figcaption>[UPDATE: caption]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../tools/conditions-map.html">Live conditions map</a><a href="../tools/satellite-loop.html">Satellite loop</a><a href="../evaluation.html">Forecast evaluation</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
@@ -145,17 +152,21 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="synoptic" open>
     <summary><h2>2. Synoptic (Large-Scale) Overview</h2></summary>
     <div class="post-section-body">
-        <p>[UPDATE: the big picture over the North Pacific and western North America: jet position, troughs/ridges, atmospheric rivers, where the storm track is aimed.]</p>
-        <ul>
-            <li><strong>Pattern:</strong> [UPDATE]</li>
-            <li><strong>Key features this weekend:</strong> [UPDATE]</li>
-            <li><strong>Model agreement:</strong> [UPDATE: high / medium / low, and why]</li>
-        </ul>
+        <div class="post-cols">
+            <div class="post-text">
+            <p>[UPDATE: the big picture over the North Pacific and western North America: jet position, troughs/ridges, atmospheric rivers, where the storm track is aimed.]</p>
+            <ul>
+                <li><strong>Pattern:</strong> [UPDATE]</li>
+                <li><strong>Key features this weekend:</strong> [UPDATE]</li>
+                <li><strong>Model agreement:</strong> [UPDATE: high / medium / low, and why]</li>
+            </ul>
+            </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>🌀 [UPDATE: add 500 mb / jet / IVT figure]</em></p></div>
+                <figcaption>[UPDATE: caption, include model and valid time]</figcaption>
+            </figure>
+        </div>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>🌀 [UPDATE: add 500 mb / jet / IVT figure]</em></p></div>
-            <figcaption>[UPDATE: caption, include model and valid time]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../tools/model-tools-synoptic.html">Synoptic-scale tools</a><a href="../tools/satellite-loop.html">Satellite loop</a><a href="../tools/radiosonde.html">Skew-T / soundings</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
@@ -165,26 +176,30 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="local" open>
     <summary><h2>3. Local Overview</h2></summary>
     <div class="post-section-body">
-        <p>[UPDATE: what this means for the Cascades, day by day: timing of precipitation, orographic flow, snow level, winds.]</p>
-        <ul>
-            <li><strong>Friday:</strong> [UPDATE]</li>
-            <li><strong>Saturday:</strong> [UPDATE]</li>
-            <li><strong>Sunday:</strong> [UPDATE]</li>
-        </ul>
+        <div class="post-cols">
+            <div class="post-text">
+            <p>[UPDATE: what this means for the Cascades, day by day: timing of precipitation, orographic flow, snow level, winds.]</p>
+            <ul>
+                <li><strong>Friday:</strong> [UPDATE]</li>
+                <li><strong>Saturday:</strong> [UPDATE]</li>
+                <li><strong>Sunday:</strong> [UPDATE]</li>
+            </ul>
 
-        <h3>Snow level &amp; temperatures</h3>
-        <p>[UPDATE: freezing level / snow level by day, base and summit temperatures where it matters.]</p>
+            <h3>Snow level &amp; temperatures</h3>
+            <p>[UPDATE: freezing level / snow level by day, base and summit temperatures where it matters.]</p>
 
-        <h3>Winds</h3>
-        <p>[UPDATE: ridgetop wind direction and speed, which areas are exposed, lift closure risk.]</p>
+            <h3>Winds</h3>
+            <p>[UPDATE: ridgetop wind direction and speed, which areas are exposed, lift closure risk.]</p>
 
-        <h3>Uncertainties</h3>
-        <p>[UPDATE: the main forecast uncertainty (timing, snow level, rain/snow line, shadowing) and which way it could bust.]</p>
+            <h3>Uncertainties</h3>
+            <p>[UPDATE: the main forecast uncertainty (timing, snow level, rain/snow line, shadowing) and which way it could bust.]</p>
+            </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add local figure, e.g. freezing level chart or precipitation map]</em></p></div>
+                <figcaption>[UPDATE: caption]</figcaption>
+            </figure>
+        </div>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add local figure, e.g. freezing level chart or precipitation map]</em></p></div>
-            <figcaption>[UPDATE: caption]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../tools/model-tools-precipitation.html">Precipitation</a><a href="../tools/model-tools-freezing-level.html">Freezing &amp; snow level</a><a href="../tools/model-tools-lowland-snow.html">Lowland snow</a><a href="../tools/radiosonde.html">Skew-T / soundings</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
@@ -232,33 +247,37 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="winners" open>
     <summary><h2>5. Weekend Winners (and Losers)</h2></summary>
     <div class="post-section-body">
-        <p>
-            Where this pattern delivers more or less water than a normal storm, from the
-            <a href="../in-house/powder-stash.html">Powder Stash Predictor</a>.
-            Pattern call: <strong>[UPDATE: pattern name]</strong> ([UPDATE: confidence]).
-        </p>
-        <div class="winners-grid">
-            <div class="winners winners-up">
-                <h3>🏆 Winners</h3>
-                <ul>
-                    <li><strong>[UPDATE: area]</strong>: [UPDATE: +XX% vs a normal storm, why]</li>
-                    <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
-                </ul>
+        <div class="post-cols">
+            <div class="post-text">
+            <p>
+                Where this pattern delivers more or less water than a normal storm, from the
+                <a href="../in-house/powder-stash.html">Powder Stash Predictor</a>.
+                Pattern call: <strong>[UPDATE: pattern name]</strong> ([UPDATE: confidence]).
+            </p>
+            <div class="winners-grid">
+                <div class="winners winners-up">
+                    <h3>🏆 Winners</h3>
+                    <ul>
+                        <li><strong>[UPDATE: area]</strong>: [UPDATE: +XX% vs a normal storm, why]</li>
+                        <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
+                    </ul>
+                </div>
+                <div class="winners winners-down">
+                    <h3>🥀 Losers</h3>
+                    <ul>
+                        <li><strong>[UPDATE: area]</strong>: [UPDATE: −XX% vs a normal storm, why]</li>
+                        <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
+                    </ul>
+                </div>
             </div>
-            <div class="winners winners-down">
-                <h3>🥀 Losers</h3>
-                <ul>
-                    <li><strong>[UPDATE: area]</strong>: [UPDATE: −XX% vs a normal storm, why]</li>
-                    <li><strong>[UPDATE: area]</strong>: [UPDATE]</li>
-                </ul>
+            <p><strong>Best bet this weekend:</strong> [UPDATE: area and day, one sentence why]</p>
             </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add Powder Stash zone map]</em></p></div>
+                <figcaption>[UPDATE: caption]</figcaption>
+            </figure>
         </div>
-        <p><strong>Best bet this weekend:</strong> [UPDATE: area and day, one sentence why]</p>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>🗺️ [UPDATE: add Powder Stash zone map]</em></p></div>
-            <figcaption>[UPDATE: caption]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../in-house/powder-stash.html">Powder Stash Predictor</a><a href="../tools/model-tools-precipitation.html">Precipitation tools</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
@@ -268,18 +287,22 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="mid-range" open>
     <summary><h2>6. Mid-Range (Early Next Week)</h2></summary>
     <div class="post-section-body">
-        <p><strong>[UPDATE: Mon DD to Wed DD]</strong></p>
-        <ul>
-            <li><strong>Monday:</strong> [UPDATE]</li>
-            <li><strong>Tuesday:</strong> [UPDATE]</li>
-            <li><strong>Wednesday:</strong> [UPDATE]</li>
-        </ul>
-        <p><strong>Confidence:</strong> [UPDATE: ensemble spread, what would change the call]</p>
+        <div class="post-cols">
+            <div class="post-text">
+            <p><strong>[UPDATE: Mon DD to Wed DD]</strong></p>
+            <ul>
+                <li><strong>Monday:</strong> [UPDATE]</li>
+                <li><strong>Tuesday:</strong> [UPDATE]</li>
+                <li><strong>Wednesday:</strong> [UPDATE]</li>
+            </ul>
+            <p><strong>Confidence:</strong> [UPDATE: ensemble spread, what would change the call]</p>
+            </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>📅 [UPDATE: add ensemble / mid-range figure]</em></p></div>
+                <figcaption>[UPDATE: caption]</figcaption>
+            </figure>
+        </div>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>📅 [UPDATE: add ensemble / mid-range figure]</em></p></div>
-            <figcaption>[UPDATE: caption]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../tools/model-tools-synoptic.html">Synoptic-scale tools</a><a href="../tools/model-tools-precipitation.html">Precipitation tools</a><a href="../tools/model-tools-freezing-level.html">Freezing &amp; snow level</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
@@ -289,18 +312,22 @@ thumbnail_caption: "[UPDATE: caption under the thumbnail]"
 <details class="post-section" id="long-term" open>
     <summary><h2>7. Long-Term Outlook</h2></summary>
     <div class="post-section-body">
-        <p>[UPDATE: weeks 2 to 4 and beyond. Reading the tea leaves: sub-seasonal regimes, MJO, ENSO, North Pacific SST, CPC outlooks.]</p>
-        <ul>
-            <li><strong>Weeks 2–3:</strong> [UPDATE]</li>
-            <li><strong>Signals to watch:</strong> [UPDATE]</li>
-            <li><strong>Season context:</strong> [UPDATE: snowpack vs normal, base depths, opening dates]</li>
-        </ul>
-        <p><em>This is low-confidence territory. Treat it as a hint about the pattern, not a forecast of any single storm.</em></p>
+        <div class="post-cols">
+            <div class="post-text">
+            <p>[UPDATE: weeks 2 to 4 and beyond. Reading the tea leaves: sub-seasonal regimes, MJO, ENSO, North Pacific SST, CPC outlooks.]</p>
+            <ul>
+                <li><strong>Weeks 2–3:</strong> [UPDATE]</li>
+                <li><strong>Signals to watch:</strong> [UPDATE]</li>
+                <li><strong>Season context:</strong> [UPDATE: snowpack vs normal, base depths, opening dates]</li>
+            </ul>
+            <p><em>This is low-confidence territory. Treat it as a hint about the pattern, not a forecast of any single storm.</em></p>
+            </div>
+            <figure class="figure-slot">
+                <div class="figure-placeholder"><p><em>🔭 [UPDATE: add sub-seasonal / outlook figure]</em></p></div>
+                <figcaption>[UPDATE: caption]</figcaption>
+            </figure>
+        </div>
 
-        <figure class="figure-slot">
-            <div class="figure-placeholder"><p><em>🔭 [UPDATE: add sub-seasonal / outlook figure]</em></p></div>
-            <figcaption>[UPDATE: caption]</figcaption>
-        </figure>
         <p class="section-tools"><span>🧰 Related tools:</span> <a href="../outlooks/subseasonal.html">Sub-seasonal</a><a href="../outlooks/seasonal.html">Seasonal</a><a href="../outlooks/teleconnections.html">Teleconnections</a><a href="../outlooks/tea-leaves.html">Tea Leaves</a></p>
         <p class="to-top"><a href="#contents">↑ Back to contents</a></p>
     </div>
