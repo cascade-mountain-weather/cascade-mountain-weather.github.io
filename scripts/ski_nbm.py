@@ -118,7 +118,9 @@ def main():
         liquid = None if any(q is None for q in qpf) else sum(qpf)
         # point fields over the ski window
         hrs = real_hours(cycle, ws, we)
-        hrs_all = real_hours(cycle, ws + pd.Timedelta(hours=1), we, thin=False)      # every real hour, for the timing recommender
+        # every real hour, for the timing recommender: the ski day (8 am-4 pm) plus two hours either side (6-8 am, 4-6 pm), which only the
+        # improving/deteriorating call reads (assets/ski-model.js); the ski-window means above still use the 07:00-16:00 hours in hrs
+        hrs_all = real_hours(cycle, ws - pd.Timedelta(hours=1), we + pd.Timedelta(hours=2), thin=False)
         cache = {}
         for f in sorted(set(hrs) | set(hrs_all)):
             cache[f] = {

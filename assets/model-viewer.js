@@ -198,7 +198,15 @@
                     sel.addEventListener('change', () => { state[s.key] = sel.value; changed(); });
                     chips.appendChild(sel);
                 } else {
+                    let lastGroup = null;
                     opts.forEach(o => {
+                        if (o.group && o.group !== lastGroup) {      // an option can carry a group name: shown as a small heading above its chips
+                            lastGroup = o.group;
+                            const h = document.createElement('span');
+                            h.className = 'mv-sub';
+                            h.textContent = o.group;
+                            chips.appendChild(h);
+                        }
                         const b = document.createElement('button');
                         b.type = 'button';
                         b.className = 'mv-chip';

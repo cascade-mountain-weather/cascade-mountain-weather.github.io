@@ -6,6 +6,9 @@
 .mv-group { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; max-width: 100%; }
 .mv-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
 .mv-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; min-width: 0; }
+/* group heading inside a chip row (the product list): takes a full line, with extra space above all but the first */
+.mv-sub { flex: 0 0 100%; font-size: 0.78rem; font-weight: 700; color: #1e3c72; margin: 0.35rem 0 -0.1rem; padding-bottom: 0.15rem; border-bottom: 1px solid #e2e8f0; }
+.mv-sub:first-child { margin-top: 0; }
 .mv-chip {
     flex: 0 1 auto; min-height: 40px; padding: 0 0.9rem; border-radius: 999px;
     border: 1px solid #cbd5e1; background: #fff; color: #1e3c72;

@@ -422,6 +422,14 @@ h3 {
     border-radius: 6px;
 }
 
+.post-thumb-caption {
+    margin: -0.25rem 0 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    font-style: italic;
+    color: #555;
+}
+
 .post-summary {
     margin: 1rem 0;
     line-height: 1.8;

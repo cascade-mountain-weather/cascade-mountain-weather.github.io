@@ -107,21 +107,31 @@
     };
     const OC_ORDER = ['hres', 'aifs', 'aifs_ens'];
 
-    // add the chart products that the manifest has, right after the 850 mb temperature product
+    // add the chart products that the manifest has (organize() below puts every product in its group)
     function addChartProducts() {
-        const entries = Object.entries(PRODUCTS);
-        Object.keys(PRODUCTS).forEach(k => delete PRODUCTS[k]);
-        entries.forEach(([k, v]) => {
-            PRODUCTS[k] = v;
-            if (k !== 'temp850') return;
-            Object.keys(OC_DEFS).forEach(key => {
-                if (!charts) return;
-                const have = OC_ORDER.filter(m => charts.charts[key] && charts.charts[key][m]);
-                if (!have.length) return;
-                const [label, title, what, how] = OC_DEFS[key];
-                PRODUCTS[key] = { label, models: have, title: m => `${modelName(m)}: ${title}`, build: m => chartView(key, m), info: Object.assign({ what: what + OC_AI, how }, OC_SRC) };
-            });
+        Object.keys(OC_DEFS).forEach(key => {
+            const have = OC_ORDER.filter(m => charts.charts[key] && charts.charts[key][m]);
+            if (!have.length) return;
+            const [label, title, what, how] = OC_DEFS[key];
+            PRODUCTS[key] = { label, models: have, title: m => `${modelName(m)}: ${title}`, build: m => chartView(key, m), info: Object.assign({ what: what + OC_AI, how }, OC_SRC) };
         });
+    }
+
+    // The product list is grouped by the main field each product shows, in this order; the chips carry the group names.
+    const GROUPS = [
+        ['Upper levels (500 hPa height, 200 hPa wind)', ['z500', 'jet200']],
+        ['Mid and surface levels (850 hPa, sea level pressure, ocean)', ['temp850', 'z500t850', 'wind850', 'sst']],
+        ['Moisture and atmospheric rivers', ['ivt', 'arlt', 'plume']],
+        ['Synoptic overview (University of Utah)', ['utah']],
+    ];
+    const groupOf = k => { const g = GROUPS.find(x => x[1].includes(k)); return g ? g[0] : 'Other'; };
+    function organize() {
+        const ordered = [];
+        GROUPS.forEach(([, keys]) => keys.forEach(k => { if (PRODUCTS[k]) ordered.push(k); }));
+        Object.keys(PRODUCTS).forEach(k => { if (!ordered.includes(k)) ordered.push(k); });
+        const copy = Object.assign({}, PRODUCTS);
+        Object.keys(PRODUCTS).forEach(k => delete PRODUCTS[k]);
+        ordered.forEach(k => { PRODUCTS[k] = copy[k]; });
     }
 
     const MODELS = {
@@ -229,7 +239,7 @@
     const modelsOf = st => PRODUCTS[st.product].models;
     const mount = () => CMWViewer.mount(document.getElementById('viewer'), {
         selectors: [
-            { key: 'product', label: 'Product', options: Object.keys(PRODUCTS).map(k => ({ value: k, label: PRODUCTS[k].label })) },
+            { key: 'product', label: 'Product', options: Object.keys(PRODUCTS).map(k => ({ value: k, label: PRODUCTS[k].label, group: groupOf(k) })) },
             { key: 'model', label: 'Model', options: st => modelsOf(st).map(m => ({ value: m, label: modelName(m) })) },
             { key: 'layout', label: 'Layout (testing)', options: st => canCompare(st) ? [{ value: 'single', label: 'One map' }, { value: 'compare', label: 'Side by side' }] : [{ value: 'single', label: '-' }] },
             { key: 'vs', label: 'Compare with', options: st => st.layout === 'compare' && canCompare(st) ? partners(modelsOf(st), modelsOf(st).includes(st.model) ? st.model : modelsOf(st)[0]).map(m => ({ value: m, label: modelName(m) })) : [{ value: '-', label: '-' }] },
@@ -261,6 +271,7 @@
         if (m && m.dates && m.dates.length) { sst = m; PRODUCTS.sst = SST_PRODUCT; }
         if (c && c.charts && c.file) charts = c;
         if (charts) addChartProducts();
+        organize();
         mount();
     });
 }());
