@@ -1,0 +1,321 @@
+{
+ "init": "2026-11-13 12Z",
+ "steps": [
+  0,
+  12,
+  24,
+  36,
+  48,
+  60,
+  72,
+  84,
+  96,
+  108,
+  120
+ ],
+ "valid": [
+  "Fri Nov 13 12Z",
+  "Sat Nov 14 00Z",
+  "Sat Nov 14 12Z",
+  "Sun Nov 15 00Z",
+  "Sun Nov 15 12Z",
+  "Mon Nov 16 00Z",
+  "Mon Nov 16 12Z",
+  "Tue Nov 17 00Z",
+  "Tue Nov 17 12Z",
+  "Wed Nov 18 00Z",
+  "Wed Nov 18 12Z"
+ ],
+ "models": {
+  "det": {
+   "label": "ECMWF HRES",
+   "days": [
+    {
+     "date": "2026-11-14",
+     "label": "Sat Nov 14",
+     "members": 1,
+     "votes": {
+      "0": 1,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 1.21,
+     "p_storm": 0.0,
+     "precip_mm": [
+      3.4,
+      3.4,
+      3.4
+     ],
+     "lowest_low": {
+      "intensity_m": 280,
+      "km_east": -2126,
+      "km_north": -167
+     },
+     "call": "0"
+    },
+    {
+     "date": "2026-11-15",
+     "label": "Sun Nov 15",
+     "members": 1,
+     "votes": {
+      "0": 1,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 0.53,
+     "p_storm": 1.0,
+     "precip_mm": [
+      10.6,
+      10.6,
+      10.6
+     ],
+     "lowest_low": {
+      "intensity_m": 326,
+      "km_east": -1225,
+      "km_north": 167
+     },
+     "call": "0"
+    },
+    {
+     "date": "2026-11-16",
+     "label": "Mon Nov 16",
+     "members": 1,
+     "votes": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 3,
+     "median_distance": 0.95,
+     "p_storm": 0.0,
+     "precip_mm": [
+      3.3,
+      3.3,
+      3.3
+     ],
+     "lowest_low": {
+      "intensity_m": 189,
+      "km_east": -624,
+      "km_north": -834
+     },
+     "call": "3"
+    },
+    {
+     "date": "2026-11-17",
+     "label": "Tue Nov 17",
+     "members": 1,
+     "votes": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 1,
+      "none": 0
+     },
+     "pattern": 5,
+     "median_distance": 0.39,
+     "p_storm": 0.0,
+     "precip_mm": [
+      1.1,
+      1.1,
+      1.1
+     ],
+     "lowest_low": {
+      "intensity_m": 166,
+      "km_east": -1750,
+      "km_north": 1056
+     },
+     "call": "5"
+    },
+    {
+     "date": "2026-11-18",
+     "label": "Wed Nov 18",
+     "members": 1,
+     "votes": {
+      "0": 1,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 0.76,
+     "p_storm": 0.0,
+     "precip_mm": [
+      0.6,
+      0.6,
+      0.6
+     ],
+     "lowest_low": {
+      "intensity_m": 270,
+      "km_east": -624,
+      "km_north": -278
+     },
+     "call": "0"
+    }
+   ]
+  },
+  "eps": {
+   "label": "ECMWF ENS mean",
+   "days": [
+    {
+     "date": "2026-11-14",
+     "label": "Sat Nov 14",
+     "members": 50,
+     "votes": {
+      "0": 26,
+      "1": 0,
+      "2": 24,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 1.19,
+     "p_storm": 0.02,
+     "precip_mm": [
+      3.9,
+      4.4,
+      4.9
+     ],
+     "lowest_low": {
+      "intensity_m": 279,
+      "km_east": -2126,
+      "km_north": -167
+     },
+     "call": "0"
+    },
+    {
+     "date": "2026-11-15",
+     "label": "Sun Nov 15",
+     "members": 50,
+     "votes": {
+      "0": 50,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 0.45,
+     "p_storm": 1.0,
+     "precip_mm": [
+      11.1,
+      12.6,
+      13.9
+     ],
+     "lowest_low": {
+      "intensity_m": 331,
+      "km_east": -1074,
+      "km_north": 56
+     },
+     "call": "0"
+    },
+    {
+     "date": "2026-11-16",
+     "label": "Mon Nov 16",
+     "members": 50,
+     "votes": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 25,
+      "4": 0,
+      "5": 25,
+      "none": 0
+     },
+     "pattern": 3,
+     "median_distance": 0.77,
+     "p_storm": 0.14,
+     "precip_mm": [
+      3.7,
+      4.3,
+      5.0
+     ],
+     "lowest_low": {
+      "intensity_m": 195,
+      "km_east": -1149,
+      "km_north": 56
+     },
+     "call": "3"
+    },
+    {
+     "date": "2026-11-17",
+     "label": "Tue Nov 17",
+     "members": 50,
+     "votes": {
+      "0": 0,
+      "1": 0,
+      "2": 6,
+      "3": 5,
+      "4": 0,
+      "5": 39,
+      "none": 0
+     },
+     "pattern": 5,
+     "median_distance": 0.49,
+     "p_storm": 0.0,
+     "precip_mm": [
+      0.7,
+      1.0,
+      1.5
+     ],
+     "lowest_low": {
+      "intensity_m": 194,
+      "km_east": -1675,
+      "km_north": 723
+     },
+     "call": "5"
+    },
+    {
+     "date": "2026-11-18",
+     "label": "Wed Nov 18",
+     "members": 50,
+     "votes": {
+      "0": 27,
+      "1": 0,
+      "2": 1,
+      "3": 6,
+      "4": 9,
+      "5": 7,
+      "none": 0
+     },
+     "pattern": 0,
+     "median_distance": 1.03,
+     "p_storm": 0.42,
+     "precip_mm": [
+      1.0,
+      3.2,
+      8.2
+     ],
+     "lowest_low": {
+      "intensity_m": 227,
+      "km_east": -699,
+      "km_north": -278
+     },
+     "call": "0"
+    }
+   ]
+  }
+ }
+}
