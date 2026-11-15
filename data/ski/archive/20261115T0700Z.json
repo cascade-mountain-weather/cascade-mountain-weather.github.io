@@ -1,0 +1,7225 @@
+{
+ "schema": 1,
+ "generated_utc": "2026-11-15T13:02Z",
+ "cycle_utc": "2026-11-15T07:00Z",
+ "model": "NOAA National Blend of Models (core CONUS, 2.5 km), via Herbie",
+ "km_to_grid_point": {
+  "snoqualmie": 0.5,
+  "stevens": 0.3,
+  "baker": 0.8,
+  "crystal": 1.6,
+  "paradise": 0.6,
+  "white_pass": 0.9,
+  "blewett": 1.1,
+  "washington_pass": 0.3,
+  "hurricane": 1.2,
+  "st_helens": 0.5,
+  "icicle": 1.0,
+  "mission": 1.1,
+  "whistler": 0.8,
+  "hood_timberline": 0.7,
+  "hood_meadows": 1.4,
+  "hood_skibowl": 1.2,
+  "north_bend": 0.8,
+  "tiger_mountain": 0.8
+ },
+ "windows_utc": [
+  {
+   "date": "2026-11-16",
+   "ski": [
+    "2026-11-16T15:00Z",
+    "2026-11-17T00:00Z"
+   ],
+   "snow": [
+    "2026-11-16T00:00Z",
+    "2026-11-17T00:00Z"
+   ]
+  },
+  {
+   "date": "2026-11-17",
+   "ski": [
+    "2026-11-17T15:00Z",
+    "2026-11-18T00:00Z"
+   ],
+   "snow": [
+    "2026-11-17T00:00Z",
+    "2026-11-18T00:00Z"
+   ]
+  },
+  {
+   "date": "2026-11-18",
+   "ski": [
+    "2026-11-18T15:00Z",
+    "2026-11-19T00:00Z"
+   ],
+   "snow": [
+    "2026-11-18T00:00Z",
+    "2026-11-19T00:00Z"
+   ]
+  },
+  {
+   "date": "2026-11-19",
+   "ski": [
+    "2026-11-19T15:00Z",
+    "2026-11-20T00:00Z"
+   ],
+   "snow": [
+    "2026-11-19T00:00Z",
+    "2026-11-20T00:00Z"
+   ]
+  }
+ ],
+ "notes": [
+  "Nearest grid point to each zone's forecast point; temperature, snowfall and wind are not corrected for the elevation of the point.",
+  "Snowfall is the median of the NBM (with 25th and 75th percentiles) over the 24 hours ending 00Z after the ski day, from four 6 h windows combined with the fitted scaled sum.",
+  "Snow level, gust, cloud, visibility and temperature are over 07:00 to 16:00 local time (Pacific)."
+ ],
+ "zones": {
+  "snoqualmie": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.03,
+    "snow_ratio": 6.4,
+    "snow_level_ft": 3788.3,
+    "gust_mph": 6.0,
+    "cloud_pct": 44.0,
+    "vis_mi": 0.2,
+    "temp_f": 35.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      32,
+      32,
+      32,
+      34,
+      35,
+      35,
+      36,
+      37,
+      37,
+      37,
+      36,
+      35,
+      35
+     ],
+     "gust_mph": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      5.0,
+      6.0,
+      6.0,
+      5.0,
+      4.0,
+      3.0,
+      3.0
+     ],
+     "cloud_pct": [
+      30.0,
+      35.0,
+      40.0,
+      43.0,
+      37.0,
+      45.0,
+      42.0,
+      38.0,
+      47.0,
+      42.0,
+      31.0,
+      27.0,
+      36.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.1,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      2.5,
+      null,
+      null,
+      2.5,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3438.0,
+      3386.0,
+      3465.0,
+      3570.0,
+      3675.0,
+      3806.0,
+      3937.0,
+      4068.0,
+      4094.0,
+      4121.0,
+      4016.0,
+      3990.0,
+      3963.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.01,
+    "snow_ratio": 7.7,
+    "snow_level_ft": 3368.6,
+    "gust_mph": 9.6,
+    "cloud_pct": 26.5,
+    "vis_mi": 2.5,
+    "temp_f": 34.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      31,
+      33,
+      37,
+      35
+     ],
+     "gust_mph": [
+      4.0,
+      4.0,
+      8.0,
+      10.0
+     ],
+     "cloud_pct": [
+      39.0,
+      19.0,
+      22.0,
+      26.0
+     ],
+     "vis_mi": [
+      2.5,
+      2.5,
+      2.5,
+      2.5
+     ],
+     "snow_level_ft": [
+      2992.0,
+      3136.0,
+      3724.0,
+      3622.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.6,
+    "snow_level_ft": 2992.1,
+    "gust_mph": 21.5,
+    "cloud_pct": 82.5,
+    "vis_mi": null,
+    "temp_f": 33.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      31,
+      32,
+      35,
+      34
+     ],
+     "gust_mph": [
+      21.0,
+      19.0,
+      16.0,
+      13.0
+     ],
+     "cloud_pct": [
+      82.0,
+      82.0,
+      85.0,
+      81.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2677.0,
+      2887.0,
+      3202.0,
+      3202.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 7.3,
+    "snow_level_ft": 3320.2,
+    "gust_mph": 8.7,
+    "cloud_pct": 45.5,
+    "vis_mi": null,
+    "temp_f": 34.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      34,
+      39,
+      35
+     ],
+     "gust_mph": [
+      9.0,
+      7.0,
+      7.0,
+      4.0
+     ],
+     "cloud_pct": [
+      47.0,
+      41.0,
+      47.0,
+      47.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2782.0,
+      3097.0,
+      3675.0,
+      3727.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "stevens": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.1,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.07,
+    "snow_ratio": 9.8,
+    "snow_level_ft": 3718.3,
+    "gust_mph": 7.2,
+    "cloud_pct": 43.3,
+    "vis_mi": 0.3,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.02,
+      0.16,
+      0.02
+     ],
+     "temp_f": [
+      30,
+      30,
+      29,
+      30,
+      32,
+      34,
+      34,
+      35,
+      34,
+      34,
+      32,
+      31,
+      31
+     ],
+     "gust_mph": [
+      5.0,
+      5.0,
+      5.0,
+      4.0,
+      4.0,
+      4.0,
+      6.0,
+      7.0,
+      7.0,
+      6.0,
+      6.0,
+      5.0,
+      5.0
+     ],
+     "cloud_pct": [
+      40.0,
+      34.0,
+      35.0,
+      37.0,
+      46.0,
+      41.0,
+      43.0,
+      57.0,
+      54.0,
+      46.0,
+      42.0,
+      37.0,
+      45.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      4.8,
+      null,
+      null,
+      4.8,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3333.0,
+      3281.0,
+      3281.0,
+      3438.0,
+      3648.0,
+      3780.0,
+      3885.0,
+      4042.0,
+      4094.0,
+      4121.0,
+      4068.0,
+      3937.0,
+      3806.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.03,
+    "snow_ratio": 10.1,
+    "snow_level_ft": 3165.2,
+    "gust_mph": 10.1,
+    "cloud_pct": 30.5,
+    "vis_mi": 4.7,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      31,
+      35,
+      31
+     ],
+     "gust_mph": [
+      5.0,
+      5.0,
+      7.0,
+      10.0
+     ],
+     "cloud_pct": [
+      41.0,
+      16.0,
+      35.0,
+      30.0
+     ],
+     "vis_mi": [
+      4.1,
+      4.9,
+      4.9,
+      4.8
+     ],
+     "snow_level_ft": [
+      2546.0,
+      2900.0,
+      3593.0,
+      3622.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 11.4,
+    "snow_level_ft": 2847.8,
+    "gust_mph": 28.6,
+    "cloud_pct": 85.8,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      31,
+      30
+     ],
+     "gust_mph": [
+      29.0,
+      21.0,
+      17.0,
+      15.0
+     ],
+     "cloud_pct": [
+      87.0,
+      83.0,
+      87.0,
+      86.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2415.0,
+      2782.0,
+      3097.0,
+      3097.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 11.3,
+    "snow_level_ft": 3208.7,
+    "gust_mph": 8.5,
+    "cloud_pct": 51.5,
+    "vis_mi": null,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      32,
+      36,
+      32
+     ],
+     "gust_mph": [
+      9.0,
+      8.0,
+      6.0,
+      5.0
+     ],
+     "cloud_pct": [
+      63.0,
+      49.0,
+      49.0,
+      45.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2730.0,
+      2966.0,
+      3543.0,
+      3596.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "baker": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.5,
+    "snow_p50_in": 0.9,
+    "snow_p75_in": 1.7,
+    "snow_det_in": 1.5,
+    "liquid_in": 0.06,
+    "snow_ratio": 10.0,
+    "snow_level_ft": 3648.3,
+    "gust_mph": 12.8,
+    "cloud_pct": 67.7,
+    "vis_mi": 8.5,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.01,
+      0.01,
+      0.01,
+      0.0,
+      0.0,
+      0.02,
+      0.01,
+      0.0,
+      0.0,
+      0.01,
+      0.04,
+      0.0,
+      0.05
+     ],
+     "temp_f": [
+      31,
+      31,
+      30,
+      30,
+      30,
+      31,
+      31,
+      31,
+      31,
+      31,
+      29,
+      29,
+      29
+     ],
+     "gust_mph": [
+      14.0,
+      13.0,
+      13.0,
+      12.0,
+      11.0,
+      9.0,
+      8.0,
+      6.0,
+      6.0,
+      5.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "cloud_pct": [
+      56.0,
+      67.0,
+      61.0,
+      65.0,
+      77.0,
+      76.0,
+      74.0,
+      74.0,
+      66.0,
+      67.0,
+      67.0,
+      68.0,
+      61.0
+     ],
+     "vis_mi": [
+      6.9,
+      6.9,
+      6.9,
+      7.9,
+      10.1,
+      10.1,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3491.0,
+      3491.0,
+      3517.0,
+      3438.0,
+      3517.0,
+      3622.0,
+      3727.0,
+      3753.0,
+      3806.0,
+      3806.0,
+      3701.0,
+      3727.0,
+      3648.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.01
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.1,
+    "snow_det_in": 0.5,
+    "liquid_in": 0.01,
+    "snow_ratio": 10.5,
+    "snow_level_ft": 3250.5,
+    "gust_mph": 7.2,
+    "cloud_pct": 35.5,
+    "vis_mi": 10.1,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      32,
+      28
+     ],
+     "gust_mph": [
+      7.0,
+      7.0,
+      3.0,
+      3.0
+     ],
+     "cloud_pct": [
+      56.0,
+      32.0,
+      29.0,
+      25.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      2966.0,
+      3005.0,
+      3488.0,
+      3543.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.0,
+    "snow_level_ft": 2880.6,
+    "gust_mph": 23.9,
+    "cloud_pct": 77.5,
+    "vis_mi": null,
+    "temp_f": 29.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      25,
+      29,
+      33,
+      30
+     ],
+     "gust_mph": [
+      24.0,
+      19.0,
+      9.0,
+      5.0
+     ],
+     "cloud_pct": [
+      73.0,
+      72.0,
+      82.0,
+      83.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2415.0,
+      2651.0,
+      3123.0,
+      3333.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.5,
+    "snow_level_ft": 3044.6,
+    "gust_mph": 11.6,
+    "cloud_pct": 38.0,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      31,
+      36,
+      30
+     ],
+     "gust_mph": [
+      12.0,
+      6.0,
+      2.0,
+      1.0
+     ],
+     "cloud_pct": [
+      46.0,
+      39.0,
+      36.0,
+      31.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2703.0,
+      2782.0,
+      3333.0,
+      3360.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "crystal": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.5,
+    "snow_det_in": 0.5,
+    "liquid_in": 0.06,
+    "snow_ratio": 13.0,
+    "snow_level_ft": 3788.3,
+    "gust_mph": 11.9,
+    "cloud_pct": 46.7,
+    "vis_mi": 0.3,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.0,
+      0.0,
+      0.01,
+      0.01,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      29,
+      29,
+      30,
+      32,
+      33,
+      34,
+      34,
+      33,
+      32,
+      30,
+      30,
+      29
+     ],
+     "gust_mph": [
+      14.0,
+      14.0,
+      12.0,
+      10.0,
+      9.0,
+      8.0,
+      7.0,
+      7.0,
+      7.0,
+      7.0,
+      6.0,
+      5.0,
+      6.0
+     ],
+     "cloud_pct": [
+      54.0,
+      45.0,
+      38.0,
+      40.0,
+      49.0,
+      54.0,
+      55.0,
+      46.0,
+      48.0,
+      51.0,
+      47.0,
+      54.0,
+      52.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      5.4,
+      null,
+      null,
+      5.3,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3386.0,
+      3360.0,
+      3438.0,
+      3570.0,
+      3701.0,
+      3885.0,
+      3963.0,
+      4094.0,
+      4042.0,
+      4016.0,
+      3937.0,
+      3858.0,
+      3832.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 13.8,
+    "snow_level_ft": 3119.3,
+    "gust_mph": 12.5,
+    "cloud_pct": 34.2,
+    "vis_mi": 4.9,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      30,
+      34,
+      30
+     ],
+     "gust_mph": [
+      13.0,
+      7.0,
+      8.0,
+      11.0
+     ],
+     "cloud_pct": [
+      46.0,
+      26.0,
+      32.0,
+      33.0
+     ],
+     "vis_mi": [
+      3.7,
+      5.2,
+      5.5,
+      5.4
+     ],
+     "snow_level_ft": [
+      2310.0,
+      2979.0,
+      3593.0,
+      3596.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.5,
+    "snow_det_in": 0.4,
+    "liquid_in": 0.01,
+    "snow_ratio": 13.0,
+    "snow_level_ft": 3077.4,
+    "gust_mph": 44.3,
+    "cloud_pct": 86.8,
+    "vis_mi": null,
+    "temp_f": 29.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      30,
+      28
+     ],
+     "gust_mph": [
+      44.0,
+      35.0,
+      21.0,
+      16.0
+     ],
+     "cloud_pct": [
+      90.0,
+      89.0,
+      84.0,
+      84.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2835.0,
+      3045.0,
+      3202.0,
+      3228.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.01,
+    "snow_ratio": 11.7,
+    "snow_level_ft": 3510.5,
+    "gust_mph": 19.5,
+    "cloud_pct": 66.8,
+    "vis_mi": null,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      31,
+      35,
+      30
+     ],
+     "gust_mph": [
+      19.0,
+      9.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      71.0,
+      65.0,
+      67.0,
+      64.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3176.0,
+      3307.0,
+      3753.0,
+      3806.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "paradise": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.1,
+    "snow_p50_in": 0.1,
+    "snow_p75_in": 1.8,
+    "snow_det_in": 1.3,
+    "liquid_in": 0.12,
+    "snow_ratio": 13.2,
+    "snow_level_ft": 3823.3,
+    "gust_mph": 5.8,
+    "cloud_pct": 61.3,
+    "vis_mi": 0.3,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.02,
+      0.03,
+      0.01,
+      0.0,
+      0.03,
+      0.01,
+      0.01,
+      0.01
+     ],
+     "temp_f": [
+      29,
+      29,
+      29,
+      30,
+      31,
+      31,
+      32,
+      33,
+      32,
+      32,
+      30,
+      29,
+      28
+     ],
+     "gust_mph": [
+      7.0,
+      7.0,
+      6.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      6.0,
+      6.0,
+      5.0,
+      5.0,
+      4.0,
+      4.0
+     ],
+     "cloud_pct": [
+      68.0,
+      65.0,
+      66.0,
+      68.0,
+      61.0,
+      62.0,
+      64.0,
+      48.0,
+      56.0,
+      65.0,
+      59.0,
+      61.0,
+      69.0
+     ],
+     "vis_mi": [
+      0.1,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      5.6,
+      null,
+      null,
+      5.6,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3648.0,
+      3517.0,
+      3596.0,
+      3701.0,
+      3832.0,
+      3885.0,
+      3990.0,
+      4094.0,
+      3990.0,
+      4068.0,
+      3963.0,
+      3937.0,
+      3780.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.02
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.3,
+    "liquid_in": 0.01,
+    "snow_ratio": 13.6,
+    "snow_level_ft": 3303.0,
+    "gust_mph": 6.5,
+    "cloud_pct": 38.2,
+    "vis_mi": 5.2,
+    "temp_f": 29.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      29,
+      33,
+      29
+     ],
+     "gust_mph": [
+      6.0,
+      4.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      52.0,
+      28.0,
+      34.0,
+      39.0
+     ],
+     "vis_mi": [
+      4.1,
+      5.4,
+      5.7,
+      5.7
+     ],
+     "snow_level_ft": [
+      2835.0,
+      3163.0,
+      3540.0,
+      3675.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.3,
+    "snow_det_in": 0.5,
+    "liquid_in": 0.0,
+    "snow_ratio": 12.5,
+    "snow_level_ft": 3294.0,
+    "gust_mph": 30.6,
+    "cloud_pct": 85.8,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      30,
+      29,
+      31,
+      29
+     ],
+     "gust_mph": [
+      31.0,
+      23.0,
+      13.0,
+      11.0
+     ],
+     "cloud_pct": [
+      89.0,
+      89.0,
+      84.0,
+      81.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3123.0,
+      3176.0,
+      3412.0,
+      3465.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 11.0,
+    "snow_level_ft": 3543.3,
+    "gust_mph": 10.7,
+    "cloud_pct": 62.8,
+    "vis_mi": null,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      31,
+      36,
+      30
+     ],
+     "gust_mph": [
+      11.0,
+      4.0,
+      3.0,
+      4.0
+     ],
+     "cloud_pct": [
+      57.0,
+      63.0,
+      64.0,
+      67.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3176.0,
+      3281.0,
+      3780.0,
+      3937.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "white_pass": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.2,
+    "snow_det_in": 0.3,
+    "liquid_in": 0.02,
+    "snow_ratio": 10.6,
+    "snow_level_ft": 3919.5,
+    "gust_mph": 10.7,
+    "cloud_pct": 60.3,
+    "vis_mi": 0.3,
+    "temp_f": 33.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.02,
+      0.01,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      29,
+      32,
+      33,
+      34,
+      35,
+      35,
+      35,
+      34,
+      32,
+      31,
+      30
+     ],
+     "gust_mph": [
+      10.0,
+      9.0,
+      9.0,
+      9.0,
+      11.0,
+      11.0,
+      11.0,
+      11.0,
+      10.0,
+      9.0,
+      7.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      46.0,
+      49.0,
+      57.0,
+      60.0,
+      59.0,
+      67.0,
+      60.0,
+      53.0,
+      57.0,
+      56.0,
+      50.0,
+      35.0,
+      39.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      5.9,
+      null,
+      null,
+      5.9,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3727.0,
+      3701.0,
+      3701.0,
+      3675.0,
+      3780.0,
+      3990.0,
+      4068.0,
+      4121.0,
+      4068.0,
+      3937.0,
+      4016.0,
+      3963.0,
+      3885.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 10.9,
+    "snow_level_ft": 3217.7,
+    "gust_mph": 12.5,
+    "cloud_pct": 38.2,
+    "vis_mi": 5.5,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      32,
+      36,
+      32
+     ],
+     "gust_mph": [
+      7.0,
+      6.0,
+      9.0,
+      13.0
+     ],
+     "cloud_pct": [
+      44.0,
+      25.0,
+      47.0,
+      37.0
+     ],
+     "vis_mi": [
+      4.3,
+      5.7,
+      6.0,
+      6.0
+     ],
+     "snow_level_ft": [
+      2598.0,
+      3058.0,
+      3645.0,
+      3570.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.7,
+    "snow_det_in": 0.7,
+    "liquid_in": 0.01,
+    "snow_ratio": 12.8,
+    "snow_level_ft": 3018.4,
+    "gust_mph": 37.6,
+    "cloud_pct": 86.0,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      30,
+      31,
+      30
+     ],
+     "gust_mph": [
+      38.0,
+      31.0,
+      19.0,
+      17.0
+     ],
+     "cloud_pct": [
+      86.0,
+      88.0,
+      86.0,
+      84.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2835.0,
+      2966.0,
+      3123.0,
+      3150.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.4,
+    "snow_det_in": 0.4,
+    "liquid_in": 0.01,
+    "snow_ratio": 12.1,
+    "snow_level_ft": 3471.1,
+    "gust_mph": 14.8,
+    "cloud_pct": 69.5,
+    "vis_mi": null,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      32,
+      36,
+      32
+     ],
+     "gust_mph": [
+      15.0,
+      10.0,
+      8.0,
+      8.0
+     ],
+     "cloud_pct": [
+      71.0,
+      70.0,
+      68.0,
+      69.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3150.0,
+      3333.0,
+      3675.0,
+      3727.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "blewett": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 7.4,
+    "snow_level_ft": 3683.3,
+    "gust_mph": 8.1,
+    "cloud_pct": 18.3,
+    "vis_mi": 4.7,
+    "temp_f": 36.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.02,
+      0.02,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      30,
+      34,
+      37,
+      38,
+      39,
+      40,
+      39,
+      37,
+      35,
+      33,
+      31
+     ],
+     "gust_mph": [
+      8.0,
+      8.0,
+      8.0,
+      8.0,
+      6.0,
+      5.0,
+      6.0,
+      6.0,
+      6.0,
+      5.0,
+      5.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      20.0,
+      16.0,
+      15.0,
+      16.0,
+      20.0,
+      17.0,
+      13.0,
+      16.0,
+      23.0,
+      30.0,
+      31.0,
+      36.0,
+      29.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      9.0,
+      null,
+      8.2,
+      null,
+      null,
+      8.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3333.0,
+      3255.0,
+      3228.0,
+      3281.0,
+      3491.0,
+      3648.0,
+      3911.0,
+      4147.0,
+      4173.0,
+      4252.0,
+      4173.0,
+      4068.0,
+      3990.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 9.3,
+    "snow_level_ft": 2843.7,
+    "gust_mph": 7.8,
+    "cloud_pct": 29.0,
+    "vis_mi": 7.2,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      34,
+      36,
+      32
+     ],
+     "gust_mph": [
+      5.0,
+      6.0,
+      8.0,
+      7.0
+     ],
+     "cloud_pct": [
+      19.0,
+      15.0,
+      39.0,
+      43.0
+     ],
+     "vis_mi": [
+      4.4,
+      8.1,
+      8.2,
+      8.2
+     ],
+     "snow_level_ft": [
+      1864.0,
+      2638.0,
+      3461.0,
+      3412.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.9,
+    "snow_det_in": 0.8,
+    "liquid_in": 0.03,
+    "snow_ratio": 12.2,
+    "snow_level_ft": 2585.3,
+    "gust_mph": 13.6,
+    "cloud_pct": 88.5,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      31,
+      32,
+      30
+     ],
+     "gust_mph": [
+      10.0,
+      14.0,
+      11.0,
+      9.0
+     ],
+     "cloud_pct": [
+      88.0,
+      87.0,
+      88.0,
+      91.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2283.0,
+      2493.0,
+      2782.0,
+      2782.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.01
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.02
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.2,
+    "snow_p50_in": 0.3,
+    "snow_p75_in": 0.9,
+    "snow_det_in": 0.6,
+    "liquid_in": 0.02,
+    "snow_ratio": 11.3,
+    "snow_level_ft": 3011.8,
+    "gust_mph": 5.8,
+    "cloud_pct": 65.5,
+    "vis_mi": null,
+    "temp_f": 33.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      34,
+      36,
+      32
+     ],
+     "gust_mph": [
+      5.0,
+      6.0,
+      5.0,
+      4.0
+     ],
+     "cloud_pct": [
+      74.0,
+      68.0,
+      60.0,
+      60.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2651.0,
+      2808.0,
+      3228.0,
+      3360.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "washington_pass": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.2,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.01,
+    "snow_ratio": 14.2,
+    "snow_level_ft": 3403.3,
+    "gust_mph": 6.5,
+    "cloud_pct": 29.3,
+    "vis_mi": 5.2,
+    "temp_f": 25.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      22,
+      22,
+      21,
+      22,
+      25,
+      27,
+      27,
+      28,
+      27,
+      26,
+      24,
+      22,
+      22
+     ],
+     "gust_mph": [
+      7.0,
+      7.0,
+      6.0,
+      5.0,
+      5.0,
+      5.0,
+      6.0,
+      6.0,
+      6.0,
+      6.0,
+      5.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      40.0,
+      35.0,
+      21.0,
+      20.0,
+      31.0,
+      30.0,
+      22.0,
+      33.0,
+      37.0,
+      32.0,
+      27.0,
+      36.0,
+      42.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      10.1,
+      10.1,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2992.0,
+      3045.0,
+      2992.0,
+      3045.0,
+      3228.0,
+      3438.0,
+      3622.0,
+      3701.0,
+      3780.0,
+      3780.0,
+      3622.0,
+      3517.0,
+      3543.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 14.7,
+    "snow_level_ft": 2561.5,
+    "gust_mph": 6.9,
+    "cloud_pct": 26.0,
+    "vis_mi": 10.1,
+    "temp_f": 23.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      20,
+      23,
+      27,
+      22
+     ],
+     "gust_mph": [
+      6.0,
+      4.0,
+      7.0,
+      7.0
+     ],
+     "cloud_pct": [
+      35.0,
+      17.0,
+      28.0,
+      24.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      1365.0,
+      2507.0,
+      3199.0,
+      3176.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 13.3,
+    "snow_level_ft": 2788.7,
+    "gust_mph": 14.8,
+    "cloud_pct": 81.0,
+    "vis_mi": null,
+    "temp_f": 23.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      21,
+      23,
+      25,
+      23
+     ],
+     "gust_mph": [
+      14.0,
+      15.0,
+      14.0,
+      9.0
+     ],
+     "cloud_pct": [
+      80.0,
+      73.0,
+      86.0,
+      85.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2257.0,
+      2677.0,
+      3097.0,
+      3123.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.2,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 13.4,
+    "snow_level_ft": 3116.8,
+    "gust_mph": 5.6,
+    "cloud_pct": 54.5,
+    "vis_mi": null,
+    "temp_f": 25.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      21,
+      25,
+      29,
+      25
+     ],
+     "gust_mph": [
+      6.0,
+      4.0,
+      4.0,
+      3.0
+     ],
+     "cloud_pct": [
+      73.0,
+      55.0,
+      45.0,
+      45.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2756.0,
+      2835.0,
+      3386.0,
+      3491.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "hurricane": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.4,
+    "snow_det_in": 0.6,
+    "liquid_in": 0.1,
+    "snow_ratio": 9.7,
+    "snow_level_ft": 3709.5,
+    "gust_mph": 9.8,
+    "cloud_pct": 58.7,
+    "vis_mi": 8.5,
+    "temp_f": 28.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.01,
+      0.01,
+      0.01,
+      0.01,
+      0.03,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      29,
+      27,
+      27,
+      28,
+      28,
+      29,
+      29,
+      29,
+      28,
+      27,
+      26,
+      26
+     ],
+     "gust_mph": [
+      12.0,
+      12.0,
+      10.0,
+      7.0,
+      4.0,
+      3.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      2.0,
+      3.0
+     ],
+     "cloud_pct": [
+      76.0,
+      67.0,
+      58.0,
+      54.0,
+      52.0,
+      66.0,
+      66.0,
+      62.0,
+      52.0,
+      56.0,
+      45.0,
+      43.0,
+      42.0
+     ],
+     "vis_mi": [
+      9.0,
+      7.9,
+      7.9,
+      7.9,
+      7.9,
+      9.0,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3517.0,
+      3517.0,
+      3570.0,
+      3596.0,
+      3675.0,
+      3701.0,
+      3753.0,
+      3832.0,
+      3858.0,
+      3832.0,
+      3780.0,
+      3753.0,
+      3622.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.01
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 9.5,
+    "snow_level_ft": 3303.0,
+    "gust_mph": 13.2,
+    "cloud_pct": 31.0,
+    "vis_mi": 9.9,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      23,
+      27,
+      29,
+      26
+     ],
+     "gust_mph": [
+      13.0,
+      4.0,
+      3.0,
+      4.0
+     ],
+     "cloud_pct": [
+      30.0,
+      25.0,
+      31.0,
+      38.0
+     ],
+     "vis_mi": [
+      9.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      2966.0,
+      3215.0,
+      3488.0,
+      3543.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.7,
+    "snow_level_ft": 3169.3,
+    "gust_mph": 11.4,
+    "cloud_pct": 81.0,
+    "vis_mi": null,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      26,
+      27,
+      25
+     ],
+     "gust_mph": [
+      11.0,
+      4.0,
+      4.0,
+      3.0
+     ],
+     "cloud_pct": [
+      79.0,
+      80.0,
+      84.0,
+      81.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2992.0,
+      3018.0,
+      3333.0,
+      3333.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.7,
+    "snow_level_ft": 3110.2,
+    "gust_mph": 8.1,
+    "cloud_pct": 38.0,
+    "vis_mi": null,
+    "temp_f": 27.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      24,
+      28,
+      30,
+      25
+     ],
+     "gust_mph": [
+      8.0,
+      2.0,
+      3.0,
+      0.0
+     ],
+     "cloud_pct": [
+      42.0,
+      35.0,
+      42.0,
+      33.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2992.0,
+      2940.0,
+      3281.0,
+      3228.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "st_helens": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.7,
+    "snow_p50_in": 1.2,
+    "snow_p75_in": 3.4,
+    "snow_det_in": 2.4,
+    "liquid_in": 0.14,
+    "snow_ratio": 12.5,
+    "snow_level_ft": 4050.7,
+    "gust_mph": 13.2,
+    "cloud_pct": 70.3,
+    "vis_mi": 0.3,
+    "temp_f": 27.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.02,
+      0.1,
+      0.05,
+      0.02,
+      0.01,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      27,
+      26,
+      27,
+      27,
+      28,
+      28,
+      28,
+      28,
+      27,
+      26,
+      26,
+      25
+     ],
+     "gust_mph": [
+      13.0,
+      14.0,
+      13.0,
+      13.0,
+      13.0,
+      11.0,
+      9.0,
+      8.0,
+      6.0,
+      5.0,
+      4.0,
+      4.0,
+      4.0
+     ],
+     "cloud_pct": [
+      81.0,
+      80.0,
+      84.0,
+      75.0,
+      75.0,
+      76.0,
+      73.0,
+      59.0,
+      51.0,
+      44.0,
+      60.0,
+      57.0,
+      48.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      9.0,
+      null,
+      null,
+      9.0,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      4042.0,
+      4094.0,
+      4016.0,
+      3858.0,
+      3885.0,
+      3963.0,
+      3937.0,
+      4121.0,
+      4173.0,
+      4121.0,
+      4094.0,
+      4094.0,
+      4068.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.05
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.02
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.6,
+    "snow_det_in": 0.7,
+    "liquid_in": 0.03,
+    "snow_ratio": 11.7,
+    "snow_level_ft": 3611.4,
+    "gust_mph": 12.1,
+    "cloud_pct": 54.2,
+    "vis_mi": 9.3,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      25,
+      26,
+      29,
+      26
+     ],
+     "gust_mph": [
+      11.0,
+      12.0,
+      12.0,
+      11.0
+     ],
+     "cloud_pct": [
+      71.0,
+      53.0,
+      54.0,
+      39.0
+     ],
+     "vis_mi": [
+      8.4,
+      8.7,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      3570.0,
+      3373.0,
+      3776.0,
+      3727.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.4,
+    "snow_det_in": 0.6,
+    "liquid_in": 0.01,
+    "snow_ratio": 10.4,
+    "snow_level_ft": 3320.2,
+    "gust_mph": 41.6,
+    "cloud_pct": 81.2,
+    "vis_mi": null,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      26,
+      27,
+      25
+     ],
+     "gust_mph": [
+      42.0,
+      35.0,
+      17.0,
+      10.0
+     ],
+     "cloud_pct": [
+      90.0,
+      81.0,
+      78.0,
+      76.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3045.0,
+      3255.0,
+      3438.0,
+      3543.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.0,
+    "snow_ratio": 9.5,
+    "snow_level_ft": 3589.2,
+    "gust_mph": 14.1,
+    "cloud_pct": 54.8,
+    "vis_mi": null,
+    "temp_f": 27.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      24,
+      28,
+      31,
+      27
+     ],
+     "gust_mph": [
+      14.0,
+      7.0,
+      5.0,
+      3.0
+     ],
+     "cloud_pct": [
+      51.0,
+      52.0,
+      52.0,
+      64.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3228.0,
+      3333.0,
+      3858.0,
+      3937.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "icicle": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.3,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.02,
+    "snow_ratio": 12.2,
+    "snow_level_ft": 3692.0,
+    "gust_mph": 6.0,
+    "cloud_pct": 36.0,
+    "vis_mi": 0.2,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.04,
+      0.02,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      26,
+      27,
+      29,
+      31,
+      33,
+      34,
+      34,
+      34,
+      33,
+      30,
+      29,
+      28
+     ],
+     "gust_mph": [
+      7.0,
+      7.0,
+      6.0,
+      5.0,
+      4.0,
+      4.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      4.0,
+      5.0,
+      6.0
+     ],
+     "cloud_pct": [
+      26.0,
+      27.0,
+      32.0,
+      26.0,
+      38.0,
+      23.0,
+      31.0,
+      44.0,
+      53.0,
+      50.0,
+      43.0,
+      40.0,
+      37.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.1,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      5.1,
+      null,
+      null,
+      5.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3228.0,
+      3281.0,
+      3307.0,
+      3360.0,
+      3622.0,
+      3753.0,
+      3858.0,
+      4016.0,
+      4016.0,
+      4042.0,
+      3937.0,
+      3858.0,
+      3753.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 12.7,
+    "snow_level_ft": 2915.8,
+    "gust_mph": 7.6,
+    "cloud_pct": 33.0,
+    "vis_mi": 4.7,
+    "temp_f": 28.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      24,
+      29,
+      32,
+      28
+     ],
+     "gust_mph": [
+      6.0,
+      4.0,
+      7.0,
+      8.0
+     ],
+     "cloud_pct": [
+      29.0,
+      13.0,
+      45.0,
+      45.0
+     ],
+     "vis_mi": [
+      3.6,
+      5.1,
+      5.2,
+      5.1
+     ],
+     "snow_level_ft": [
+      1916.0,
+      2795.0,
+      3435.0,
+      3517.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.3,
+    "snow_det_in": 0.7,
+    "liquid_in": 0.0,
+    "snow_ratio": 13.2,
+    "snow_level_ft": 2769.0,
+    "gust_mph": 19.7,
+    "cloud_pct": 88.8,
+    "vis_mi": null,
+    "temp_f": 27.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      27,
+      28,
+      27
+     ],
+     "gust_mph": [
+      20.0,
+      18.0,
+      15.0,
+      12.0
+     ],
+     "cloud_pct": [
+      90.0,
+      86.0,
+      89.0,
+      90.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2388.0,
+      2730.0,
+      2966.0,
+      2992.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.4,
+    "snow_det_in": 0.4,
+    "liquid_in": 0.01,
+    "snow_ratio": 12.6,
+    "snow_level_ft": 3195.5,
+    "gust_mph": 6.0,
+    "cloud_pct": 62.8,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      30,
+      34,
+      29
+     ],
+     "gust_mph": [
+      6.0,
+      5.0,
+      4.0,
+      3.0
+     ],
+     "cloud_pct": [
+      73.0,
+      61.0,
+      59.0,
+      58.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2966.0,
+      2940.0,
+      3412.0,
+      3465.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "mission": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.5,
+    "snow_level_ft": 3727.0,
+    "gust_mph": 6.5,
+    "cloud_pct": 23.3,
+    "vis_mi": 5.2,
+    "temp_f": 36.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      31,
+      32,
+      32,
+      34,
+      35,
+      37,
+      37,
+      38,
+      37,
+      36,
+      35,
+      34,
+      33
+     ],
+     "gust_mph": [
+      5.0,
+      5.0,
+      5.0,
+      6.0,
+      6.0,
+      6.0,
+      7.0,
+      7.0,
+      6.0,
+      6.0,
+      5.0,
+      5.0,
+      6.0
+     ],
+     "cloud_pct": [
+      15.0,
+      15.0,
+      23.0,
+      16.0,
+      17.0,
+      14.0,
+      15.0,
+      21.0,
+      33.0,
+      42.0,
+      31.0,
+      32.0,
+      30.0
+     ],
+     "vis_mi": [
+      7.9,
+      0.3,
+      0.3,
+      0.3,
+      9.0,
+      10.1,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3360.0,
+      3307.0,
+      3281.0,
+      3333.0,
+      3517.0,
+      3727.0,
+      3963.0,
+      4199.0,
+      4173.0,
+      4173.0,
+      4147.0,
+      4068.0,
+      4042.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 10.8,
+    "snow_level_ft": 2876.5,
+    "gust_mph": 6.9,
+    "cloud_pct": 30.0,
+    "vis_mi": 8.8,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      32,
+      35,
+      32
+     ],
+     "gust_mph": [
+      6.0,
+      6.0,
+      7.0,
+      7.0
+     ],
+     "cloud_pct": [
+      22.0,
+      18.0,
+      38.0,
+      42.0
+     ],
+     "vis_mi": [
+      5.0,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      1969.0,
+      2717.0,
+      3461.0,
+      3360.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.8,
+    "snow_det_in": 1.1,
+    "liquid_in": 0.08,
+    "snow_ratio": 12.3,
+    "snow_level_ft": 2591.9,
+    "gust_mph": 14.3,
+    "cloud_pct": 89.2,
+    "vis_mi": null,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.01,
+      0.01,
+      0.01
+     ],
+     "temp_f": [
+      30,
+      30,
+      32,
+      31
+     ],
+     "gust_mph": [
+      12.0,
+      14.0,
+      11.0,
+      10.0
+     ],
+     "cloud_pct": [
+      91.0,
+      87.0,
+      88.0,
+      91.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2336.0,
+      2467.0,
+      2782.0,
+      2782.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.03
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.05
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.3,
+    "snow_p50_in": 0.5,
+    "snow_p75_in": 1.4,
+    "snow_det_in": 1.0,
+    "liquid_in": 0.04,
+    "snow_ratio": 11.7,
+    "snow_level_ft": 3011.8,
+    "gust_mph": 7.2,
+    "cloud_pct": 69.2,
+    "vis_mi": null,
+    "temp_f": 33.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      31,
+      33,
+      35,
+      32
+     ],
+     "gust_mph": [
+      6.0,
+      7.0,
+      5.0,
+      4.0
+     ],
+     "cloud_pct": [
+      80.0,
+      72.0,
+      64.0,
+      61.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2677.0,
+      2808.0,
+      3176.0,
+      3386.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "whistler": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.9,
+    "snow_det_in": 1.2,
+    "liquid_in": 0.08,
+    "snow_ratio": 6.6,
+    "snow_level_ft": 3342.1,
+    "gust_mph": 8.5,
+    "cloud_pct": 68.3,
+    "vis_mi": 8.5,
+    "temp_f": 38.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.01,
+      0.01,
+      0.0,
+      0.01,
+      0.01,
+      0.03,
+      0.03,
+      0.02,
+      0.03,
+      0.02,
+      0.02,
+      0.0,
+      0.01
+     ],
+     "temp_f": [
+      33,
+      33,
+      33,
+      36,
+      38,
+      39,
+      40,
+      40,
+      40,
+      40,
+      39,
+      38,
+      37
+     ],
+     "gust_mph": [
+      9.0,
+      8.0,
+      7.0,
+      6.0,
+      6.0,
+      6.0,
+      7.0,
+      8.0,
+      9.0,
+      8.0,
+      8.0,
+      7.0,
+      7.0
+     ],
+     "cloud_pct": [
+      75.0,
+      83.0,
+      71.0,
+      64.0,
+      75.0,
+      75.0,
+      68.0,
+      66.0,
+      59.0,
+      60.0,
+      57.0,
+      50.0,
+      59.0
+     ],
+     "vis_mi": [
+      7.9,
+      6.9,
+      6.9,
+      7.9,
+      10.1,
+      10.1,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3071.0,
+      3045.0,
+      3071.0,
+      3150.0,
+      3281.0,
+      3412.0,
+      3491.0,
+      3543.0,
+      3543.0,
+      3543.0,
+      3491.0,
+      3412.0,
+      3307.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.01
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 9.7,
+    "snow_level_ft": 2555.0,
+    "gust_mph": 7.8,
+    "cloud_pct": 48.2,
+    "vis_mi": 10.1,
+    "temp_f": 35.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      30,
+      35,
+      38,
+      35
+     ],
+     "gust_mph": [
+      6.0,
+      6.0,
+      6.0,
+      8.0
+     ],
+     "cloud_pct": [
+      64.0,
+      46.0,
+      51.0,
+      32.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      1942.0,
+      2244.0,
+      3015.0,
+      3018.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 10.8,
+    "snow_level_ft": 1673.2,
+    "gust_mph": 14.5,
+    "cloud_pct": 54.5,
+    "vis_mi": null,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      23,
+      31,
+      37,
+      34
+     ],
+     "gust_mph": [
+      14.0,
+      15.0,
+      11.0,
+      10.0
+     ],
+     "cloud_pct": [
+      57.0,
+      50.0,
+      57.0,
+      54.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      1076.0,
+      1312.0,
+      1969.0,
+      2336.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 9.7,
+    "snow_level_ft": 1647.0,
+    "gust_mph": 10.7,
+    "cloud_pct": 27.8,
+    "vis_mi": null,
+    "temp_f": 31.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      21,
+      31,
+      38,
+      33
+     ],
+     "gust_mph": [
+      11.0,
+      8.0,
+      5.0,
+      6.0
+     ],
+     "cloud_pct": [
+      43.0,
+      25.0,
+      22.0,
+      21.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      945.0,
+      1339.0,
+      1969.0,
+      2336.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "hood_timberline": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.5,
+    "snow_det_in": 0.8,
+    "liquid_in": 0.09,
+    "snow_ratio": 13.0,
+    "snow_level_ft": 4120.7,
+    "gust_mph": 12.8,
+    "cloud_pct": 42.3,
+    "vis_mi": 0.3,
+    "temp_f": 29.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.0,
+      0.0,
+      0.04,
+      0.02
+     ],
+     "temp_f": [
+      28,
+      28,
+      28,
+      29,
+      29,
+      30,
+      30,
+      30,
+      30,
+      29,
+      27,
+      25,
+      26
+     ],
+     "gust_mph": [
+      9.0,
+      9.0,
+      8.0,
+      8.0,
+      9.0,
+      11.0,
+      12.0,
+      13.0,
+      13.0,
+      11.0,
+      9.0,
+      8.0,
+      9.0
+     ],
+     "cloud_pct": [
+      65.0,
+      55.0,
+      47.0,
+      44.0,
+      36.0,
+      35.0,
+      42.0,
+      35.0,
+      45.0,
+      55.0,
+      53.0,
+      62.0,
+      54.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3990.0,
+      3911.0,
+      3885.0,
+      3937.0,
+      3963.0,
+      4121.0,
+      4278.0,
+      4304.0,
+      4357.0,
+      4383.0,
+      4304.0,
+      4357.0,
+      4226.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.03,
+    "snow_ratio": 12.6,
+    "snow_level_ft": 3486.7,
+    "gust_mph": 13.9,
+    "cloud_pct": 40.0,
+    "vis_mi": 10.1,
+    "temp_f": 28.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      26,
+      28,
+      31,
+      27
+     ],
+     "gust_mph": [
+      8.0,
+      9.0,
+      12.0,
+      14.0
+     ],
+     "cloud_pct": [
+      60.0,
+      34.0,
+      33.0,
+      33.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      3150.0,
+      3215.0,
+      3750.0,
+      3832.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.1,
+    "snow_p50_in": 0.2,
+    "snow_p75_in": 1.4,
+    "snow_det_in": 1.1,
+    "liquid_in": 0.1,
+    "snow_ratio": 12.5,
+    "snow_level_ft": 3320.2,
+    "gust_mph": 38.3,
+    "cloud_pct": 84.5,
+    "vis_mi": null,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      27,
+      25,
+      26,
+      24
+     ],
+     "gust_mph": [
+      38.0,
+      23.0,
+      17.0,
+      15.0
+     ],
+     "cloud_pct": [
+      94.0,
+      81.0,
+      79.0,
+      84.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3045.0,
+      3202.0,
+      3517.0,
+      3517.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.02
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 12.5,
+    "snow_level_ft": 3490.8,
+    "gust_mph": 23.3,
+    "cloud_pct": 78.2,
+    "vis_mi": null,
+    "temp_f": 26.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      26,
+      28,
+      25
+     ],
+     "gust_mph": [
+      23.0,
+      17.0,
+      14.0,
+      12.0
+     ],
+     "cloud_pct": [
+      88.0,
+      80.0,
+      70.0,
+      75.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3255.0,
+      3465.0,
+      3675.0,
+      3570.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "hood_meadows": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.1,
+    "snow_det_in": 0.3,
+    "liquid_in": 0.04,
+    "snow_ratio": 11.3,
+    "snow_level_ft": 4068.2,
+    "gust_mph": 9.4,
+    "cloud_pct": 38.0,
+    "vis_mi": 3.1,
+    "temp_f": 34.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.05,
+      0.03
+     ],
+     "temp_f": [
+      30,
+      30,
+      31,
+      33,
+      34,
+      35,
+      35,
+      36,
+      34,
+      33,
+      32,
+      30,
+      29
+     ],
+     "gust_mph": [
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      6.0,
+      8.0,
+      10.0,
+      10.0,
+      9.0,
+      8.0,
+      6.0,
+      6.0,
+      6.0
+     ],
+     "cloud_pct": [
+      60.0,
+      49.0,
+      40.0,
+      40.0,
+      35.0,
+      35.0,
+      40.0,
+      34.0,
+      39.0,
+      45.0,
+      43.0,
+      54.0,
+      43.0
+     ],
+     "vis_mi": [
+      6.9,
+      5.9,
+      5.9,
+      0.3,
+      6.9,
+      0.3,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3937.0,
+      3806.0,
+      3832.0,
+      3937.0,
+      3963.0,
+      4094.0,
+      4278.0,
+      4331.0,
+      4278.0,
+      4331.0,
+      4226.0,
+      4304.0,
+      4226.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.02,
+    "snow_ratio": 11.8,
+    "snow_level_ft": 3440.8,
+    "gust_mph": 10.1,
+    "cloud_pct": 35.8,
+    "vis_mi": 10.1,
+    "temp_f": 32.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      28,
+      33,
+      36,
+      31
+     ],
+     "gust_mph": [
+      4.0,
+      5.0,
+      9.0,
+      10.0
+     ],
+     "cloud_pct": [
+      54.0,
+      24.0,
+      32.0,
+      33.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      2966.0,
+      3241.0,
+      3750.0,
+      3806.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.2,
+    "snow_p50_in": 0.3,
+    "snow_p75_in": 1.6,
+    "snow_det_in": 1.4,
+    "liquid_in": 0.1,
+    "snow_ratio": 12.1,
+    "snow_level_ft": 3248.0,
+    "gust_mph": 28.2,
+    "cloud_pct": 85.5,
+    "vis_mi": null,
+    "temp_f": 29.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      29,
+      30,
+      30,
+      28
+     ],
+     "gust_mph": [
+      28.0,
+      17.0,
+      13.0,
+      11.0
+     ],
+     "cloud_pct": [
+      94.0,
+      79.0,
+      82.0,
+      87.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2966.0,
+      3123.0,
+      3438.0,
+      3465.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.02
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.1,
+    "snow_det_in": 0.3,
+    "liquid_in": 0.0,
+    "snow_ratio": 12.0,
+    "snow_level_ft": 3425.2,
+    "gust_mph": 13.9,
+    "cloud_pct": 80.2,
+    "vis_mi": null,
+    "temp_f": 30.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      30,
+      31,
+      32,
+      29
+     ],
+     "gust_mph": [
+      14.0,
+      11.0,
+      10.0,
+      8.0
+     ],
+     "cloud_pct": [
+      91.0,
+      79.0,
+      74.0,
+      77.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3228.0,
+      3386.0,
+      3570.0,
+      3517.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "hood_skibowl": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.09,
+    "snow_ratio": 7.4,
+    "snow_level_ft": 4155.7,
+    "gust_mph": 5.4,
+    "cloud_pct": 43.0,
+    "vis_mi": 8.0,
+    "temp_f": 38.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.05,
+      0.0
+     ],
+     "temp_f": [
+      34,
+      34,
+      35,
+      37,
+      38,
+      39,
+      40,
+      40,
+      39,
+      38,
+      38,
+      37,
+      36
+     ],
+     "gust_mph": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      5.0,
+      5.0,
+      6.0,
+      5.0,
+      4.0,
+      4.0,
+      3.0,
+      4.0
+     ],
+     "cloud_pct": [
+      62.0,
+      50.0,
+      46.0,
+      47.0,
+      38.0,
+      35.0,
+      43.0,
+      34.0,
+      48.0,
+      53.0,
+      50.0,
+      59.0,
+      53.0
+     ],
+     "vis_mi": [
+      6.9,
+      6.9,
+      5.9,
+      0.3,
+      6.9,
+      10.1,
+      null,
+      10.1,
+      null,
+      null,
+      10.1,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      4016.0,
+      3963.0,
+      3911.0,
+      3937.0,
+      4016.0,
+      4173.0,
+      4252.0,
+      4304.0,
+      4383.0,
+      4409.0,
+      4409.0,
+      4278.0,
+      4278.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.1,
+    "liquid_in": 0.04,
+    "snow_ratio": 8.9,
+    "snow_level_ft": 3572.0,
+    "gust_mph": 6.0,
+    "cloud_pct": 41.5,
+    "vis_mi": 10.1,
+    "temp_f": 37.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      32,
+      37,
+      41,
+      37
+     ],
+     "gust_mph": [
+      4.0,
+      5.0,
+      5.0,
+      6.0
+     ],
+     "cloud_pct": [
+      64.0,
+      37.0,
+      32.0,
+      33.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      10.1
+     ],
+     "snow_level_ft": [
+      3228.0,
+      3320.0,
+      3855.0,
+      3885.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.1,
+    "snow_p50_in": 0.2,
+    "snow_p75_in": 0.9,
+    "snow_det_in": 0.8,
+    "liquid_in": 0.11,
+    "snow_ratio": 8.6,
+    "snow_level_ft": 3372.7,
+    "gust_mph": 22.8,
+    "cloud_pct": 83.8,
+    "vis_mi": null,
+    "temp_f": 35.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      34,
+      34,
+      36,
+      35
+     ],
+     "gust_mph": [
+      23.0,
+      14.0,
+      9.0,
+      7.0
+     ],
+     "cloud_pct": [
+      94.0,
+      81.0,
+      78.0,
+      82.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3071.0,
+      3281.0,
+      3570.0,
+      3570.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.02
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.2,
+    "liquid_in": 0.0,
+    "snow_ratio": 8.7,
+    "snow_level_ft": 3530.2,
+    "gust_mph": 13.9,
+    "cloud_pct": 76.8,
+    "vis_mi": null,
+    "temp_f": 36.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      33,
+      36,
+      38,
+      36
+     ],
+     "gust_mph": [
+      14.0,
+      10.0,
+      7.0,
+      6.0
+     ],
+     "cloud_pct": [
+      86.0,
+      77.0,
+      70.0,
+      74.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3281.0,
+      3491.0,
+      3753.0,
+      3596.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "north_bend": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.08,
+    "snow_ratio": 4.3,
+    "snow_level_ft": 3832.0,
+    "gust_mph": 6.7,
+    "cloud_pct": 54.7,
+    "vis_mi": 0.3,
+    "temp_f": 39.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.0,
+      0.0,
+      0.01,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      36,
+      36,
+      36,
+      38,
+      40,
+      41,
+      41,
+      41,
+      40,
+      40,
+      38,
+      37,
+      37
+     ],
+     "gust_mph": [
+      7.0,
+      8.0,
+      7.0,
+      6.0,
+      4.0,
+      3.0,
+      4.0,
+      4.0,
+      4.0,
+      3.0,
+      2.0,
+      3.0,
+      4.0
+     ],
+     "cloud_pct": [
+      43.0,
+      46.0,
+      56.0,
+      64.0,
+      61.0,
+      57.0,
+      56.0,
+      50.0,
+      51.0,
+      47.0,
+      41.0,
+      31.0,
+      70.0
+     ],
+     "vis_mi": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      null,
+      4.3,
+      null,
+      null,
+      4.2,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3780.0,
+      3753.0,
+      3727.0,
+      3701.0,
+      3727.0,
+      3806.0,
+      3806.0,
+      3911.0,
+      3963.0,
+      3937.0,
+      3885.0,
+      4016.0,
+      4016.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.03,
+    "snow_ratio": 6.2,
+    "snow_level_ft": 3617.9,
+    "gust_mph": 6.5,
+    "cloud_pct": 29.8,
+    "vis_mi": 4.4,
+    "temp_f": 38.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      35,
+      39,
+      42,
+      38
+     ],
+     "gust_mph": [
+      6.0,
+      3.0,
+      3.0,
+      4.0
+     ],
+     "cloud_pct": [
+      53.0,
+      30.0,
+      19.0,
+      17.0
+     ],
+     "vis_mi": [
+      4.8,
+      4.4,
+      4.2,
+      4.2
+     ],
+     "snow_level_ft": [
+      3517.0,
+      3373.0,
+      3750.0,
+      3832.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 4.6,
+    "snow_level_ft": 3156.2,
+    "gust_mph": 21.7,
+    "cloud_pct": 83.5,
+    "vis_mi": null,
+    "temp_f": 39.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      37,
+      39,
+      41,
+      37
+     ],
+     "gust_mph": [
+      22.0,
+      20.0,
+      11.0,
+      8.0
+     ],
+     "cloud_pct": [
+      82.0,
+      88.0,
+      85.0,
+      79.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2992.0,
+      3045.0,
+      3281.0,
+      3307.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 5.1,
+    "snow_level_ft": 3280.8,
+    "gust_mph": 8.5,
+    "cloud_pct": 35.5,
+    "vis_mi": null,
+    "temp_f": 38.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      33,
+      40,
+      43,
+      37
+     ],
+     "gust_mph": [
+      9.0,
+      4.0,
+      5.0,
+      3.0
+     ],
+     "cloud_pct": [
+      43.0,
+      34.0,
+      34.0,
+      31.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2913.0,
+      3071.0,
+      3543.0,
+      3596.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ],
+  "tiger_mountain": [
+   {
+    "date": "2026-11-16",
+    "hours_sampled": [
+     33,
+     36,
+     39
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.04,
+    "snow_ratio": 1.7,
+    "snow_level_ft": 3867.0,
+    "gust_mph": 6.5,
+    "cloud_pct": 55.0,
+    "vis_mi": 10.1,
+    "temp_f": 45.0,
+    "hourly": {
+     "lh": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+     ],
+     "block": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.01,
+      0.01,
+      0.0,
+      0.01,
+      0.01,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      40,
+      40,
+      40,
+      42,
+      44,
+      46,
+      46,
+      47,
+      48,
+      46,
+      45,
+      43,
+      42
+     ],
+     "gust_mph": [
+      7.0,
+      7.0,
+      6.0,
+      6.0,
+      5.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      3.0,
+      2.0,
+      2.0,
+      4.0
+     ],
+     "cloud_pct": [
+      46.0,
+      45.0,
+      62.0,
+      70.0,
+      61.0,
+      60.0,
+      59.0,
+      41.0,
+      43.0,
+      43.0,
+      43.0,
+      47.0,
+      68.0
+     ],
+     "vis_mi": [
+      10.1,
+      10.1,
+      10.1,
+      7.9,
+      9.0,
+      10.1,
+      null,
+      8.2,
+      null,
+      null,
+      8.2,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3911.0,
+      3806.0,
+      3806.0,
+      3780.0,
+      3780.0,
+      3858.0,
+      3780.0,
+      3858.0,
+      3937.0,
+      4016.0,
+      3858.0,
+      3990.0,
+      4042.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.01
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-17",
+    "hours_sampled": [
+     56,
+     59,
+     62,
+     65
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.01,
+    "snow_ratio": 4.9,
+    "snow_level_ft": 3631.1,
+    "gust_mph": 4.9,
+    "cloud_pct": 30.8,
+    "vis_mi": 8.4,
+    "temp_f": 43.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      39,
+      42,
+      48,
+      44
+     ],
+     "gust_mph": [
+      5.0,
+      2.0,
+      3.0,
+      2.0
+     ],
+     "cloud_pct": [
+      52.0,
+      39.0,
+      18.0,
+      14.0
+     ],
+     "vis_mi": [
+      8.7,
+      8.5,
+      8.2,
+      8.2
+     ],
+     "snow_level_ft": [
+      3622.0,
+      3504.0,
+      3566.0,
+      3832.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-18",
+    "hours_sampled": [
+     80,
+     83,
+     86,
+     89
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 3.6,
+    "snow_level_ft": 3182.4,
+    "gust_mph": 13.0,
+    "cloud_pct": 82.2,
+    "vis_mi": null,
+    "temp_f": 43.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      41,
+      42,
+      46,
+      44
+     ],
+     "gust_mph": [
+      13.0,
+      10.0,
+      7.0,
+      6.0
+     ],
+     "cloud_pct": [
+      81.0,
+      87.0,
+      83.0,
+      78.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      3097.0,
+      3097.0,
+      3228.0,
+      3307.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   },
+   {
+    "date": "2026-11-19",
+    "hours_sampled": [
+     104,
+     107,
+     110,
+     113
+    ],
+    "snow_method": "scaled-sum of 6 h percentile",
+    "snow_p25_in": 0.0,
+    "snow_p50_in": 0.0,
+    "snow_p75_in": 0.0,
+    "snow_det_in": 0.0,
+    "liquid_in": 0.0,
+    "snow_ratio": 4.0,
+    "snow_level_ft": 3156.2,
+    "gust_mph": 5.4,
+    "cloud_pct": 33.5,
+    "vis_mi": null,
+    "temp_f": 42.0,
+    "hourly": {
+     "lh": [
+      7,
+      10,
+      13,
+      16
+     ],
+     "block": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "precip_in": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "temp_f": [
+      36,
+      42,
+      47,
+      43
+     ],
+     "gust_mph": [
+      5.0,
+      2.0,
+      5.0,
+      3.0
+     ],
+     "cloud_pct": [
+      43.0,
+      36.0,
+      29.0,
+      26.0
+     ],
+     "vis_mi": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "snow_level_ft": [
+      2992.0,
+      2992.0,
+      3281.0,
+      3360.0
+     ],
+     "blocks": [
+      {
+       "end_lh": 10,
+       "liquid_in": 0.0
+      },
+      {
+       "end_lh": 16,
+       "liquid_in": 0.0
+      }
+     ]
+    }
+   }
+  ]
+ }
+}
