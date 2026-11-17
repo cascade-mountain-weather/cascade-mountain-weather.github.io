@@ -54,6 +54,21 @@
 .cmap-pin--flag { background: #9ca3af !important; }
 .cmap-pin:hover > span { background: #2a5298; }
 
+/* East-flow watch: a flag on the crest (its color is set in the SVG) and a status chip, bottom left */
+.cmap-flag { background: none; border: 0; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45)); }
+.cmap-east {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #94a3b8; border-radius: 6px;
+    font-size: 0.8rem; line-height: 1.2; color: #334155;
+    cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.cmap-east--on { border-color: var(--east); border-width: 2px; color: #1f2937; }
+.cmap-east-sw { width: 0.85rem; height: 0.85rem; border-radius: 3px; background: var(--east); border: 1px solid rgba(0, 0, 0, 0.35); flex: none; }
+.cmap-east-detail { font-size: 0.88rem; line-height: 1.45; }
+.cmap-east-detail small { display: block; margin-top: 0.4rem; color: #475569; }
+
 .cmap-areas {
     margin-top: 1rem;
     font-size: 0.9rem;

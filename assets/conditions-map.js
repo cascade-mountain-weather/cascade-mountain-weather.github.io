@@ -386,7 +386,61 @@
             dot.on('click', () => { const z = zoneOfArea.get(area); openAt(L.latLng(s.lat, s.lon), zones ? areasByKey.get(z) : areasByKey.get(area.basin), area, zones ? z : null); });
         }));
 
+        addEastFlow(map, data.east_flow);
+
         map.fitBounds(layer.getBounds(), { padding: [12, 12] });
+    }
+
+    // ---- east-flow watch ----------------------------------------------------
+    // The pressure gradient across the Cascades: Seattle-Tacoma (KSEA) minus Wenatchee (KEAT), in mb, from Synoptic (scripts/collect_live_conditions.py).
+    // At or below the threshold (default -4 mb: KSEA lower) cold east-side air is being pushed west through the passes, and a flag sits on the crest.
+    // The flag darkens with each additional mb of gradient, from 4 mb (light orange) to 10 mb or more (deep red).
+    const EAST_COLORS = ['#fdba74', '#fb923c', '#f97316', '#ea580c', '#dc2626', '#b91c1c', '#7f1d1d'];
+    const eastColor = mb => EAST_COLORS[Math.min(EAST_COLORS.length - 1, Math.max(0, Math.floor(Math.abs(mb)) - 4))];
+    const CREST = [47.5, -121.25];       // roughly the Cascade crest between Snoqualmie and Stevens passes
+
+    function addEastFlow(map, ef) {
+        if (!ef || typeof ef.gradient_mb !== 'number') return;
+        const g = ef.gradient_mb, active = !!ef.active, thr = ef.threshold_mb;
+        const ageH = (Date.now() - Date.parse(ef.valid_utc)) / 3.6e6;
+        const s = ef.stations || {};
+        const st = k => (s[k] && s[k].pressure_mb != null) ? `${Number(s[k].pressure_mb).toFixed(1)} mb` : DASH;
+        const sr = ef.series_mb || [];
+        const prev = sr.length > 6 ? sr[sr.length - 7] : null;                       // six hours before the last value (the series ends at its last hour)
+        const trend = prev == null ? '' : (Math.abs(g - prev) < 0.5 ? 'about steady over 6 hours' : g < prev ? `strengthening (was ${signed(prev, ' mb')} 6 hours ago)` : `weakening (was ${signed(prev, ' mb')} 6 hours ago)`);
+        const when = pacific.format(new Date(ef.valid_utc));
+        const detail = `<div class="cmap-east-detail"><strong>${active ? 'East-flow watch' : 'No east-flow signal'}</strong><br>` +
+            `KSEA minus KEAT: <strong>${signed(g, ' mb')}</strong> (${esc(ef.basis || 'pressure')})<br>` +
+            `Seattle-Tacoma ${st('KSEA')} &middot; Wenatchee ${st('KEAT')}<br>` +
+            (trend ? `${esc(trend)}<br>` : '') +
+            `<small>As of ${esc(when)}${ageH > STALE_DATA_HOURS ? ' (more than 6 hours old)' : ''}. Flagged at ${thr} mb or lower; the flag darkens with each additional mb. ` +
+            `A strong gradient means east wind through the passes, usually cold and dry on the east side and a push of cold air west, which can change snow levels and bring wind to the crest.</small></div>`;
+
+        const ctl = L.control({ position: 'bottomleft' });
+        ctl.onAdd = () => {
+            const div = L.DomUtil.create('div', 'cmap-east' + (active ? ' cmap-east--on' : ''));
+            div.style.setProperty('--east', active ? eastColor(g) : '#94a3b8');
+            div.innerHTML = `<span class="cmap-east-sw"></span><span>East flow ${active ? 'watch' : 'none'}: <strong>${signed(g, ' mb')}</strong></span>`;
+            div.title = 'Pressure gradient across the Cascades: Seattle-Tacoma minus Wenatchee. Click for details.';
+            L.DomEvent.disableClickPropagation(div);
+            div.addEventListener('click', () => L.popup({ maxWidth: 300, className: 'cmap-popup' }).setLatLng(CREST).setContent(detail).openOn(map));
+            return div;
+        };
+        ctl.addTo(map);
+
+        if (!active) return;
+        const color = eastColor(g);
+        const flag = L.marker(CREST, {
+            icon: L.divIcon({
+                className: 'cmap-flag',
+                html: `<svg viewBox="0 0 24 32" width="26" height="34" aria-hidden="true"><line x1="4" y1="2" x2="4" y2="31" stroke="#1f2937" stroke-width="2.2" stroke-linecap="round"/>` +
+                      `<path d="M4 3 L22 9 L4 16 Z" fill="${color}" stroke="#1f2937" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
+                iconSize: [26, 34], iconAnchor: [4, 32],
+            }),
+            zIndexOffset: 1000, keyboard: false,
+        }).addTo(map);
+        flag.bindTooltip(`East-flow watch: ${signed(g, ' mb')} (KSEA minus KEAT)`, { direction: 'top', offset: [8, -28] });
+        flag.bindPopup(detail, { maxWidth: 300, className: 'cmap-popup' });
     }
 
     function renderAll(data) {

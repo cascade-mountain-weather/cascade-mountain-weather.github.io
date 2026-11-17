@@ -188,6 +188,72 @@ def fetch_synoptic(stids):
     return out
 
 
+# --- east-flow watch ------------------------------------------------------
+# Sea-level pressure at Seattle-Tacoma (KSEA, west of the Cascades) minus Pangborn Memorial in Wenatchee (KEAT, east), in mb. East of the
+# crest has the higher pressure when air is pushed west through the passes, so the gradient goes negative; at or below EAST_FLOW_MB it is flagged.
+EAST_FLOW_STATIONS = ('KSEA', 'KEAT')
+EAST_FLOW_MB = -4.0
+EAST_FLOW_HOURS = 48         # hourly gradient history kept
+
+
+def east_flow_summary(raw, grid):
+    """{'KSEA': {'name', 'slp': [(time, mb)], 'alt': [...]}, ...} -> the east-flow block for the JSON, or None without a usable pair.
+    Hourly values (the last reading of each hour, as for the SNOTEL series) are paired by hour; the gradient is KSEA minus KEAT from sea-level
+    pressure, or from the altimeter setting when either station has no sea-level pressure that hour (never one of each: they are not comparable)."""
+    west, east = (raw.get(s) for s in EAST_FLOW_STATIONS)
+    if not west or not east:
+        return None
+    hourly = {s: {k: hourly_series(raw[s][k], grid, 2) or [None] * len(grid) for k in ('slp', 'alt')} for s in EAST_FLOW_STATIONS}
+    series, basis = [], []
+    for i in range(len(grid)):
+        pair = None
+        for key in ('slp', 'alt'):
+            w, e = hourly['KSEA'][key][i], hourly['KEAT'][key][i]
+            if w is not None and e is not None:
+                pair = (round(w - e, 1), key)
+                break
+        series.append(pair[0] if pair else None)
+        basis.append(pair[1] if pair else None)
+    idx = max((i for i, v in enumerate(series) if v is not None), default=None)
+    if idx is None:
+        return None
+    g = series[idx]
+    key = basis[idx]
+    return {
+        'gradient_mb': g,                          # KSEA minus KEAT: negative when the east side is higher
+        'threshold_mb': EAST_FLOW_MB,
+        'active': g <= EAST_FLOW_MB,
+        'valid_utc': grid[idx].strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'basis': 'sea-level pressure' if key == 'slp' else 'altimeter setting',
+        'stations': {s: {'name': raw[s]['name'], 'pressure_mb': hourly[s][key][idx]} for s in EAST_FLOW_STATIONS},
+        'series_mb': series,                       # one value per hour, oldest first, the last ending at series_end_utc
+        'series_end_utc': grid[-1].strftime('%Y-%m-%dT%H:%M:%SZ'),
+    }
+
+
+def fetch_east_flow():
+    grid = [g for g in hourly_grid()][-EAST_FLOW_HOURS:]
+    resp = requests.get(SYNOPTIC_URL, params={
+        'token': SYNOPTIC_TOKEN, 'stid': ','.join(EAST_FLOW_STATIONS), 'vars': 'sea_level_pressure,altimeter',
+        'recent': (EAST_FLOW_HOURS + 6) * 60, 'obtimezone': 'utc', 'units': 'pres|mb',
+    }, timeout=60)
+    resp.raise_for_status()
+    data = resp.json()
+    if data['SUMMARY'].get('RESPONSE_CODE') not in (1, 2):
+        raise RuntimeError(f"Synoptic error: {data['SUMMARY']}")
+    raw = {}
+    for st in data.get('STATION', []):
+        obs = st['OBSERVATIONS']
+        times = [parse_iso(t) for t in obs.get('date_time', [])]
+
+        def var(name):
+            key = name + '_set_1' if name + '_set_1' in obs else next((k for k in obs if k.startswith(name + '_set_1')), None)
+            return list(zip(times, obs[key])) if key else []
+
+        raw[st['STID']] = {'name': st['NAME'], 'slp': var('sea_level_pressure'), 'alt': var('altimeter')}
+    return east_flow_summary(raw, grid)
+
+
 def fetch_awdb(triplets):
     meta = requests.get(f'{AWDB_URL}/stations', params={'stationTriplets': ','.join(triplets)}, timeout=60)
     meta.raise_for_status()
@@ -484,8 +550,18 @@ def main():
             'checklist': build_checklist(stations),
         })
 
+    east_flow = None
+    try:
+        east_flow = fetch_east_flow()
+        if east_flow is None:
+            errors.append('East flow: no KSEA/KEAT pressure pair')
+    except Exception as exc:  # the map still works without the flag
+        errors.append(f'East flow: {exc}')
+        print(f'WARNING: east-flow fetch failed: {exc}', file=sys.stderr)
+
     payload = {
         'generated_utc': now.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'east_flow': east_flow,
         # swe_hourly_in / precip_hourly_in on each station: one value per hour, oldest first, the last one ending at hourly_end_utc
         'hourly_end_utc': hourly_grid()[-1].strftime('%Y-%m-%dT%H:%M:%SZ'),
         'hourly_step_h': 1,
