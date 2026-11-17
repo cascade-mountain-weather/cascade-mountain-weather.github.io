@@ -97,7 +97,7 @@ def load_ours_json(first_day):
     if not path.exists():
         return None
     out = {}
-    for area, v in json.loads(path.read_text(encoding="utf-8")).items():
+    for area, v in json.loads(path.read_text(encoding="utf-8-sig")).items():      # -sig: tolerate a byte-order mark from an editor
         entry = {}
         for key in ("total", "precip"):
             rng = parse_range(str(v.get(key, ""))) if isinstance(v, dict) else None
@@ -117,6 +117,18 @@ def load_ours_json(first_day):
         if entry:
             out[area] = entry
     return out or None
+
+
+def load_obs_override(first_day):
+    """Observed snowfall you looked up yourself (for example an NWAC station report), replacing the SNOTEL estimate for the
+    windows it names: data/evaluation/obs_override_<first-day>.json, {"source": "NWAC", "areas": {"Mt. Baker": {"total": 2}}}
+    (inches, new snow over the window). Only the windows and areas listed are replaced; liquid precipitation stays SNOTEL.
+    Returns ({area: {window: inches}}, source label), or ({}, None) when there is no file."""
+    path = OUT_DIR / f"obs_override_{first_day}.json"
+    if not path.exists():
+        return {}, None
+    d = json.loads(path.read_text(encoding="utf-8-sig"))
+    return d.get("areas") or {}, d.get("source") or "manual report"
 
 
 def local_to_utc(d, hour):
@@ -295,6 +307,7 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
         print(f"  CoCoRaHS skipped: {str(exc)[:100]}")
         coco = {}
     hires = snap.get("hires") or {}
+    override, override_src = load_obs_override(first_day)
     result = {
         "snapshot": snap_name, "first_day_local": first_day, "nbm_cycle_utc": snap["source"]["cycle_utc"],
         "scored_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
@@ -312,6 +325,9 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
         "windows": {wid: {"start_utc": snap["windows"][wid]["start_utc"], "end_utc": snap["windows"][wid]["end_utc"]} for wid in windows},
         "areas": {},
     }
+    if override:
+        result["notes"].append(f"Observed snowfall for " + "; ".join(f"{a} ({', '.join(w)})" for a, w in override.items())
+                               + f" is a reported amount ({override_src}), not the SNOTEL estimate.")
     for name, site_snap in snap["sites"].items():
         trips = sites.get(name, {}).get("obs")
         if not trips:
@@ -329,6 +345,9 @@ def score_snapshot(snap, snap_name, ours_all=None, verbose=True, snow_level=None
             o_nbm = obs[wid]["snowfall_in"]
             use_ours_period = wid == "total" and "ours_period" in obs
             o_ours = obs["ours_period"]["snowfall_in"] if use_ours_period else o_nbm
+            manual = (override.get(name) or {}).get(wid)
+            if manual is not None:          # a reported amount replaces the SNOTEL estimate for this window
+                o_nbm = o_ours = {"low": manual, "mid": manual, "high": manual, "stations_used": 0, "stations_requested": 0, "source": override_src}
             scores = score_nbm(nbm, o_nbm)
             scores.update(score_ours(ours, o_ours))
             models = {}
