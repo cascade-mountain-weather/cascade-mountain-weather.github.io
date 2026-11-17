@@ -81,9 +81,10 @@
     // Ensemble mean: /mm5rt/ensembles/{YYYYMMDDHH}/images_d3/{var}.{FF}.mean.gif
     const UW = 'https://a.atmos.washington.edu';
     const UW_SRC = { source: 'UW Atmospheric Sciences', sourceUrl: UW + '/wrfrt/' };
-    const uwDet = (v, hours, probeHour) => ({
+    // domain: 'd4' is the 1.33 km nest (posted out to 72 h; shown to 48 h), 'd3' the 4 km domain, which runs out to 120 h
+    const uwDet = (v, hours, probeHour, domain) => ({
         hours, probeHour, runs: uwRuns(6), runExact: true,
-        urlFor: (r, h) => `${UW}/wrfrt/data/${ymdh(r)}/images_d4/wa_${v}.${pad(h, 2)}.0000.gif`,
+        urlFor: (r, h) => `${UW}/wrfrt/data/${ymdh(r)}/images_${domain || 'd4'}/wa_${v}.${pad(h, 2)}.0000.gif`,
         fallbackUrl: UW + '/wrfrt/',
     });
     const uwEns = (v, hours, probeHour) => ({
@@ -124,6 +125,20 @@
         fallbackUrl: 'https://cw3e.ucsd.edu/west-wrf_ensemble_meteograms',
     });
     const cw3eStorm = code => cw3ePoint('snow_storm_total', code);
+    // Watershed freezing-level plumes. CW3E dropped the fixed .../freezingLevelImages/{HUC8}_current.png files (they stopped updating on 12 Nov 2026) for one
+    // image per run, named by watershed: /images/freezinglevel_ensembleplumes/v1/{GEFS_50|ECMWF_ENS}/{Watershed_Name}/{YYYYMMDDHH}/1/...__F168.png.
+    // GEFS runs every 6 h, the ECMWF ensemble every 12 h; the viewer takes the newest run that has an image.
+    const WS_NAME = { '17110005': 'Upper Skagit', '17110009': 'Skykomish', '17020011': 'Wenatchee', '17110010': 'Snoqualmie', '17030001': 'Upper Yakima',
+        '17110020': 'Dungeness-Elwha', '17020008': 'Methow', '17110014': 'Puyallup', '17110015': 'Nisqually', '17070105': 'Middle Columbia-Hood',
+        '17080004': 'Upper Cowlitz', '17020009': 'Lake Chelan' };
+    const cw3eWatershed = (model, huc) => {
+        const ws = (WS_NAME[huc] || huc).replace(/ /g, '_'), step = (model === 'ECMWF_ENS' ? 12 : 6) * 3600e3, base = Math.floor(Date.now() / step) * step;
+        return {
+            hours: [null], runs: Array.from({ length: 8 }, (_, i) => new Date(base - i * step)), runExact: true,
+            urlFor: r => `${CW3E_MAIN}/freezinglevel_ensembleplumes/v1/${model}/${ws}/${ymdh(r)}/1/freezinglevel_ensembleplumes__v1__${model}__${ws}__${ymdh(r)}__1__F168.png`,
+            fallbackUrl: 'https://cw3e.ucsd.edu/tools/forecasts/freezing-level-plume-diagrams/',
+        };
+    };
     const HOURLY48 = range(1, 48, 1), HOURLY_ENS = range(3, 84, 3);
     const ENS_NOTE = 'The ensemble mean averages every member, so it smooths out the extremes. Use it for the most likely pattern, and use the individual-member plume plots for the spread.';
 
@@ -245,22 +260,22 @@
         uw_snow: {
             cat: 'snow',
             region: true, label: 'UW WRF snow',
-            models: { acc: 'Accumulated (WRF)', p3: '3-hour (WRF)', ens: '24-hour (ensemble mean)' },
-            title: (a, st) => ({ acc: 'UW WRF accumulated snowfall', p3: 'UW WRF 3-hour snowfall', ens: 'UW WRF ensemble mean 24-hour snowfall' })[st.model] || 'UW WRF accumulated snowfall',
-            build: (a, st) => ({ acc: uwDet('snowacc', HOURLY48, 3), p3: uwDet('snow3', range(6, 48, 3), 6), ens: uwEns('msnow24', HOURLY_ENS, 24) })[st.model] || uwDet('snowacc', HOURLY48, 3),
+            models: { acc: 'Accumulated, 1.33 km (48 h)', p3: '3-hour, 1.33 km (48 h)', acc4: 'Accumulated, 4 km (120 h)', p34: '3-hour, 4 km (120 h)', ens: '24-hour (ensemble mean)' },
+            title: (a, st) => ({ acc: 'UW WRF accumulated snowfall (1.33 km)', p3: 'UW WRF 3-hour snowfall (1.33 km)', acc4: 'UW WRF accumulated snowfall (4 km)', p34: 'UW WRF 3-hour snowfall (4 km)', ens: 'UW WRF ensemble mean 24-hour snowfall' })[st.model] || 'UW WRF accumulated snowfall (1.33 km)',
+            build: (a, st) => ({ acc: uwDet('snowacc', HOURLY48, 3), p3: uwDet('snow3', range(6, 48, 3), 6), acc4: uwDet('snowacc', range(1, 120, 1), 3, 'd3'), p34: uwDet('snow3', range(6, 120, 3), 6, 'd3'), ens: uwEns('msnow24', HOURLY_ENS, 24) })[st.model] || uwDet('snowacc', HOURLY48, 3),
             info: Object.assign({
-                what: 'Snowfall from the University of Washington WRF model over Washington. The deterministic WRF (the 1.33 km domain) shows either the snow total accumulated through each forecast hour or the snow that falls in each 3-hour period. The ensemble option is the mean of the UW WRF ensemble&rsquo;s 24-hour snowfall.',
-                how: 'Use the accumulated map for totals and the 3-hour map to see when the heaviest bursts hit. Compare the WRF with the ensemble mean: if a single run shows much more snow than the mean, treat it as the high end. ' + ENS_NOTE,
+                what: 'Snowfall from the University of Washington WRF model over Washington. The deterministic WRF shows either the snow total accumulated through each forecast hour or the snow that falls in each 3-hour period, on two grids: the 1.33 km nest (sharper terrain, shown out to 48 hours) and the 4 km domain, which runs the full 120 hours (5 days). The ensemble option is the mean of the UW WRF ensemble&rsquo;s 24-hour snowfall.',
+                how: 'Use the accumulated map for totals and the 3-hour map to see when the heaviest bursts hit. Use the 1.33 km maps for the first two days and the 4 km maps to look further out; the coarser grid smooths the terrain, so expect less detail in the mountains. Compare the WRF with the ensemble mean: if a single run shows much more snow than the mean, treat it as the high end. ' + ENS_NOTE,
             }, UW_SRC),
         },
         uw_precip: {
             region: true, label: 'UW WRF total precip',
-            models: { tot: 'Accumulated (24, 36, 48 h)', p3: '3-hour' },
-            title: (a, st) => st.model === 'p3' ? 'UW WRF 3-hour precipitation' : 'UW WRF total accumulated precipitation',
-            build: (a, st) => st.model === 'p3' ? uwDet('pcp3', range(6, 48, 3), 6) : uwDet('pcpt', [24, 36, 48], 24),
+            models: { tot: 'Accumulated, 1.33 km (24-48 h)', p3: '3-hour, 1.33 km (48 h)', tot4: 'Accumulated, 4 km (24-120 h)', p34: '3-hour, 4 km (120 h)' },
+            title: (a, st) => ({ p3: 'UW WRF 3-hour precipitation (1.33 km)', tot4: 'UW WRF total accumulated precipitation (4 km)', p34: 'UW WRF 3-hour precipitation (4 km)' })[st.model] || 'UW WRF total accumulated precipitation (1.33 km)',
+            build: (a, st) => ({ p3: uwDet('pcp3', range(6, 48, 3), 6), tot4: uwDet('pcpt', range(24, 120, 12), 24, 'd3'), p34: uwDet('pcp3', range(6, 120, 3), 6, 'd3') })[st.model] || uwDet('pcpt', [24, 36, 48], 24),
             info: Object.assign({
-                what: 'Precipitation (rain plus the water in snow) from the UW WRF model over Washington: either the total accumulated since the start of the run, which the model posts at 24, 36 and 48 hours, or the amount that falls in each 3-hour period.',
-                how: 'Compare it with the snow map: where precipitation is high but snow is low, the model has rain or a high snow level. Use the 3-hour maps for timing. Totals are heavily shaped by terrain, so look at the Cascade crest and windward slopes.',
+                what: 'Precipitation (rain plus the water in snow) from the UW WRF model over Washington: either the total accumulated since the start of the run, which the model posts every 12 hours from 24 hours on, or the amount that falls in each 3-hour period. The 1.33 km nest is shown out to 48 hours; the 4 km domain runs the full 120 hours (5 days).',
+                how: 'Compare it with the snow map: where precipitation is high but snow is low, the model has rain or a high snow level. Use the 3-hour maps for timing, and the 4 km maps to see storms beyond the first two days. Totals are heavily shaped by terrain, so look at the Cascade crest and windward slopes.',
             }, UW_SRC),
         },
         cw3e_snow: {
@@ -430,15 +445,12 @@
             title: (a, st) => `${(a.basins.find(b => b.id === st.basin) || a.basins[0]).label} freezing level: ${st.model === 'gefs' ? 'GEFS' : 'ECMWF'} ensemble`,
             build: (a, st) => {
                 const b = a.basins.find(x => x.id === st.basin) || a.basins[0];
-                return {
-                    urlFor: () => `${CW3E}/${st.model === 'gefs' ? 'gefs' : 'ECMWF'}/freezingLevelImages/${b.id}_current.png`,
-                    fallbackUrl: 'https://cw3e.ucsd.edu/DSMaps/DS_freezing.html',
-                };
+                return cw3eWatershed(st.model === 'gefs' ? 'GEFS_50' : 'ECMWF_ENS', b.id);
             },
             info: st => ({
                 what: `The ${st.model === 'gefs' ? 'GEFS (American)' : 'ECMWF (European)'} ensemble forecast of the freezing level over this watershed. Each light gray line is one ensemble member. The bars show 6-hour precipitation averaged over the watershed, colored by the share of the watershed that gets snow versus rain in that period.`,
                 how: 'Tightly spaced lines mean the models agree; widely spaced lines mean more uncertainty. Look at the ensemble mean (light green line) and the &plusmn;1 standard deviation spread (gray shading between the red and blue lines). Where the freezing level sits relative to the pass and base elevations tells you where it rains and where it snows.',
-                source: 'CW3E watershed freezing level forecasts', sourceUrl: 'https://cw3e.ucsd.edu/DSMaps/DS_freezing.html',
+                source: 'CW3E watershed freezing level forecasts', sourceUrl: 'https://cw3e.ucsd.edu/tools/forecasts/freezing-level-plume-diagrams/',
             }),
         },
     };
