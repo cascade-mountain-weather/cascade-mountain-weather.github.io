@@ -109,6 +109,39 @@ header h1 {
     display: block;
 }
 
+/* Social links: X and Instagram, in the top-left corner under the coffee button */
+.header-social {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 20;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.header-social svg { width: 22px; height: 22px; }
+.buy-coffee-btn + .header-social { top: 3.1rem; }   /* the coffee button (home page) takes the top spot */
+
+.header-social a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(15, 23, 42, 0.55);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    opacity: 0.8;
+    transition: transform 0.2s ease, opacity 0.3s ease;
+}
+
+.header-social a:hover,
+.header-social a:focus-visible {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
 /* Buy Me a Coffee Button */
 .buy-coffee-btn {
     position: absolute;
@@ -153,6 +186,20 @@ header h1 {
     .buy-coffee-btn img {
         height: 28px;
     }
+
+    .header-social {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .buy-coffee-btn + .header-social { top: 2.8rem; }
+
+    .header-social a {
+        width: 34px;
+        height: 34px;
+    }
+
+    .header-social svg { width: 19px; height: 19px; }
 }
 
 @media (max-width: 480px) {
