@@ -2,7 +2,7 @@
 (function(){
   try{
     // Support any number of nav dropdowns (Home, Forecast, Current Weather &
-    // Observations, Model Tools, ...), not just the first one on the page.
+    // Observations, Forecast Tools, ...), not just the first one on the page.
     const dropdowns = Array.from(document.querySelectorAll('.nav-item.dropdown')).map(function(dropdown){
       return { dropdown: dropdown, toggle: dropdown.querySelector(':scope > .dropdown-toggle') };
     }).filter(function(pair){ return !!pair.toggle; });

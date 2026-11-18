@@ -56,6 +56,54 @@
         };
     }
 
+    // WeatherNext 3 maps from AI Weather Guy: {path}/frames/{field}/f###.jpg?t=<run ISO>|<style>. The server always sends its newest
+    // run for any `t` and caches the answer for a year, so `t` must be a run that is already out: never ask for one that is not,
+    // or the old frames get cached under the new key. Runs come every 12 h (00Z, 12Z) and the 12Z maps were last modified about
+    // 7 h after the run time, so a run is only offered WN_DELAY_H hours after its run time. If the cycle ever changes, edit here.
+    const WN = 'https://maps.ai-weather-guy.com';
+    const WN_DELAY_H = 9;
+    const WN_HOME = 'https://maps.ai-weather-guy.com/';
+    function wnRuns() {
+        const ready = Date.now() - WN_DELAY_H * 3600e3, step = 12 * 3600e3, base = Math.floor(ready / step) * step;
+        return [new Date(base)];
+    }
+    function wn3(field, style, region, hours, probeHour) {
+        return {
+            hours, probeHour, runs: wnRuns(), runExact: true,
+            urlFor: (r, h) => `${WN}${region || ''}/frames/${field}/f${pad(h, 3)}.jpg?t=${encodeURIComponent(r.toISOString().replace('.000Z', 'Z'))}${encodeURIComponent('|' + style)}`,
+            fallbackUrl: WN_HOME,
+        };
+    }
+    const WN_HOURS = range(6, 360, 6);
+    const SRC_WN = { source: 'AI Weather Guy, WeatherNext 3', sourceUrl: WN_HOME };
+
+    // UW WRF 4 km (d3) 850 hPa temperature: /wrfrt/data/{YYYYMMDDHH}/images_d3/wa_850t.##.0000.gif, hourly to 120 h, runs every 12 h
+    const UW = 'https://a.atmos.washington.edu/wrfrt/data';
+    function uwT850() {
+        return {
+            hours: range(0, 120, 3), probeHour: 3, runs: runs(12, 6), runExact: true,
+            urlFor: (r, h) => `${UW}/${ymdh(r)}/images_d3/wa_850t.${pad(h, 2)}.0000.gif`,
+            fallbackUrl: 'https://a.atmos.washington.edu/wrfrt/',
+        };
+    }
+
+    // UW WRF 10 m wind maps (ww_ files over Washington): hourly, 120 h on the 4 km domain (d3), 72 h on the 1.33 km nest (d4), speeds in knots
+    function uwWind(v, domain) {
+        return {
+            hours: domain === 'd4' ? range(1, 72, 1) : range(1, 120, 1), probeHour: 3, runs: runs(6, 8), runExact: true,
+            urlFor: (r, h) => `${UW}/${ymdh(r)}/images_${domain}/ww_${v}.${pad(h, 2)}.0000.gif`,
+            fallbackUrl: 'https://a.atmos.washington.edu/wrfrt/',
+        };
+    }
+    const SRC_UW = { source: 'University of Washington Atmospheric Sciences WRF', sourceUrl: 'https://a.atmos.washington.edu/wrfrt/' };
+    const uwWindProduct = (v, label, title, what, how) => ({
+        label: 'UW WRF ' + label,
+        models: ['uw4', 'uw133'],
+        title: m => `${title} (${m === 'uw133' ? '1.33 km' : '4 km'})`,
+        build: m => uwWind(v, m === 'uw133' ? 'd4' : 'd3'),
+        info: Object.assign({ what, how }, SRC_UW),
+    });
+
     // Point for the ensemble AR plume (off the Washington coast) and how far out it looks: F240 is the 10-day version
     const PLUME = { point: '47.0N_124.0W', hours: 240 };
 
@@ -73,56 +121,12 @@
         };
     }
 
-    // ECMWF Open Charts (charts.ecmwf.int, CC-BY-4.0), cropped to the North Pacific (100E to 100W) and pre-rendered twice a day by
-    // scripts/fetch_ecmwf_charts.py (workflow ecmwf_charts.yml) onto the ecmwf-charts branch; the viewer reads that branch's manifest.json.
-    // HRES reaches 10 days, the AI models 15; frames are 6 hours apart to day 6, then 12 hours to day 10, then daily. A product shows only when its manifest entry exists.
-    let charts = null;
-    const CHARTS_URL = (window.ECMWF_CHARTS_URL || '').replace(/\/$/, '') + '/';
-    // before the ecmwf-charts branch exists (or when previewing locally), fall back to assets/data/ecmwf_charts/ (scripts/fetch_ecmwf_charts.py --out assets/data/ecmwf_charts)
-    const CHARTS_LOCAL = BASE + 'data/ecmwf_charts/';
-    let chartsBase = CHARTS_URL;
-    function chartView(key, m) {
-        const c = charts.charts[key][m], b = c.base;
-        return {
-            hours: c.hours, runs: [new Date(Date.UTC(+b.slice(0, 4), +b.slice(4, 6) - 1, +b.slice(6, 8), +b.slice(8, 10)))], runExact: true,
-            urlFor: (r, h) => chartsBase + charts.file.replace('{product}', key).replace('{model}', m).replace('{base}', b).replace('{hour}', pad(h, 3)),
-            fallbackUrl: 'https://charts.ecmwf.int/',
-        };
-    }
-    const OC_SRC = { source: 'ECMWF Open Charts (CC-BY-4.0)', sourceUrl: 'https://charts.ecmwf.int/' };
-    const OC_AI = ' The AIFS is ECMWF&rsquo;s AI model; the AIFS ensemble line is its control run (one member), not the ensemble mean. When the AI and physics-based runs agree on the pattern, confidence is higher. The star marks the central Washington coast. Cropped from ECMWF&rsquo;s Open Charts, updated twice a day.';
-    const OC_DEFS = {
-        jet200: ['Jet stream (200 hPa wind)', 'sea level pressure and 200 hPa wind',
-            'Sea level pressure (lines) and the wind at 200 hPa (shading), about 39,000 feet, the level of the jet stream, over the North Pacific from eastern Siberia to the Rockies.',
-            'Find the jet core (the strongest wind) and where it is aimed. A jet pointed at Washington brings storms; a jet that splits or dives south of the state means a colder or drier pattern; a ridge with the jet far to the north means dry. Step forward to see whether the jet is extending or retracting across the Pacific.'],
-        z500: ['500 hPa height and wind', '500 hPa height and wind',
-            'Geopotential height (lines) and wind (shading) at 500 hPa, about 18,000 feet, the standard level for reading ridges and troughs, over the North Pacific.',
-            'Troughs (low heights, lines dipping south) near the coast bring storms; ridges (heights bulging north) bring dry weather. Look for a trough digging toward Washington, and for blocking ridges over the Gulf of Alaska.'],
-        wind850: ['MSLP and 850 hPa wind', 'sea level pressure and 850 hPa wind',
-            'Sea level pressure (lines) and the wind at 850 hPa (shading), about 5,000 feet, the level that feeds moisture into the Cascades.',
-            'Strong 850 hPa wind aimed at the coast is the low-level push behind heavy mountain precipitation (compare the Moisture product). Wind from the southwest tends to be milder; wind from the northwest is colder and showery.'],
-        z500t850: ['500 hPa height and 850 hPa temp', '500 hPa height and 850 hPa temperature',
-            '500 hPa height (lines) with 850 hPa temperature (colors) over the North Pacific, a one-glance view of the pattern aloft and how cold the air at pass level is.',
-            'A trough over the Northwest with the 0&deg;C color line at or below pass level is the snow setup. For a closer look at the temperature alone, see the 850 mb temperature product.'],
-    };
-    const OC_ORDER = ['hres', 'aifs', 'aifs_ens'];
-
-    // add the chart products that the manifest has (organize() below puts every product in its group)
-    function addChartProducts() {
-        Object.keys(OC_DEFS).forEach(key => {
-            const have = OC_ORDER.filter(m => charts.charts[key] && charts.charts[key][m]);
-            if (!have.length) return;
-            const [label, title, what, how] = OC_DEFS[key];
-            PRODUCTS[key] = { label, models: have, title: m => `${modelName(m)}: ${title}`, build: m => chartView(key, m), info: Object.assign({ what: what + OC_AI, how }, OC_SRC) };
-        });
-    }
-
     // The product list is grouped by the main field each product shows, in this order; the chips carry the group names.
     const GROUPS = [
-        ['Upper levels (500 hPa height, 200 hPa wind)', ['z500', 'jet200']],
-        ['Mid and surface levels (850 hPa, sea level pressure, ocean)', ['temp850', 'z500t850', 'wind850', 'sst']],
-        ['Moisture and atmospheric rivers', ['ivt', 'arlt', 'plume']],
         ['Synoptic overview (University of Utah)', ['utah']],
+        ['Upper level products', ['z500', 'trop']],
+        ['Mid and surface level products', ['temp850', 'mslp', 'uw_wind', 'uw_gust', 'uw_gustmax', 'sst']],
+        ['Moisture and atmospheric rivers', ['ivt', 'arlt', 'plume']],
     ];
     const groupOf = k => { const g = GROUPS.find(x => x[1].includes(k)); return g ? g[0] : 'Other'; };
     function organize() {
@@ -135,7 +139,8 @@
     }
 
     const MODELS = {
-        oisst: 'NOAA OISST', aifs_ens: 'ECMWF AIFS ensemble (control)',
+        oisst: 'NOAA OISST',
+        wn3: 'WeatherNext 3 (AI ensemble)', wn3sd: 'WeatherNext 3 spread (std. dev.)', uw4: 'UW WRF 4 km (120 h)', uw133: 'UW WRF 1.33 km (72 h)',
         gfs: 'GFS', ecmwf: 'ECMWF HRES', aifs: 'ECMWF AIFS (AI)', hres: 'ECMWF HRES',
         gefs: 'GEFS', eps: 'ECMWF ENS', diff: 'ECMWF ENS minus GEFS',
         wwrf_ecmwf: 'West-WRF (ECMWF-driven)', wwrf_gfs: 'West-WRF (GFS-driven)',
@@ -168,18 +173,63 @@
                 how: 'Watch where the plume makes landfall as you step forward. A plume aimed at Washington, especially with high IVT (orange/red), likely means heavy mountain precipitation. Compare models: if they agree on timing and landfall latitude, confidence is higher. Try Side by side to play two at once.',
             }, SRC_CW3E),
         },
+        trop: {
+            label: '2 PVU (tropopause)',
+            models: ['wn3'],
+            title: () => 'WeatherNext 3 dynamic tropopause (2 PVU), out to 15 days',
+            build: () => wn3('trop', 'trop|fill|corner|smooth', '', WN_HOURS, 6),
+            info: Object.assign({
+                what: 'The 2 PVU surface is the approximate level of the dynamic tropopause, the boundary between the lower atmosphere and the stratosphere. Troughs show up as places where it dips low (cold, low-pressure air aloft seeps into the troposphere) and ridges where it bulges high. Forecast is from WeatherNext 3, an AI model, every 6 hours out to 15 days. Produced by <a href="https://ai-weather-guy.com" target="_blank" rel="noopener noreferrer">ai-weather-guy.com</a>.',
+                how: 'Follow the dips and rises: a deep dip usually means a stronger system. Compare the pattern to the 500 hPa height and spread maps. Beyond about a week, treat the details as a pattern hint only.',
+            }, SRC_WN),
+        },
+        z500: {
+            label: '500 mb height and spread',
+            models: ['wn3', 'wn3sd'],
+            title: m => m === 'wn3sd' ? 'WeatherNext 3 500 hPa height: ensemble spread (standard deviation)' : 'WeatherNext 3 500 hPa height',
+            build: m => m === 'wn3sd' ? wn3('z500sd', 'fill|corner|smooth', '', WN_HOURS, 6) : wn3('z500', 'hgt|fill|corner|smooth', '', WN_HOURS, 6),
+            info: m => Object.assign(m === 'wn3sd' ? {
+                what: 'How much the ensemble members disagree about the 500 hPa height (about 18,000 ft), as a standard deviation. Small values mean the members agree on the pattern; large values mean they do not.',
+                how: 'Use it as a confidence map. High spread means the storm track a few days later is uncertain, so expect the forecast to change. Low spread means the pattern is well established. Try Side by side with the height map. Produced by <a href="https://ai-weather-guy.com" target="_blank" rel="noopener noreferrer">ai-weather-guy.com</a>.',
+            } : {
+                what: 'The height of the 500 hPa surface (about 18,000 ft), the standard way to see troughs and ridges steering storms. Low heights are troughs, high heights are ridges. From WeatherNext 3, an AI model, every 6 hours out to 15 days. Produced by <a href="https://ai-weather-guy.com" target="_blank" rel="noopener noreferrer">ai-weather-guy.com</a>.',
+                how: 'This is a standard level for analyzing atmospheric flows because the ground surface has no influence on here. Check the spread map (standard deviation) to see how much to trust the pattern at that time. More color means more uncertainty.',
+            }, SRC_WN), 
+        },
+        mslp: {
+            label: 'Surface pressure (spaghetti)',
+            models: ['wn3'],
+            title: () => 'WeatherNext 3 sea level pressure spaghetti plot',
+            build: () => wn3('mslp', 'mslp3|corner|smooth', '', WN_HOURS, 6),
+            info: Object.assign({
+                what: 'Selected sea level pressure contours drawn for every ensemble member at once (a spaghetti plot). Each line is one member&rsquo;s version of the same pressure contour. From WeatherNext 3, an AI model, every 6 hours out to 15 days. Produced by <a href="https://ai-weather-guy.com" target="_blank" rel="noopener noreferrer">ai-weather-guy.com</a>.',
+                how: 'Where the lines bunch together the members agree on where a surface low will be; when they are jumbled, there is model disagreement. Some frames may be missing; the viewer skips them.',
+            }, SRC_WN),
+        },
         temp850: {
             label: '850 mb temperature',
-            models: ['gfs', 'ecmwf'],
-            title: m => `${modelName(m)} 850 hPa Temperature`,
-            build: m => m === 'gfs'
-                ? cw3eMap('850hpa_temperature_map', 'GFS_25', 'NEPac', 6, range(0, 240, 6), 0)
-                : cw3eMap('850hpa_temperature_map', 'ECMWF_HRes', 'NEPac', 12, range(0, 240, 3), 0),
-            info: Object.assign({
-                what: '850 hPa is about 5,000 feet, near pass level in the Cascades. This map shows the temperature there, a quick read on whether the air feeding a storm is cold enough for snow at pass elevations.',
-                how: 'A 0&deg;C line near or below the Cascade crest suggests snow levels may be around pass level. Compare models: a few degrees of disagreement here is the difference between rain and snow at the passes.',
-            }, SRC_CW3E),
+            models: ['wn3', 'uw4', 'gfs', 'ecmwf'],
+            title: m => m === 'wn3' ? 'WeatherNext 3 850 hPa Temperature (Pacific Northwest)' : `${modelName(m)} 850 hPa Temperature`,
+            build: m => m === 'wn3' ? wn3('t850', 'wb|fill|corner|smooth', '/pnw', WN_HOURS, 6)
+                : m === 'uw4' ? uwT850()
+                : m === 'gfs'
+                    ? cw3eMap('850hpa_temperature_map', 'GFS_25', 'NEPac', 6, range(0, 240, 6), 0)
+                    : cw3eMap('850hpa_temperature_map', 'ECMWF_HRes', 'NEPac', 12, range(0, 240, 3), 0),
+            info: m => Object.assign({
+                what: 'This map shows the temperature at 850 hPa (about 5,000 feet). Because most of our storms come from the ocean, this level provides a good indication of whether cold/warm air will move into the mountains.'
+                    + (m === 'wn3' ? ' This one is the WeatherNext 3 AI model zoomed on the Pacific Northwest, out to 15 days.' : m === 'uw4' ? ' This one is the UW WRF at 4 km, out to 5 days, covering Washington.' : ''),
+                how: 'A 0&deg;C line near or below the Cascade crest suggests snow levels may be around pass level. Compare models: a few degrees of disagreement here is the difference between rain and snow.',
+            }, m === 'wn3' ? SRC_WN : m === 'uw4' ? { source: 'University of Washington Atmospheric Sciences WRF', sourceUrl: 'https://a.atmos.washington.edu/wrfrt/' } : SRC_CW3E),
         },
+        uw_wind: uwWindProduct('wssfc', 'UW WRF wind speed', 'UW WRF wind speed',
+            'Wind speed at 10 m (about 33 ft) above the ground, shaded in knots (1 knot = 1.15 mph), with wind barbs (a full barb is 10 knots) and sea level pressure contours, from the University of Washington WRF.',
+            'Look for the tight pressure gradients (contours packed together) and where the shading goes above 25 to 30 knots: those are the windy corridors, usually the coast, the Strait of Juan de Fuca, the Cascade Crest and the passes.'),
+        uw_gust: uwWindProduct('wgsfc', 'wind gusts', 'UW WRF wind gusts',
+            'The forecast 10 m wind gust at each hour, shaded in knots (1 knot = 1.15 mph), with wind barbs and sea level pressure contours, from the University of Washington WRF over Washington.',
+            'Higher gust potential indicates greater chance for snow transport, visibility issues, and wind holds at resorts. Above about 40 knots (46 mph) is damaging. This is the maximum estimated gust in one hour, not the strongest gust in a forecast period (see the maximum gust product).'),
+        uw_gustmax: uwWindProduct('wgmax', 'maximum accumulated wind gust', 'UW WRF maximum accumulated wind gust',
+            'The strongest 10 m wind gust the model produces at each point from the start of the run through the forecast hour you pick, shaded in knots (1 knot = 1.15 mph), from the University of Washington WRF.',
+            'Accumulated maximum gusts are useful for seeing when and where the strongest gusts will be. If values no longer increase, the maximum gust at that point has passed.'),
         arlt: {
             noCompare: true,
             label: 'AR landfall probability',
@@ -212,8 +262,8 @@
             title: () => 'North Pacific sea surface temperature anomaly, Japan to the Washington coast',
             build: () => sstView(),
             info: {
-                what: 'How much warmer or colder than the 1991&ndash;2020 average the surface of the North Pacific is, from NOAA&rsquo;s daily optimum interpolation SST analysis (OISST v2.1, 0.25&deg; grid). It covers the whole basin from Japan to the Washington coast, with a map every few days over the past two months, ending with the latest day. Grey is land or missing data.',
-                how: 'The ocean sets the temperature of the air that crosses it, so look at the water under the storm track. Warm water in the Gulf of Alaska and off the Northwest coast favors milder, higher snow-level storms; cold water favors colder air and lower snow levels. A big warm patch in the central Pacific near 40&deg;N (a marine heat wave) tends to go with a ridge aloft there. Step through the maps to see whether the pattern is growing or fading. It changes slowly, so read it as background for the season, not the next storm.',
+                what: 'How much warmer or colder than the 1991&ndash;2020 average the surface of the North Pacific is, from NOAA&rsquo;s daily optimum interpolation SST analysis (OISST v2.1, 0.25&deg; grid). It covers the whole Northern Pacific from Japan to the Washington coast, with a map every few days over the past two months, ending with the latest day. Grey is land or missing data.',
+                how: 'The ocean fuels the storms we get, so look at the anomalies in the Gulf of Alaska and Central North Pacific. Step through the maps to see whether the pattern is growing or fading. It changes slowly, so read it as background for the season, not the next storm.',
                 source: 'NOAA NCEI OISST v2.1', sourceUrl: 'https://www.ncei.noaa.gov/products/optimum-interpolation-sst',
             },
         },
@@ -263,14 +313,8 @@
     const SST_PRODUCT = PRODUCTS.sst;
     delete PRODUCTS.sst;
     const getManifest = url => fetch(url, { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    Promise.all([
-        getManifest(BASE + 'data/sst/manifest.json'),
-        (window.ECMWF_CHARTS_URL ? getManifest(CHARTS_URL + 'manifest.json') : Promise.resolve(null))
-            .then(m => m || getManifest(CHARTS_LOCAL + 'manifest.json').then(l => { if (l) chartsBase = CHARTS_LOCAL; return l; })),
-    ]).then(([m, c]) => {
+    getManifest(BASE + 'data/sst/manifest.json').then(m => {
         if (m && m.dates && m.dates.length) { sst = m; PRODUCTS.sst = SST_PRODUCT; }
-        if (c && c.charts && c.file) charts = c;
-        if (charts) addChartProducts();
         organize();
         mount();
     });

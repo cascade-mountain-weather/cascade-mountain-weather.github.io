@@ -1,16 +1,15 @@
 ---
 layout: page
-title: "Synoptic Weather Tools | Cascade Mountain Weather"
-description: "Synoptic-scale weather tools for Cascade Mountain Weather forecasting. View GFS and ECMWF model outputs, integrated vapor transport, and atmospheric river forecasts for Washington."
+title: "Upper Air and Surface Weather | Cascade Mountain Weather"
+description: "Upper air and surface weather maps for Cascade Mountain Weather forecasting. View GFS and ECMWF model outputs, integrated vapor transport, and atmospheric river forecasts for Washington."
 keywords: "Cascade Mountain Weather synoptic, GFS model, ECMWF model, atmospheric river forecast, IVT forecast, Washington weather models, mountain weather analysis"
 og_description: "GFS and ECMWF weather model analysis for Washington Cascade Range forecasting."
 ---
 <link rel="stylesheet" href="{{ '/assets/model-viewer.css' | relative_url }}">
 <section class="hero">
-    <h1 class="PlotTitle">Synoptic-scale Tools</h1>
-    <p>The big-picture pattern: where the moisture, the cold air and the storm track are headed, from the GFS, the European models and the ensembles. Pick a product and a model, then drag the slider or press play. Times are shown in Pacific time with the model&rsquo;s Z (UTC) time beside them.</p>
+    <h1 class="PlotTitle">Upper Air and Surface Weather</h1>
+    <p>The overall large-scale weather pattern at both upper-levels and the surface. We include both deterministic, AI, and ensemble model output at several spatial scales from the GFS, ECMWF, UW WRF, CW3E, and WeatherNext3 models. Forecast duration spans 5- to 15-days, depending on the model. Pick a product and a model, then drag the slider or press play. Times are shown in Pacific time with the model&rsquo;s Z (UTC) time beside them.</p>
     <div id="viewer"></div>
 </section>
-<script>window.ECMWF_CHARTS_URL = "{{ site.ecmwf_charts_url }}";</script>
 <script src="{{ '/assets/model-viewer.js' | relative_url }}"></script>
 <script src="{{ '/assets/model-tools-synoptic.js' | relative_url }}"></script>

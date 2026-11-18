@@ -491,16 +491,17 @@
     }
 
     function renderMethod() {
-        $('eval-method').innerHTML = `<ul>
-            <li><strong>Forecasts.</strong> The NBM (National Blend of Models) median and 25&ndash;75% range for the weekend total, and our range from each post. For 2025&ndash;26 the NBM was rebuilt from the model archive using the Thursday 19Z run, not the exact numbers seen at the time.</li>
-            <li><strong>Observed snowfall</strong> is an estimate from nearby SNOTEL stations (snow water equivalent and depth). Trace precipitation counts as none, and gains while the station was above 35&deg;F are treated as rain. The estimate is a range because new-snow density is unknown; only its midpoint is used for errors.</li>
-            <li><strong>Stations</strong> sit at their own elevation, not the 5,000 ft the forecasts target.</li>
-            <li><strong>HRRR, RRFS and HRDPS</strong> are single-value models. HRRR and HRDPS run 48 hours, so they are compared on Friday only (the first day the Thursday forecast covers); RRFS runs 84 hours, so it also reaches part of Saturday. HRRR and RRFS snowfall is the model&rsquo;s own; HRDPS snowfall is its water equivalent of snow times 10, an assumed ratio. HRDPS and RRFS are not archived, so they appear only for weekends scored from the 2026&ndash;27 season on; HRRR was rebuilt from the archive for 2025&ndash;26.</li>
-            <li><strong>Precipitation</strong> is liquid water: the SNOTEL stations&rsquo; precipitation gain (rain plus melted snow; lowest, mean and highest station) against each forecast&rsquo;s liquid total. The NBM publishes only a single precipitation value, so it has no range. A hit allows a tenth of an inch. Stations sit at their own elevation and the models read the nearest grid point, so expect a spread.</li>
-            <li><strong>Freezing level</strong> is compared at the Quillayute and Salem soundings: the sounding&rsquo;s freezing level against the 0&deg;C isotherm HRRR and RRFS forecast at that time. The snow level is no longer scored.</li>
-            <li><strong>CoCoRaHS</strong> volunteer reports within 25 km are shown as a cross-check and are not scored.</li>
-            <li><strong>Inside range</strong> means the observed midpoint fell in the forecast range (half an inch of slack). <strong>Typical error</strong> is the average distance from the forecast middle; <strong>bias</strong> is forecast minus observed.</li>
-            <li>The <a href="/evaluation-2025-26-original.html">original 2025&ndash;26 evaluation</a> used a different method, so its numbers are not comparable.</li></ul>`;
+        $('eval-method').innerHTML = `
+        <ul>
+        <li><strong>Our forecast and the NBM.</strong> The NBM (National Blend of Models) median and 25&ndash;75% range for the weekend total, and our range from each post. For 2025&ndash;26 the NBM was rebuilt from the model archive using the Thursday 19Z run, not the exact numbers seen at the time.</li>
+        <li><strong>HRRR, RRFS, and HRDPS</strong> snowfall values. HRRR and HRDPS run 48 hours, so they are compared starting on Friday; RRFS runs out to 84 hours. HRRR and RRFS snowfall is direct model output; HRDPS snowfall is an estimate from its precipitation times 10, an assumed snow-liquid ratio.</li>
+        <li><strong>Observed snowfall</strong> is an estimate from nearby SNOTEL stations (snow water equivalent and depth). Precipitation increases while temperatures were above 35&deg;F are treated as rain. The estimate is a range because new-snow density is unknown. The range uses new-snow densities of 7% to 20%.</li>
+        <li><strong>Precipitation</strong> is liquid water: the SNOTEL stations&rsquo; precipitation gain against each forecast&rsquo;s estimated total.</li>
+        <li><strong>Freezing level</strong> is compared at the Quillayute and Salem soundings sites: the sounding&rsquo;s freezing level against the 0&deg;C isotherm HRRR and RRFS forecast at that time.</li>
+        <li><strong>Evaluation method.</strong> The evaluation compares model output to observations at several timesteps and over the course of the weekend. Mean absolute error, bias, and RMSE are scored. Big storms are scored independently using a confusion matrix.</li>
+        <li><strong>Potential error.</strong> Model output and our estimates are compared with observations. Output is not downscaled to each station&rsquo;s elevation, so some systematic bias is expected.</li>
+        <li><strong>CoCoRaHS</strong> volunteer reports within 25 km of each station are shown as a cross-check and are not scored.</li>
+        </ul>`;
     }
 
     // ---- wiring -------------------------------------------------------------------------------
