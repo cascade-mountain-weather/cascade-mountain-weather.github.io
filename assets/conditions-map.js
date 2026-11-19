@@ -392,11 +392,11 @@
     }
 
     // ---- east-flow watch ----------------------------------------------------
-    // The pressure gradient across the Cascades: Seattle-Tacoma (KSEA) minus Wenatchee (KEAT), in mb, from Synoptic (scripts/collect_live_conditions.py).
-    // At or below the threshold (default -4 mb: KSEA lower) cold east-side air is being pushed west through the passes, and a flag sits on the crest.
-    // The flag darkens with each additional mb of gradient, from 4 mb (light orange) to 10 mb or more (deep red).
+    // The pressure gradient across the Cascades: Mt. Si High School (NGC81, North Bend) minus Wenatchee (KEAT), in mb, from Synoptic (scripts/collect_live_conditions.py).
+    // At or below the threshold (default -3 mb: NGC81 lower) cold east-side air is being pushed west through the passes, and a flag sits on the crest.
+    // The flag darkens with each additional mb of gradient, from 3 mb (light orange) to 9 mb or more (deep red).
     const EAST_COLORS = ['#fdba74', '#fb923c', '#f97316', '#ea580c', '#dc2626', '#b91c1c', '#7f1d1d'];
-    const eastColor = mb => EAST_COLORS[Math.min(EAST_COLORS.length - 1, Math.max(0, Math.floor(Math.abs(mb)) - 4))];
+    const eastColor = mb => EAST_COLORS[Math.min(EAST_COLORS.length - 1, Math.max(0, Math.floor(Math.abs(mb)) - 3))];
     const CREST = [47.5, -121.25];       // roughly the Cascade crest between Snoqualmie and Stevens passes
 
     function addEastFlow(map, ef) {
@@ -404,24 +404,25 @@
         const g = ef.gradient_mb, active = !!ef.active, thr = ef.threshold_mb;
         const ageH = (Date.now() - Date.parse(ef.valid_utc)) / 3.6e6;
         const s = ef.stations || {};
+        const w = ef.west || 'NGC81', e = ef.east || 'KEAT';
         const st = k => (s[k] && s[k].pressure_mb != null) ? `${Number(s[k].pressure_mb).toFixed(1)} mb` : DASH;
         const sr = ef.series_mb || [];
         const prev = sr.length > 6 ? sr[sr.length - 7] : null;                       // six hours before the last value (the series ends at its last hour)
         const trend = prev == null ? '' : (Math.abs(g - prev) < 0.5 ? 'about steady over 6 hours' : g < prev ? `strengthening (was ${signed(prev, ' mb')} 6 hours ago)` : `weakening (was ${signed(prev, ' mb')} 6 hours ago)`);
         const when = pacific.format(new Date(ef.valid_utc));
         const detail = `<div class="cmap-east-detail"><strong>${active ? 'East-flow watch' : 'No east-flow signal'}</strong><br>` +
-            `KSEA minus KEAT: <strong>${signed(g, ' mb')}</strong> (${esc(ef.basis || 'pressure')})<br>` +
-            `Seattle-Tacoma ${st('KSEA')} &middot; Wenatchee ${st('KEAT')}<br>` +
+            `${esc(w)} minus ${esc(e)}: <strong>${signed(g, ' mb')}</strong> (${esc(ef.basis || 'pressure')})<br>` +
+            `Mt. Si High School ${st(w)} &middot; Wenatchee ${st(e)}<br>` +
             (trend ? `${esc(trend)}<br>` : '') +
             `<small>As of ${esc(when)}${ageH > STALE_DATA_HOURS ? ' (more than 6 hours old)' : ''}. Flagged at ${thr} mb or lower; the flag darkens with each additional mb. ` +
-            `A strong gradient means east wind through the passes, usually cold and dry on the east side and a push of cold air west, which can change snow levels and bring wind to the crest.</small></div>`;
+            `A strong gradient can support wind blowing east to west (over the mountains). In winter, this is due to high pressure, cold air out east seeking the lower pressure, warmer air out west. This cold air crosses the Cascades, and then warms adiabatically as it descends towards lower elevations.</small></div>`;
 
         const ctl = L.control({ position: 'bottomleft' });
         ctl.onAdd = () => {
             const div = L.DomUtil.create('div', 'cmap-east' + (active ? ' cmap-east--on' : ''));
             div.style.setProperty('--east', active ? eastColor(g) : '#94a3b8');
             div.innerHTML = `<span class="cmap-east-sw"></span><span>East flow ${active ? 'watch' : 'none'}: <strong>${signed(g, ' mb')}</strong></span>`;
-            div.title = 'Pressure gradient across the Cascades: Seattle-Tacoma minus Wenatchee. Click for details.';
+            div.title = 'Pressure gradient across the Cascades: Mt. Si High School minus Wenatchee. Click for details.';
             L.DomEvent.disableClickPropagation(div);
             div.addEventListener('click', () => L.popup({ maxWidth: 300, className: 'cmap-popup' }).setLatLng(CREST).setContent(detail).openOn(map));
             return div;
@@ -439,7 +440,7 @@
             }),
             zIndexOffset: 1000, keyboard: false,
         }).addTo(map);
-        flag.bindTooltip(`East-flow watch: ${signed(g, ' mb')} (KSEA minus KEAT)`, { direction: 'top', offset: [8, -28] });
+        flag.bindTooltip(`East-flow watch: ${signed(g, ' mb')} (${w} minus ${e})`, { direction: 'top', offset: [8, -28] });
         flag.bindPopup(detail, { maxWidth: 300, className: 'cmap-popup' });
     }
 

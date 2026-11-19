@@ -189,16 +189,16 @@ def fetch_synoptic(stids):
 
 
 # --- east-flow watch ------------------------------------------------------
-# Sea-level pressure at Seattle-Tacoma (KSEA, west of the Cascades) minus Pangborn Memorial in Wenatchee (KEAT, east), in mb. East of the
+# Sea-level pressure at Mt. Si High School (NGC81, North Bend, west of the crest) minus Pangborn Memorial in Wenatchee (KEAT, east), in mb. East of the
 # crest has the higher pressure when air is pushed west through the passes, so the gradient goes negative; at or below EAST_FLOW_MB it is flagged.
-EAST_FLOW_STATIONS = ('KSEA', 'KEAT')
-EAST_FLOW_MB = -4.0
+EAST_FLOW_STATIONS = ('NGC81', 'KEAT')
+EAST_FLOW_MB = -3.0
 EAST_FLOW_HOURS = 48         # hourly gradient history kept
 
 
 def east_flow_summary(raw, grid):
-    """{'KSEA': {'name', 'slp': [(time, mb)], 'alt': [...]}, ...} -> the east-flow block for the JSON, or None without a usable pair.
-    Hourly values (the last reading of each hour, as for the SNOTEL series) are paired by hour; the gradient is KSEA minus KEAT from sea-level
+    """{'NGC81': {'name', 'slp': [(time, mb)], 'alt': [...]}, ...} -> the east-flow block for the JSON, or None without a usable pair.
+    Hourly values (the last reading of each hour, as for the SNOTEL series) are paired by hour; the gradient is NGC81 minus KEAT from sea-level
     pressure, or from the altimeter setting when either station has no sea-level pressure that hour (never one of each: they are not comparable)."""
     west, east = (raw.get(s) for s in EAST_FLOW_STATIONS)
     if not west or not east:
@@ -208,7 +208,7 @@ def east_flow_summary(raw, grid):
     for i in range(len(grid)):
         pair = None
         for key in ('slp', 'alt'):
-            w, e = hourly['KSEA'][key][i], hourly['KEAT'][key][i]
+            w, e = hourly[EAST_FLOW_STATIONS[0]][key][i], hourly[EAST_FLOW_STATIONS[1]][key][i]
             if w is not None and e is not None:
                 pair = (round(w - e, 1), key)
                 break
@@ -220,8 +220,10 @@ def east_flow_summary(raw, grid):
     g = series[idx]
     key = basis[idx]
     return {
-        'gradient_mb': g,                          # KSEA minus KEAT: negative when the east side is higher
+        'gradient_mb': g,                          # NGC81 minus KEAT: negative when the east side is higher
         'threshold_mb': EAST_FLOW_MB,
+        'west': EAST_FLOW_STATIONS[0],
+        'east': EAST_FLOW_STATIONS[1],
         'active': g <= EAST_FLOW_MB,
         'valid_utc': grid[idx].strftime('%Y-%m-%dT%H:%M:%SZ'),
         'basis': 'sea-level pressure' if key == 'slp' else 'altimeter setting',
@@ -554,7 +556,7 @@ def main():
     try:
         east_flow = fetch_east_flow()
         if east_flow is None:
-            errors.append('East flow: no KSEA/KEAT pressure pair')
+            errors.append('East flow: no NGC81/KEAT pressure pair')
     except Exception as exc:  # the map still works without the flag
         errors.append(f'East flow: {exc}')
         print(f'WARNING: east-flow fetch failed: {exc}', file=sys.stderr)

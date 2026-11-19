@@ -182,8 +182,7 @@
         const km = ms.map(m => { const s = data.models[m].sites[siteName]; return s && s.grid_km != null ? `${SHORT[m] || m} ${s.grid_km} km` : null; }).filter(Boolean).join(', ');
         root.innerHTML = `<div class="mt-controls">
             ${fixedSite ? '' : ctl('Area', `<select class="mt-select" id="mt-site">${data.sites.map(s => `<option value="${s.name}"${s.name === siteName ? ' selected' : ''}>${s.name}</option>`).join('')}</select>`)}
-            ${ctl('Time span', chips('span', [[24, '24 h'], [48, '48 h']], state.span))}
-            ${ctl('Column step', chips('step', [[1, '1 h'], [3, '3 h'], [6, '6 h']], state.step))}
+            ${ctl('Column step', chips('step', [[1, '1 h'], [3, '3 h']], state.step))}
             ${ctl('Humidity', chips('humid', [['td', 'Dew point'], ['rh', 'Relative humidity']], state.humid))}
             ${ctl('Units', chips('units', [['us', '°F, mph, in'], ['metric', '°C, m/s, mm']], state.units))}
         </div>
@@ -191,7 +190,6 @@
         <p class="mt-note"><strong>Grid-based, not downscaled.</strong> Each value is the model grid cell nearest the ski area${km ? ' (' + km + ' away)' : ''}, with no elevation or terrain correction. Wind arrows point the way the wind blows toward. The ❄️ and 🌧️ in the precipitation rows are an estimate from the grid cell&rsquo;s wet-bulb temperature. The amounts are liquid water. Precipitation colors show the amount only. Times are Pacific. Updated ${fFull.format(gen)}.</p>`;
         if (!fixedSite) root.querySelector('#mt-site').addEventListener('change', e => { state.site = e.target.value; store('mg-site', state.site); render(); });
         const bind = (name, fn) => root.querySelectorAll(`[data-${name}]`).forEach(b => b.addEventListener('click', () => { fn(b.dataset[name]); render(); }));
-        bind('span', v => { state.span = +v; });
         bind('step', v => { state.step = +v; });
         bind('humid', v => { state.humid = v; });
         bind('units', v => { state.units = v; store('mg-units', v); });
