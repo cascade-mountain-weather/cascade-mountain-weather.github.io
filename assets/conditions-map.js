@@ -392,16 +392,20 @@
     }
 
     // ---- east-flow watch ----------------------------------------------------
-    // The pressure gradient across the Cascades: Mt. Si High School (NGC81, North Bend) minus Wenatchee (KEAT), in mb, from Synoptic (scripts/collect_live_conditions.py).
-    // At or below the threshold (default -3 mb: NGC81 lower) cold east-side air is being pushed west through the passes, and a flag sits on the crest.
-    // The flag darkens with each additional mb of gradient, from 3 mb (light orange) to 9 mb or more (deep red).
-    const EAST_COLORS = ['#fdba74', '#fb923c', '#f97316', '#ea580c', '#dc2626', '#b91c1c', '#7f1d1d'];
-    const eastColor = mb => EAST_COLORS[Math.min(EAST_COLORS.length - 1, Math.max(0, Math.floor(Math.abs(mb)) - 3))];
+    // The pressure gradient across the Cascades: Mt. Si High School (NGC81) minus Wenatchee (KEAT), in mb, from Synoptic (scripts/collect_live_conditions.py).
+    // At or below the threshold (-4 mb: NGC81 lower) cold east-side air is being pushed west through the passes, and a flag and a callout sit on the map.
+    // Both appear only while the watch is active. The color deepens with every half mb of gradient past the threshold, from light orange to deep red at about 10 mb.
+    const EAST_FROM = [253, 186, 116], EAST_TO = [127, 29, 29], EAST_STEPS = 12;
+    const eastColor = (mb, thr) => {
+        const n = Math.min(EAST_STEPS, Math.max(0, Math.floor((Math.abs(mb) - Math.abs(thr)) / 0.5 + 1e-9))), f = n / EAST_STEPS;
+        return 'rgb(' + EAST_FROM.map((c, i) => Math.round(c + (EAST_TO[i] - c) * f)).join(',') + ')';
+    };
     const CREST = [47.5, -121.25];       // roughly the Cascade crest between Snoqualmie and Stevens passes
+    const compass = d => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round(d / 22.5) % 16];
 
     function addEastFlow(map, ef) {
-        if (!ef || typeof ef.gradient_mb !== 'number') return;
-        const g = ef.gradient_mb, active = !!ef.active, thr = ef.threshold_mb;
+        if (!ef || typeof ef.gradient_mb !== 'number' || !ef.active) return;       // nothing is shown unless the watch is active
+        const g = ef.gradient_mb, thr = ef.threshold_mb;
         const ageH = (Date.now() - Date.parse(ef.valid_utc)) / 3.6e6;
         const s = ef.stations || {};
         const w = ef.west || 'NGC81', e = ef.east || 'KEAT';
@@ -410,27 +414,31 @@
         const prev = sr.length > 6 ? sr[sr.length - 7] : null;                       // six hours before the last value (the series ends at its last hour)
         const trend = prev == null ? '' : (Math.abs(g - prev) < 0.5 ? 'about steady over 6 hours' : g < prev ? `strengthening (was ${signed(prev, ' mb')} 6 hours ago)` : `weakening (was ${signed(prev, ' mb')} 6 hours ago)`);
         const when = pacific.format(new Date(ef.valid_utc));
-        const detail = `<div class="cmap-east-detail"><strong>${active ? 'East-flow watch' : 'No east-flow signal'}</strong><br>` +
+        const wd = ef.wind;
+        const windLine = wd && (wd.speed_mph != null || wd.gust_mph != null)
+            ? `Wind at Mt. Si High School: <strong>${wd.speed_mph != null ? Math.round(wd.speed_mph) + ' mph' : DASH}</strong>${wd.dir_deg != null ? ' from the ' + compass(wd.dir_deg) : ''}, gusts <strong>${wd.gust_mph != null ? Math.round(wd.gust_mph) + ' mph' : DASH}</strong><br>`
+            : '';
+        const detail = `<div class="cmap-east-detail"><strong>East Flow Watch</strong><br>` +
             `${esc(w)} minus ${esc(e)}: <strong>${signed(g, ' mb')}</strong> (${esc(ef.basis || 'pressure')})<br>` +
             `Mt. Si High School ${st(w)} &middot; Wenatchee ${st(e)}<br>` +
+            windLine +
             (trend ? `${esc(trend)}<br>` : '') +
-            `<small>As of ${esc(when)}${ageH > STALE_DATA_HOURS ? ' (more than 6 hours old)' : ''}. Flagged at ${thr} mb or lower; the flag darkens with each additional mb. ` +
-            `A strong gradient can support wind blowing east to west (over the mountains). In winter, this is due to high pressure, cold air out east seeking the lower pressure, warmer air out west. This cold air crosses the Cascades, and then warms adiabatically as it descends towards lower elevations.</small></div>`;
+            `<small>As of ${esc(when)}${ageH > STALE_DATA_HOURS ? ' (more than 6 hours old)' : ''}. Flagged at ${thr} mb or lower; the color deepens with every half mb. ` +
+            `A strong gradient means east wind through the passes, usually cold and dry on the east side and a push of cold air west, which can change snow levels and bring wind to the crest.</small></div>`;
+        const color = eastColor(g, thr);
 
         const ctl = L.control({ position: 'bottomleft' });
         ctl.onAdd = () => {
-            const div = L.DomUtil.create('div', 'cmap-east' + (active ? ' cmap-east--on' : ''));
-            div.style.setProperty('--east', active ? eastColor(g) : '#94a3b8');
-            div.innerHTML = `<span class="cmap-east-sw"></span><span>East flow ${active ? 'watch' : 'none'}: <strong>${signed(g, ' mb')}</strong></span>`;
-            div.title = 'Pressure gradient across the Cascades: Mt. Si High School minus Wenatchee. Click for details.';
+            const div = L.DomUtil.create('div', 'cmap-east cmap-east--on');
+            div.style.setProperty('--east', color);
+            div.innerHTML = `<span class="cmap-east-sw"></span><span><strong>East Flow Watch</strong></span>`;
+            div.title = 'Pressure gradient across the Cascades. Click for details.';
             L.DomEvent.disableClickPropagation(div);
             div.addEventListener('click', () => L.popup({ maxWidth: 300, className: 'cmap-popup' }).setLatLng(CREST).setContent(detail).openOn(map));
             return div;
         };
         ctl.addTo(map);
 
-        if (!active) return;
-        const color = eastColor(g);
         const flag = L.marker(CREST, {
             icon: L.divIcon({
                 className: 'cmap-flag',
@@ -440,7 +448,7 @@
             }),
             zIndexOffset: 1000, keyboard: false,
         }).addTo(map);
-        flag.bindTooltip(`East-flow watch: ${signed(g, ' mb')} (${w} minus ${e})`, { direction: 'top', offset: [8, -28] });
+        flag.bindTooltip('East Flow Watch', { direction: 'top', offset: [8, -28] });
         flag.bindPopup(detail, { maxWidth: 300, className: 'cmap-popup' });
     }
 

@@ -192,7 +192,7 @@ def fetch_synoptic(stids):
 # Sea-level pressure at Mt. Si High School (NGC81, North Bend, west of the crest) minus Pangborn Memorial in Wenatchee (KEAT, east), in mb. East of the
 # crest has the higher pressure when air is pushed west through the passes, so the gradient goes negative; at or below EAST_FLOW_MB it is flagged.
 EAST_FLOW_STATIONS = ('NGC81', 'KEAT')
-EAST_FLOW_MB = -3.0
+EAST_FLOW_MB = -4.0
 EAST_FLOW_HOURS = 48         # hourly gradient history kept
 
 
@@ -219,6 +219,15 @@ def east_flow_summary(raw, grid):
         return None
     g = series[idx]
     key = basis[idx]
+
+    def latest(name):
+        # newest reading of the west station's wind (speed, gust, direction) within the last 3 hours of the data
+        vals = [(t, v) for t, v in raw[EAST_FLOW_STATIONS[0]].get(name, []) if v is not None]
+        if not vals:
+            return None
+        t, v = max(vals, key=lambda x: x[0])
+        return round(v, 1) if (grid[-1] - t) <= timedelta(hours=3) else None
+    wind = {'speed_mph': latest('wspd'), 'gust_mph': latest('gust'), 'dir_deg': latest('wdir')}
     return {
         'gradient_mb': g,                          # NGC81 minus KEAT: negative when the east side is higher
         'threshold_mb': EAST_FLOW_MB,
@@ -228,6 +237,7 @@ def east_flow_summary(raw, grid):
         'valid_utc': grid[idx].strftime('%Y-%m-%dT%H:%M:%SZ'),
         'basis': 'sea-level pressure' if key == 'slp' else 'altimeter setting',
         'stations': {s: {'name': raw[s]['name'], 'pressure_mb': hourly[s][key][idx]} for s in EAST_FLOW_STATIONS},
+        'wind': wind if any(v is not None for v in wind.values()) else None,   # at the west station (mph, degrees)
         'series_mb': series,                       # one value per hour, oldest first, the last ending at series_end_utc
         'series_end_utc': grid[-1].strftime('%Y-%m-%dT%H:%M:%SZ'),
     }
@@ -236,8 +246,8 @@ def east_flow_summary(raw, grid):
 def fetch_east_flow():
     grid = [g for g in hourly_grid()][-EAST_FLOW_HOURS:]
     resp = requests.get(SYNOPTIC_URL, params={
-        'token': SYNOPTIC_TOKEN, 'stid': ','.join(EAST_FLOW_STATIONS), 'vars': 'sea_level_pressure,altimeter',
-        'recent': (EAST_FLOW_HOURS + 6) * 60, 'obtimezone': 'utc', 'units': 'pres|mb',
+        'token': SYNOPTIC_TOKEN, 'stid': ','.join(EAST_FLOW_STATIONS), 'vars': 'sea_level_pressure,altimeter,wind_speed,wind_gust,wind_direction',
+        'recent': (EAST_FLOW_HOURS + 6) * 60, 'obtimezone': 'utc', 'units': 'pres|mb,speed|mph',
     }, timeout=60)
     resp.raise_for_status()
     data = resp.json()
@@ -252,7 +262,8 @@ def fetch_east_flow():
             key = name + '_set_1' if name + '_set_1' in obs else next((k for k in obs if k.startswith(name + '_set_1')), None)
             return list(zip(times, obs[key])) if key else []
 
-        raw[st['STID']] = {'name': st['NAME'], 'slp': var('sea_level_pressure'), 'alt': var('altimeter')}
+        raw[st['STID']] = {'name': st['NAME'], 'slp': var('sea_level_pressure'), 'alt': var('altimeter'),
+                          'wspd': var('wind_speed'), 'gust': var('wind_gust'), 'wdir': var('wind_direction')}
     return east_flow_summary(raw, grid)
 
 

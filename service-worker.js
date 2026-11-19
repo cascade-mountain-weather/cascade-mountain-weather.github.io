@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cascade-mountain-weather-v40';
+const CACHE_NAME = 'cascade-mountain-weather-v41';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
