@@ -6,8 +6,8 @@
   "Nisqually Entrance to Longmire": "OPEN",
   "Paradise Valley Road One-way scenic route leaving Paradise connecting to Stevens": "CLOSED for the season.",
   "Ricksecker Point Road": "CLOSED for the season.",
-  "SR 123 (Cayuse Pass) South Entrance to Cayuse Pass": "CLOSED for the season. For pass information, check the Washington State Dept. of Transportation (WSDOT) or call 1-800-695-ROAD (7623) toll-free statewide or 206-DOT-HIWY (368-4499) in the greater Seattle area. Commercial vehicles prohibited at all times. NOTE: Tunnel height limit 13' 1\".",
-  "SR 410 (Chinook Pass) North Entrance to SR123/Cayuse Pass then east to Chinook P": "CLOSED for the season. For pass information, check the Washington State Dept. of Transportation (WSDOT) or call 1-800-695-ROAD (7623) toll-free statewide or 206-DOT-HIWY (368-4499) in the greater Seattle area. Commercial vehicles prohibited at all times.",
+  "SR 123 (Cayuse Pass) South Entrance to Cayuse Pass": "CLOSED for the season. For pass information, check the Washington State Dept. of Transportation (WSDOT) . Commercial vehicles prohibited at all times. NOTE: Tunnel height limit 13' 1\".",
+  "SR 410 (Chinook Pass) North Entrance to SR123/Cayuse Pass then east to Chinook P": "CLOSED for the season. For pass information, check the Washington State Dept. of Transportation (WSDOT) . Commercial vehicles prohibited at all times.",
   "Stevens Canyon Road": "CLOSED for the season. NOTE: Tunnel height limit 12' 6\".",
   "Sunrise Road": "CLOSED for the season. NOTE: Summerland Trailhead is closed due to Fryingpan Creek Bridge construction through 2029. No pedestrians are allowed on White River Road through the closure zone past Fryingpan Creek Bridge . Bicyclists may travel the closed road but must follow all signage & instructions ",
   "Westside Road": "CLOSED for the season. Visitors are advised that Westside Road is an active geohazard zone . Due to danger from rock fall, vehicles must park south of the barricade at Dry Creek when the road is open. Hikers and bicyclists should travel through the area with caution and avoid lingering in the hazard",
@@ -210,6 +210,21 @@
    "source": "nps",
    "text": "Ohanapecosh Campground area closed for construction in 2026. . The entire Ohanapecosh Campground area is CLOSED for the duration of the construction project, including all campsites, visitor center, restrooms, picnic area, & Ohanapecosh river access.",
    "url": "https://www.nps.gov/mora/planyourvisit/park-construction.htm"
+  },
+  "wsdot:725177": {
+   "category": "Collision",
+   "closed": false,
+   "direction": "",
+   "first_seen_utc": "2026-11-19T22:21Z",
+   "key": "wsdot:725177",
+   "lat": 48.7084,
+   "lon": -121.0911,
+   "pass": "washington",
+   "road": "SR 20",
+   "source": "wsdot",
+   "source_modified": 1795112645070,
+   "text": "Update 10:23 AM : Eastbound & westbound traffic is alternating on SR 20 at Scenic Viewpoint (MP 132) due to a collision.  The State Patrol has arrived on the scene.",
+   "type": "Incident"
   }
  }
 }
