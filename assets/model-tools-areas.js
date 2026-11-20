@@ -37,7 +37,7 @@
         'stevens': { label: 'Stevens Pass', wwrf: 'US2', utah: 'TSTEV', basins: [{ id: '17110009', label: 'Skykomish (west side)' }, { id: '17020011', label: 'Wenatchee (east side)' }] },
         'snoqualmie': { label: 'Snoqualmie Pass', uw: 'ksmp', wwrf: 'I90', utah: 'SNO30', basins: [{ id: '17110010', label: 'Snoqualmie (west side)' }, { id: '17030001', label: 'Upper Yakima (east side)' }] },
         'hurricane': { label: 'Hurricane Ridge', uw: 'dowlx', utah: 'HUR53', basins: [{ id: '17110020', label: 'Dungeness-Elwha' }] },
-        'winthrop': { label: 'Winthrop / Mazama (Methow Valley)', uw: 'mtwpm', wwrf: 'S52', basins: [{ id: '17020008', label: 'Methow' }] },
+        'mission-ridge': { label: 'Mission Ridge', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }, { id: '17030001', label: 'Upper Yakima' }] },
         'blewett': { label: 'Blewett Pass', uw: 'lvwth', wwrf: 'US97', utah: 'MISR', basins: [{ id: '17020011', label: 'Wenatchee' }] },
         'crystal': { label: 'Crystal Mountain', uw: 'pvc55', utah: 'CMT', basins: [{ id: '17110014', label: 'Puyallup' }] },
         'paradise': { label: 'Paradise (Mt. Rainier)', uw: 'pvc55', wwrf: 'MRNP', utah: 'PVC54', basins: [{ id: '17110015', label: 'Nisqually' }] },
@@ -50,7 +50,7 @@
     // ---- NBM snowfall plume, drawn as an SVG image so it behaves like the other figures ----
     const NBM_SITE = { 'mt-baker': 'Mt. Baker', stevens: 'Stevens Pass', snoqualmie: 'Snoqualmie Pass', blewett: 'Blewett Pass',
         crystal: 'Crystal', paradise: 'Paradise', white: 'White Pass', washington: 'Washington Pass',
-        hurricane: 'Hurricane Ridge', winthrop: 'Winthrop', 'mt-hood': 'Mt. Hood' };
+        hurricane: 'Hurricane Ridge', 'mission-ridge': 'Mission Ridge', 'mt-hood': 'Mt. Hood' };
     const num = (v, d) => (v == null ? '\u2013' : (+v).toFixed(d == null ? 1 : d));
 
     // The same plume chart the forecast posts use (assets/post-plume-map.js), for one area, as an SVG image.

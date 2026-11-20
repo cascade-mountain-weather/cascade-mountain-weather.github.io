@@ -127,22 +127,47 @@ def add_risk(zones, curves):
 
 TRAFFIC = ROOT / "data" / "traffic" / "typical_sat.json"
 LEAVE_TIMES = ["05:30", "06:00", "06:30", "07:00", "07:30"]      # the departure times scripts/ski_traffic.py pulls
+def traffic_data():
+    return json.loads(TRAFFIC.read_text()) if TRAFFIC.exists() else {}
 
 
-def drive_by_time(cfg):
+def origin_names(cfg, res):
+    """{origin id: name} the page offers. When the Google pull exists, its starting areas (Seattle neighborhoods, Bellevue, Everett, ...)
+    replace the single hand-placed Seattle; origins only in destinations.yml are kept."""
+    from ski_traffic import ORIGINS
+    pulled = {k: v[0] for k, v in ORIGINS.items() if any(key.startswith(k + "|") for key in res)}
+    if not pulled:
+        return {k: v["name"] for k, v in cfg["origins"].items()}
+    names = dict(pulled)
+    for k, v in cfg["origins"].items():
+        if k not in names and k != "seattle":
+            names[k] = v["name"]
+    return names
+
+
+def drive_by_time(cfg, res, origins):
     """{zone id: {origin: {"HH:MM": hours}}} and the leave times, from the Google typical Saturday-morning times (scripts/ski_traffic.py).
-    Only complete origin x time sets are kept; the page falls back to drive_hours (the 07:00 figure) for the rest."""
-    if not TRAFFIC.exists():
+    Only complete origin x time sets are kept; the page falls back to drive_hours for the rest."""
+    if not res:
         return {}, []
-    res = json.loads(TRAFFIC.read_text())
     times = LEAVE_TIMES
     out = {}
     for z in cfg["zones"]:
-        for o in cfg["origins"]:
+        for o in origins:
             row = {t: round(res[f"{o}|{z['id']}|{t}"]["min"] / 60, 2) for t in times if f"{o}|{z['id']}|{t}" in res}
             if len(row) == len(times):
                 out.setdefault(z["id"], {})[o] = row
     return out, times
+
+
+def drive_hours(z, res, origins):
+    """Free-flow hours per origin: the hand/07:00 figure in destinations.yml, else Google's no-traffic time for the pulled areas."""
+    out = dict(z["drive_hours"])
+    for o in origins:
+        k = f"{o}|{z['id']}|07:00"
+        if o not in out and k in res:
+            out[o] = round(res[k]["free_min"] / 60, 1)
+    return {o: out[o] for o in origins if o in out}
 
 
 def main():
@@ -159,7 +184,9 @@ def main():
     curves = json.loads(CURVE.read_text(encoding="utf-8"))
     start = datetime.now(timezone.utc).date() + timedelta(days=1)
     zones = []
-    by_time, leave_times = drive_by_time(cfg)
+    res = traffic_data()
+    origins = origin_names(cfg, res)
+    by_time, leave_times = drive_by_time(cfg, res, origins)
     bases = base_depths(cfg) if a.real else {}
     for z in cfg["zones"]:
         e = elev[z["id"]]
@@ -167,7 +194,7 @@ def main():
             "id": z["id"], "name": z["name"], "modes": z["modes"], "nwac_zone": z["nwac_zone"],
             "top_ft": z["top_ft"], "access_ft": e["winter_access"], "forecast_ft": e["forecast_point"],
             "pass": z["pass"], "url": z.get("url"), "grooming_url": z.get("grooming_url"),
-            "drive_hours": z["drive_hours"], "drive_by_time": by_time.get(z["id"], {}), "road_risk": z.get("road_risk"),
+            "drive_hours": drive_hours(z, res, origins), "drive_by_time": by_time.get(z["id"], {}), "road_risk": z.get("road_risk"),
             "access_points": [{"id": p["id"], "name": p["name"], "type": p["type"], "modes": p["modes"], "ft": e.get("ap:" + p["id"])} for p in z["access_points"]],
             **bases.get(z["id"], {}),
             "days": real_days(z["id"], extract) if a.real else mock_days(z, e, start, curves),
@@ -176,7 +203,7 @@ def main():
     out = {"mock": not a.real, "risk_source": curves["source"], "generated_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}",
            "note": "Sample numbers to build and test the scorer. Not a forecast." if not a.real else "Beta: NBM forecast, not yet checked against what happened.",
            "forecast": ({"model": extract["model"], "cycle_utc": extract["cycle_utc"], "generated_utc": extract["generated_utc"], "notes": extract["notes"]} if a.real else None),
-           "origins": {k: v["name"] for k, v in cfg["origins"].items()}, "leave_times": leave_times if by_time else [], "zones": zones}
+           "origins": origins, "leave_times": leave_times if by_time else [], "zones": zones}
     Path(a.out).write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print("wrote", a.out, len(zones), "zones")
 

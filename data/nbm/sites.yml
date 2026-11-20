@@ -43,9 +43,9 @@ verification_points:
   - {name: Salem,      station: SLE, lat: 44.920, lon: -123.020}
 
 # Points the NBM plume page (scripts/nbm_plume.py) draws but the weekend forecast and its scoring do not use.
-# Winthrop: coordinates from CW3E's West-WRF station list (station S52). It is a valley town, so the NBM point
-# is valley level, not ski terrain.
+# Mission Ridge: coordinates are approximate, from memory (near the base area, roughly 4,500 ft; the summit is about 6,800 ft); the plume page
+# records km_to_grid_point. It replaced Winthrop (a valley-level point) in Nov 2026.
 plume_only_sites:
-  - {name: Winthrop, lat: 48.4249, lon: -120.1459}
+  - {name: Mission Ridge, lat: 47.293, lon: -120.398}
   # Mt. Hood: Timberline Lodge (about 5,900 ft). Coordinates are approximate, from memory; the plume page records km_to_grid_point.
   - {name: Mt. Hood, lat: 45.331, lon: -121.711}

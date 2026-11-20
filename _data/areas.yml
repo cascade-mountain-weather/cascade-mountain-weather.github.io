@@ -55,7 +55,7 @@ areas:
   - id: mazama
     name: Mazama
     basin: "17020008"
-    page: /tools/model-tools-precipitation.html#area=winthrop
+    page: /tools/model-tools-precipitation.html#area=washington
     stations:
       - {id: MAZ22, network: NWAC, label: Mazama, primary: true}
 
@@ -96,7 +96,7 @@ areas:
     name: Mission Ridge
     basin: "17020011"
     basins: ["17020011", "17030001"]   # drains toward Wenatchee and Upper Yakima; shade both like Blewett
-    page: null
+    page: /tools/model-tools-precipitation.html#area=mission-ridge
     stations:
       # Grouse Camp (5390 ft) sits near the ski area. Upper Wheeler (4330 ft) is lower, so less representative.
       - {id: "507:WA:SNTL", network: SNOTEL, label: Grouse Camp, resort: Mission Ridge, primary: true}

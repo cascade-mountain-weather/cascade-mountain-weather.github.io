@@ -38,7 +38,7 @@
     const WET = { ok: 'Fine with wet', prefer: 'Prefer dry', dry: 'Keep me dry' };
     const WET_LIMIT = 0.1;          // inches of liquid that gets you wet: the "Keep me dry" cutoff
     let LIVE = null;      // assets/data/pass_now.json: closures and restrictions right now (scripts/pass_log.py)
-    const S = { mode: 'resort', day: 0, origin: 'seattle', leave: '07:00', wet: 'prefer', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
+    const S = { mode: 'resort', day: 0, origin: 'seattle_c', traffic: false, leave: '07:00', wet: 'prefer', maxDrive: 4, minElev: 3500, w: Object.fromEntries(CRIT.map(c => [c.id, c.w])) };
 
     // Liquid (in) that reaches you as rain or wet snow during the ski window. Rain share: 50% when the snow level is at the middle of
     // your skiing range, ramping over +/-1,000 ft. Wet-snow share: highest at 34 F, zero by 29 and 39 F (the NBM temperature is the
@@ -162,7 +162,7 @@
 
     function score(z, d, S) {
         const why = [];
-        const timed = ((z.drive_by_time || {})[S.origin] || {})[S.leave];     // typical drive at your leave time, when we have it
+        const timed = S.traffic ? timedDrive(((z.drive_by_time || {})[S.origin] || {}), S.leave) : null;     // typical drive at your leave time, only when "Estimate traffic" is on
         const drive = timed != null ? timed : (z.drive_hours || {})[S.origin];
         const lowest = LOW.includes(S.mode) ? (z.access_ft || 0) : Math.max(S.minElev, z.access_ft || 0);       // hiking and biking start at the trailhead, not your ski minimum
         const vert = z.top_ft - lowest;
@@ -244,6 +244,19 @@
         return null;
     }
 
+    // Typical drive (h) at a leave time "HH:MM", interpolated between the pulled departure times and held flat outside them. Null with no data.
+    function timedDrive(row, t) {
+        const pts = Object.keys(row).sort().map(k => [mins(k), row[k]]);
+        if (!pts.length) return null;
+        const m = mins(t);
+        if (m <= pts[0][0]) return pts[0][1];
+        for (let i = 1; i < pts.length; i++) {
+            if (m <= pts[i][0]) return pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * (m - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]);
+        }
+        return pts[pts.length - 1][1];
+    }
+    const mins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
+
     function clock(t) {
         const [h, m] = t.split(':').map(Number);
         return `${h}:${String(m).padStart(2, '0')} am`;
@@ -300,7 +313,7 @@
                 <div class="sk-group"><span class="sk-label">Day</span>${chips(data.zones[0].days.map((d, i) => [i, dayLabel(d.date)]), S.day, 'day')}</div>
                 <div class="sk-group"><label class="sk-label" for="sk-origin">Starting from</label>
                     <select id="sk-origin" class="sk-select">${Object.entries(data.origins).map(([k, v]) => `<option value="${k}"${k === S.origin ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></div>
-                ${(data.leave_times || []).length ? `<div class="sk-group"><span class="sk-label">Leaving at</span>${chips(data.leave_times.map(t => [t, clock(t)]), S.leave, 'leave')}</div>` : ''}
+                ${(data.leave_times || []).length ? `<div class="sk-group"><label class="sk-label"><input type="checkbox" id="sk-traffic"${S.traffic ? ' checked' : ''}> Estimate traffic</label>${S.traffic ? `<label class="sk-label" for="sk-leave">Leave at</label><input id="sk-leave" class="sk-select" type="time" step="900" value="${S.leave}"><small class="sk-small">Typical Saturday-morning drive from Google, ${clock(data.leave_times[0])} to ${clock(data.leave_times[data.leave_times.length - 1])}; times outside that use the nearest. It does not know about storms or closures.</small>` : ''}</div>` : ''}
                 <div class="sk-group"><label class="sk-label" for="sk-drive">Longest drive: <b>${S.maxDrive} h</b></label><input id="sk-drive" type="range" min="1" max="6" step="0.5" value="${S.maxDrive}"></div>
                 ${LOW.includes(S.mode) ? '' : `<div class="sk-group"><label class="sk-label" for="sk-elev">Lowest elevation you will ski: <b>${S.minElev.toLocaleString()} ft</b></label><input id="sk-elev" type="range" min="1500" max="6500" step="250" value="${S.minElev}"></div>`}
             </div>
@@ -313,6 +326,8 @@
             ${out.length ? `<details class="sk-out" ${ok.length ? '' : 'open'}><summary>Ruled out (${out.length})</summary><ul>${out.map(r => `<li><strong>${esc(r.z.name)}</strong>: ${r.why.map(esc).join('; ')}</li>`).join('')}</ul></details>` : ''}
             <p class="sk-small">&ldquo;Fits your criteria&rdquo; is not &ldquo;safe&rdquo;. Backcountry travel needs the avalanche forecast, your own assessment and the right gear.</p>`;
             el.querySelectorAll('.sk-chip, .sk-link').forEach(b => b.addEventListener('click', () => { S[b.dataset.k] = b.dataset.k === 'day' ? +b.dataset.v : b.dataset.v; render(); }));
+            if (el.querySelector('#sk-traffic')) el.querySelector('#sk-traffic').addEventListener('change', e => { S.traffic = e.target.checked; render(); });
+            if (el.querySelector('#sk-leave')) el.querySelector('#sk-leave').addEventListener('change', e => { if (e.target.value) { S.leave = e.target.value; render(); } });
             el.querySelector('#sk-origin').addEventListener('change', e => { S.origin = e.target.value; render(); });
             el.querySelector('#sk-drive').addEventListener('input', e => { S.maxDrive = +e.target.value; render(); });
             if (el.querySelector('#sk-elev')) el.querySelector('#sk-elev').addEventListener('input', e => { S.minElev = +e.target.value; render(); });
