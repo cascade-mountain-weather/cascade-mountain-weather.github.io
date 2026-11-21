@@ -688,13 +688,20 @@
    "t850_c": -0.1,
    "freezing_below_surface": true,
    "snow_below_surface": true
+  },
+  "2026112100": {
+   "surface_ft": 203,
+   "freezing_level_ft": 4247,
+   "snow_level_ft": 3997,
+   "t850_c": -1.3,
+   "freezing_below_surface": false,
+   "snow_below_surface": false
   }
  },
  "missing": {
   "2026110812": true,
   "2026111112": true,
   "2026111200": true,
-  "2026111212": true,
-  "2026112100": true
+  "2026111212": true
  }
 }
