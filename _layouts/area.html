@@ -52,7 +52,7 @@
         <li><a href="{{ '/tools/model-tools-precipitation.html' | relative_url }}#area={{ ap.tool }}">Precipitation and snow models</a>: West-WRF and Utah ensembles, RRFS, and maps</li>
         <li><a href="{{ '/tools/model-tools-freezing-level.html' | relative_url }}#area={{ ap.tool }}">Freezing and snow level</a></li>
         <li><a href="{{ '/tools/conditions-map.html' | relative_url }}">Live conditions map</a></li>
-        <li><a href="{{ '/in-house/ski-model.html' | relative_url }}">Ski recommendation model</a></li>
+        <li><a href="{{ '/in-house/ski-model.html' | relative_url }}">{{ site.ski_model_name }}</a></li>
     </ul>
     <p class="area-all">Other areas: {% for o in site.data.area_pages.areas %}{% unless o.slug == ap.slug %}<a href="{{ '/tools/' | append: o.slug | append: '.html' | relative_url }}">{{ o.name }}</a>{% unless forloop.last %}, {% endunless %}{% endunless %}{% endfor %}</p>
 </section>

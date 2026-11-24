@@ -49,3 +49,12 @@
 .sk-trend-deteriorating { color: #b45309; }
 .sk-window .sk-fuzzy { color: #92400e; font-style: italic; }
 .sk-window .sk-corn { display: block; margin-top: .25rem; }
+
+/* Acknowledgement popup: shown until the visitor agrees (remembered in localStorage) */
+.sk-ack { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100vh - 2rem); overflow-y: auto; border: 0; border-radius: 12px; padding: 1.4rem 1.5rem; max-width: 520px; width: calc(100% - 2rem); box-shadow: 0 10px 40px rgba(0,0,0,.35); color: #334155; line-height: 1.5; }
+.sk-ack::backdrop { background: rgba(15, 23, 42, .75); }
+.sk-ack h2 { margin: 0 0 .6rem; color: #1e3c72; font-size: 1.25rem; }
+.sk-ack p { margin: 0 0 .8rem; }
+.sk-ack-btn { min-height: 44px; padding: 0 1.4rem; border-radius: 10px; border: 0; background: #1e3c72; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.sk-ack-btn:hover { background: #274a8a; }
+.sk-ack-btn:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }

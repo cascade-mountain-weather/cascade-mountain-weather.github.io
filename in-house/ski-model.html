@@ -1,14 +1,14 @@
 ---
 layout: page
-title: "Ski Recommendation Model | Cascade Mountain Weather"
-description: "A model that recommends where and when to ski in the Washington Cascades from the forecast."
-under_development: true
+title: "Type I Fun Finder | Cascade Mountain Weather"
+description: "A model that matches the forecast to the kind of day you want and lists general Washington Cascades regions that fit. We must clearly state that this is not a direct recommendation."
 ---
 <link rel="stylesheet" href="{{ '/assets/ski-model.css' | relative_url }}">
 <div class="lt-page">
 <section class="hero">
-    <h1 class="PlotTitle">{{ site.ski_model_name }}: Ski Recommendation Model</h1>
-    <p>Our forecast for the weekend, boiled down to a recommendation: where to go, and when, for the kind of day you want. The name is a working title.</p>
+    <h1 class="PlotTitle">{{ site.ski_model_name }}</h1>
+    <p>Our forecast for the weekend, matched to the kind of day you want: general regions, and times of day, that fit your criteria.</p>
+    <p><strong>This is by no means a recommendation.</strong> It spits out a general region that fits your criteria. Specific planning (route planning, the <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">NWAC avalanche forecast</a>) is essential for safe travel in the winter backcountry.</p>
 </section>
 
 <div class="lt-card">
@@ -26,4 +26,23 @@ under_development: true
     </ul>
 </div>
 </div>
+<dialog id="sk-ack" class="sk-ack" aria-labelledby="sk-ack-h">
+    <h2 id="sk-ack-h">Before you use this</h2>
+    <p><strong>This is by no means a recommendation.</strong> The Type I Fun Finder spits out a general region that fits the criteria you set. It does not know your route, the snowpack in your terrain, or today&rsquo;s avalanche conditions.</p>
+    <p>Specific planning (route planning, the <a href="https://nwac.us" target="_blank" rel="noopener noreferrer">NWAC avalanche forecast</a>, the right gear and your own assessment) is essential for safe travel in the winter backcountry. You are responsible for your own decisions.</p>
+    <button type="button" class="sk-ack-btn" id="sk-ack-btn">I understand and agree</button>
+</dialog>
+<script>
+(function () {
+    var KEY = 'cmw-fun-finder-ack-v1', dlg = document.getElementById('sk-ack');
+    try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+    if (!dlg.showModal) return;
+    dlg.addEventListener('cancel', function (e) { e.preventDefault(); });
+    document.getElementById('sk-ack-btn').addEventListener('click', function () {
+        try { localStorage.setItem(KEY, '1'); } catch (e) {}
+        dlg.close();
+    });
+    dlg.showModal();
+})();
+</script>
 <script src="{{ '/assets/ski-model.js' | relative_url }}"></script>
