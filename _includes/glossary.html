@@ -1,0 +1,4 @@
+<!-- Weather-term popups: definitions in _data/glossary.yml, behavior in assets/glossary.js. Add data-no-glossary to any element to skip it. -->
+<link rel="stylesheet" href="{{ '/assets/glossary.css' | relative_url }}">
+<script type="application/json" id="glossary-data">{{ site.data.glossary | jsonify }}</script>
+<script src="{{ '/assets/glossary.js' | relative_url }}" defer></script>

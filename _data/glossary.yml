@@ -1,0 +1,114 @@
+# Plain-language definitions for the little popups on weather terms (see assets/glossary.js, _includes/glossary.html).
+# Edit the text freely. Fields:
+#   id        unique slug
+#   label     the title shown in the popup
+#   patterns  regular expressions (case-insensitive) that find the term in page text. Use single quotes in YAML so backslashes survive.
+#   not_after optional: skip a match if it directly follows one of these strings (e.g. "Hurricane " so Hurricane Ridge is not a ridge)
+#   text      the definition (plain text, no HTML)
+#   more      optional: { label, url } for a "Learn more" link
+#   credit    optional: { label, url } shown as a small "Adapted from" line
+# Each term gets a popup on its first appearance on a page (and again when the page content is redrawn, as the model viewers do).
+# The scan skips headings, links, buttons, menus and anything inside data-no-glossary.
+
+- id: height500
+  label: "500 mb height"
+  patterns: ['\b500[- ]?(?:mb|hPa)(?: geopotential)?(?: heights?)?']
+  text: "The altitude (about 18,000 ft over us) where the air pressure falls to 500 mb, half of sea-level pressure. Like surface pressure, it is lower under low pressure and higher under high pressure, so low heights mark troughs and high heights mark ridges. In our region the surface has little influence at this level, which makes it a good stand-in for the overall pattern: where the systems aloft are, how strong they are, and which way they are steering storms."
+
+- id: vorticity
+  label: "Vorticity"
+  patterns: ['\b(?:vertical |positive |negative |absolute |relative )?vorticity\b']
+  text: "A measure of how much the air is spinning around a vertical axis (counterclockwise is positive in the Northern Hemisphere). On a 500 mb map it shows up in troughs, ridges and the smaller waves riding along in the flow. Vorticity matters because where it is increasing downwind, air tends to rise, and rising air is what makes clouds and precipitation."
+  credit: { label: "Adapted from Jeff Haby, theweatherprediction.com", url: "https://www.theweatherprediction.com/" }
+
+- id: pva
+  label: "Vorticity advection (PVA / NVA)"
+  patterns: ['\bpositive vorticity advection\b', '\bnegative vorticity advection\b', '\bPVA\b', '\bNVA\b']
+  text: "Advection is the wind carrying something along. Positive vorticity advection (PVA) is when the wind blows more spin into an area, and it tends to support rising air, more cloud, and possibly precipitation. Negative vorticity advection (NVA) is the opposite and favors sinking, clearing air."
+  credit: { label: "Adapted from Jeff Haby, theweatherprediction.com", url: "https://www.theweatherprediction.com/" }
+
+- id: omega700
+  label: "700 mb vertical velocity"
+  patterns: ['\b(?:700[- ]?(?:mb|hPa) )?(?:vertical velocity|omega)\b(?! block)']
+  text: "How fast air is rising or sinking at 700 mb (about 10,000 ft), roughly the middle of the lower atmosphere. Rising air cools, condenses and makes precipitation, so strong upward motion here is one of the best signs that real snow or rain is coming. It is most convincing when it lines up with upper-level divergence, which pulls air upward from below."
+
+- id: divergence
+  label: "Upper-level divergence"
+  patterns: ['\b(?:upper[- ]level )?divergence\b']
+  text: "Air spreading apart high in the atmosphere. When air is pulled away aloft, more air has to rise from below to replace it, so upper-level divergence supports upward motion and storm development."
+
+- id: temp850
+  label: "850 mb temperature"
+  patterns: ['\b850[- ]?(?:mb|hPa)(?: temperatures?)?']
+  text: "The air temperature at 850 mb, about 5,000 ft. That is close to the height of Cascade passes and ski areas, and most of our storms arrive from the ocean, so this level is a good early hint whether cold or warm air is heading into the mountains. Around 0 C is a rough rain-snow dividing line for the passes."
+
+- id: pvu
+  label: "2 PVU (dynamic tropopause)"
+  patterns: ['\b2 PVU\b', '\bdynamic tropopause\b']
+  text: "The 2 PVU surface is a way of finding the tropopause, the boundary between the weather-making lower atmosphere and the stratosphere above. Where it dips low, cold air aloft is pushing down (a trough, usually a stronger system); where it bulges up, there is a ridge."
+
+- id: trough
+  label: "Trough"
+  patterns: ['\btroughs?\b']
+  text: "An elongated area of low pressure (low heights) aloft, shaped like a valley on a 500 mb map. Troughs bring cooler, unsettled weather and are the usual source of our precipitation."
+
+- id: ridge
+  label: "Ridge"
+  patterns: ['\bridges?\b']
+  not_after: ["Hurricane ", "Blewett "]
+  text: "An elongated area of high pressure (high heights) aloft, the opposite of a trough. Ridges mean sinking air, mostly dry weather, and often warmer temperatures and valley inversions."
+
+- id: shortwave
+  label: "Shortwave"
+  patterns: ['\bshort ?waves?\b']
+  text: "A small, fast-moving ripple in the upper-level flow, much smaller than the big troughs and ridges. Shortwaves are often what trigger a burst of precipitation as they pass, and they are harder for models to time than the large-scale pattern."
+
+- id: jet
+  label: "Jet stream"
+  patterns: ['\bjet stream\b', '\bjet\b(?= (?:streak|core|max))']
+  text: "A narrow river of very fast wind high in the atmosphere that steers storm systems. When it points straight at Washington, storms arrive in a steady stream."
+
+- id: ivt
+  label: "Integrated vapor transport (IVT)"
+  patterns: ['\bintegrated vapor transport\b', '\bIVT\b']
+  text: "How much water vapor is moving through the air, added up from the surface to the top of the atmosphere (units: kg per meter per second). It combines moisture and wind, so high values mean a lot of water is being delivered to the coast. Values over about 250 are the threshold for an atmospheric river."
+
+- id: ar
+  label: "Atmospheric river"
+  patterns: ['\batmospheric rivers?\b']
+  text: "A long, narrow band of very moist air that carries water vapor from the tropics or subtropics toward the coast. When one hits the Cascades, the air is forced up the mountains and can produce heavy precipitation, often with a high snow level."
+
+- id: freezing
+  label: "Freezing level"
+  patterns: ['\bfreezing levels?\b']
+  text: "The height above sea level where the air temperature is 32 F. Above it, precipitation can fall as snow; below it, snow can melt on the way down. The freezing level is a starting point for the snow level, which is usually lower."
+
+- id: snowlevel
+  label: "Snow level"
+  patterns: ['\bsnow levels?\b']
+  text: "The elevation where precipitation switches between rain and snow. It is different from the freezing level because it takes time and energy to melt (or sublimate) a falling snowflake, so snow can keep falling below the freezing level. Where does that energy come from? The atmosphere. The air cools as it gives up energy to the flake. If flakes are large enough or fall fast enough, they reach the ground as snow instead of turning to rain, or disappearing on the way down (virga). That is why heavy precipitation often pulls the snow level lower."
+
+- id: dgz
+  label: "Dendritic growth zone"
+  patterns: ['\bdendritic growth zone\b', '\bDGZ\b']
+  text: "The layer of the atmosphere between about -12 C and -18 C, where ice crystals grow into large, branching flakes that stack up fluffy. The deeper and wetter that layer, the higher the chance of light, low-density powder."
+
+- id: slr
+  label: "Snow-to-liquid ratio"
+  patterns: ['\bsnow[- ]to[- ]liquid ratios?\b', '\bSLR\b']
+  text: "How many inches of snow you get from one inch of liquid water. Around 10:1 is average. Cold, dry snow can reach 15:1 or more (fluffy powder), while warm, wet snow can be 6:1 or less (dense, heavy snow)."
+
+- id: ensemble
+  label: "Ensemble"
+  patterns: ['\bensembles?\b']
+  text: "A set of many forecasts of the same event, each started from slightly different conditions. If the members agree, confidence is higher; if they fan out, the forecast is uncertain. The spread among them is a measure of that uncertainty."
+
+- id: spaghetti
+  label: "Spaghetti plot"
+  patterns: ['\bspaghetti(?: plots?)?\b']
+  text: "A map with one line per ensemble member, all showing the same feature (such as a pressure contour). Where the lines bunch together the models agree; where they tangle and spread apart, they do not."
+
+- id: pscz
+  label: "Puget Sound convergence zone"
+  patterns: ['\bPuget Sound convergence zone\b', '\bconvergence zone\b', '\bPSCZ\b']
+  text: "A band where air flowing around the Olympic Mountains comes back together over Puget Sound. The air is forced upward, which can produce a narrow strip of heavier showers or lowland snow, often between Seattle and Everett."

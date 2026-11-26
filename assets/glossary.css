@@ -1,0 +1,13 @@
+/* Weather-term popups (see assets/glossary.js and _data/glossary.yml) */
+.gl-term { all: unset; cursor: help; border-bottom: 1.5px dotted currentColor; color: inherit; font: inherit; }
+.gl-term:hover { border-bottom-style: solid; }
+.gl-term:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; border-radius: 2px; }
+.gl-pop { position: absolute; z-index: 10000; width: min(340px, calc(100vw - 1.5rem)); box-sizing: border-box; padding: .8rem 1rem; background: #fff; color: #334155; border: 1px solid #cbd5e1; border-left: 4px solid #1e3c72; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-size: .9rem; line-height: 1.5; text-align: left; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.gl-pop[hidden] { display: none; }
+.gl-pop strong { display: block; color: #1e3c72; margin-bottom: .25rem; padding-right: 1.6rem; }
+.gl-pop p { margin: 0 0 .4rem; }
+.gl-pop small { display: block; color: #64748b; margin-top: .3rem; }
+.gl-pop a { color: #1e3c72; text-decoration: underline; }
+.gl-close { all: unset; position: absolute; top: .35rem; right: .45rem; width: 28px; height: 28px; text-align: center; line-height: 28px; font-size: 1.3rem; cursor: pointer; color: #64748b; border-radius: 6px; }
+.gl-close:hover { background: #eef2f7; }
+.gl-close:focus-visible { outline: 3px solid #f59e0b; }
