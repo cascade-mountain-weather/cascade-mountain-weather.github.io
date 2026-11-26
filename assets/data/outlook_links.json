@@ -4,101 +4,116 @@
  "licence_url": "https://creativecommons.org/licenses/by/4.0/",
  "copyright": "ECMWF",
  "extended": {
-  "base_time": "2026-11-25T00:00:00Z",
+  "base_time": "2026-11-26T00:00:00Z",
   "products": {
    "precip": {
     "product": "extended-anomaly-spread-tp",
     "label": "Precipitation",
-    "base_time": "2026-11-25T00:00:00Z",
+    "base_time": "2026-11-26T00:00:00Z",
     "frames": [
      {
       "valid": "2026-12-07T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234055-de0799d24b38b99b671b79e23ef8e3b0ae7b39b0.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+288h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235333-fd0737fffda672289cec23e88d1f7fe1b1e1e4a7.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+264h) Area : North America"
      },
      {
       "valid": "2026-12-14T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234104-46fbb83ef359aaf34b85bdb46058233e04e5e9b5.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+456h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235341-830e4c727ee60ccad679b86178cf6fe1bbf5ff10.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+432h) Area : North America"
      },
      {
       "valid": "2026-12-21T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234112-af694679a4a178cf127123c54c62ae0ea08e0788.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+624h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235350-04f2f38e20dca1117493bc5932b1159a27e4f432.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+600h) Area : North America"
      },
      {
       "valid": "2026-12-28T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234121-c463cec5f127b87e7625eca2c4468d17db13298e.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+792h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235357-7353b2fdeda71991d6e79ed9c844ea2e282a26d4.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+768h) Area : North America"
      },
      {
       "valid": "2027-01-04T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234128-78572aa8b3b5f0228b17147bed6f5fe0fb96867e.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+960h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235406-eb2dadccadbc4048261f86362b2ee372cc760e00.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+936h) Area : North America"
+     },
+     {
+      "valid": "2027-01-11T00:00:00Z",
+      "url": "https://charts.ecmwf.int/content/20261126235414-682a7e73245423e3b0a213fcfb6385a1457644c7.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 04 Jan 2027 - Mon 11 Jan 2027 (+1104h) Area : North America"
      }
     ]
    },
    "temp": {
     "product": "extended-anomaly-range-ratio-t",
     "label": "Temperature",
-    "base_time": "2026-11-25T00:00:00Z",
+    "base_time": "2026-11-26T00:00:00Z",
     "frames": [
      {
       "valid": "2026-12-07T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234143-01a9c2da4cf13833366e5d8ed4360a0a7203b503.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+288h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235431-654e2370f43d9a0f874ddca962c84272f9a52bd5.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+264h) Area : North America"
      },
      {
       "valid": "2026-12-14T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234151-51f95e2684c83cde88dfc81912e45d342ed1b68e.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+456h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235438-ade5d5050d05d30f42285b28e26e4ff39494519f.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+432h) Area : North America"
      },
      {
       "valid": "2026-12-21T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234159-802a16b149342fb368cb391663f116ec3f63b7b5.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+624h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235448-8ad539c9a6e4161cfe96f48aed8282b43d873bd8.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+600h) Area : North America"
      },
      {
       "valid": "2026-12-28T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234207-32754efd04ddc0503ef14a84b7c06900f8dd858b.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+792h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235458-51c5764e4f40de6e756ca95095d659273c94b61b.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+768h) Area : North America"
      },
      {
       "valid": "2027-01-04T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125234215-fc53f0de7fa0bee68c1b33af7ec5242e079358fd.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+960h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126235507-145b69871825cd42414bbba786bbf0c0ceee5632.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+936h) Area : North America"
+     },
+     {
+      "valid": "2027-01-11T00:00:00Z",
+      "url": "https://charts.ecmwf.int/content/20261126235547-7a530c591558605414970e6cda43feb72cd4b3f7.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 04 Jan 2027 - Mon 11 Jan 2027 (+1104h) Area : North America"
      }
     ]
    },
    "z500": {
     "product": "extended-anomaly-z500",
     "label": "500 hPa height",
-    "base_time": "2026-11-25T00:00:00Z",
+    "base_time": "2026-11-26T00:00:00Z",
     "frames": [
      {
       "valid": "2026-12-07T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125220210-d2689cc17a015f09dd8ba89a5c99918235bac7db.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+288h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126205707-e72d0126011a8f0142498de99de3e49b659b84a1.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 30 Nov 2026 - Mon 07 Dec 2026 (+264h) Area : North America"
      },
      {
       "valid": "2026-12-14T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125220218-5e11b3568dbfeac01bfbb1a05b24dc37f3282caf.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+456h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126205712-b4f8a43c3da7484794794ff717389f9167de7521.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 07 Dec 2026 - Mon 14 Dec 2026 (+432h) Area : North America"
      },
      {
       "valid": "2026-12-21T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125220225-77393f5d06bc856ba2db31e8345bfc6744bc9f4a.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+624h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126205722-202825b1ef78601dcf6b7954efa5cfb2cd15d5f3.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 14 Dec 2026 - Mon 21 Dec 2026 (+600h) Area : North America"
      },
      {
       "valid": "2026-12-28T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125220231-0db091f06fcd7408e3fa716848cf9a964631ed13.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+792h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126205729-cfda75e79c27847bf42a4f1a985e69d600a1e591.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 21 Dec 2026 - Mon 28 Dec 2026 (+768h) Area : North America"
      },
      {
       "valid": "2027-01-04T00:00:00Z",
-      "url": "https://charts.ecmwf.int/content/20261125220237-9713a02c349d386da5f956f51b0bfd7b6b80cb27.png",
-      "desc": "Base time: Wed 25 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+960h) Area : North America"
+      "url": "https://charts.ecmwf.int/content/20261126205742-f8300676b40522d14e94a7ce6aac7937ab44c3d3.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 28 Dec 2026 - Mon 04 Jan 2027 (+936h) Area : North America"
+     },
+     {
+      "valid": "2027-01-11T00:00:00Z",
+      "url": "https://charts.ecmwf.int/content/20261126205749-2c9785d351b4a58b07450abd3cc376ea899c45ee.png",
+      "desc": "Base time: Thu 26 Nov 2026 Valid time: Mon 04 Jan 2027 - Mon 11 Jan 2027 (+1104h) Area : North America"
      }
     ]
    }
@@ -194,8 +209,8 @@
   "mjo": {
    "label": "MJO forecast (ECMWF ensemble)",
    "product": "mofc_multi_mjo_family_index",
-   "base_time": "2026-11-25T00:00:00Z",
-   "url": "https://charts.ecmwf.int/content/20261125200533-091edf249e952a701cc96e2ce6d104ea72d00800.png",
+   "base_time": "2026-11-26T00:00:00Z",
+   "url": "https://charts.ecmwf.int/content/20261126200537-bb5aeb20d730195bd62932d8aaede16ddc63fbc9.png",
    "desc": ""
   },
   "pna": {
@@ -206,5 +221,5 @@
    "desc": ""
   }
  },
- "generated_utc": "2026-11-25T23:43Z"
+ "generated_utc": "2026-11-26T23:57Z"
 }
