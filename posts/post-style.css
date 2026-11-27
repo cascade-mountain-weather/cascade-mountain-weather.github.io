@@ -501,6 +501,8 @@ figure.figure-slot:not(:has(img)) figcaption::before { content: none; }
 .figure-pair > figure.figure-slot { float: none; clear: none; flex: 1 1 0; min-width: 0; width: auto; max-width: none; margin: 0; }
 .figure-pair > figure.figure-slot:nth-child(1) { flex-grow: 0.87; }  /* WPC map, 576x664 */
 .figure-pair > figure.figure-slot:nth-child(2) { flex-grow: 1.34; }  /* satellite loop, 1207x900 */
+/* Wider pair for big maps: set each figure's flex-grow inline to its image width / height so both come out the same height */
+.figure-pair.wide { max-width: 900px; }
 /* A pair of same-shaped images (e.g. HRRR AM and PM): equal widths */
 .figure-pair.equal > figure.figure-slot:nth-child(n) { flex-grow: 1; }
 @media (max-width: 600px) {
